@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "mgck"
+version = "0.1.0"
+description = ""
+authors = ["badmagick329"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Django = "^4.2.2"
+python-dotenv = "^1.0.0"
+gunicorn = "^20.1.0"
+psycopg2-binary = "^2.9.6"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-django = "^4.5.2"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "djangobackend.settings"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
