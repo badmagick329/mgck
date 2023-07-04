@@ -6,9 +6,9 @@
 {% block body %}
   <form class="form_inputs" autocomplete="off" action="{% url 'urlshortener:shorten' %}" method="post">
     {% csrf_token %}
-    <input type="text" name="source_url" placeholder="Enter URL here" class="input_box">
-    <input type="text" name="custom_id" placeholder="Request custom id (Skip for a random ID)" class="input_box">
-    <input type="submit" value="Shorten" class="submit_button">
+    <input class="input_box" type="text" name="source_url" placeholder="Enter URL here">
+    <input class="input_box" type="text" name="custom_id" placeholder="Request custom id (Skip for a random ID)">
+    <input class="submit_button" type="submit" value="Shorten">
   </form>
   <script src={% static 'js/script.js' %}></script>
 {% endblock %}
