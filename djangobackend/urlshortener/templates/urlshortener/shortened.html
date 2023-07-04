@@ -4,11 +4,9 @@
   <title>Short URL</title>
 {% endblock %}
 {% block body %}
-  <div class="main">
-    <div class="result">
-      <span>Here is your shortened URL:</span>
-      <a href={{ short_url }}>{{ short_url }}</a>
-      <a href="{% url 'urlshortener:index' %}">Shorten another URL</a>
-    </div>
+  <div class="result">
+    <span>Here is your shortened URL:</span>
+    <a href={{ short_url }}>{{ short_url }}</a>
+    <a href="{% url 'urlshortener:index' %}">Shorten another URL</a>
   </div>
 {% endblock %}
