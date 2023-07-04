@@ -1,0 +1,8 @@
+.env
+db
+docker-compose*.yml
+nginx/conf.d/*
+!nginx/conf.d/main.conf.sample
+.pytest_cache
+__pycache__
+notes/
