@@ -5,13 +5,14 @@ from pathlib import Path
 import requests
 
 from djangobackend.exceptions import DownloadError, RedditAudioNotFound
-from djangobackend.settings import DEBUG, REDDIT_VIDEOS, REDDIT_VIDEOS_STATIC
+from djangobackend.settings import (CONTAINERED, DEBUG, REDDIT_VIDEOS,
+                                    REDDIT_VIDEOS_STATIC)
 
 VIDEO_RE = r"(https?://v\.redd\.it)/(\w+)/(\w+\.mp4)"
 
 
 def mux_video(video_url: str) -> str | None:
-    DL_DIR = Path(REDDIT_VIDEOS) if DEBUG else Path(REDDIT_VIDEOS_STATIC)
+    DL_DIR = Path(REDDIT_VIDEOS_STATIC) if CONTAINERED else Path(REDDIT_VIDEOS)
     match = re.match(VIDEO_RE, video_url)
     if match is None:
         return None
