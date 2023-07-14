@@ -23,6 +23,7 @@ services:
     volumes:
       - ./djangobackend:/usr/src/app
       - staticfiles:/usr/src/app/staticfiles
+      - ${REDDIT_VIDEOS}:${REDDIT_VIDEOS_STATIC}
     expose:
       - 8002
     env_file:
@@ -37,6 +38,7 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - staticfiles:/usr/src/app/staticfiles
+      - ${REDDIT_VIDEOS}:${REDDIT_VIDEOS_STATIC}
     ports:
       - ${NGINX_PORT}:80
     depends_on:
