@@ -1,7 +1,8 @@
-FROM python:3.10.10-alpine
+FROM python:3.10.10-slim
 WORKDIR /usr/src/app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+RUN apt-get update && apt-get install -y ffmpeg
 RUN pip install --upgrade pip
 COPY pyproject.toml poetry.lock ./
 RUN pip install poetry

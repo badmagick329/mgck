@@ -19,6 +19,9 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_URL = os.environ["BASE_URL"]
+REDDIT_VIDEOS = os.environ.get("REDDIT_VIDEOS", "")
+REDDIT_VIDEOS_STATIC = os.environ.get("REDDIT_VIDEOS_STATIC", "")
+TOKEN = os.environ.get("TOKEN", "")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -82,7 +85,7 @@ DATABASES = {
         "USER": os.environ["DB_USER"],
         "PASSWORD": os.environ["DB_PASSWORD"],
         "HOST": os.environ.get("DB_HOST", "db"),
-        "PORT": os.environ.get("DB_PORT", "5432"), 
+        "PORT": os.environ.get("DB_PORT", "5432"),
     }
 }
 
