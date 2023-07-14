@@ -37,4 +37,10 @@ server {
       # -------------
       alias /usr/src/app/staticfiles/;
     }
+    # reddit videos route
+    location /videos/ {
+      sendfile on;
+      sendfile_max_chunk 10m;
+      alias /usr/src/app/redditvideos/;
+    }
 }
