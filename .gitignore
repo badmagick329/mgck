@@ -6,3 +6,4 @@ nginx/conf.d/*
 .pytest_cache
 __pycache__
 notes/
+local_media/

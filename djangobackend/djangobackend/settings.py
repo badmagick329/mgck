@@ -22,6 +22,7 @@ BASE_URL = os.environ["BASE_URL"]
 REDDIT_VIDEOS = os.environ.get("REDDIT_VIDEOS", "")
 REDDIT_VIDEOS_STATIC = os.environ.get("REDDIT_VIDEOS_STATIC", "")
 TOKEN = os.environ.get("TOKEN", "")
+CONTAINERED = os.environ.get("DB_HOST","") != "localhost"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -40,6 +41,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "urlshortener",
+    "redditvideo",
+    "fileuploader",
 ]
 
 MIDDLEWARE = [
@@ -123,6 +126,9 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/uploads/"
+MEDIA_ROOT = os.environ["UPLOADS_STATIC"] if CONTAINERED else os.environ["UPLOADS"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
