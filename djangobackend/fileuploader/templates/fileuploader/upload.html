@@ -1,0 +1,22 @@
+{% extends 'fileuploader/base.html' %}
+{% load static %}
+{% block title %}
+<title>Upload a file</title>
+{% endblock %}
+{% block body %}
+<div class="flex flex-col">
+  <h1 class="text-3xl font-bold mb-4">Upload a file</h1>
+  <form autocomplete="off" method="post" action="{% url 'fileuploader:upload_file' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input class="block w-full text-sm text-slate-500 mb-4
+      file:mr-4 file:py-2 file:px-4
+      file:rounded file:border-0
+      file:text-sm file:font-semibold
+      file:bg-black-50 file:text-white-700
+      hover:file:bg-black-150" type="file" name="file">
+    <input
+      class="bg-blue-500 hover:bg-blue-700 text-white-700 font-bold py-2 px-4 rounded "
+      type="submit" value="Upload">
+  </form>
+</div>
+{% endblock %}
