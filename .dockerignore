@@ -1,0 +1,4 @@
+./*
+!djangobackend/
+!pyproject.toml
+!poetry.lock
