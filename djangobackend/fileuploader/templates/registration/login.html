@@ -1,0 +1,15 @@
+{% extends "fileuploader/base.html" %}
+{% block body %}
+<div class="flex flex-col">
+  <h1 class="font-bold mb-6 text-center text-3xl">Login</h1>
+  {% if message %}
+  <div class="text-red-600 font-semibold mb-4">{{ message }}</div>
+  {% endif %}
+  <form class="flex flex-col" action="{% url 'fileuploader:login' %}" method="post">
+    {% csrf_token %}
+    <input class="rounded mb-4 p-2" name="username" placeholder="Username">
+    <input class="rounded mb-4 p-2" type="password" name="password" placeholder="Password">
+    <input class="bg-blue-500 hover:bg-blue-700 text-white-700 font-bold p-2 rounded " type="submit" value="Login">
+  </form>
+</div>
+{% endblock %}

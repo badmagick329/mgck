@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {% block title %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <link href={% static 'css/style.css' %} rel="stylesheet">
+  {% block extrahead %}{% endblock %}
+</head>
+
+<body>
+  {% if user.is_authenticated %}
+    <div class="flex justify-end bg-white border-gray-200 dark:bg-gray-900 py-4">
+        <a class="mx-4" href="{% url 'fileuploader:logout' %}">Logout</a>
+    </div>
+  {% endif %}
+  <div class="flex items-center justify-center h-screen">
+    {% block body %}{% endblock %}
+  </div>
+</body>
+
+</html>

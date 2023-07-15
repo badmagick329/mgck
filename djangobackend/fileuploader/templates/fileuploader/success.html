@@ -1,0 +1,14 @@
+{% extends 'fileuploader/base.html' %}
+{% load static %}
+{% block title %}
+<title>File Uploaded</title>
+{% endblock %}
+{% block body %}
+<div class="flex flex-col">
+  <h1 class="text-3xl font-semibold mb-4">File uploaded</h1>
+  <a target="_blank" class="mb-4 underline font-semibold" href={{ file_url }}>{{ filename }}</a>
+  <a class="bg-blue-500 hover:bg-blue-700 text-white-700 
+    font-bold py-2 px-4 rounded text-center" 
+    href="{% url 'fileuploader:upload_file' %}">Upload More</a>
+</div>
+{% endblock %}
