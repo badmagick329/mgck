@@ -2,6 +2,8 @@ from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 
 class UploadedFile(models.Model):
@@ -14,13 +16,14 @@ class UploadedFile(models.Model):
         null=True,
     )
 
-    def delete(self, *args, **kwargs):
-        self.file.delete()
-        super().delete(*args, **kwargs)
-
     def __str__(self):
         return (
             f"<UploadedFile(file={self.file}, "
             f"uploaded_by={self.uploaded_by}, "
             f"uploaded_at={self.uploaded_at})>"
         )
+
+
+@receiver(post_delete, sender=UploadedFile)
+def delete_file(sender, instance, **kwargs):
+    instance.file.delete(False)
