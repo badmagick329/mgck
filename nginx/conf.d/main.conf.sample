@@ -22,6 +22,8 @@ server {
       # Optional settings for rate limit
       limit_req zone=addrlimit burst=10 delay=5;
       # -------------
+      # file upload limit
+      client_max_body_size 100M;
     }
     location /static/ {
       sendfile on;
@@ -41,6 +43,12 @@ server {
     location /videos/ {
       sendfile on;
       sendfile_max_chunk 10m;
-      alias /usr/src/app/redditvideos/;
+      alias /redditvideos/;
+    }
+    # file uploads route
+    location /uploads/ {
+      sendfile on;
+      sendfile_max_chunk 10m;
+      alias /uploads/;
     }
 }
