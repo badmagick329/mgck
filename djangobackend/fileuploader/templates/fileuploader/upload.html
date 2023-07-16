@@ -5,6 +5,13 @@
 {% endblock %}
 {% block body %}
 <div class="flex flex-col">
+  {% if form.errors %}
+  {% for field in form %}
+    {% for error in field.errors %}
+      <div class="text-red-600 font-semibold mb-4">{{ error }}</div>
+    {% endfor %}
+  {% endfor %}
+  {% endif %}
   <h1 class="text-3xl font-bold mb-4">Upload a file</h1>
   <form autocomplete="off" method="post" action="{% url 'fileuploader:upload_file' %}" enctype="multipart/form-data">
     {% csrf_token %}
@@ -14,9 +21,14 @@
       file:text-sm file:font-semibold
       file:bg-black-50 file:text-white-700
       hover:file:bg-black-150" type="file" name="file">
+    <div class="flex">
     <input
       class="bg-blue-500 hover:bg-blue-700 text-white-700 font-bold py-2 px-4 rounded "
-      type="submit" value="Upload">
+      type="submit" value="Upload File">
+      <a class="bg-blue-500 hover:bg-blue-700 text-white-700 
+        font-bold py-2 px-4 rounded text-center mx-auto" 
+        href="{% url 'fileuploader:list_files' %}">List Files</a>
+    </div>
   </form>
 </div>
 {% endblock %}

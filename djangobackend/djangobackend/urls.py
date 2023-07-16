@@ -24,7 +24,7 @@ from djangobackend.settings import CONTAINERED
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("reddit/", include("redditvideo.urls")),
-    path("upload/", include("fileuploader.urls")),
+    path("files/", include("fileuploader.urls")),
     path("", include("urlshortener.urls")),
 ]
 if not CONTAINERED:
