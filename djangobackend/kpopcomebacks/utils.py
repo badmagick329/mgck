@@ -1,5 +1,6 @@
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
+from time import perf_counter
 
 from django.core.paginator import Paginator
 
@@ -10,32 +11,22 @@ generated_data = None
 PAGE_SIZE = 2
 
 
-def dummy_data() -> list[Comeback]:
+def dummy_data(n=10) -> list[Comeback]:
     global generated_data
     if generated_data is not None:
         return generated_data
-    dates = [
-        "2023-08-24",
-        "2023-08-03",
-        "2023-08-05",
-        "2023-08-24",
-        "2023-08-12",
-        "2023-07-24",
-        "2023-07-21",
-        "2023-07-10",
-        "2023-07-13",
-        "2023-07-01",
-        "2023-06-01",
-        "2023-06-11",
-        "2023-06-21",
-        "2023-06-15",
-        "2023-06-17",
-    ]
     comebacks = list()
-    for date in dates:
-        comebacks += create_comebacks(date, random.randint(1, 5))
+    for date in _dates(n):
+        comebacks += create_comebacks(date)
     generated_data = comebacks
     return comebacks
+
+
+def _dates(n):
+    today = datetime.today()
+    for i in range(n):
+        yield (today + timedelta(days=i)).strftime("%Y-%m-%d")
+        yield (today - timedelta(days=i)).strftime("%Y-%m-%d")
 
 
 def create_comebacks(date: str, n=1):
@@ -92,7 +83,7 @@ def create_comebacks(date: str, n=1):
     for i in range(n):
         artist = random.choice(artists)
         comeback = {
-            "id": str(i),
+            "id": f"{date}-{artist}-{i}",
             "artist": artist,
             "title": f"{random.choice(prefixes)} {random.choice(postfixes)}",
             "date": date,
@@ -103,9 +94,7 @@ def create_comebacks(date: str, n=1):
     return comebacks
 
 
-def format_comebacks(
-    comebacks: list[dict[str, str]], page_number: str | None = None
-) -> dict:
+def format_comebacks(comebacks: list[Comeback], page_number: str | None = None) -> dict:
     paginator = Paginator(comebacks, PAGE_SIZE)
     if page_number is None:
         page_number = get_closest_page(paginator)
@@ -155,23 +144,137 @@ def get_closest_page(paginator: Paginator) -> int:
     return closest
 
 
-def filter_combacks(
-    cbs: list[dict[str, str]], artist: str, title: str
-) -> list[dict[str, str]]:
-    if not artist and not title:
-        return cbs
-    comebacks = list()
+def filter_comebacks(
+    cbs: list[Comeback], artist: str, title: str, start_date: str, end_date: str
+) -> list[Comeback]:
+    artist = artist.strip().lower()
+    title = title.strip().lower()
+    artist_ids = set()
+    title_ids = set()
+    start_date_ids = set()
+    end_date_ids = set()
+    all_ids = set([cb["id"] for cb in cbs])
+    if artist:
+        artist_ids = set(
+            [cb["id"] for cb in cbs if cb["artist"].lower().startswith(artist)]
+        )
+    else:
+        artist_ids = all_ids
+    if title:
+        title_ids = set(
+            [cb["id"] for cb in cbs if cb["title"].lower().startswith(title)]
+        )
+    else:
+        title_ids = all_ids
+    if valid_date(start_date.strip()):
+        start_date_ids = set(
+            [cb["id"] for cb in cbs if cb["date"] >= start_date.strip()]
+        )
+    else:
+        start_date_ids = all_ids
+    if valid_date(end_date.strip()):
+        end_date_ids = set([cb["id"] for cb in cbs if cb["date"] <= end_date.strip()])
+    else:
+        end_date_ids = all_ids
+    ids = artist_ids & title_ids & start_date_ids & end_date_ids
+    return [cb for cb in cbs if cb["id"] in ids]
+
+
+def filter_comebacks_v0(
+    cbs: list[Comeback], artist: str, title: str, start_date: str, end_date: str
+) -> list[Comeback]:
+    artist = artist.strip().lower()
+    title = title.strip().lower()
+    start_date = start_date.strip() if valid_date(start_date.strip()) else None
+    end_date = end_date.strip() if valid_date(end_date.strip()) else None
+    artist_ids = set()
+    title_ids = set()
+    start_date_ids = set()
+    end_date_ids = set()
     for cb in cbs:
-        artist_check = cb["artist"].lower().startswith(artist)
-        title_check = cb["title"].lower().startswith(title)
-        if artist and title:
-            if artist_check and title_check:
-                comebacks.append(cb)
-            continue
-        if artist and artist_check:
-            comebacks.append(cb)
-            continue
-        if title and title_check:
-            comebacks.append(cb)
-            continue
-    return comebacks
+        if artist:
+            if cb["artist"].lower().startswith(artist):
+                artist_ids.add(cb["id"])
+        else:
+            artist_ids.add(cb["id"])
+        if title:
+            if cb["title"].lower().startswith(title):
+                title_ids.add(cb["id"])
+        else:
+            title_ids.add(cb["id"])
+        if start_date:
+            if cb["date"] >= start_date.strip():
+                start_date_ids.add(cb["id"])
+        else:
+            start_date_ids.add(cb["id"])
+        if end_date:
+            if cb["date"] <= end_date.strip():
+                end_date_ids.add(cb["id"])
+        else:
+            end_date_ids.add(cb["id"])
+    ids = artist_ids & title_ids & start_date_ids & end_date_ids
+    return [cb for cb in cbs if cb["id"] in ids]
+
+
+def valid_date(date: str) -> bool:
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
+
+
+def perf_test(n):
+    cbs = dummy_data(n)
+    cbs = sorted(cbs, key=lambda x: x["date"])
+    func_a = list()
+    start = perf_counter()
+    filter_comebacks_v0(cbs, "shi", "bad", "2012-01-01", "2045-01-01")
+    func_a.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks_v0(cbs, "", "goo", "2012-01-01", "2045-01-01")
+    func_a.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks_v0(cbs, "bla", "", "2012-01-01", "2045-01-01")
+    func_a.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks_v0(cbs, "", "", "2012-01-01", "2045-01-01")
+    func_a.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks_v0(cbs, "", "", "", "2045-01-01")
+    func_a.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks_v0(cbs, "", "", "", "")
+    func_a.append(perf_counter() - start)
+    print("Times taken for func a")
+    for i in func_a:
+        print(i)
+    print("Total time taken for func a", sum(func_a))
+    func_b = list()
+    start = perf_counter()
+    filter_comebacks(cbs, "shi", "bad", "2012-01-01", "2045-01-01")
+    func_b.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks(cbs, "", "goo", "2012-01-01", "2045-01-01")
+    func_b.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks(cbs, "bla", "", "2012-01-01", "2045-01-01")
+    func_b.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks(cbs, "", "", "2012-01-01", "2045-01-01")
+    func_b.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks(cbs, "", "", "", "2045-01-01")
+    func_b.append(perf_counter() - start)
+    start = perf_counter()
+    filter_comebacks(cbs, "", "", "", "")
+    func_b.append(perf_counter() - start)
+    print("Times taken for func b")
+    for i in func_b:
+        print(i)
+    print(f"Time taken: {perf_counter() - start}")
+    print("Total time taken for func b", sum(func_b))
+
+
+if __name__ == "__main__":
+    perf_test(30000)
