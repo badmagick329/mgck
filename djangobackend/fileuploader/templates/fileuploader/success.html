@@ -8,10 +8,10 @@
   <h1 class="text-3xl font-semibold mb-4">File uploaded</h1>
   <a target="_blank" class="underline font-semibold mb-4" href={{ file_url }}>{{ filename }}</a>
   <div class="flex">
-    <a class="bg-blue-500 hover:bg-blue-700 text-white-700 
+    <a class="bg-blue-500 hover:bg-blue-700 text-white 
       font-bold py-2 px-4 rounded text-center mx-auto" 
       href="{% url 'fileuploader:upload_file' %}">Upload More</a>
-    <a class="bg-blue-500 hover:bg-blue-700 text-white-700 
+    <a class="bg-blue-500 hover:bg-blue-700 text-white 
       font-bold py-2 px-4 rounded text-center mx-auto" 
       href="{% url 'fileuploader:list_files' %}">List Files</a>
   </div>
