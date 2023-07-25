@@ -25,6 +25,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("reddit/", include("redditvideo.urls")),
     path("files/", include("fileuploader.urls")),
+    path("kpop/", include("kpopcomebacks.urls")),
     path("", include("urlshortener.urls")),
 ]
 if not CONTAINERED:

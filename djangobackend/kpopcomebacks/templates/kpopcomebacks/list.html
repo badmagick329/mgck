@@ -1,0 +1,29 @@
+{% extends 'kpopcomebacks/base.html' %}
+{% load static %}
+{% block title %}<title>Kpop</title>{% endblock %}
+{% block body %}
+  <div class="flex flex-col items-center h-screen mt-4">
+    <form id="search-form" class="flex flex-col items-center">
+      {% csrf_token %}
+      <input 
+      class="w-full border-2 border-gray-300
+      h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+      autocomplete="off"
+      hx-post="{{ search_url }}?page={{ page.current }}"
+      hx-target=".comebacks"
+      hx-trigger="keyup changed delay:500ms"
+      name="artist" placeholder="Artist">
+      <input 
+      class="w-full border-2 border-gray-300
+      h-10 px-5 rounded-lg text-sm focus:outline-none"
+      autocomplete="off"
+      hx-post="{{ search_url }}?page={{ page.current }}"
+      hx-target=".comebacks"
+      hx-trigger="keyup changed delay:500ms"
+      name="title" placeholder="Title">
+    </form>
+    <div class="flex flex-col grow comebacks">
+    {% include "kpopcomebacks/comebacks.html" %}
+    </div>
+  </div>
+{% endblock %}

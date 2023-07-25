@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "urlshortener",
     "redditvideo",
     "fileuploader",
+    "kpopcomebacks",
 ]
 
 MIDDLEWARE = [
