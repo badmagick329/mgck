@@ -21,6 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_URL = os.environ["BASE_URL"]
 REDDIT_VIDEOS = os.environ.get("REDDIT_VIDEOS", "")
 REDDIT_VIDEOS_STATIC = os.environ.get("REDDIT_VIDEOS_STATIC", "")
+REDDIT_SECRET = os.environ.get("REDDIT_SECRET", "")
+REDDIT_ID = os.environ.get("REDDIT_ID", "")
+REDDIT_AGENT = os.environ.get("REDDIT_AGENT", "")
 TOKEN = os.environ.get("TOKEN", "")
 CONTAINERED = os.environ.get("DB_HOST","") != "localhost"
 
