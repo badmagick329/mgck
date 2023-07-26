@@ -69,11 +69,11 @@ def filter_comebacks(
     if artist:
         filters.append(Q(artist__name__icontains=artist))
     if title:
-        filters.append(Q(name__icontains=title))
-    if valid_date(start_date.strip()):
-        filters.append(Q(release_date__gte=start_date.strip()))
-    if valid_date(end_date.strip()):
-        filters.append(Q(release_date__lte=end_date.strip()))
+        filters.append(Q(title__icontains=title))
+    if date := valid_date(start_date.strip()):
+        filters.append(Q(release_date__gte=date))
+    if date := valid_date(end_date.strip()):
+        filters.append(Q(release_date__lte=date))
     if filters:
         return (
             Release.objects.filter(*filters)
@@ -87,9 +87,8 @@ def filter_comebacks(
     )
 
 
-def valid_date(date: str) -> bool:
+def valid_date(date: str) -> datetime | None:
     try:
-        datetime.strptime(date, "%Y-%m-%d")
-        return True
+        return datetime.strptime(date, "%Y-%m-%d")
     except ValueError:
-        return False
+        return None
