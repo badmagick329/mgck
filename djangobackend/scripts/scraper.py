@@ -365,7 +365,7 @@ class Scraper:
                 release_type=release_type,
                 release_date=cb["release_date"],
                 reddit_urls=cb["reddit_urls"],
-                urls=cb["urls"],
+                urls=[u.split("&")[0] for u in cb["urls"]],
             )
             if not created:
                 release.save()
