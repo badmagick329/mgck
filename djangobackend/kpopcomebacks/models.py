@@ -6,8 +6,11 @@ from django.db import models
 class Artist(models.Model):
     name = models.CharField(max_length=510)
 
-    def __str__(self):
+    def __repr__(self):
         return f"<Artist(id={self.id}, name={self.name})>"
+
+    def __str__(self):
+        return self.name
 
 
 class Release(models.Model):
@@ -48,5 +51,8 @@ class Release(models.Model):
 class ReleaseType(models.Model):
     name = models.CharField(max_length=510)
 
-    def __str__(self):
+    def __repr__(self):
         return f"<ReleaseType(id={self.id}, name={self.name})>"
+
+    def __str__(self):
+        return self.name
