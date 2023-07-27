@@ -39,9 +39,11 @@ class ReleaseData:
     release_type: str
     reddit_urls: list[str]
     urls: list[str] | None
+    id: int | None = None
 
     def to_dict(self) -> dict:
         return {
+            "id": self.id,
             "release_date": self.release_date,
             "artist": self.artist,
             "title": self.title,
@@ -54,6 +56,7 @@ class ReleaseData:
     @staticmethod
     def from_dict(data: dict) -> "ReleaseData":
         return ReleaseData(
+            id=data["id"],
             release_date=data["release_date"],
             artist=data["artist"],
             title=data["title"],
@@ -67,6 +70,7 @@ class ReleaseData:
         artist, _ = Artist.objects.get_or_create(name=self.artist)
         release_type, _ = ReleaseType.objects.get_or_create(name=self.release_type)
         return Release(
+            id=self.id,
             artist=artist,
             album=self.album,
             title=self.title,
@@ -81,6 +85,7 @@ class ReleaseData:
     @staticmethod
     def from_release(release: Release) -> "ReleaseData":
         return ReleaseData(
+            id=release.id,
             release_date=datetime.strftime(release.release_date, "%Y-%m-%d"),
             artist=release.artist.name,
             title=release.title,
@@ -221,6 +226,7 @@ class Scraper:
         Merge new_cbs into old_cbs. All old_cb dates that are in new_cbs are replaced with new_cbs
         """
         old_cbs = deepcopy(old_cbs)
+        old_cbs = sorted(old_cbs, key=lambda x: x["release_date"])
         remove_dates = list(set([cb["release_date"] for cb in new_cbs]))
         merged_cbs = [c for c in old_cbs if c["release_date"] not in remove_dates]
         merged_cbs.extend(new_cbs)
@@ -361,25 +367,67 @@ class Scraper:
 
     @staticmethod
     def save_to_db(cbs: list[dict]):
+        update_releases = list()
+        create_releases = list()
+        BATCH = 500
+        remove_dates = [cb["release_date"] for cb in cbs if cb["id"] is None]
+        remove_dates = list(set(remove_dates))
+        remove_dates = [
+            datetime.strptime(date, "%Y-%m-%d").date() for date in remove_dates
+        ]
+        Release.objects.filter(release_date__in=remove_dates).delete()
+        artist_names = list(set([cb["artist"] for cb in cbs]))
+        release_types_names = list(set([cb["release_type"] for cb in cbs]))
+        saved_artists = Artist.objects.filter(name__in=artist_names)
+        saved_release_types = ReleaseType.objects.filter(name__in=release_types_names)
+        artist_names_map = {artist.name: artist for artist in saved_artists}
+        release_types_names_map = {
+            release_type.name: release_type for release_type in saved_release_types
+        }
         for cb in cbs:
-            artist, _ = Artist.objects.get_or_create(name=cb["artist"])
-            release_type, _ = ReleaseType.objects.get_or_create(name=cb["release_type"])
-            release, _ = Release.objects.get_or_create(
-                artist=artist,
-                title=cb["title"],
-                album=cb["album"],
-                release_type=release_type,
-                release_date=cb["release_date"],
-            )
-            release.reddit_urls = cb["reddit_urls"]
-            release.urls = [u.split("&")[0] for u in cb["urls"]]
-            release.save()
+            if cb["id"] is None:
+                if cb["artist"] not in artist_names_map:
+                    artist = Artist(name=cb["artist"])
+                    artist_names_map[cb["artist"]] = artist
+                    artist.save()
+                else:
+                    artist = artist_names_map[cb["artist"]]
+                if cb["release_type"] not in release_types_names_map:
+                    release_type = ReleaseType(name=cb["release_type"])
+                    release_types_names_map[cb["release_type"]] = release_type
+                    release_type.save()
+                else:
+                    release_type = release_types_names_map[cb["release_type"]]
+                release = Release(
+                    artist=artist,
+                    title=cb["title"],
+                    album=cb["album"],
+                    release_type=release_type,
+                    release_date=cb["release_date"],
+                    reddit_urls=cb["reddit_urls"],
+                    urls=cb["urls"],
+                )
+                create_releases.append(release)
+                if len(create_releases) == BATCH:
+                    Release.objects.bulk_create(create_releases)
+                    create_releases = list()
+            else:
+                release = Release.objects.get(id=cb["id"])
+                release.reddit_urls = cb["reddit_urls"]
+                release.urls = cb["urls"] if cb["urls"] else release.urls
+                update_releases.append(release)
+                if len(update_releases) == BATCH:
+                    Release.objects.bulk_update(
+                        update_releases, fields=["reddit_urls", "urls"]
+                    )
+                    update_releases = list()
+        if len(create_releases) > 0:
+            Release.objects.bulk_create(create_releases)
+        if len(update_releases) > 0:
+            Release.objects.bulk_update(update_releases, fields=["reddit_urls", "urls"])
 
     @staticmethod
     def cb_dicts_eq(cb1: dict, cb2: dict) -> bool:
-        """
-        Check if two cbs are equal
-        """
         return (
             cb1["release_date"] == cb2["release_date"]
             and cb1["artist"] == cb2["artist"]
