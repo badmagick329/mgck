@@ -5,11 +5,6 @@ from django.shortcuts import render, reverse
 from kpopcomebacks.models import Artist, Release, ReleaseType
 from kpopcomebacks.utils import filter_comebacks, format_comebacks
 
-# TODO
-# tailwind
-# flex gap-1
-# justify between
-
 
 def index(request):
     comebacks = [
@@ -30,13 +25,7 @@ def index(request):
 
 def search(request):
     if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-    # cbs = [
-    #     r
-    #     for r in Release.objects.all()
-    #     .prefetch_related("artist", "release_type")
-    #     .order_by("release_date")
-    # ]
+        return HttpResponse("🙅", status=405)
     artist = request.POST.get("artist", "").strip().lower()
     title = request.POST.get("title", "").strip().lower()
     start_date = request.POST.get("start_date", "").strip()

@@ -7,7 +7,7 @@
           <p class="font-bold bg-black text-white dark:bg-white dark:text-pink-800 py-1 px-3 rounded my-2">{{ comeback.release_date }}</p>
           <p class="text-base md:text-2xl font-semibold">{{ comeback.artist }}
           {% if comeback.title %}- {{ comeback.title }} {% endif %}</p>
-          {% if comeback.release_type %}
+          {% if comeback.release_type.name %}
             <p class="italic">[{{ comeback.release_type }}]</p>
           {% endif %}
           {% for url in comeback.urls %}
