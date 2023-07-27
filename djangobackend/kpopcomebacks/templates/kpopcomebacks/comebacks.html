@@ -1,28 +1,6 @@
 {% load custom_filters %}
-<div class="grow justify-self-start">
-  <div>
-    {% if comebacks %}
-      {% for comeback in comebacks %}
-        <hr>
-        <div class="flex flex-col items-center justify-center w-full my-2">
-          <p class="font-bold bg-black text-white dark:bg-white dark:text-pink-800 py-1 px-3 rounded my-2">{{ comeback.release_date }}</p>
-          <p class="text-base md:text-2xl font-semibold">{{ comeback.artist }}
-          {% if comeback.title %}- {{ comeback.title }} {% endif %}</p>
-          {% if comeback.release_type.name %}
-            <p class="italic">[{{ comeback.release_type }}]</p>
-          {% endif %}
-          {% for url in comeback.urls %}
-            <a class="text-xs font-semibold mx-2 md:text-base text-indigo-900 dark:text-blue-400" href={{ url }} target="_blank">{{ url|shorten }}</a>
-          {% endfor %}
-        </div>
-      {% endfor %}
-    {% else %}
-      <p class="text-base md:text-2xl text-center my-2">No Results</p>
-    {% endif %}
-  </div>
-</div>
-<div class="justify-self-end mb-10">
-  <nav id="paginator" class="flex w-full justify-center" data-current-page={{ page.current }}>
+<div>
+  <nav id="paginator" class="flex w-full justify-center mb-4" data-current-page={{ page.current }}>
     <button
     class="mr-2 bg-pink-500 
     text-center font-bold py-1 px-3 rounded 
@@ -114,4 +92,26 @@
     data-page-number={{ page.last }}>Last
     </button>
   </nav>
+<div class="grow">
+  <div>
+    {% if comebacks %}
+      {% for comeback in comebacks %}
+        <hr>
+        <div class="flex flex-col items-center justify-center w-full my-2">
+          <p class="font-bold bg-black text-white dark:bg-white dark:text-pink-800 py-1 px-3 rounded my-2">{{ comeback.release_date }}</p>
+          <p class="text-base md:text-2xl font-semibold">{{ comeback.artist }}
+          {% if comeback.title %}- {{ comeback.title }} {% endif %}</p>
+          {% if comeback.release_type.name %}
+            <p class="italic">[{{ comeback.release_type }}]</p>
+          {% endif %}
+          {% for url in comeback.urls %}
+            <a class="text-xs font-semibold mx-2 md:text-base text-indigo-900 dark:text-blue-400" href={{ url }} target="_blank">{{ url|shorten }}</a>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-base md:text-2xl text-center my-2">No Results</p>
+    {% endif %}
+  </div>
+</div>
 </div>
