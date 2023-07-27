@@ -203,12 +203,16 @@ class Scraper:
         years = [y for y in range(2018, pendulum.now().year + 2)]
 
         urls = []
+        current_year = pendulum.now().year
+        break_in = 0
         for year in years:
             for month in self.month_strings:
-                if year == pendulum.now().year and month == current_month:
-                    urls.append(self.reddit_wiki_base.format(year=year, month=month))
-                    return urls
+                if year == current_year and month == current_month:
+                    break_in = 2 if pendulum.now().date().day > 14 else 1
                 urls.append(self.reddit_wiki_base.format(year=year, month=month))
+                break_in -= 1
+                if break_in == 0:
+                    return urls
 
     def merge_cbs(self, old_cbs: list[dict], new_cbs: list[dict]) -> list[dict]:
         """
@@ -343,7 +347,7 @@ class Scraper:
             json.dump(cbs, f, indent=4, ensure_ascii=False)
 
     @staticmethod
-    def cbs_from_db(recent: bool = True):
+    def cbs_from_db(recent: bool = True) -> list[dict[str, str]]:
         if recent:
             start_date = pendulum.now().subtract(months=2).date()
             releases = Release.objects.filter(
@@ -358,17 +362,16 @@ class Scraper:
         for cb in cbs:
             artist, _ = Artist.objects.get_or_create(name=cb["artist"])
             release_type, _ = ReleaseType.objects.get_or_create(name=cb["release_type"])
-            release, created = Release.objects.update_or_create(
+            release, _ = Release.objects.get_or_create(
                 artist=artist,
                 title=cb["title"],
                 album=cb["album"],
                 release_type=release_type,
                 release_date=cb["release_date"],
-                reddit_urls=cb["reddit_urls"],
-                urls=[u.split("&")[0] for u in cb["urls"]],
             )
-            if not created:
-                release.save()
+            release.reddit_urls = cb["reddit_urls"]
+            release.urls = [u.split("&")[0] for u in cb["urls"]]
+            release.save()
 
     @staticmethod
     def cb_dicts_eq(cb1: dict, cb2: dict) -> bool:
