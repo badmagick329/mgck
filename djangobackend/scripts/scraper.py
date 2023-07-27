@@ -27,6 +27,7 @@ from kpopcomebacks.models import Artist, Release, ReleaseType
 from djangobackend.settings import REDDIT_AGENT, REDDIT_ID, REDDIT_SECRET
 
 LOG_LEVEL = logging.DEBUG
+CHECK_NEXT_MONTH = pendulum.now().date().day > 14
 
 
 @dataclass
@@ -136,7 +137,8 @@ class Scraper:
 
     def scrape(self, urls: list[str] | None = None, from_json: bool = False):
         if not urls:
-            urls = self.generate_urls()[-1:]
+            urls = self.generate_urls()
+            urls = urls[-2:] if CHECK_NEXT_MONTH else urls[-1:]
         if from_json:
             saved_cbs = self.cbs_from_json(self.JSON_FILE)
         else:
@@ -208,7 +210,7 @@ class Scraper:
         for year in years:
             for month in self.month_strings:
                 if year == current_year and month == current_month:
-                    break_in = 2 if pendulum.now().date().day > 14 else 1
+                    break_in = 2 if CHECK_NEXT_MONTH else 1
                 urls.append(self.reddit_wiki_base.format(year=year, month=month))
                 break_in -= 1
                 if break_in == 0:
