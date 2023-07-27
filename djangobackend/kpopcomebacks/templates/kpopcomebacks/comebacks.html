@@ -1,96 +1,70 @@
 {% load custom_filters %}
 <div>
-  <nav id="paginator" class="flex w-full justify-center mb-4" data-current-page={{ page.current }}>
-    <button
-    class="mr-2 bg-pink-500 
-    text-center font-bold py-1 px-3 rounded 
-    {% if page.first %}
-    text-white hover:bg-pink-700 hover:cursor-pointer 
-    {% else %}
-    text-gray-600 hover:cursor-default 
-    {% endif %}"
-    {% if page.first %}
-    hx-post="{{ search_url }}?page={{ page.first }}"
-    hx-target=".comebacks"
-    hx-include="#search-form"
-    {% endif %}
-    data-page-number={{ page.first }}>First
-    </button>
-    <button
-    class="mr-2 bg-pink-500 
-    text-center font-bold py-1 px-3 rounded 
-    {% if page.previous_jump %}
-    text-white hover:bg-pink-700 hover:cursor-pointer 
-    {% else %}
-    text-gray-600 hover:cursor-default 
-    {% endif %}"
-    {% if page.previous_jump %}
-    hx-post="{{ search_url }}?page={{ page.previous_jump }}"
-    hx-target=".comebacks"
-    hx-include="#search-form"
-    {% endif %}
-    data-page-number={{ page.previous_jump }}>&lt&lt</button>
-    </button>
-    <button
-    class="mr-2 bg-pink-500 
-    text-center font-bold py-1 px-3 rounded 
-    {% if page.previous %}
-    text-white hover:bg-pink-700 hover:cursor-pointer 
-    {% else %}
-    text-gray-600 hover:cursor-default 
-    {% endif %}"
-    {% if page.previous %}
-    hx-post="{{ search_url }}?page={{ page.previous }}"
-    hx-target=".comebacks"
-    hx-include="#search-form"
-    {% endif %}
-    data-page-number={{ page.previous }}>&lt
-    </button>
-    <button
-    class="mr-2 bg-pink-500 
-    text-center font-bold py-1 px-3 rounded 
-    {% if page.next %}
-    text-white hover:bg-pink-700 hover:cursor-pointer 
-    {% else %}
-    text-gray-600 hover:cursor-default 
-    {% endif %}"
-    {% if page.next %}
-    hx-post="{{ search_url }}?page={{ page.next }}"
-    hx-target=".comebacks"
-    hx-include="#search-form"
-    {% endif %}
-    data-page-number={{ page.next }}>&gt
-    </button>
-    <button
-    class="mr-2 bg-pink-500 
-    text-center font-bold py-1 px-3 rounded 
-    {% if page.next_jump %}
-    text-white hover:bg-pink-700 hover:cursor-pointer 
-    {% else %}
-    text-gray-600 hover:cursor-default 
-    {% endif %}"
-    {% if page.next_jump %}
-    hx-post="{{ search_url }}?page={{ page.next_jump }}"
-    hx-target=".comebacks"
-    hx-include="#search-form"
-    {% endif %}
-    data-page-number={{ page.next_jump }}>&gt&gt
-    </button>
-    <button
-    class="mr-2 bg-pink-500 
-    text-center font-bold py-1 px-3 rounded 
-    {% if page.last %}
-    text-white hover:bg-pink-700 hover:cursor-pointer 
-    {% else %}
-    text-gray-600 hover:cursor-default 
-    {% endif %}"
-    {% if page.last %}
-    hx-post="{{ search_url }}?page={{ page.last }}"
-    hx-target=".comebacks"
-    hx-include="#search-form"
-    {% endif %}
-    data-page-number={{ page.last }}>Last
-    </button>
+  <nav id="paginator" class="flex w-full justify-center mt-6 mb-4" data-current-page={{ page.current }}>
+    <div>
+      <button
+      class="mr-2 bg-pink-500 
+      text-center font-bold py-1 px-3 rounded 
+      {% if page.previous %}
+      text-white hover:bg-pink-700 hover:cursor-pointer 
+      {% else %}
+      text-gray-600 hover:cursor-default 
+      {% endif %}"
+      {% if page.previous %}
+      hx-post="{{ search_url }}?page={{ page.previous }}"
+      hx-target=".comebacks"
+      hx-include="#search-form"
+      {% endif %}
+      data-page-number={{ page.previous }}>Previous
+      </button>
+      <button
+      class="mr-2 bg-pink-500 
+      text-center font-bold py-1 px-3 rounded 
+      {% if page.previous_jump %}
+      text-white hover:bg-pink-700 hover:cursor-pointer 
+      {% else %}
+      text-gray-600 hover:cursor-default 
+      {% endif %}"
+      {% if page.previous_jump %}
+      hx-post="{{ search_url }}?page={{ page.previous_jump }}"
+      hx-target=".comebacks"
+      hx-include="#search-form"
+      {% endif %}
+      data-page-number={{ page.previous_jump }}>&lt&lt</button>
+      </button>
+    </div>
+    <div>
+      <button
+      class="mr-2 bg-pink-500 
+      text-center font-bold py-1 px-3 rounded 
+      {% if page.next_jump %}
+      text-white hover:bg-pink-700 hover:cursor-pointer 
+      {% else %}
+      text-gray-600 hover:cursor-default 
+      {% endif %}"
+      {% if page.next_jump %}
+      hx-post="{{ search_url }}?page={{ page.next_jump }}"
+      hx-target=".comebacks"
+      hx-include="#search-form"
+      {% endif %}
+      data-page-number={{ page.next_jump }}>&gt&gt
+      </button>
+      <button
+      class="mr-2 bg-pink-500 
+      text-center font-bold py-1 px-3 rounded 
+      {% if page.next %}
+      text-white hover:bg-pink-700 hover:cursor-pointer 
+      {% else %}
+      text-gray-600 hover:cursor-default 
+      {% endif %}"
+      {% if page.next %}
+      hx-post="{{ search_url }}?page={{ page.next }}"
+      hx-target=".comebacks"
+      hx-include="#search-form"
+      {% endif %}
+      data-page-number={{ page.next }}>Next
+      </button>
+    </div>
   </nav>
 <div class="grow">
   <div>
