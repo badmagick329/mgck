@@ -21,47 +21,97 @@
     {% endif %}
   </div>
 </div>
-<div class="justify-self-end my-10">
+<div class="justify-self-end mb-10">
   <nav id="paginator" class="flex w-full justify-center" data-current-page={{ page.current }}>
     <button
     class="mr-2 bg-pink-500 
     text-center font-bold py-1 px-3 rounded 
-    {% if page.has_previous %}
+    {% if page.first %}
     text-white hover:bg-pink-700 hover:cursor-pointer 
     {% else %}
     text-gray-600 hover:cursor-default 
     {% endif %}"
-    {% if page.has_previous %}
+    {% if page.first %}
+    hx-post="{{ search_url }}?page={{ page.first }}"
+    hx-target=".comebacks"
+    hx-include="#search-form"
+    {% endif %}
+    data-page-number={{ page.first }}>First
+    </button>
+    <button
+    class="mr-2 bg-pink-500 
+    text-center font-bold py-1 px-3 rounded 
+    {% if page.previous_jump %}
+    text-white hover:bg-pink-700 hover:cursor-pointer 
+    {% else %}
+    text-gray-600 hover:cursor-default 
+    {% endif %}"
+    {% if page.previous_jump %}
+    hx-post="{{ search_url }}?page={{ page.previous_jump }}"
+    hx-target=".comebacks"
+    hx-include="#search-form"
+    {% endif %}
+    data-page-number={{ page.previous_jump }}>&lt&lt</button>
+    </button>
+    <button
+    class="mr-2 bg-pink-500 
+    text-center font-bold py-1 px-3 rounded 
+    {% if page.previous %}
+    text-white hover:bg-pink-700 hover:cursor-pointer 
+    {% else %}
+    text-gray-600 hover:cursor-default 
+    {% endif %}"
+    {% if page.previous %}
     hx-post="{{ search_url }}?page={{ page.previous }}"
     hx-target=".comebacks"
     hx-include="#search-form"
     {% endif %}
-    data-page-number={{ page.previous }}>Previous</button>
-    {% if comebacks and page.total > 1 %}
-      {% for page_number in page.page_numbers %}
-        <button
-        class="mr-2 bg-pink-500 hover:bg-pink-700 
-        text-center font-bold py-1 px-3 rounded hover:cursor-pointer 
-        text-white"
-        hx-post="{{ search_url }}?page={{ page_number }}"
-        hx-target=".comebacks"
-        hx-include="#search-form"
-        data-page-number={{ page_number }}>{{ page_number }}</button>
-      {% endfor %}
-    {% endif %}
+    data-page-number={{ page.previous }}>&lt
+    </button>
     <button
     class="mr-2 bg-pink-500 
     text-center font-bold py-1 px-3 rounded 
-    {% if page.has_next %}
+    {% if page.next %}
     text-white hover:bg-pink-700 hover:cursor-pointer 
     {% else %}
     text-gray-600 hover:cursor-default 
     {% endif %}"
-    {% if page.has_next %}
+    {% if page.next %}
     hx-post="{{ search_url }}?page={{ page.next }}"
     hx-target=".comebacks"
     hx-include="#search-form"
     {% endif %}
-    data-page-number={{ page.next }}>Next</button>
+    data-page-number={{ page.next }}>&gt
+    </button>
+    <button
+    class="mr-2 bg-pink-500 
+    text-center font-bold py-1 px-3 rounded 
+    {% if page.next_jump %}
+    text-white hover:bg-pink-700 hover:cursor-pointer 
+    {% else %}
+    text-gray-600 hover:cursor-default 
+    {% endif %}"
+    {% if page.next_jump %}
+    hx-post="{{ search_url }}?page={{ page.next_jump }}"
+    hx-target=".comebacks"
+    hx-include="#search-form"
+    {% endif %}
+    data-page-number={{ page.next_jump }}>&gt&gt
+    </button>
+    <button
+    class="mr-2 bg-pink-500 
+    text-center font-bold py-1 px-3 rounded 
+    {% if page.last %}
+    text-white hover:bg-pink-700 hover:cursor-pointer 
+    {% else %}
+    text-gray-600 hover:cursor-default 
+    {% endif %}"
+    {% if page.last %}
+    hx-post="{{ search_url }}?page={{ page.last }}"
+    hx-target=".comebacks"
+    hx-include="#search-form"
+    {% endif %}
+    data-page-number={{ page.last }}>Last
+    </button>
   </nav>
 </div>
