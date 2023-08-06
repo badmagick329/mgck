@@ -439,8 +439,9 @@ class Scraper:
 
 
 def main():
+    urls = sys.argv[1:]
     scraper = Scraper(LOG_LEVEL)
-    scraper.scrape()
+    scraper.scrape(urls)
 
 
 if __name__ == "__main__":
