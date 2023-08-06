@@ -8,7 +8,7 @@ class ArtistAdmin(admin.ModelAdmin):
 
 
 class ReleaseAdmin(admin.ModelAdmin):
-    list_display = ("artist", "album", "title", "release_date", "release_type")
+    list_display = ("artist", "album", "title", "release_date", "release_type", "urls")
     search_fields = [
         "artist__name",
         "album",
