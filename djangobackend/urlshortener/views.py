@@ -2,8 +2,10 @@ import re
 from datetime import datetime
 
 from django.shortcuts import HttpResponseRedirect, render
-from urlshortener.models import ShortURL
 from urlshortener.apps import UrlshortenerConfig
+from urlshortener.models import ShortURL
+
+from djangobackend.settings import BASE_URL
 
 app_name = UrlshortenerConfig.name
 
@@ -20,6 +22,8 @@ def shorten(request):
         return error(request, "Please enter a valid URL")
     if " " in source_url:
         return error(request, f"{source_url} is not a valid URL")
+    if is_duplicate(source_url):
+        return error(request, f"{source_url} has already been shortened")
     custom_id = request.POST.get("custom_id", "").strip()
     if custom_id:
         url_id = ShortURL.request_custom_id(custom_id)
@@ -33,6 +37,12 @@ def shorten(request):
         f"{app_name}/shortened.html",
         context={"short_url": short_url.redirect_url},
     )
+
+
+def is_duplicate(source_url):
+    url_id = source_url.replace(BASE_URL, "")[1:].split("?")[0]
+    saved_ids = ShortURL.objects.values_list("short_id", flat=True)
+    return url_id in saved_ids
 
 
 def target_url(request, short_id):
