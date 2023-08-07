@@ -51,6 +51,7 @@ class ShortURL(models.Model):
             return ValueError(f"{custom_id} is not alphanumeric")
         if cls.objects.filter(short_id=custom_id).exists():
             return ValueError(f"{custom_id} is already taken")
+
         return custom_id
 
     @property
