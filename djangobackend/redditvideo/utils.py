@@ -30,7 +30,11 @@ def mux_video(video_url: str) -> str | None:
         return f"{id_}.mp4"
     elif isinstance(result, DownloadError):
         return None
-    return mux(vfile, afile, ofile)
+    outfile = mux(vfile, afile, ofile)
+    if outfile is None:
+        return None
+    cleanup(vfile, afile)
+    return outfile
 
 
 def download(url: str, filename: Path) -> str | Exception:
@@ -50,3 +54,14 @@ def mux(video: str, audio: str, output: Path) -> str | None:
     subprocess.run(cmd, shell=True)
     if Path(output).exists():
         return output.name
+
+
+def cleanup(video: str, audio: str) -> None:
+    try:
+        Path(video).unlink()
+    except (FileNotFoundError, OSError):
+        pass
+    try:
+        Path(audio).unlink()
+    except (FileNotFoundError, OSError):
+        pass
