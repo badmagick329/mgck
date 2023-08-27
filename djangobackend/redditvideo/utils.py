@@ -24,7 +24,7 @@ def mux_video(video_url: str) -> str | None:
     afile = DL_DIR / f"{id_}_audio.mp4"
     if download(video_url, vfile) is None:
         return None
-    result = download(f"{base}/{id_}/DASH_audio.mp4", afile)
+    result = download(f"{base}/{id_}/" + "DASH_{}.mp4", afile)
     if isinstance(result, RedditAudioNotFound):
         vfile.rename(ofile)
         return f"{id_}.mp4"
@@ -38,11 +38,14 @@ def mux_video(video_url: str) -> str | None:
 
 
 def download(url: str, filename: Path) -> str | Exception:
-    r = requests.get(url)
-    if r.status_code == 403:
+    post_fixes = ("audio", "AUDIO_128", "AUDIO_64")
+    r = None
+    for pf in post_fixes:
+        r = requests.get(url.format(pf))
+        if r.status_code == 200:
+            break
+    if r is None:
         return RedditAudioNotFound()
-    elif r.status_code != 200:
-        return DownloadError(r.status_code)
     with open(filename, "wb") as f:
         f.write(r.content)
     return filename
