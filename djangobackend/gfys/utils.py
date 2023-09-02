@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from gfys.models import Gfy, Tag
 
-PAGE_SIZE = 10
+PAGE_SIZE = 30
 
 
 def format_gfys(gfys: list[Gfy], page_number: str | None = None) -> dict:
