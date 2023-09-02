@@ -9,7 +9,6 @@ def index(request):
 
 
 def gfylist(request):
-    print(f"request.GET: {request.GET}")
     gfys = filter_gfys(
         request.GET.get("title", ""),
         request.GET.get("tags", ""),
@@ -17,6 +16,4 @@ def gfylist(request):
         request.GET.get("end_date", ""),
     )
     data = format_gfys(gfys, request.GET.get("page", None))
-    data["search_url"] = reverse("gfys:gfy-list")
-    print(f"Sending page values: {data['page']}")
     return TemplateResponse(request, "gfys/partials/gfylist.html", {"data": data})
