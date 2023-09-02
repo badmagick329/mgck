@@ -7,3 +7,4 @@ nginx/conf.d/*
 __pycache__
 notes/
 local_media/
+djangobackend/scripts/data/*

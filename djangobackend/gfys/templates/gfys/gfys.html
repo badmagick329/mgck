@@ -1,0 +1,55 @@
+{% extends 'gfys/base.html' %}
+{% load static %}
+{% block title %}<title>Gfy Archive</title>{% endblock %}
+{% block body %}
+  <div class="flex flex-col items-center mt-4">
+    <form id="search-form" class="flex items-center">
+      <div class="flex flex-col items-center mr-2">
+        <input type="text" name="title" placeholder="Search Title"
+          autocomplete="off"
+          class="w-full border-2 border-gray-300
+          h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+          hx-get="{% url 'gfys:gfy-list' %}"
+          hx-trigger="keyup changed delay:500ms"
+          hx-target=".gfy-list"
+          hx-include="#search-form"
+        >
+        <input type="text" name="tags" placeholder="Search Tags (, separated)"
+          autocomplete="off"
+          class="w-full border-2 border-gray-300
+          h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+          hx-get="{% url 'gfys:gfy-list' %}"
+          hx-trigger="keyup changed delay:500ms"
+          hx-target=".gfy-list"
+          hx-include="#search-form"
+        >
+      </div>
+      <div class="flex flex-col items-center">
+        <input type="text" name="start_date" placeholder="Start Date (YYYY-MM-DD)"
+          class="w-full border-2 border-gray-300
+          h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+          autocomplete="off"
+          hx-get="{% url 'gfys:gfy-list' %}"
+          hx-trigger="keyup changed delay:500ms"
+          hx-target=".gfy-list"
+          hx-include="#search-form"
+        >
+        <input type="text" name="end_date" placeholder="End Date (YYYY-MM-DD)"
+          class="w-full border-2 border-gray-300
+          h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+          autocomplete="off"
+          hx-get="{% url 'gfys:gfy-list' %}"
+          hx-trigger="keyup changed delay:500ms"
+          hx-target=".gfy-list"
+          hx-include="#search-form"
+        >
+      </div>
+    </form>
+  </div>
+  <div 
+    hx-trigger="load" 
+    hx-swap="outerHTML"
+    hx-get={% url 'gfys:gfy-list' %}
+  >
+  </div>
+{% endblock %}

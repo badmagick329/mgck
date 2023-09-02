@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "redditvideo",
     "fileuploader",
     "kpopcomebacks",
+    "gfys",
 ]
 
 MIDDLEWARE = [

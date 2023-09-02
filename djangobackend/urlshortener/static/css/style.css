@@ -541,19 +541,9 @@ video {
   margin-right: auto;
 }
 
-.my-10 {
-  margin-top: 2.5rem;
-  margin-bottom: 2.5rem;
-}
-
 .my-2 {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
-}
-
-.my-4 {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
 }
 
 .mb-2 {
@@ -580,22 +570,6 @@ video {
   margin-top: 1rem;
 }
 
-.mb-10 {
-  margin-bottom: 2.5rem;
-}
-
-.mr-4 {
-  margin-right: 1rem;
-}
-
-.mr-6 {
-  margin-right: 1.5rem;
-}
-
-.ml-2 {
-  margin-left: 0.5rem;
-}
-
 .mt-6 {
   margin-top: 1.5rem;
 }
@@ -606,6 +580,10 @@ video {
 
 .flex {
   display: flex;
+}
+
+.hidden {
+  display: none;
 }
 
 .h-10 {
@@ -620,12 +598,20 @@ video {
   width: 100%;
 }
 
+.max-w-lg {
+  max-width: 32rem;
+}
+
 .grow {
   flex-grow: 1;
 }
 
 .flex-col {
   flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
 }
 
 .items-center {
@@ -638,22 +624,6 @@ video {
 
 .justify-center {
   justify-content: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.justify-self-start {
-  justify-self: start;
-}
-
-.justify-self-end {
-  justify-self: end;
-}
-
-.justify-self-center {
-  justify-self: center;
 }
 
 .rounded {
@@ -802,6 +772,29 @@ video {
   text-decoration-line: underline;
 }
 
+.center-cropped {
+  width: 20rem;
+  height: 20rem;
+  background-position: center top;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  scale: 0.95;
+  border-radius: 10px;
+}
+
+/* Set the image to fill its parent and make transparent */
+
+.center-cropped img {
+  min-height: 100%;
+  min-width: 100%;
+  /* IE 8 */
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  /* IE 5-7 */
+  filter: alpha(opacity=0);
+  /* modern browsers */
+  opacity: 0;
+}
+
 .file\:mr-4::file-selector-button {
   margin-right: 1rem;
 }
@@ -897,10 +890,5 @@ video {
   .md\:text-base {
     font-size: 1rem;
     line-height: 1.5rem;
-  }
-
-  .md\:text-xl {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
   }
 }
