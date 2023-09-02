@@ -2,22 +2,22 @@
 {% load static %}
 {% block title %}<title>Gfy Archive</title>{% endblock %}
 {% block body %}
-  <div class="flex flex-col items-center mt-4">
+  <div class="flex flex-col items-center mt-4 px-2">
     <form id="search-form" class="flex items-center">
       <div class="flex flex-col items-center mr-2">
-        <input type="text" name="title" placeholder="Search Title"
+        <input type="text" name="title" placeholder="Title"
           autocomplete="off"
           class="w-full border-2 border-gray-300
-          h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+          h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
           hx-get="{% url 'gfys:gfy-list' %}"
           hx-trigger="keyup changed delay:500ms"
           hx-target=".gfy-list"
           hx-include="#search-form"
         >
-        <input type="text" name="tags" placeholder="Search Tags (, separated)"
+        <input type="text" name="tags" placeholder="Tags (, separated)"
           autocomplete="off"
           class="w-full border-2 border-gray-300
-          h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+          h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
           hx-get="{% url 'gfys:gfy-list' %}"
           hx-trigger="keyup changed delay:500ms"
           hx-target=".gfy-list"
@@ -25,18 +25,18 @@
         >
       </div>
       <div class="flex flex-col items-center">
-        <input type="text" name="start_date" placeholder="Start Date (YYYY-MM-DD)"
+        <input type="text" name="start_date" placeholder="Start (YYYY-MM-DD)"
           class="w-full border-2 border-gray-300
-          h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+          h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
           autocomplete="off"
           hx-get="{% url 'gfys:gfy-list' %}"
           hx-trigger="keyup changed delay:500ms"
           hx-target=".gfy-list"
           hx-include="#search-form"
         >
-        <input type="text" name="end_date" placeholder="End Date (YYYY-MM-DD)"
+        <input type="text" name="end_date" placeholder="End (YYYY-MM-DD)"
           class="w-full border-2 border-gray-300
-          h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+          h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
           autocomplete="off"
           hx-get="{% url 'gfys:gfy-list' %}"
           hx-trigger="keyup changed delay:500ms"
@@ -46,10 +46,14 @@
       </div>
     </form>
   </div>
-  <div 
-    hx-trigger="load" 
-    hx-swap="outerHTML"
-    hx-get={% url 'gfys:gfy-list' %}
-  >
+  <div class="flex flex-col items-center mx-2">
+    <div class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2">
+      <div 
+        hx-trigger="load" 
+        hx-swap="outerHTML"
+        hx-get={% url 'gfys:gfy-list' %}
+      >
+      </div>
+    </div>
   </div>
 {% endblock %}
