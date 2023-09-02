@@ -1,16 +1,18 @@
 from datetime import datetime
 
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Count, Q
 from gfys.models import Gfy, Tag
 
 PAGE_SIZE = 50
 
 
-def format_gfys(gfys: list[Gfy], page_number: str | None = None) -> dict:
+def format_gfys(gfys: list[Gfy], page_number: str | None = None) -> dict | None:
     paginator = Paginator(gfys, PAGE_SIZE)
     if page_number is None:
         page_number = 1
+    if page_number == "None":
+        return None
     page_number = int(page_number)
     if page_number < 1:
         page_number = 1
@@ -48,8 +50,6 @@ def filter_gfys(title: str, tags: str, start_date: str, end_date: str) -> list[G
     filters = list()
     if title:
         filters.append(Q(imgur_title__icontains=title))
-    if tags:
-        filters.append(Q(tags__name__in=tags))
     start_date, end_date = valid_date(start_date.strip()), valid_date(end_date.strip())
     if any([start_date, end_date]):
         filters.append(Q(date__isnull=False))
@@ -57,12 +57,24 @@ def filter_gfys(title: str, tags: str, start_date: str, end_date: str) -> list[G
         filters.append(Q(date__gte=start_date))
     if end_date:
         filters.append(Q(date__lte=end_date))
-    if filters:
-        return (
-            Gfy.objects.filter(*filters)
-            .prefetch_related("tags")
-            .order_by("-date", "-id")
-        )
+    if filters or tags:
+        if not tags:
+            return (
+                Gfy.objects.filter(*filters)
+                .prefetch_related("tags")
+                .order_by("-date", "-id")
+            )
+        else:
+            results = (
+                Gfy.objects.filter(*filters)
+                .filter(tags__name__in=tags)
+                .annotate(num_tags=Count("tags"))
+                .filter(num_tags=len(tags))
+                .prefetch_related("tags")
+                .order_by("-date", "-id")
+            )
+            return results
+
     return Gfy.objects.all().prefetch_related("tags").order_by("-date", "-id")
 
 
