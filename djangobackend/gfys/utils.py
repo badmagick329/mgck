@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from gfys.models import Gfy, Tag
 
-PAGE_SIZE = 30
+PAGE_SIZE = 50
 
 
 def format_gfys(gfys: list[Gfy], page_number: str | None = None) -> dict:
@@ -52,9 +52,6 @@ def filter_gfys(title: str, tags: str, start_date: str, end_date: str) -> list[G
         filters.append(Q(tags__name__in=tags))
     start_date, end_date = valid_date(start_date.strip()), valid_date(end_date.strip())
     if any([start_date, end_date]):
-        print(f"Filtering null dates")
-        test = Gfy.objects.filter(date__isnull=True)
-        print(f"{test.count()} gfys with null dates")
         filters.append(Q(date__isnull=False))
     if start_date:
         filters.append(Q(date__gte=start_date))
@@ -74,30 +71,3 @@ def valid_date(date: str) -> datetime | None:
         return datetime.strptime(date, "%Y-%m-%d")
     except ValueError:
         return None
-
-
-# def filter_comebacks(
-#     artist: str, title: str, start_date: str, end_date: str
-# ) -> list[Release]:
-#     artist = artist.strip().lower()
-#     title = title.strip().lower()
-#     filters = list()
-#     if artist:
-#         filters.append(Q(artist__name__icontains=artist))
-#     if title:
-#         filters.append(Q(title__icontains=title))
-#     if date := valid_date(start_date.strip()):
-#         filters.append(Q(release_date__gte=date))
-#     if date := valid_date(end_date.strip()):
-#         filters.append(Q(release_date__lte=date))
-#     if filters:
-#         return (
-#             Release.objects.filter(*filters)
-#             .prefetch_related("artist", "release_type")
-#             .order_by("release_date")
-#         )
-#     return (
-#         Release.objects.all()
-#         .prefetch_related("artist", "release_type")
-#         .order_by("release_date")
-#     )
