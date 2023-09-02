@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
+
 class Tag(models.Model):
     name = models.CharField(max_length=255)
 
@@ -77,13 +78,16 @@ class Gfy(models.Model):
                 gfy_title=gfy_title,
             )
             gfy.save()
-        tags_strlist = [t.strip() for t in data["tags"]]
-        gfy_tags = [t.name for t in gfy.tags.all()]
-        for tag in data["tags"]:
-            if tag in gfy_tags:
-                continue
-            t, _ = Tag.objects.get_or_create(name=tag)
-            gfy.tags.add(t)
+        if data["tags"] is None:
+            tags_strlist = list()
+        else:
+            tags_strlist = [t.strip() for t in data["tags"]]
+            gfy_tags = [t.name for t in gfy.tags.all()]
+            for tag in data["tags"]:
+                if tag in gfy_tags:
+                    continue
+                t, _ = Tag.objects.get_or_create(name=tag)
+                gfy.tags.add(t)
         date = cls.gfy_date(tags_strlist, gfy_title or imgur_title)
         gfy.date = date
         gfy.save()
