@@ -1,0 +1,83 @@
+{% load static %}
+<div class="gfy-list">
+  <nav id="paginator" class="flex w-full justify-center mt-6 mb-4" data-current-page={{ data.page.current }}>
+    <div>
+      <button
+      class="mr-2 bg-pink-500 
+      text-center font-bold py-1 px-3 rounded 
+      {% if data.page.previous %}
+      text-white hover:bg-pink-700 hover:cursor-pointer 
+      {% else %}
+      text-gray-600 hover:cursor-default 
+      {% endif %}"
+      {% if data.page.previous %}
+        hx-get="{% url 'gfys:gfy-list' %}?page={{ data.page.previous }}"
+        hx-target=".gfy-list"
+        hx-include="#search-form"
+        hx-swap="outerHTML"
+      {% endif %}
+      data-page-number={{ data.page.previous }}>Previous
+      </button>
+      <button
+      class="mr-2 bg-pink-500 
+      text-center font-bold py-1 px-3 rounded 
+      {% if data.page.previous_jump %}
+      text-white hover:bg-pink-700 hover:cursor-pointer 
+      {% else %}
+      text-gray-600 hover:cursor-default
+      {% endif %}"
+      {% if data.page.previous_jump %}
+        hx-get="{% url 'gfys:gfy-list' %}?page={{ data.page.previous_jump }}"
+        hx-target=".gfy-list"
+        hx-include="#search-form"
+        hx-swap="outerHTML"
+      {% endif %}
+      data-page-number={{ data.page.previous_jump }}>&lt&lt</button>
+      </button>
+    </div>
+    <div>
+      <button
+      class="mr-2 bg-pink-500 
+      text-center font-bold py-1 px-3 rounded 
+      {% if data.page.next_jump %}
+      text-white hover:bg-pink-700 hover:cursor-pointer 
+      {% else %}
+      text-gray-600 hover:cursor-default 
+      {% endif %}"
+      {% if data.page.next_jump %}
+        hx-get="{% url 'gfys:gfy-list' %}?page={{ data.page.next_jump }}"
+        hx-target=".gfy-list"
+        hx-include="#search-form"
+        hx-swap="outerHTML"
+      {% endif %}
+      data-page-number={{ data.page.next_jump }}>&gt&gt
+      </button>
+      <button
+      class="mr-2 bg-pink-500 
+      text-center font-bold py-1 px-3 rounded 
+      {% if data.page.next %}
+      text-white hover:bg-pink-700 hover:cursor-pointer 
+      {% else %}
+      text-gray-600 hover:cursor-default 
+      {% endif %}"
+      {% if data.page.next %}
+        hx-get="{% url 'gfys:gfy-list' %}?page={{ data.page.next }}"
+        hx-target=".gfy-list"
+        hx-include="#search-form"
+        hx-swap="outerHTML"
+      {% endif %}
+      data-page-number="{{ data.page.next }}">Next
+      </button>
+    </div>
+  </nav>
+  <div class="flex flex-wrap items-center justify-center">
+    {% for gfy in data.gfys %}
+    <div class="center-cropped" style="background-image: url({{ gfy.thumbnail }})">
+    <!-- <div class=""> -->
+      <a href="{{ gfy.imgur_url }}" target="_blank">
+        <img class="max-w-lg max-h-lg" src="{{ gfy.thumbnail }}" alt="{{ gfy.imgur_title }}" width="200" , height="200" />
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
