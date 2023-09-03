@@ -92,7 +92,10 @@ class Gfy(models.Model):
                     continue
                 t, _ = Tag.objects.get_or_create(name=tag)
                 gfy.tags.add(t)
-        date = cls.gfy_date(tags_strlist, gfy_title or imgur_title)
+        title = imgur_title
+        if "_[" in title and title.endswith("]"):
+            title = title.split("_[")[0]
+        date = cls.gfy_date(tags_strlist, title)
         gfy.date = date
         gfy.save()
         return gfy
@@ -123,14 +126,3 @@ class Gfy(models.Model):
             return date
         except ValueError:
             return None
-
-
-# @receiver(pre_save, sender=Gfy)
-def set_gfy_date(sender, instance, *args, **kwargs):
-    if not (tags := instance.tags.all()):
-        return
-    title = instance.gfy_title or instance.imgur_title
-    tags = [t.name for t in instance.tags.all()]
-    date = Gfy.gfy_date(tags, title)
-    if date is not None:
-        instance.date = date
