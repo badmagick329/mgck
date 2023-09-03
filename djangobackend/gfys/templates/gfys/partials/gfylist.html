@@ -1,7 +1,7 @@
 {% load static %}
 {% for gfy in data.gfys %}
   {% if forloop.last %}
-    <a href="{{ gfy.imgur_url }}" target="_blank"
+    <a href="{{ gfy.imgur_gifv_url }}" target="_blank"
       hx-get="{% url 'gfys:gfy-list' %}?page={{ data.page.next }}"
       hx-trigger="revealed"
       hx-swap="afterend"
@@ -13,7 +13,7 @@
       </div>
    </a>
   {% else %}
-    <a href="{{ gfy.imgur_url }}" target="_blank">
+    <a href="{{ gfy.imgur_gifv_url }}" target="_blank">
       <div class="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h32
         overflow-hidden rounded-lg">
         <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ gfy.thumbnail }}');"></div>

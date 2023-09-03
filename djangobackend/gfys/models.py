@@ -44,6 +44,10 @@ class Gfy(models.Model):
         return f"https://i.imgur.com/{self.imgur_id}"
 
     @property
+    def imgur_gifv_url(self) -> str:
+        return f"https://i.imgur.com/{self.imgur_id}.gifv"
+
+    @property
     def imgur_mp4_url(self) -> str:
         return f"https://i.imgur.com/{self.imgur_id}.mp4"
 
