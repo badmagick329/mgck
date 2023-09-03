@@ -28,9 +28,10 @@ def search(request):
         return HttpResponse("🙅", status=405)
     artist = request.POST.get("artist", "").strip().lower()
     title = request.POST.get("title", "").strip().lower()
+    exact = request.POST.get("exact", "").strip().lower() == "exact"
     start_date = request.POST.get("start_date", "").strip()
     end_date = request.POST.get("end_date", "").strip()
-    comebacks = filter_comebacks(artist, title, start_date, end_date)
+    comebacks = filter_comebacks(artist, title, start_date, end_date, exact)
     search_url = reverse("kpopcomebacks:search")
     data = format_comebacks(comebacks, request.GET.get("page", None))
     data["search_url"] = search_url

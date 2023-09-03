@@ -56,15 +56,21 @@ def get_closest_page(paginator: Paginator) -> int:
 
 
 def filter_comebacks(
-    artist: str, title: str, start_date: str, end_date: str
+    artist: str, title: str, start_date: str, end_date: str, exact: bool
 ) -> list[Release]:
     artist = artist.strip().lower()
     title = title.strip().lower()
     filters = list()
     if artist:
-        filters.append(Q(artist__name__icontains=artist))
+        if exact:
+            filters.append(Q(artist__name__iexact=artist))
+        else:
+            filters.append(Q(artist__name__icontains=artist))
     if title:
-        filters.append(Q(title__icontains=title))
+        if exact:
+            filters.append(Q(title__iexact=title))
+        else:
+            filters.append(Q(title__icontains=title))
     if date := valid_date(start_date.strip()):
         filters.append(Q(release_date__gte=date))
     if date := valid_date(end_date.strip()):

@@ -10,38 +10,49 @@
         class="w-full border-2 border-gray-300
         h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
         autocomplete="off"
-        hx-post="{{ search_url }}?page={{ page.current }}"
+        hx-post="{% url 'kpopcomebacks:search' %}?page={{ page.current }}"
         hx-target=".comebacks"
         hx-trigger="keyup changed delay:500ms"
         name="artist" placeholder="Artist">
         <input 
         class="w-full border-2 border-gray-300
-        h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+        h-10 px-5 rounded-lg text-sm focus:outline-none mb-2"
         autocomplete="off"
-        hx-post="{{ search_url }}?page={{ page.current }}"
+        hx-post="{% url 'kpopcomebacks:search' %}?page={{ page.current }}"
         hx-target=".comebacks"
         hx-trigger="keyup changed delay:500ms"
         name="title" placeholder="Title">
+        <div id="list-type" class="flex w-full justify-start mb-4">
+          <input type="checkbox"
+          class="mx-1 accent-pink-500"
+          hx-post="{{ search_url }}?page={{ page.current }}"
+          hx-target=".comebacks"
+          name="exact"
+          autocomplete="off"
+          value="exact">
+          <label class="" for="exact">Exact Search</label>
+        </div>
       </div>
       <div class="flex flex-col items-center">
         <input type="text"
         class="w-full border-2 border-gray-300
         h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
         autocomplete="off"
-        hx-post="{{ search_url }}?page={{ page.current }}"
+        hx-post="{% url 'kpopcomebacks:search' %}?page={{ page.current }}"
         hx-target=".comebacks"
         hx-trigger="keyup changed delay:500ms"
         name="start_date" placeholder="Start Date (YYYY-MM-DD)"
         value={{min_date}} pattern="\d{4}-\d{2}-\d{2}">
         <input type="text"
         class="w-full border-2 border-gray-300
-        h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+        h-10 px-5 rounded-lg text-sm focus:outline-none mb-2"
         autocomplete="off"
-        hx-post="{{ search_url }}?page={{ page.current }}"
+        hx-post="{% url 'kpopcomebacks:search' %}?page={{ page.current }}"
         hx-target=".comebacks"
         hx-trigger="keyup changed delay:500ms"
         name="end_date" placeholder="End Date (YYYY-MM-DD)"
         value={{max_date}} pattern="\d{4}-\d{2}-\d{2}">
+        <span class="opacity-0 mb-4">.</span>
       </div>
     </form>
     <div class="flex flex-col grow comebacks w-full px-4">
