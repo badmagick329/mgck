@@ -94,8 +94,7 @@ class Gfy(models.Model):
                 gfy.tags.add(t)
         title = imgur_title
         if "_[" in title and title.endswith("]"):
-            ridx = title.rindex("_[")
-            title = title[:ridx]
+            title = title.split("_[")[0]
         date = cls.gfy_date(tags_strlist, title)
         gfy.date = date
         gfy.save()
