@@ -7,4 +7,5 @@ app_name = GfysConfig.name
 urlpatterns = [
     path("", views.index, name="index"),
     path("gfy-list", views.gfylist, name="gfy-list"),
+    path("video/<str:imgur_id>", views.video, name="video"),
 ]

@@ -2,3 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+
+.overlay {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.modal {
+  max-height: calc(100vh - 10rem);
+}
+
+.hidden {
+  display: none;
+}

@@ -23,7 +23,7 @@ class Gfy(models.Model):
 
     imgur_id = models.CharField(max_length=20)
     gfy_id = models.CharField(max_length=100, blank=True, null=True)
-    tags = models.ManyToManyField(Tag, related_name="gfys", blank=True, null=True)
+    tags = models.ManyToManyField(Tag, related_name="gfys")
     imgur_title = models.CharField(max_length=255)
     gfy_title = models.CharField(max_length=255, blank=True, null=True)
     date = models.DateField(blank=True, null=True)

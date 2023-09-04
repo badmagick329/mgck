@@ -5,8 +5,8 @@
     {% block title %}{% endblock %}
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="color-scheme" content="dark" />
     <meta property="og:title" content="Red Velvet Gfy Archive" />
     <meta property="og:description" content="Search through Red Velvet Gfys now moved to Imgur" />
     <link href={% static 'css/style.css' %} rel="stylesheet">
@@ -15,7 +15,8 @@
             integrity="sha384-lVb3Rd/Ca0AxaoZg5sACe8FJKF0tnUgR2Kd7ehUOG5GCcROv5uBIZsOqovBAcWua"
             crossorigin="anonymous"></script>
   </head>
-  <body class="bg-white dark:bg-gray-900">
+  <body class="bg-gray-900">
     {% block body %}{% endblock %}
   </body>
+  <script src="{% static 'js/script.js' %}"></script>
 </html>
