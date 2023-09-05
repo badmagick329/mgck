@@ -24,6 +24,7 @@ function main() {
 const closeModal = function () {
   modal.innerHTML = "";
   modal.classList.add("hidden");
+  modal.classList.add("opacity-0")
   overlay.classList.add("hidden");
 };
 
@@ -70,6 +71,7 @@ const resizeVideo = function () {
     }
     video.style.width = `${newWidth}px`;
     video.style.height = `${newHeight}px`;
+    modal.classList.remove("opacity-0")
   });
   return true;
 };
