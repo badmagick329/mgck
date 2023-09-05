@@ -37,59 +37,45 @@ const openModal = function () {
   }
 };
 
-function closeFullscreen() {
-  if (document.fullscreenElement && document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) { /* Safari */
-    document.webkitExitFullscreen();
-  } else if (document.msFullscreenElement && document.msExitFullscreen) { /* IE11 */
-    document.msExitFullscreen();
-  }
-}
-
 const resizeVideo = function () {
   const video = document.querySelector("#video-player");
   if (!video) return false;
   video.addEventListener("loadedmetadata", function () {
-    try {
-      const videoText = document.querySelector("#video-text");
-      const videoTextHeight = videoText.clientHeight;
-      const videoTags = document.querySelector("#video-tags");
-      const videoTagsHeight = videoTags.clientHeight;
-      const videoLinks = document.querySelector("#video-link");
-      const videoLinksHeight = videoLinks.clientHeight;
-      const containerWidth = modal.clientWidth;
-      const marginPaddingBorder = 40;
-      const containerHeight =
-        (modal.clientHeight -
-          videoTextHeight -
-          videoTagsHeight -
-          videoLinksHeight -
-          marginPaddingBorder) *
-        0.9;
-      const videoAspectRatio = video.videoWidth / video.videoHeight;
-      let newWidth, newHeight;
-      if (containerHeight < containerWidth) {
-        newWidth = containerHeight * videoAspectRatio;
-        newHeight = containerHeight;
-        if (newWidth > containerWidth) {
-          newWidth = containerWidth;
-          newHeight = containerWidth / videoAspectRatio;
-        }
-      } else {
+    const videoText = document.querySelector("#video-text");
+    const videoTextHeight = videoText.clientHeight;
+    const videoTags = document.querySelector("#video-tags");
+    const videoTagsHeight = videoTags.clientHeight;
+    const videoLinks = document.querySelector("#video-link");
+    const videoLinksHeight = videoLinks.clientHeight;
+    const containerWidth = modal.clientWidth;
+    const marginPaddingBorder = 40;
+    const containerHeight =
+      (modal.clientHeight -
+        videoTextHeight -
+        videoTagsHeight -
+        videoLinksHeight -
+        marginPaddingBorder) *
+      0.9;
+    const videoAspectRatio = video.videoWidth / video.videoHeight;
+    let newWidth, newHeight;
+    if (containerHeight < containerWidth) {
+      newWidth = containerHeight * videoAspectRatio;
+      newHeight = containerHeight;
+      if (newWidth > containerWidth) {
         newWidth = containerWidth;
         newHeight = containerWidth / videoAspectRatio;
-        if (newHeight > containerHeight) {
-          newWidth = containerHeight * videoAspectRatio;
-          newHeight = containerHeight;
-        }
       }
-      video.style.width = `${newWidth}px`;
-      video.style.height = `${newHeight}px`;
-
-    } finally {
-      modal.classList.remove("opacity-0")
+    } else {
+      newWidth = containerWidth;
+      newHeight = containerWidth / videoAspectRatio;
+      if (newHeight > containerHeight) {
+        newWidth = containerHeight * videoAspectRatio;
+        newHeight = containerHeight;
+      }
     }
+    video.style.width = `${newWidth}px`;
+    video.style.height = `${newHeight}px`;
+    modal.classList.remove("opacity-0")
   });
   return true;
 };
