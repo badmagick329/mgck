@@ -6,6 +6,8 @@
 .overlay {
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(3px);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 }
 
 .modal {
@@ -14,4 +16,8 @@
 
 .hidden {
   display: none;
+}
+
+#video-text {
+  overflow-wrap: anywhere;
 }
