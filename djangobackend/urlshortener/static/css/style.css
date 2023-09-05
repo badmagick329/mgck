@@ -1089,10 +1089,6 @@ video {
     width: 8rem;
   }
 
-  .md\:w-4\/5 {
-    width: 80%;
-  }
-
   .md\:grid-cols-5 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
