@@ -1,6 +1,5 @@
-from django.shortcuts import HttpResponse, render, reverse
 from django.template.response import TemplateResponse
-from gfys.models import Gfy, Tag
+from gfys.models import Gfy
 from gfys.utils import filter_gfys, format_gfys
 
 
@@ -19,7 +18,7 @@ def gfylist(request):
     return TemplateResponse(request, "gfys/partials/gfylist.html", {"data": data})
 
 def video(request, imgur_id):
-    print(f"imgur_id: {imgur_id}")
+    # TODO: Add error handling if gfy doesn't exist
     gfy = Gfy.objects.get(imgur_id=imgur_id)
     gfy.gfy_tags = [t.name for t in gfy.tags.all()]
     return TemplateResponse(request, "gfys/partials/video.html", {"gfy": gfy})
