@@ -657,20 +657,12 @@ video {
   display: none;
 }
 
-.h-0 {
-  height: 0px;
-}
-
 .h-10 {
   height: 2.5rem;
 }
 
 .h-24 {
   height: 6rem;
-}
-
-.h-auto {
-  height: auto;
 }
 
 .h-full {
@@ -1097,6 +1089,10 @@ video {
     width: 8rem;
   }
 
+  .md\:w-4\/5 {
+    width: 80%;
+  }
+
   .md\:grid-cols-5 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
@@ -1137,6 +1133,10 @@ video {
 }
 
 @media (min-width: 1024px) {
+  .lg\:w-4\/5 {
+    width: 80%;
+  }
+
   .lg\:grid-cols-6 {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
