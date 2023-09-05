@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
-from gfys.models import Gfy, Tag
+from gfys.models import Gfy
 
 PAGE_SIZE = 50
 

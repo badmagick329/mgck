@@ -18,6 +18,7 @@ function main() {
   window.addEventListener("beforeunload", function (e) {
     window.scrollTo(0, 0);
   });
+
 }
 
 const closeModal = function () {
@@ -34,19 +35,39 @@ const openModal = function () {
 const resizeVideo = function () {
   const video = document.querySelector("#video-player");
   if (!video) return false;
-  const windowWidth = window.innerWidth;
-  const windowHeight = window.innerHeight;
   video.addEventListener("loadedmetadata", function () {
-    const naturalWidth = video.videoWidth || video.width;
-    const naturalHeight = video.videoHeight || video.height;
-    const widthScaleFactor = windowWidth / naturalWidth;
-    let heightScaleFactor = windowHeight / naturalHeight;
-    if (naturalHeight > naturalWidth * 1.3) {
-      heightScaleFactor = heightScaleFactor * 0.4;
+    const videoText = document.querySelector("#video-text");
+    const videoTextHeight = videoText.clientHeight;
+    const videoTags = document.querySelector("#video-tags");
+    const videoTagsHeight = videoTags.clientHeight;
+    const videoLinks = document.querySelector("#video-link");
+    const videoLinksHeight = videoLinks.clientHeight;
+    const containerWidth = modal.clientWidth;
+    const marginPaddingBorder = 40;
+    const containerHeight =
+      (modal.clientHeight -
+        videoTextHeight -
+        videoTagsHeight -
+        videoLinksHeight -
+        marginPaddingBorder) *
+      0.9;
+    const videoAspectRatio = video.videoWidth / video.videoHeight;
+    let newWidth, newHeight;
+    if (containerHeight < containerWidth) {
+      newWidth = containerHeight * videoAspectRatio;
+      newHeight = containerHeight;
+      if (newWidth > containerWidth) {
+        newWidth = containerWidth;
+        newHeight = containerWidth / videoAspectRatio;
+      }
+    } else {
+      newWidth = containerWidth;
+      newHeight = containerWidth / videoAspectRatio;
+      if (newHeight > containerHeight) {
+        newWidth = containerHeight * videoAspectRatio;
+        newHeight = containerHeight;
+      }
     }
-    const scaleFactor = Math.min(widthScaleFactor, heightScaleFactor);
-    const newWidth = naturalWidth * scaleFactor * 0.85;
-    const newHeight = naturalHeight * scaleFactor * 0.85;
     video.style.width = `${newWidth}px`;
     video.style.height = `${newHeight}px`;
   });
@@ -59,7 +80,6 @@ const modalObserver = (mutationList, observer) => {
       const result = resizeVideo();
       if (result === true) {
         openModal();
-      } else {
       }
       break;
     }

@@ -1,18 +1,18 @@
 {% load static %}
 <div class="flex flex-col justify-center w-full h-full">
-  <p class="flex flex-wrap text-sm md:text-2xl mb-4">{{ gfy.imgur_title }}</p>
-  <div class=" flex flex-wrap gap-2 w-full justify-start mb-2">
+  <h2 id="video-text" class="max-w-full text-sm md:text-xl mb-4">{{ gfy.imgur_title }}</h2>
+  <div id="video-tags" class="flex flex-wrap gap-2 w-full justify-start mb-2">
     {% for tag in gfy.gfy_tags %}
       <span class="text-xs md:text-sm lg:text-base px-0.5 py-1 md:px-4 md:py-2
       bg-gray-800 rounded-lg mx-0.5 md:mx-2 md:font-semibold">{{ tag }}</span>
     {% endfor %}
   </div>
-  <div class="flex justify-center w-full h-full">
-    <video
-      id="video-player" class="mb-4 max-w-full max-h-full"
-      controls autoplay loop muted 
-      >
+  <div class="flex justify-center w-full h-full mb-1">
+    <video id="video-player" class="object-contain w-full h-full" controls autoplay loop muted>
       <source src="{{ gfy.imgur_mp4_url }}" type="video/mp4">
     </video>
   </div>
+  <a id="video-link" href="{{ gfy.imgur_url }}" alt="Link to imgur"
+    class="text-xs md:text-sm lg:text-base text-pink-500 underline"
+    target="_blank">View on Imgur</a>
 </div>
