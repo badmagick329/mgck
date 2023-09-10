@@ -1,14 +1,24 @@
 {% extends "urlshortener/base.html" %}
 {% load static %}
 {% block title %}
-  <title>URL Shortener</title>
+  <title>Index</title>
 {% endblock %}
 {% block body %}
-  <form class="form_inputs" autocomplete="off" action="{% url 'urlshortener:shorten' %}" method="post">
-    {% csrf_token %}
-    <input class="input_box" type="text" name="source_url" placeholder="Enter URL here">
-    <input class="input_box" type="text" name="custom_id" placeholder="Request custom id (Skip for a random ID)">
-    <input class="submit_button" type="submit" value="Shorten">
-  </form>
-  <script src={% static 'js/script.js' %}></script>
+  <div
+    class="flex flex-col items-center
+      w-full px-8 sm:w-4/5 md:w-3/5 lg:w-2/5 mx-auto"
+      >
+    <a
+      class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
+      py-1 px-3 rounded my-2 w-full text-center"
+      href="{% url 'urlshortener:shortener' %}">URL Shortener</a>
+    <a
+      class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
+      py-1 px-3 rounded my-2 w-full text-center"
+      href="{% url 'kpopcomebacks:index' %}">Kpop Comebacks</a>
+    <a
+      class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
+      py-1 px-3 rounded my-2 w-full text-center"
+      href="{% url 'gfys:index' %}">Red Velvet Gfy Archive</a>
+  </div>
 {% endblock %}

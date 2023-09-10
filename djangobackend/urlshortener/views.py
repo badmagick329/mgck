@@ -1,13 +1,17 @@
 import re
 from datetime import datetime
 
-from django.shortcuts import HttpResponseRedirect, render
+from django.shortcuts import HttpResponse, HttpResponseRedirect, render
 from urlshortener.apps import UrlshortenerConfig
 from urlshortener.models import ShortURL
 
 from djangobackend.settings import BASE_URL
 
 app_name = UrlshortenerConfig.name
+
+
+def shortener(request):
+    return render(request, f"{app_name}/shortener.html")
 
 
 def index(request):
@@ -31,7 +35,9 @@ def shorten(request):
             return error(request, str(url_id))
     else:
         url_id = ShortURL.create_id()
-    short_url = ShortURL.objects.create(url=request.POST["source_url"], short_id=url_id)
+    short_url = ShortURL.objects.create(
+        url=request.POST["source_url"], short_id=url_id
+    )
     return render(
         request,
         f"{app_name}/shortened.html",
