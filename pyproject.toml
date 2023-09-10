@@ -21,9 +21,7 @@ praw = "^7.7.1"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
 pytest-django = "^4.5.2"
-
-[tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "djangobackend.settings"
+django-stubs = "^4.2.4"
 
 [build-system]
 requires = ["poetry-core"]

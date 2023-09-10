@@ -8,15 +8,28 @@ from django.dispatch import receiver
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
 
     class Meta:
         ordering = ["name"]
-        unique_together = ["name"]
+
+    def __repr__(self):
+        return f"<Tag(id={self.id}, name={self.name})>"  # type: ignore
 
     def __str__(self):
-        return f"<Tag(id={self.id}, name={self.name})>"
+        return self.name
 
+class Account(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __repr__(self):
+        return f"<Account(id={self.id}, name={self.name})>"  # type: ignore
+
+    def __str__(self):
+        return self.name
 
 class Gfy(models.Model):
     IMGUR_RE = re.compile(r"https://i.imgur.com/(.*).mp4")
@@ -27,6 +40,7 @@ class Gfy(models.Model):
     imgur_title = models.CharField(max_length=255)
     gfy_title = models.CharField(max_length=255, blank=True, null=True)
     date = models.DateField(blank=True, null=True)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         ordering = ["-date"]
@@ -34,9 +48,9 @@ class Gfy(models.Model):
 
     def __str__(self):
         return (
-            f"<Gfy(id={self.id}, imgur_id={self.imgur_id}, gfy_id={self.gfy_id}, "
+            f"<Gfy(id={self.id}, imgur_id={self.imgur_id}, gfy_id={self.gfy_id}, "  # type: ignore
             f"imgur_title={self.imgur_title}, gfy_title={self.gfy_title}, "
-            f"date={self.date})>"
+            f"date={self.date}), account={self.account}>"
         )
 
     @property
@@ -67,6 +81,8 @@ class Gfy(models.Model):
         saved_gfy = cls.objects.filter(imgur_id=match.group(1))
         if saved_gfy.exists():
             gfy = saved_gfy.first()
+            if gfy is None:
+                raise ValueError("gfy is None")
             gfy_title = gfy.gfy_title
             gfy_id = gfy.gfy_id
             imgur_title = gfy.imgur_title
@@ -85,18 +101,27 @@ class Gfy(models.Model):
         if data["tags"] is None:
             tags_strlist = list()
         else:
+            if gfy is None:
+                raise ValueError("gfy is None")
             tags_strlist = [t.strip() for t in data["tags"]]
-            gfy_tags = [t.name for t in gfy.tags.all()]
+            tags = gfy.tags.all()
+            gfy_tags = [t.name for t in tags] if tags else list()
             for tag in data["tags"]:
                 if tag in gfy_tags:
                     continue
                 t, _ = Tag.objects.get_or_create(name=tag)
                 gfy.tags.add(t)
         title = imgur_title
-        if "_[" in title and title.endswith("]"):
-            title = title.split("_[")[0]
+        rindex = title.rfind("_[")
+        if rindex == -1:
+            raise ValueError("Reference not found")
+        title = title[:rindex]
         date = cls.gfy_date(tags_strlist, title)
         gfy.date = date
+        account = data.get("account", None)
+        if account is not None:
+            a, _ = Account.objects.get_or_create(name=account)
+            gfy.account = a
         gfy.save()
         return gfy
 
