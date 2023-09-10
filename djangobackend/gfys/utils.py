@@ -7,7 +7,7 @@ from gfys.models import Gfy
 PAGE_SIZE = 50
 
 
-def format_gfys(gfys: list[Gfy], page_number: str | None = None) -> dict | None:
+def format_gfys(gfys: list[Gfy], page_number: int | str | None = None) -> dict | None:
     paginator = Paginator(gfys, PAGE_SIZE)
     if page_number is None:
         page_number = 1
