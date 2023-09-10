@@ -28,6 +28,19 @@
           class="w-full border-2 border-gray-300
           h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
         >
+        <select autocomplete="off" name="account"
+          class="w-full border-2 border-gray-300
+          h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
+          hx-get="{% url 'gfys:gfy-list' %}"
+          hx-trigger="change"
+          hx-target=".gfy-list"
+          hx-include="#search-form"
+          >
+          <option value="">All Accounts</option>
+          {% for account in accounts %}
+            <option value="{{ account }}">{{ account }}</option>
+          {% endfor %}
+        </select>
       </div>
       <div class="flex flex-col items-center">
         <input type="text" name="start_date" placeholder="Start (YYYY-MM-DD)"
@@ -48,6 +61,12 @@
           h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
           autocomplete="off"
         >
+        <span
+          class="w-full border-2 border-gray-300 opacity-0
+                 h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4">
+          .</span>
+      </div>
+      <div class="flex flex-col items-center">
       </div>
     </form>
   </div>

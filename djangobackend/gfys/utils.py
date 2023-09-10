@@ -1,13 +1,15 @@
 from datetime import datetime
 
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 from gfys.models import Gfy
 
 PAGE_SIZE = 50
 
 
-def format_gfys(gfys: list[Gfy], page_number: int | str | None = None) -> dict | None:
+def format_gfys(
+    gfys: QuerySet[Gfy], page_number: int | str | None = None
+) -> dict | None:
     paginator = Paginator(gfys, PAGE_SIZE)
     if page_number is None:
         page_number = 1
@@ -19,7 +21,7 @@ def format_gfys(gfys: list[Gfy], page_number: int | str | None = None) -> dict |
     elif page_number > paginator.num_pages:
         page_number = paginator.num_pages
     page = paginator.page(page_number)
-    gfys = [gfy for gfy in page]
+    gfys = [gfy for gfy in page] # type: ignore
     prev = page.previous_page_number() if page.has_previous() else None
     next_ = page.next_page_number() if page.has_next() else None
     prev_jump = page.previous_page_number() - 3 if prev else None
@@ -35,7 +37,9 @@ def format_gfys(gfys: list[Gfy], page_number: int | str | None = None) -> dict |
         "previous_jump": prev_jump,
         "next_jump": next_jump,
         "first": 1 if page.number != 1 else None,
-        "last": paginator.num_pages if page.number != paginator.num_pages else None,
+        "last": paginator.num_pages
+        if page.number != paginator.num_pages
+        else None,
         "total": paginator.num_pages,
     }
     return {
@@ -44,19 +48,23 @@ def format_gfys(gfys: list[Gfy], page_number: int | str | None = None) -> dict |
     }
 
 
-def filter_gfys(title: str, tags: str, start_date: str, end_date: str) -> list[Gfy]:
+def filter_gfys(
+    title: str, tags: str, start_date: str, end_date: str, account: str
+) -> QuerySet[Gfy]:
     title = title.strip().lower()
-    tags = [tag.strip().lower() for tag in tags.split(",") if tag.strip()]
+    tags = [tag.strip().lower() for tag in tags.split(",") if tag.strip()]  # type: ignore
     filters = list()
     if title:
         filters.append(Q(imgur_title__icontains=title))
-    start_date, end_date = valid_date(start_date.strip()), valid_date(end_date.strip())
+    start_date, end_date = valid_date(start_date.strip()), valid_date(end_date.strip())  # type: ignore
     if any([start_date, end_date]):
         filters.append(Q(date__isnull=False))
     if start_date:
         filters.append(Q(date__gte=start_date))
     if end_date:
         filters.append(Q(date__lte=end_date))
+    if account:
+        filters.append(Q(account__name__iexact=account))
     if filters or tags:
         if not tags:
             return (

@@ -3,8 +3,6 @@ from datetime import date as Date
 from datetime import datetime
 
 from django.db import models
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
 
 
 class Tag(models.Model):
@@ -19,6 +17,7 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+
 class Account(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
@@ -31,6 +30,7 @@ class Account(models.Model):
     def __str__(self):
         return self.name
 
+
 class Gfy(models.Model):
     IMGUR_RE = re.compile(r"https://i.imgur.com/(.*).mp4")
 
@@ -40,7 +40,9 @@ class Gfy(models.Model):
     imgur_title = models.CharField(max_length=255)
     gfy_title = models.CharField(max_length=255, blank=True, null=True)
     date = models.DateField(blank=True, null=True)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
+    account = models.ForeignKey(
+        Account, on_delete=models.CASCADE, blank=True, null=True
+    )
 
     class Meta:
         ordering = ["-date"]
