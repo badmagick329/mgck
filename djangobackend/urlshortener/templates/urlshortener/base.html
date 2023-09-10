@@ -8,11 +8,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="dark light">
     <link rel="icon" type="image/x-icon" href="{% static 'favicons/favicon.ico' %}">
-    <link href={% static 'css/_style.css' %} rel="stylesheet">
-    {% block extrahead %}{% endblock %}
+    <link href={% static 'css/style.css' %} rel="stylesheet">
   </head>
   <body>
-  <div class="main">
+  <div
+    class="flex flex-col min-h-screen
+    min-w-screen bg-gray-900 items-center justify-center">
     {% block body %}{% endblock %}
   </div>
   </body>

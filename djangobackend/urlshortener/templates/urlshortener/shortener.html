@@ -1,0 +1,26 @@
+{% extends "urlshortener/base.html" %}
+{% load static %}
+{% block title %}
+  <title>URL Shortener</title>
+{% endblock %}
+{% block body %}
+  <form
+    class="flex flex-col justify-center
+    items-center w-full px-4 md:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto"
+    autocomplete="off" action="{% url 'urlshortener:shorten' %}" method="post">
+    {% csrf_token %}
+    <input
+    class="w-full border-2 border-gray-300
+    h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
+    type="text" name="source_url" placeholder="Enter URL here">
+    <input
+    class="w-full border-2 border-gray-300
+    h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
+    type="text" name="custom_id" placeholder="Request custom id (Skip for a random ID)">
+    <input
+    class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold hover:cursor-pointer
+    h-10 px-2 sm:px-5 rounded-lg text-sm focus:outline-none"
+    type="submit" value="Shorten">
+  </form>
+  <script src={% static 'js/script.js' %}></script>
+{% endblock %}

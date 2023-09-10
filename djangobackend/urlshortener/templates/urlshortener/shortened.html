@@ -4,9 +4,20 @@
   <title>Short URL</title>
 {% endblock %}
 {% block body %}
-  <div class="result">
-    <span>Here is your shortened URL:</span>
-    <a href={{ short_url }}>{{ short_url }}</a>
-    <a href="{% url 'urlshortener:index' %}">Shorten another URL</a>
+  <div
+    class="flex flex-col justify-center
+           items-center w-full px-4 md:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto">
+    <span
+      class="font-bold text-center py-2"
+      >Here is your shortened URL:</span>
+    <a
+      class="text-xl font-semibold underline
+      text-center text-pink-500 hover:text-pink-700 py-2"
+      href={{ short_url }}>{{ short_url }}</a>
+    <a
+      class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold
+      px-2 sm:px-5 rounded-lg py-2 hover:cursor-pointer
+      focus:outline-none text-center content-center"
+      href="{% url 'urlshortener:shortener' %}">Shorten another URL</a>
   </div>
 {% endblock %}
