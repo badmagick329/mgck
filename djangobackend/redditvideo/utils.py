@@ -5,7 +5,7 @@ from pathlib import Path
 import requests
 
 from djangobackend.exceptions import DownloadError, RedditAudioNotFound
-from djangobackend.settings import (CONTAINERED, DEBUG, REDDIT_VIDEOS,
+from djangobackend.settings import (CONTAINERED, REDDIT_VIDEOS,
                                     REDDIT_VIDEOS_STATIC)
 
 VIDEO_RE = r"(https?://v\.redd\.it)/(\w+)/(\w+\.mp4)"
@@ -22,9 +22,9 @@ def mux_video(video_url: str) -> str | None:
         return f"{id_}.mp4"
     vfile = DL_DIR / f"{id_}_video.mp4"
     afile = DL_DIR / f"{id_}_audio.mp4"
-    if download(video_url, vfile) is None:
+    if download_audio(video_url, vfile) is None:
         return None
-    result = download(f"{base}/{id_}/" + "DASH_{}.mp4", afile)
+    result = download_audio(f"{base}/{id_}/" + "DASH_{}.mp4", afile)
     if isinstance(result, RedditAudioNotFound):
         vfile.rename(ofile)
         return f"{id_}.mp4"
@@ -37,7 +37,7 @@ def mux_video(video_url: str) -> str | None:
     return outfile
 
 
-def download(url: str, filename: Path) -> str | Exception:
+def download_audio(url: str, filename: Path) -> str | Exception:
     post_fixes = ("audio", "AUDIO_128", "AUDIO_64")
     r = None
     for pf in post_fixes:
