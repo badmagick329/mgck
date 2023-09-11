@@ -33,6 +33,8 @@ class Account(models.Model):
 
 class Gfy(models.Model):
     IMGUR_RE = re.compile(r"https://i.imgur.com/(.*).mp4")
+    IMGUR_BASE_URL = "https://i.imgur.com/"
+    GFYCAT_BASE_URL = "https://gfycat.com/"
 
     imgur_id = models.CharField(max_length=20)
     gfy_id = models.CharField(max_length=100, blank=True, null=True)
@@ -57,37 +59,96 @@ class Gfy(models.Model):
 
     @property
     def imgur_url(self) -> str:
-        return f"https://i.imgur.com/{self.imgur_id}"
+        return f"{self.IMGUR_BASE_URL}{self.imgur_id}"
 
     @property
     def imgur_gifv_url(self) -> str:
-        return f"https://i.imgur.com/{self.imgur_id}.gifv"
+        return f"{self.IMGUR_BASE_URL}{self.imgur_id}.gifv"
 
     @property
     def imgur_mp4_url(self) -> str:
-        return f"https://i.imgur.com/{self.imgur_id}.mp4"
+        return f"{self.IMGUR_BASE_URL}{self.imgur_id}.mp4"
 
     @property
     def gfy_url(self) -> str:
-        return f"https://gfycat.com/{self.gfy_id}"
+        return f"{self.GFYCAT_BASE_URL}{self.gfy_id}"
 
     @property
     def thumbnail(self) -> str:
-        return f"https://i.imgur.com/{self.imgur_id}.jpg"
+        return f"{self.IMGUR_BASE_URL}{self.imgur_id}.jpg"
 
     @classmethod
     def from_dict(cls, data: dict) -> "Gfy":
+        """
+        Create or update a gfy from a dict.
+
+        Parameters
+        ----------
+        data : dict
+            expected keys:
+                imgur_url : str,
+                imgur_title : str,
+            optional keys:
+                gfy_id : str | None,
+                gfy_title : str | None,
+                tags : list[str] | None,
+                account : str | None,
+
+        Following fields will not be updated if a gfy with the same imgur_id already exists:
+
+        - imgur_id
+        - gfy_id
+        - imgur_title
+        - gfy_title
+
+        Returns
+        -------
+        "Gfy"
+
+        """
+        gfy = cls._get_or_create_gfy(data)
+        tags = data.get("tags", None) or list()
+        cls._update_tags(gfy, tags)
+        account = data.get("account", None)
+        cls._update_account(gfy, account)
+        cls._update_date(gfy)
+        return gfy
+
+    @staticmethod
+    def gfy_date(tags: list[str], title: str) -> Date | None:
+        date = None
+        if tags:
+            date = Gfy.date_from(tags)
+            if date is not None:
+                return date
+        return Gfy.date_from([w.strip() for w in title.split(" ") if w.strip()])
+
+    @staticmethod
+    def date_from(words: list[str]) -> Date | None:
+        for w in words:
+            date = Gfy.text_to_date(w)
+            if date is not None:
+                return date
+
+    @staticmethod
+    def text_to_date(t: str) -> Date | None:
+        if not t.isdigit():
+            return None
+        date_str = f"20{t}" if len(t) == 6 else t
+        try:
+            date = datetime.strptime(date_str, "%Y%m%d").date()
+            return date
+        except ValueError:
+            return None
+
+    @classmethod
+    def _get_or_create_gfy(cls, data: dict) -> "Gfy":
         match = re.search(cls.IMGUR_RE, data["imgur_url"])
         if match is None:
             raise ValueError(f"Invalid imgur_url {data['imgur_url']}")
         saved_gfy = cls.objects.filter(imgur_id=match.group(1))
         if saved_gfy.exists():
             gfy = saved_gfy.first()
-            if gfy is None:
-                raise ValueError("gfy is None")
-            gfy_title = gfy.gfy_title
-            gfy_id = gfy.gfy_id
-            imgur_title = gfy.imgur_title
         else:
             imgur_id = match.group(1)
             gfy_id = data.get("gfy_id", None)
@@ -100,56 +161,34 @@ class Gfy(models.Model):
                 gfy_title=gfy_title,
             )
             gfy.save()
-        if data["tags"] is None:
-            tags_strlist = list()
-        else:
-            if gfy is None:
-                raise ValueError("gfy is None")
-            tags_strlist = [t.strip() for t in data["tags"]]
-            tags = gfy.tags.all()
-            gfy_tags = [t.name for t in tags] if tags else list()
-            for tag in data["tags"]:
-                if tag in gfy_tags:
-                    continue
-                t, _ = Tag.objects.get_or_create(name=tag)
-                gfy.tags.add(t)
-        title = imgur_title
+        return gfy
+
+    @classmethod
+    def _update_tags(cls, gfy: "Gfy", tags: list[str]) -> None:
+        for tag in tags:
+            t, _ = Tag.objects.get_or_create(name=tag)
+            gfy.tags.add(t)
+        saved_tags = gfy.tags.all()
+        for tag in saved_tags:
+            if tag.name not in tags:
+                gfy.tags.remove(tag)
+
+    @classmethod
+    def _update_account(cls, gfy: "Gfy", account: str | None) -> None:
+        if account is None:
+            return
+        a, _ = Account.objects.get_or_create(name=account)
+        gfy.account = a
+        gfy.save()
+
+    @classmethod
+    def _update_date(cls, gfy: "Gfy") -> None:
+        title = gfy.imgur_title
         rindex = title.rfind("_[")
         if rindex == -1:
             raise ValueError("Reference not found")
         title = title[:rindex]
-        date = cls.gfy_date(tags_strlist, title)
+        tags = [t.name for t in gfy.tags.all()]
+        date = cls.gfy_date(tags, title)
         gfy.date = date
-        account = data.get("account", None)
-        if account is not None:
-            a, _ = Account.objects.get_or_create(name=account)
-            gfy.account = a
         gfy.save()
-        return gfy
-
-    @staticmethod
-    def gfy_date(tags: list[str], title: str) -> Date | None:
-        date = None
-        for t in tags:
-            date = Gfy.text_to_date(t)
-            if date is not None:
-                return date
-        words = [w.strip() for w in title.split(" ") if w.strip()]
-        for w in words:
-            date = Gfy.text_to_date(w)
-            if date is not None:
-                return date
-
-    @staticmethod
-    def text_to_date(t: str) -> Date | None:
-        if not t.isdigit():
-            return None
-        if len(t) == 6:
-            date_str = f"20{t}"
-        else:
-            date_str = t
-        try:
-            date = datetime.strptime(date_str, "%Y%m%d").date()
-            return date
-        except ValueError:
-            return None
