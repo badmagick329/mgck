@@ -3,3 +3,6 @@ class RedditAudioNotFound(Exception):
 
 class DownloadError(Exception):
     pass
+
+class MuxingError(Exception):
+    pass
