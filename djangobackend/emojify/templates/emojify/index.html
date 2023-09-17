@@ -1,0 +1,41 @@
+{% extends "emojify/base.html" %}
+{% load static %}
+{% block title %}
+  <title>Emojify 😀 Your 😳 Message ✉</title>
+{% endblock %}
+{% block body %}
+<div class="flex flex-col w-full h-full md:w-3/4 lg:w-1/2 px-4 mt-2">
+  <textarea id="message-input" type="text" name="message"
+        autocomplete="off"
+        class="w-full border-2 border-gray-300
+        px-2 sm:px-5 rounded-lg text-sm focus:outline-none mb-4"
+        rows="5"
+        placeholder="Enter Your Message Here"
+  ></textarea>
+  <textarea id="emojis-input"
+        autocomplete="off"
+        class="w-full border-2 border-gray-300
+        px-2 sm:px-5 py-1 rounded-lg text-sm focus:outline-none mb-4"
+        name="emojis"
+        rows="1"
+        placeholder="Enter Your Emojis Here" value=""
+  ></textarea>
+  <span class="mb-4">Emojis will be picked from the above list at random. You
+    can edit it and it will be saved in your browser. Use
+    reset to bring back default list</span>
+  <div class="flex w-full justify-between">
+    <button id="refresh-emojis"
+      class="bg-pink-500 text-center font-bold py-1 px-3 rounded"
+      >Regenerate ♻</button>
+    <button id="reset-emojis"
+      class="bg-pink-500 text-center font-bold py-1 px-3 rounded"
+      >Reset 😑</button>
+    <button id="copy-message"
+      class="bg-pink-500 text-center font-bold py-1 px-3 rounded"
+      >Copy 📋</button>
+  </div>
+  <span id="message-output"
+        class="w-full justify-center rounded-lg px-2 bg-gray-600 my-2 py-2"
+  ></span>
+</div>
+{% endblock %}

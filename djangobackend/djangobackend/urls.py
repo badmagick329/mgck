@@ -27,6 +27,7 @@ urlpatterns = [
     path("files/", include("fileuploader.urls")),
     path("kpop/", include("kpopcomebacks.urls")),
     path("gfys/", include("gfys.urls")),
+    path("emojify/", include("emojify.urls")),
     path("", include("urlshortener.urls")),
 ]
 if not CONTAINERED:
