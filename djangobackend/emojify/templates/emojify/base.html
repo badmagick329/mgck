@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% block title %}{% endblock %}
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:title" content="Emojify 😀 Your 😳 Message ✉" />
+    <meta property="og:description" content="Add emojis after each word in your message" />
+    <link href={% static 'css/style.css' %} rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicons/favicon.ico' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.3"
+            integrity="sha384-lVb3Rd/Ca0AxaoZg5sACe8FJKF0tnUgR2Kd7ehUOG5GCcROv5uBIZsOqovBAcWua"
+            crossorigin="anonymous"></script>
+  </head>
+  <body class="flex flex-col items-center justify-center bg-gray-900 min-h-screen">
+    {% block body %}{% endblock %}
+  </body>
+  <script src="{% static 'js/emojify.js' %}"></script>
+</html>

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "fileuploader",
     "kpopcomebacks",
     "gfys",
+    "emojify",
 ]
 
 MIDDLEWARE = [
