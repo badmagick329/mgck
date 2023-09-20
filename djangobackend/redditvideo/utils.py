@@ -4,6 +4,8 @@ from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 
 import requests
+from redditvideo.types import AudioResult, MuxingResult, VideoResult
+from result.result import as_result
 
 from djangobackend.exceptions import (DownloadError, MuxingError,
                                       RedditAudioNotFound)
@@ -26,12 +28,14 @@ def mux_video(video_url: str) -> str | None:
     afile = DL_DIR / f"{video_id}_audio.mp4"
     audio_url = f"{base}/{video_id}/" + "DASH_{}.mp4"
     vresult, aresult = download(video_url, vfile, audio_url, afile)
-    result = process_results(vresult, aresult, vfile, afile, ofile)
+    res = process_results(vresult, aresult, vfile, afile, ofile)
     cleanup(vfile, afile)
-    return result
+    return res
 
 
-def download(video_url, vfile, audio_url, afile):
+def download(
+    video_url, vfile, audio_url, afile
+) -> tuple[VideoResult, AudioResult]:
     with ThreadPoolExecutor(max_workers=2) as exc:
         vfuture = exc.submit(download_video, video_url, vfile)
         afuture = exc.submit(download_audio, audio_url, afile)
@@ -39,37 +43,34 @@ def download(video_url, vfile, audio_url, afile):
         return vfuture.result(), afuture.result()
 
 
-def download_video(url: str, filename: Path) -> str | Exception:
-    try:
-        r = requests.get(url)
-        if r.status_code != 200:
-            return DownloadError()
-        with open(filename, "wb") as f:
-            f.write(r.content)
-        return filename
-    except Exception as e:
-        return e
+@as_result(Exception)
+def download_video(url: str, filename: Path) -> VideoResult:
+    r = requests.get(url)
+    if r.status_code != 200:
+        raise DownloadError
+    with open(filename, "wb") as f:
+        f.write(r.content)
+    return filename
 
 
-def download_audio(url: str, filename: Path) -> str | Exception:
-    try:
-        post_fixes = ("audio", "AUDIO_128", "AUDIO_64")
+@as_result(Exception, RedditAudioNotFound)
+def download_audio(url: str, filename: Path) -> AudioResult:
+    post_fixes = ("audio", "AUDIO_128", "AUDIO_64")
+    r = None
+    for pf in post_fixes:
+        r = requests.get(url.format(pf))
+        if r.status_code == 200:
+            break
         r = None
-        for pf in post_fixes:
-            r = requests.get(url.format(pf))
-            if r.status_code == 200:
-                break
-            r = None
-        if r is None:
-            return RedditAudioNotFound()
-        with open(filename, "wb") as f:
-            f.write(r.content)
-        return filename
-    except Exception as e:
-        return e
+    if r is None:
+        raise RedditAudioNotFound
+    with open(filename, "wb") as f:
+        f.write(r.content)
+    return filename
 
 
-def mux(video: str, audio: str, output: Path) -> str | MuxingError:
+@as_result(MuxingError)
+def mux(video: str, audio: str, output: Path) -> MuxingResult:
     cmd = (
         'ffmpeg -y -i "{}" -i "{}" -c:v copy -c:a copy '
         '-async 1 -hide_banner -loglevel error "{}"'
@@ -78,19 +79,24 @@ def mux(video: str, audio: str, output: Path) -> str | MuxingError:
     subprocess.run(cmd, shell=True)
     if Path(output).exists():
         return output.name
-    return MuxingError()
+    raise MuxingError()
 
 
-def process_results(vresult, aresult, vfile, afile, ofile) -> str | None:
-    if isinstance(vresult, Exception):
+def process_results(
+    vresult: VideoResult,
+    aresult: AudioResult,
+    vfile: str,
+    afile: str,
+    ofile: Path,
+) -> str | None:
+    if vresult.is_err():
         return None
-    if isinstance(aresult, Exception):
+    if aresult.is_err():
         vfile.rename(ofile)
         return ofile.name
     outfile = mux(vfile, afile, ofile)
-    if isinstance(outfile, MuxingError):
-        return None
-    return outfile
+    return outfile.unwrap_or(None)
+
 
 def cleanup(*files) -> None:
     for file in files:

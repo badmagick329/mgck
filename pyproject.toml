@@ -17,6 +17,7 @@ beautifulsoup4 = "^4.12.2"
 pendulum = "^2.1.2"
 lxml = "^4.9.3"
 praw = "^7.7.1"
+result = "^0.13.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
