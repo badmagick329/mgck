@@ -1,0 +1,46 @@
+{% extends 'gfys/base.html' %}
+{% load static %}
+{% block title %}<title>Imgur Form</title>{% endblock %}
+{% block body %}
+  <div class="flex flex-col items-center h-screen">
+    <h1
+        class="text-base md:text-2xl font-bold my-4"
+      >Add Imgurs</h1>
+    <form id="imgur-form"
+      class="flex flex-col items-center mb-4 px-2 w-full md:w-3/4 lg:w-1/2"
+      >
+      {% csrf_token %}
+      <input type="text" name="url" placeholder="Imgur url"
+        autocomplete="off"
+        class="w-full border-2 border-gray-300
+        h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+        hx-post="{% url 'gfys:fetch-title' %}"
+        hx-trigger="keyup delay:750ms"
+        hx-target="#fetch-title"
+        hx-include="#imgur-form"
+      ></input>
+      <div id="fetch-title">
+      </div>
+      <input type="text" name="title" placeholder="Imgur Title"
+        autocomplete="off"
+        class="w-full border-2 border-gray-300
+        h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+      ></input>
+      <input type="text" name="tags" placeholder="Tags (, separated)"
+        autocomplete="off"
+        class="w-full border-2 border-gray-300
+        h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
+      ></input>
+      <button
+        class="bg-pink-500 hover:bg-pink-700 text-center font-bold py-1 px-3 rounded"
+        hx-post="{% url 'gfys:imgur-upload' %}"
+        hx-trigger="click"
+        hx-target=".imgur-result"
+        hx-include="#imgur-form"
+        >Submit</button>
+    </form>
+  <span
+      class="imgur-result flex flex-col"
+    ></span>
+  </div>
+{% endblock %}

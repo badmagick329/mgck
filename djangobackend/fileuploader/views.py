@@ -9,9 +9,7 @@ from fileuploader.models import UploadUser
 
 @login_required(login_url="login/")
 def upload_file(request):
-    if (
-        not UploadUser.objects.filter(user=request.user).exists()
-    ):
+    if not UploadUser.objects.filter(user=request.user).exists():
         return HttpResponse(
             "<h1>You do not have permission to upload files. Please contact the admin</h1>"
         )
@@ -72,7 +70,11 @@ def login_view(request):
                 {"message": "Invalid username and/or password."},
             )
     else:
-        return render(request, "registration/login.html")
+        return render(
+            request,
+            "registration/login.html",
+            {"action": reverse("fileuploader:login")},
+        )
 
 
 def logout_view(request):

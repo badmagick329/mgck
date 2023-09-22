@@ -17,7 +17,6 @@ class GfyAdmin(admin.ModelAdmin):
         "imgur_title",
         "gfy_title",
         "date",
-        "account",
     ]
 
 

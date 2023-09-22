@@ -122,7 +122,7 @@ class Gfy(models.Model):
         cls._update_tags(gfy, tags)
         account = data.get("account", None)
         cls._update_account(gfy, account)
-        cls._update_date(gfy)
+        cls.update_date(gfy)
         return gfy
 
     @staticmethod
@@ -193,7 +193,7 @@ class Gfy(models.Model):
         gfy.save()
 
     @classmethod
-    def _update_date(cls, gfy: "Gfy") -> None:
+    def update_date(cls, gfy: "Gfy") -> None:
         title = gfy.imgur_title
         rindex = title.rfind("_[")
         if rindex != -1:
