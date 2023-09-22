@@ -185,9 +185,8 @@ class Gfy(models.Model):
     def _update_date(cls, gfy: "Gfy") -> None:
         title = gfy.imgur_title
         rindex = title.rfind("_[")
-        if rindex == -1:
-            raise ValueError("Reference not found")
-        title = title[:rindex]
+        if rindex != -1:
+            title = title[:rindex]
         tags = [t.name for t in gfy.tags.all()]
         date = cls.gfy_date(tags, title)
         gfy.date = date
