@@ -38,6 +38,10 @@ def upload_file(request):
 
 @login_required(login_url="login/")
 def list_files(request):
+    if not UploadUser.objects.filter(user=request.user).exists():
+        return HttpResponse(
+            "<h1>You do not have permission to upload files. Please contact the admin</h1>"
+        )
     user_files = request.user.uploaded_files.all()
     return render(
         request,
@@ -48,6 +52,10 @@ def list_files(request):
 
 @login_required(login_url="login/")
 def delete_file(request, file_id):
+    if not UploadUser.objects.filter(user=request.user).exists():
+        return HttpResponse(
+            "<h1>You do not have permission to upload files. Please contact the admin</h1>"
+        )
     file_to_delete = get_object_or_404(
         request.user.uploaded_files, pk=file_id, uploaded_by=request.user
     )
