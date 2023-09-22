@@ -31,13 +31,21 @@
         class="w-full border-2 border-gray-300
         h-10 px-5 rounded-lg text-sm focus:outline-none mb-4"
       ></input>
-      <button
-        class="bg-pink-500 hover:bg-pink-700 text-center font-bold py-1 px-3 rounded"
-        hx-post="{% url 'gfys:imgur-upload' %}"
-        hx-trigger="click"
-        hx-target=".imgur-result"
-        hx-include="#imgur-form"
-        >Submit</button>
+      <div class="flex justify-between">
+        <button
+          class="bg-pink-500 hover:bg-pink-700 text-center
+          mx-2 font-bold py-1 px-3 rounded"
+          hx-post="{% url 'gfys:imgur-upload' %}"
+          hx-trigger="click"
+          hx-target=".imgur-result"
+          hx-include="#imgur-form"
+          >Submit</button>
+        <button
+          id="clear-imgur-fields"
+          class="bg-pink-500 hover:bg-pink-700 text-center
+          mx-2 font-bold py-1 px-3 rounded"
+          >Clear Fields</button>
+      </div>
     </form>
   <span
       class="imgur-result flex flex-col"
