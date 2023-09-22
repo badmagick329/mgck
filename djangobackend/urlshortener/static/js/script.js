@@ -21,6 +21,15 @@ function main() {
   window.addEventListener("beforeunload", function (e) {
     window.scrollTo(0, 0);
   });
+  let clearImgurFields = document.querySelector("#clear-imgur-fields");
+  if (clearImgurFields) {
+    clearImgurFields.addEventListener("click", function () {
+      let imgurFields = document.querySelectorAll(".imgur-form input");
+      for (let i = 0; i < imgurFields.length; i++) {
+        imgurFields[i].value = "";
+      }
+    });
+  }
 }
 
 const closeModal = function () {
