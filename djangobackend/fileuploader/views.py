@@ -4,10 +4,17 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from fileuploader.forms import UploadedFileForm
+from fileuploader.models import UploadUser
 
 
 @login_required(login_url="login/")
 def upload_file(request):
+    if (
+        not UploadUser.objects.filter(user=request.user).exists()
+    ):
+        return HttpResponse(
+            "<h1>You do not have permission to upload files. Please contact the admin</h1>"
+        )
     if request.method == "POST":
         form = UploadedFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -26,7 +33,9 @@ def upload_file(request):
                 {"form": form, "errors": form.errors},
             )
     else:
-        return render(request, "fileuploader/upload.html", {"form": UploadedFileForm()})
+        return render(
+            request, "fileuploader/upload.html", {"form": UploadedFileForm()}
+        )
 
 
 @login_required(login_url="login/")
