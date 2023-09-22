@@ -3,6 +3,7 @@ from datetime import datetime
 from django.core.paginator import Paginator
 from django.db.models import Count, Q, QuerySet
 from gfys.models import Gfy
+from django.db.models import F
 
 PAGE_SIZE = 50
 
@@ -57,8 +58,6 @@ def filter_gfys(
     if title:
         filters.append(Q(imgur_title__icontains=title))
     start_date, end_date = valid_date(start_date.strip()), valid_date(end_date.strip())  # type: ignore
-    if any([start_date, end_date]):
-        filters.append(Q(date__isnull=False))
     if start_date:
         filters.append(Q(date__gte=start_date))
     if end_date:
@@ -70,7 +69,7 @@ def filter_gfys(
             return (
                 Gfy.objects.filter(*filters)
                 .prefetch_related("tags")
-                .order_by("-date", "-id")
+                .order_by(F("date").desc(nulls_last=True), "-id")
             )
         else:
             results = (
@@ -79,11 +78,11 @@ def filter_gfys(
                 .annotate(num_tags=Count("tags"))
                 .filter(num_tags=len(tags))
                 .prefetch_related("tags")
-                .order_by("-date", "-id")
+                .order_by(F("date").desc(nulls_last=True), "-id")
             )
             return results
 
-    return Gfy.objects.all().prefetch_related("tags").order_by("-date", "-id")
+    return Gfy.objects.all().prefetch_related("tags").order_by(F("date").desc(nulls_last=True), "-id")
 
 
 def valid_date(date: str) -> datetime | None:
