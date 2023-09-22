@@ -1,0 +1,10 @@
+<div class="flex flex-col mt-2">
+  <span
+    class="text-sm md:text-base font-semibold mb-2"
+    >There was an error with your submission:</span>
+  {% for msg in errors %}
+    <span
+      class="text-red-500 text-sm md:text-base font-semibold mb-2"
+      >{{ msg}}</span>
+  {% endfor %}
+</div>

@@ -1,11 +1,17 @@
+import re
 from datetime import datetime
+import requests
 
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.db.models import Count, Q, QuerySet
-from gfys.models import Gfy
-from django.db.models import F
+from django.db.models import Count, F, Q, QuerySet
+from gfys.models import Account, Gfy, Tag
+from result import Result
+from result.result import as_result
+from bs4 import BeautifulSoup as bs
 
 PAGE_SIZE = 50
+IMGUR_RE = re.compile(r"https?://(?:(?:www\.)|(?:i\.))?imgur\.com/([^\.^ ^/]+)")
 
 
 def format_gfys(
@@ -22,7 +28,7 @@ def format_gfys(
     elif page_number > paginator.num_pages:
         page_number = paginator.num_pages
     page = paginator.page(page_number)
-    gfys = [gfy for gfy in page] # type: ignore
+    gfys = [gfy for gfy in page]  # type: ignore
     prev = page.previous_page_number() if page.has_previous() else None
     next_ = page.next_page_number() if page.has_next() else None
     prev_jump = page.previous_page_number() - 3 if prev else None
@@ -82,7 +88,11 @@ def filter_gfys(
             )
             return results
 
-    return Gfy.objects.all().prefetch_related("tags").order_by(F("date").desc(nulls_last=True), "-id")
+    return (
+        Gfy.objects.all()
+        .prefetch_related("tags")
+        .order_by(F("date").desc(nulls_last=True), "-id")
+    )
 
 
 def valid_date(date: str) -> datetime | None:
@@ -90,3 +100,36 @@ def valid_date(date: str) -> datetime | None:
         return datetime.strptime(date, "%Y-%m-%d")
     except ValueError:
         return None
+
+
+@as_result(ValidationError)
+def create_gfy(
+    title: str, tags: list[str], url: str, account: Account
+) -> Result[str, ValidationError]:
+    match = IMGUR_RE.match(url)
+    if not match:
+        raise ValidationError({"imgur_id": "Invalid imgur URL"})
+    imgur_id = match.group(1)
+    gfy = Gfy(imgur_title=title, imgur_id=imgur_id, account=account)
+    gfy.full_clean()
+    gfy.save()
+    for tag in tags:
+        t, _ = Tag.objects.get_or_create(name=tag)
+        gfy.tags.add(t)
+    Gfy.update_date(gfy)
+    return gfy.imgur_mp4_url
+
+def fetch_imgur_title(url:str) -> str | None:
+    match = IMGUR_RE.match(url)
+    if not match:
+        return ""
+    imgur_id = match.group(1)
+    url = f"https://imgur.com/{imgur_id}"
+    text = requests.get(url).text
+    soup = bs(text, "lxml")
+    title = soup.select("meta[name='twitter:title']")
+    if title:
+        title = title.pop()['content']
+        if title == "imgur.com":
+            title = ""
+    return title or ""

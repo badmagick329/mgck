@@ -2,6 +2,9 @@ let modal = document.querySelector("#video-modal");
 let overlay = document.querySelector(".overlay");
 
 function main() {
+  if (overlay === null || modal === null) {
+    return;
+  }
   overlay.addEventListener("click", closeModal);
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && !modal.classList.contains("hidden")) {
@@ -18,13 +21,12 @@ function main() {
   window.addEventListener("beforeunload", function (e) {
     window.scrollTo(0, 0);
   });
-
 }
 
 const closeModal = function () {
   modal.innerHTML = "";
   modal.classList.add("hidden");
-  modal.classList.add("opacity-0")
+  modal.classList.add("opacity-0");
   overlay.classList.add("hidden");
 };
 
@@ -75,7 +77,7 @@ const resizeVideo = function () {
     }
     video.style.width = `${newWidth}px`;
     video.style.height = `${newHeight}px`;
-    modal.classList.remove("opacity-0")
+    modal.classList.remove("opacity-0");
   });
   return true;
 };
