@@ -2,29 +2,31 @@ let modal = document.querySelector("#video-modal");
 let overlay = document.querySelector(".overlay");
 
 function main() {
-  if (overlay === null || modal === null) {
+  // Main gfy page
+  if (!(overlay === null || modal === null)) {
+    overlay.addEventListener("click", closeModal);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !modal.classList.contains("hidden")) {
+        closeModal();
+      }
+    });
+    let openModalBtns = document.querySelectorAll(".btn-open");
+    for (let i = 0; i < openModalBtns.length; i++) {
+      openModalBtns[i].addEventListener("click", openModal);
+    }
+    const modalObs = new MutationObserver(modalObserver);
+    modalObs.observe(modal, { childList: true });
+
+    window.addEventListener("beforeunload", function (e) {
+      window.scrollTo(0, 0);
+    });
     return;
   }
-  overlay.addEventListener("click", closeModal);
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && !modal.classList.contains("hidden")) {
-      closeModal();
-    }
-  });
-  let openModalBtns = document.querySelectorAll(".btn-open");
-  for (let i = 0; i < openModalBtns.length; i++) {
-    openModalBtns[i].addEventListener("click", openModal);
-  }
-  const modalObs = new MutationObserver(modalObserver);
-  modalObs.observe(modal, { childList: true });
-
-  window.addEventListener("beforeunload", function (e) {
-    window.scrollTo(0, 0);
-  });
+  // imgur form
   let clearImgurFields = document.querySelector("#clear-imgur-fields");
   if (clearImgurFields) {
-    clearImgurFields.addEventListener("click", function () {
-      let imgurFields = document.querySelectorAll(".imgur-form input");
+    clearImgurFields.addEventListener("click", (e) => {
+      let imgurFields = document.querySelectorAll("#imgur-form > input");
       for (let i = 0; i < imgurFields.length; i++) {
         imgurFields[i].value = "";
       }
