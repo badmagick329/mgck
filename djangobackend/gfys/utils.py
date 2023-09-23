@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup as bs
 
 PAGE_SIZE = 50
 IMGUR_RE = re.compile(r"https?://(?:(?:www\.)|(?:i\.))?imgur\.com/([^\.^ ^/]+)")
+IMGUR_A_RE = re.compile(r"https?://(?:(?:www\.)|(?:i\.))?imgur\.com/a/([^\.^ ^/]+)")
 
 
 def format_gfys(
@@ -106,10 +107,9 @@ def valid_date(date: str) -> datetime | None:
 def create_gfy(
     title: str, tags: list[str], url: str, account: Account
 ) -> Result[str, ValidationError]:
-    match = IMGUR_RE.match(url)
-    if not match:
+    imgur_id = imgur_id_from_url(url)
+    if not imgur_id:
         raise ValidationError({"imgur_id": "Invalid imgur URL"})
-    imgur_id = match.group(1)
     gfy = Gfy(imgur_title=title, imgur_id=imgur_id, account=account)
     gfy.full_clean()
     gfy.save()
@@ -133,3 +133,18 @@ def fetch_imgur_title(url:str) -> str | None:
         if title == "imgur.com":
             title = ""
     return title or ""
+
+def imgur_id_from_url(url:str) -> str | None:
+    match = IMGUR_A_RE.match(url)
+    if match:
+        text = requests.get(url).text
+        soup = bs(text, "lxml")
+        mp4_tag = soup.select("meta[name='twitter:player:stream']")
+        if mp4_tag:
+            url = mp4_tag.pop()['content']
+        else:
+            return None
+    match = IMGUR_RE.match(url)
+    if not match:
+        return None
+    return match.group(1)
