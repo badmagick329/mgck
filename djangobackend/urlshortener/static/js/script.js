@@ -28,6 +28,9 @@ function main() {
     clearImgurFields.addEventListener("click", (e) => {
       let imgurFields = document.querySelectorAll("#imgur-form > input");
       for (let i = 0; i < imgurFields.length; i++) {
+        if (imgurFields[i].name === "csrfmiddlewaretoken") {
+          continue;
+        }
         imgurFields[i].value = "";
       }
     });
