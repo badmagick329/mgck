@@ -27,7 +27,6 @@ from kpopcomebacks.models import Artist, Release, ReleaseType
 from djangobackend.settings import REDDIT_AGENT, REDDIT_ID, REDDIT_SECRET
 
 LOG_LEVEL = logging.DEBUG
-CHECK_NEXT_MONTH = pendulum.now().date().day > 14
 
 
 @dataclass
@@ -68,7 +67,9 @@ class ReleaseData:
 
     def to_release(self) -> Release:
         artist, _ = Artist.objects.get_or_create(name=self.artist)
-        release_type, _ = ReleaseType.objects.get_or_create(name=self.release_type)
+        release_type, _ = ReleaseType.objects.get_or_create(
+            name=self.release_type
+        )
         return Release(
             id=self.id,
             artist=artist,
@@ -124,7 +125,8 @@ class Scraper:
         "Referrer": "https://www.google.com/",
     }
 
-    def __init__(self, log_level):
+    def __init__(self, log_level: int | None = None):
+        log_level = log_level or logging.DEBUG
         self.reddit = praw.Reddit(
             client_id=REDDIT_ID,
             client_secret=REDDIT_SECRET,
@@ -141,14 +143,13 @@ class Scraper:
         self.updating = False
 
     def scrape(self, urls: list[str] | None = None, from_json: bool = False):
-        if not urls:
-            urls = self.generate_urls()
-            urls = urls[-2:] if CHECK_NEXT_MONTH else urls[-1:]
+        urls = self.generate_urls()
+        urls = urls[-3:]
         if from_json:
             saved_cbs = self.cbs_from_json(self.JSON_FILE)
         else:
             saved_cbs = self.cbs_from_db()
-        for _, url in enumerate(urls):
+        for url in urls:
             try:
                 self.logger.info(f"Scraping {url}")
                 cbs = self.scrape_url(url)
@@ -174,6 +175,7 @@ class Scraper:
                 self.save_to_db(merged_cbs)  # type: ignore
         except Exception as e:
             self.logger.error(f"Error saving {e}", exc_info=e, stack_info=True)
+            self.updating = False
             return
         self.updating = False
         self.logger.info("Update complete")
@@ -202,24 +204,43 @@ class Scraper:
             )
         return release_list
 
-    def generate_urls(self) -> list[str]:
+    def generate_urls(
+        self, next_month_and_year: tuple[str, int] | None = None
+    ) -> list[str]:
         """
-        Generate urls to scrape from january 2018 to current month (inclusive)
+        Generate urls to scrape from january 2018 to next month (inclusive)
+
+        Examples:
+        - next_month_and_year = ("february", 2018)
+            Returns:
+            list of 2 urls
+
+        - next_month_and_year = None
+            Returns:
+            list of urls upto and including next month
         """
-        current_month = self.month_strings[pendulum.now().month - 1]
-        years = [y for y in range(2018, pendulum.now().year + 2)]
+        stop_month, stop_year = (
+            next_month_and_year or self.next_month_and_year()
+        )
+        years = [y for y in range(2018, stop_year + 2)]
 
         urls = []
-        current_year = pendulum.now().year
-        break_in = 0
         for year in years:
             for month in self.month_strings:
-                if year == current_year and month == current_month:
-                    break_in = 2 if CHECK_NEXT_MONTH else 1
-                urls.append(self.reddit_wiki_base.format(year=year, month=month))
-                break_in -= 1
-                if break_in == 0:
+                if year == stop_year and month == stop_month:
+                    urls.append(
+                        self.reddit_wiki_base.format(year=year, month=month)
+                    )
                     return urls
+                urls.append(
+                    self.reddit_wiki_base.format(year=year, month=month)
+                )
+
+    def next_month_and_year(self) -> tuple[str, int]:
+        idx = pendulum.now().month
+        if idx == len(self.month_strings):
+            return self.month_strings[0], pendulum.now().year + 1
+        return self.month_strings[idx], pendulum.now().year
 
     def merge_cbs(self, old_cbs: list[dict], new_cbs: list[dict]) -> list[dict]:
         """
@@ -228,7 +249,9 @@ class Scraper:
         old_cbs = deepcopy(old_cbs)
         old_cbs = sorted(old_cbs, key=lambda x: x["release_date"])
         remove_dates = list(set([cb["release_date"] for cb in new_cbs]))
-        merged_cbs = [c for c in old_cbs if c["release_date"] not in remove_dates]
+        merged_cbs = [
+            c for c in old_cbs if c["release_date"] not in remove_dates
+        ]
         merged_cbs.extend(new_cbs)
         return merged_cbs
 
@@ -314,7 +337,9 @@ class Scraper:
                     continue
                 saved_cb = in_saved_cbs(cb)
                 if saved_cb and saved_cb["urls"]:
-                    self.logger.debug(f"Using saved youtube urls {saved_cb['urls']}")
+                    self.logger.debug(
+                        f"Using saved youtube urls {saved_cb['urls']}"
+                    )
                     cb["urls"] = saved_cb["urls"]
                     continue
                 self.logger.debug(
@@ -341,7 +366,9 @@ class Scraper:
             return cbs
         except Exception as e:
             self.logger.error(
-                f"Error extracting youtube urls: {e}", exc_info=e, stack_info=True
+                f"Error extracting youtube urls: {e}",
+                exc_info=e,
+                stack_info=True,
             )
 
     @staticmethod
@@ -362,8 +389,12 @@ class Scraper:
                 release_date__gte=start_date
             ).prefetch_related("release_type", "artist")
         else:
-            releases = Release.objects.all().prefetch_related("release_type", "artist")
-        return [ReleaseData.from_release(release).to_dict() for release in releases]
+            releases = Release.objects.all().prefetch_related(
+                "release_type", "artist"
+            )
+        return [
+            ReleaseData.from_release(release).to_dict() for release in releases
+        ]
 
     @staticmethod
     def save_to_db(cbs: list[dict]):
@@ -379,10 +410,13 @@ class Scraper:
         artist_names = list(set([cb["artist"] for cb in cbs]))
         release_types_names = list(set([cb["release_type"] for cb in cbs]))
         saved_artists = Artist.objects.filter(name__in=artist_names)
-        saved_release_types = ReleaseType.objects.filter(name__in=release_types_names)
+        saved_release_types = ReleaseType.objects.filter(
+            name__in=release_types_names
+        )
         artist_names_map = {artist.name: artist for artist in saved_artists}
         release_types_names_map = {
-            release_type.name: release_type for release_type in saved_release_types
+            release_type.name: release_type
+            for release_type in saved_release_types
         }
         for cb in cbs:
             if cb["id"] is None:
@@ -424,7 +458,9 @@ class Scraper:
         if len(create_releases) > 0:
             Release.objects.bulk_create(create_releases)
         if len(update_releases) > 0:
-            Release.objects.bulk_update(update_releases, fields=["reddit_urls", "urls"])
+            Release.objects.bulk_update(
+                update_releases, fields=["reddit_urls", "urls"]
+            )
 
     @staticmethod
     def cb_dicts_eq(cb1: dict, cb2: dict) -> bool:
