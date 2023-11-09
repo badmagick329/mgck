@@ -10,3 +10,4 @@ local_media/
 djangobackend/scripts/data/*
 logs/
 certbot/
+irene/*
