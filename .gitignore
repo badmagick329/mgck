@@ -11,3 +11,4 @@ djangobackend/scripts/data/*
 logs/
 certbot/
 irene/*
+crontab
