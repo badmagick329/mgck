@@ -1,7 +1,8 @@
 import re
 from datetime import datetime
 
-from django.shortcuts import HttpResponse, HttpResponseRedirect, render
+from django.shortcuts import HttpResponseRedirect, render
+from fileuploader.models import UploadUser
 from urlshortener.apps import UrlshortenerConfig
 from urlshortener.models import ShortURL
 
@@ -15,7 +16,13 @@ def shortener(request):
 
 
 def index(request):
-    return render(request, f"{app_name}/index.html")
+    can_upload = not request.user.is_anonymous and (
+        UploadUser.objects.filter(user=request.user).exists()
+        or request.user.is_superuser
+    )
+    return render(
+        request, f"{app_name}/index.html", context={"can_upload": can_upload}
+    )
 
 
 def shorten(request):

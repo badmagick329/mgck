@@ -28,5 +28,11 @@
       class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
       py-1 px-3 rounded my-2 w-full text-center"
       href="{% url 'emojify:index' %}">Emojify your message 😀</a>
+    {% if can_upload %}
+      <a
+        class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
+        py-1 px-3 rounded my-2 w-full text-center"
+        href="{% url 'fileuploader:list_files' %}">Upload files</a>
+    {% endif %}
   </div>
 {% endblock %}
