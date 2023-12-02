@@ -18,6 +18,11 @@ pendulum = "^2.1.2"
 lxml = "^4.9.3"
 praw = "^7.7.1"
 result = "^0.13.1"
+djangorestframework = "^3.14.0"
+django-stubs = "^4.2.6"
+djangorestframework-stubs = "^3.14.4"
+django-cors-headers = "^4.3.1"
+drf-yasg = "^1.21.7"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"

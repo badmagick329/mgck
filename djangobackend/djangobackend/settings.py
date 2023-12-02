@@ -32,6 +32,8 @@ CONTAINERED = os.environ.get("DB_HOST","") != "localhost"
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = int(os.environ["DEBUG"])
+API_CACHE_TTL = 60 * 5  # 5 minutes
+GFY_PAGE_SIZE=os.environ.get("GFY_PAGE_SIZE", 100)
 
 ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(" ")
 
@@ -43,6 +45,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "drf_yasg",
     "urlshortener",
     "redditvideo",
     "fileuploader",
@@ -81,7 +85,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "djangobackend.wsgi.application"
 CSRF_TRUSTED_ORIGINS = [
-    os.environ["BASE_URL"],
+    BASE_URL,
 ]
 
 # Database
@@ -98,6 +102,19 @@ DATABASES = {
     }
 }
 
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": GFY_PAGE_SIZE,
+}
+
+SWAGGER_SETTINGS = {
+    "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg.inspectors.SwaggerAutoSchema",
+    "VALIDATOR_URL": None,
+}
+
+USE_X_FORWARDED_HOST = True
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 AUTH_PASSWORD_VALIDATORS = [
     {
