@@ -30,6 +30,7 @@ export default function Gfys() {
             height={300}
             style={{ width: "300px", height: "300px" }}
             quality={75}
+            unoptimized
           />
         ))}
       </div>
