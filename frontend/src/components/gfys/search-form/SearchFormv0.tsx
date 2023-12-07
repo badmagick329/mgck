@@ -6,13 +6,13 @@ import TagsField from "./TagsField";
 import { Button } from "../ui/button";
 import { useGlobalContext } from "@/app/context/store";
 import { parseGfyResponse } from "@/lib/utils";
-import { GetSearchForm } from "@/actions/actions";
+import { searchGfys } from "@/actions/actions";
 
 export default function SearchForm() {
   const { setData } = useGlobalContext();
   const form = useForm();
   async function onSubmit(formData: FormData) {
-    const resp = await GetSearchForm(formData);
+    const resp = await searchGfys(formData);
     setData(parseGfyResponse(resp));
   }
 

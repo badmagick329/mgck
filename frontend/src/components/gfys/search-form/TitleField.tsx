@@ -10,21 +10,26 @@ import { Input } from "@/components/ui/input";
 
 type props = {
   form: UseFormReturn<FieldValues, any, undefined>;
+  setState: React.Dispatch<React.SetStateAction<any>>;
 };
 
-export default function TagsField({ form }: props) {
+export default function TitleField({ form, setState }: props) {
   return (
     <FormField
       control={form.control}
-      name="tags"
+      name="title"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Tags</FormLabel>
+          <FormLabel>Title</FormLabel>
           <FormControl>
             <Input
-              placeholder="Tags (comma separated)"
-              autoComplete="off"
               {...field}
+              placeholder="Title"
+              autoComplete="off"
+              onChange={(e) => {
+                setState(e.target.value);
+              }}
+              // defaultValue={defaultValue}
             />
           </FormControl>
           <FormMessage />
