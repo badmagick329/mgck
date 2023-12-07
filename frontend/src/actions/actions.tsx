@@ -1,7 +1,7 @@
 "use server";
 const BASE_URL = process.env.BASE_URL;
 
-export async function GetSearchForm(formData: FormData) {
+export async function searchGfys(formData: FormData) {
   const title = formData.get("title") || "";
   const tags = formData.get("tags") || "";
   console.log(`title: ${title}`);

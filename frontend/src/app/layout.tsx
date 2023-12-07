@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 const inter = Inter({ subsets: ["latin"] });
-import { GlobalContextProvider } from './context/store';
+import { GlobalContextProvider } from "./context/store";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
@@ -24,9 +24,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <GlobalContextProvider>
-          {children}
-          </GlobalContextProvider>
+          <GlobalContextProvider>{children}</GlobalContextProvider>
         </ThemeProvider>
       </body>
     </html>

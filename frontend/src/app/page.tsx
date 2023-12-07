@@ -1,6 +1,5 @@
 // import Player from "@/components/VideoPlayer";
 import { ThemeToggler } from "@/components/ThemeToggler";
-import SearchForm from "@/components/search-form/SearchForm";
 import Gfys from "@/components/gfys/Gfys";
 
 export default function Home() {
@@ -11,9 +10,10 @@ export default function Home() {
           <ThemeToggler />
         </div>
       </div>
-      <SearchForm />
       <div className="py-4"></div>
-      <Gfys />
+      <div className="w-full h-full">
+        <Gfys />
+      </div>
     </main>
   );
 }
