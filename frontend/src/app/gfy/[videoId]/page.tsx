@@ -199,9 +199,11 @@ export default function GfyView(props: Props) {
             <div className="flex w-full flex-wrap gap-2 justify-center py-2">
               {renderNavButton("previous")}
               {renderNavButton("next")}
-              <Link ref={backRef} href={gfyViewData.listUrl}>
-                <Button variant="secondary">Back</Button>
-              </Link>
+              {gfyViewData?.listUrl && (
+                <Link ref={backRef} href={gfyViewData.listUrl}>
+                  <Button variant="secondary">Back</Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
