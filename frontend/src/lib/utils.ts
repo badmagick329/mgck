@@ -83,10 +83,10 @@ export function formDataFromSearchParams(
   const tagsParam = (searchParams.get("tags") || "") as string;
   const pageParam = (searchParams.get("page") || "1") as string;
   const accountParam = (searchParams.get("account") || "") as string;
-  console.log(`titleParam: ${titleParam}`);
-  console.log(`tagsParam: ${tagsParam}`);
-  console.log(`pageParam: ${pageParam}`);
-  console.log(`accountParam: ${accountParam}`);
+  // console.log(`titleParam: ${titleParam}`);
+  // console.log(`tagsParam: ${tagsParam}`);
+  // console.log(`pageParam: ${pageParam}`);
+  // console.log(`accountParam: ${accountParam}`);
   formData.append("title", titleParam);
   formData.append("tags", tagsParam);
   formData.append("page", pageParam);

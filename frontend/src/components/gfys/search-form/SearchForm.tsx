@@ -42,7 +42,7 @@ export default function SearchForm() {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState("");
-  const FIELD_WIDTH = "w-[12rem]";
+  const FIELD_WIDTH = "w-[16rem]";
 
   useEffect(() => {
     const titleParam = (searchParams.get("title") || "") as string;
@@ -147,10 +147,10 @@ export default function SearchForm() {
                     value={s}
                     defaultChecked={selectedAccount === s}
                     onSelect={(currentValue) => {
-                      console.log(`currentValue: ${currentValue}`);
+                      // console.log(`currentValue: ${currentValue}`);
                       setSelectedAccount(s === "All" ? "All" : s);
                       setOpen(false);
-                      console.log(`selectedAccount: ${selectedAccount}`);
+                      // console.log(`selectedAccount: ${selectedAccount}`);
                     }}
                   >
                     <Check
