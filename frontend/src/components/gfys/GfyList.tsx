@@ -19,9 +19,15 @@ export default function GfyList() {
   const pathname = usePathname();
 
   const updateData = async () => {
+    let now = performance.now();
     const resp = await searchGfys(formDataFromSearchParams(searchParams));
+    console.log("searchGfys took", performance.now() - now, "ms");
+    now = performance.now();
     const d = parseGfyResponse(resp);
+    console.log("parseGfyResponse took", performance.now() - now, "ms");
+    now = performance.now();
     setData(d);
+    console.log("setData took", performance.now() - now, "ms");
   };
 
   useEffect(() => {
@@ -43,33 +49,35 @@ export default function GfyList() {
   }, [data]);
 
   return (
-    <div className="flex flex-wrap w-full py-2 justify-center overflow-hidden gap-2 2xl:w-2/3">
-      {data.gfys.map((d, key) => (
-        <Link
-          key={key}
-          href={{
-            pathname: `/gfy/${d.imgurId}`,
-          }}
-          onClick={() => {
-            setGfyViewData({
-              ...gfyViewData,
-              index: key,
-            });
-          }}
-        >
-          <Image
-            className="object-cover rounded-md hover:ring-2 hover:ring-offset-2
+    <div className="flex w-full py-2 justify-center overflow-hidden 2xl:w-2/3">
+      <div className="flex flex-wrap w-full gap-2">
+        {data.gfys.map((d, key) => (
+          <Link
+            key={key}
+            href={{
+              pathname: `/gfy/${d.imgurId}`,
+            }}
+            onClick={() => {
+              setGfyViewData({
+                ...gfyViewData,
+                index: key,
+              });
+            }}
+          >
+            <Image
+              className="object-cover rounded-md hover:ring-2 hover:ring-offset-2
                   hover:ring-indigo-500 hover:cursor-pointer"
-            src={imgurIdToJpg(d.imgurId)}
-            alt="imgur"
-            width={250}
-            height={250}
-            style={{ width: "250px", height: "250px" }}
-            quality={75}
-            unoptimized
-          />
-        </Link>
-      ))}
+              src={imgurIdToJpg(d.imgurId)}
+              alt="imgur"
+              width={250}
+              height={250}
+              style={{ width: "250px", height: "250px" }}
+              quality={75}
+              unoptimized
+            />
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
