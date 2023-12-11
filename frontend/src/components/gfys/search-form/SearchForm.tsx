@@ -8,6 +8,8 @@ import { createURL } from "@/lib/utils";
 import { ImArrowLeft, ImArrowRight } from "react-icons/im";
 import { fetchAccounts } from "@/actions/actions";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { IoMdSearch } from "react-icons/io";
+import { GrClearOption } from "react-icons/gr";
 
 import { cn } from "@/lib/utils";
 import {
@@ -66,6 +68,12 @@ export default function SearchForm() {
     };
     updateAccounts();
     const handleKeyDown = (e: KeyboardEvent) => {
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i] === document.activeElement) {
+          return;
+        }
+      }
       if (e.key === "ArrowLeft" || e.key === "h") {
         leftRef.current?.click();
       } else if (e.key === "ArrowRight" || e.key === "l") {
@@ -190,7 +198,7 @@ export default function SearchForm() {
         className="grid grid-cols-1 md:grid-cols-2 gap-2"
       >
         <input
-          className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${FIELD_WIDTH}`}
+          className={`flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${FIELD_WIDTH}`}
           name="title"
           placeholder="Title"
           autoComplete="off"
@@ -201,7 +209,7 @@ export default function SearchForm() {
           }
         />
         <input
-          className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${FIELD_WIDTH}`}
+          className={`flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${FIELD_WIDTH}`}
           name="tags"
           placeholder="Tags"
           autoComplete="off"
@@ -212,9 +220,9 @@ export default function SearchForm() {
           }
         />
         {selectedAccount === "" ? null : renderComboBox()}
-        <div className="flex justify-center md:justify-end">
+        <div className="flex justify-center gap-2 md:justify-end">
           <Button type="submit" variant="secondary">
-            Search
+            <IoMdSearch />
           </Button>
         </div>
       </form>
