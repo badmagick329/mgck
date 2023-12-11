@@ -3,7 +3,7 @@ import { useGlobalContext } from "@/app/context/store";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createURL } from "@/lib/utils";
 import { ImArrowLeft, ImArrowRight } from "react-icons/im";
 import { fetchAccounts } from "@/actions/actions";
@@ -42,7 +42,9 @@ export default function SearchForm() {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState("");
-  const FIELD_WIDTH = "w-[16rem]";
+  const leftRef = useRef<HTMLAnchorElement>(null);
+  const rightRef = useRef<HTMLAnchorElement>(null);
+  const FIELD_WIDTH = "w-[12rem]";
 
   useEffect(() => {
     const titleParam = (searchParams.get("title") || "") as string;
@@ -63,6 +65,17 @@ export default function SearchForm() {
       }
     };
     updateAccounts();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft" || e.key === "l") {
+        leftRef.current?.click();
+      } else if (e.key === "ArrowRight" || e.key === "h") {
+        rightRef.current?.click();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   function createURLparams(clearPage = false) {
@@ -99,13 +112,13 @@ export default function SearchForm() {
     router.push(newURL);
   }
 
-  function renderNavButton(url: string | null, Icon: IconType) {
+  function renderNavButton(url: string | null, Icon: IconType, ref: any) {
     if (!data.previous && !data.next) {
       return <></>;
     }
     if (url) {
       return (
-        <Link href={createURL(pathname, url.split("?")[1])}>
+        <Link ref={ref} href={createURL(pathname, url.split("?")[1])}>
           <Button variant="secondary">
             <Icon />
           </Button>
@@ -212,8 +225,8 @@ export default function SearchForm() {
     <div className="flex flex-col items-center">
       {renderForm()}
       <div className="flex space-x-2 justify-center my-4">
-        {renderNavButton(data.previous, ImArrowLeft)}
-        {renderNavButton(data.next, ImArrowRight)}
+        {renderNavButton(data.previous, ImArrowLeft, leftRef)}
+        {renderNavButton(data.next, ImArrowRight, rightRef)}
       </div>
     </div>
   );
