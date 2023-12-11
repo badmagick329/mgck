@@ -7,23 +7,39 @@ import {
   SetStateAction,
   useState,
 } from "react";
-import { GfyData } from "@/lib/types";
+import { GfyParsedResponse, GfyViewData } from "@/lib/types";
 
 interface ContextProps {
-  data: GfyData[];
-  setData: Dispatch<SetStateAction<GfyData[]>>;
+  data: GfyParsedResponse;
+  setData: Dispatch<SetStateAction<GfyParsedResponse>>;
+  gfyViewData: GfyViewData;
+  setGfyViewData: Dispatch<SetStateAction<GfyViewData>>;
 }
 
 const GlobalContext = createContext<ContextProps>({
-  data: [],
-  setData: (): GfyData[] => [],
+  data: {} as GfyParsedResponse,
+  setData: () => {},
+  gfyViewData: {} as GfyViewData,
+  setGfyViewData: () => {},
 });
 
 export const GlobalContextProvider = ({ children }: any) => {
-  const [data, setData] = useState<[] | GfyData[]>([]);
+  const [data, setData] = useState<GfyParsedResponse>({
+    count: 0,
+    previous: null,
+    next: null,
+    gfys: [],
+  });
+  const [gfyViewData, setGfyViewData] = useState<GfyViewData>({
+    index: 0,
+    videoIds: [] as string[],
+    listUrl: "",
+  });
 
   return (
-    <GlobalContext.Provider value={{ data, setData }}>
+    <GlobalContext.Provider
+      value={{ data, setData, gfyViewData, setGfyViewData }}
+    >
       {children}
     </GlobalContext.Provider>
   );

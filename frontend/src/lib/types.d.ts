@@ -1,5 +1,12 @@
 import { ReadonlyURLSearchParams } from "next/navigation";
 
+export type GfyParsedResponse = {
+  count: number;
+  previous: string | null;
+  next: string | null;
+  gfys: GfyData[];
+};
+
 export type GfyData = {
   imgurId: string;
   title: string;
@@ -18,10 +25,36 @@ export type GfyResult = {
   tags: string[];
 };
 
-interface GfyURLParams extends ReadonlyURLSearchParams {
+export type GfyResponse = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: GfyResult[];
+};
+
+export type GfyDetailResponse = {
+  title: string;
+  tags: string[];
+  date: string | null;
+  account: string;
+  video_url: string;
+};
+
+export type AccountsResponse = {
+  accounts: string[];
+};
+
+export type GfyViewData = {
+  index: number;
+  videoIds: string[];
+  listUrl: string;
+};
+
+// TODO: Remove these?
+export type GfyURLParams = ReadonlyURLSearchParams & {
   title: string;
   tags: string;
-}
+};
 
 export type GfySearchParams = {
   searchParams: GfyURLParams;
