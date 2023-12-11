@@ -66,9 +66,9 @@ export default function SearchForm() {
     };
     updateAccounts();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft" || e.key === "l") {
+      if (e.key === "ArrowLeft" || e.key === "h") {
         leftRef.current?.click();
-      } else if (e.key === "ArrowRight" || e.key === "h") {
+      } else if (e.key === "ArrowRight" || e.key === "l") {
         rightRef.current?.click();
       }
     };
