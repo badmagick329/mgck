@@ -3,8 +3,7 @@ import { fetchGfy } from "@/actions/actions";
 import { Button } from "@/components/ui/button";
 import { GfyDetailResponse } from "@/lib/types";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-// import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
 import { useGlobalContext } from "@/app/context/store";
 import { ImArrowLeft, ImArrowRight } from "react-icons/im";
 
@@ -20,8 +19,10 @@ export default function GfyView(props: Props) {
   const [gfyDetail, setGfyDetail] = useState<GfyDetailResponse | null>(null);
   const [windowWidth, setWindowWidth] = useState<number>(0);
   const [windowHeight, setWindowHeight] = useState<number>(0);
-  // const router = useRouter();
   const { gfyViewData, setGfyViewData } = useGlobalContext();
+  const leftRef = useRef<HTMLAnchorElement>(null);
+  const rightRef = useRef<HTMLAnchorElement>(null);
+  const backRef = useRef<HTMLAnchorElement>(null);
   const MOBILE_BREAKPOINT = 768;
 
   const fetchDetails = async () => {
@@ -36,9 +37,20 @@ export default function GfyView(props: Props) {
       setWindowHeight(window.innerHeight);
     };
     handleResize();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === "l") {
+        rightRef.current?.click();
+      } else if (e.key === "ArrowLeft" || e.key === "h") {
+        leftRef.current?.click();
+      } else if (e.key === "ArrowDown" || e.key === "j") {
+        backRef.current?.click();
+      }
+    };
     window.addEventListener("resize", handleResize);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -70,6 +82,7 @@ export default function GfyView(props: Props) {
         href={{
           pathname: `/gfy/${gfyViewData.videoIds[gfyViewData.index + offset]}`,
         }}
+        ref={direction === "previous" ? leftRef : rightRef}
         replace={true}
         onClick={() => {
           setGfyViewData((old) => {
@@ -121,7 +134,7 @@ export default function GfyView(props: Props) {
             {renderNavButton("previous")}
             {renderNavButton("next")}
             {gfyViewData?.listUrl && (
-              <Link href={gfyViewData.listUrl}>
+              <Link ref={backRef} href={gfyViewData.listUrl}>
                 <Button variant="secondary">Back</Button>
               </Link>
             )}
@@ -186,7 +199,7 @@ export default function GfyView(props: Props) {
             <div className="flex w-full flex-wrap gap-2 justify-center py-2">
               {renderNavButton("previous")}
               {renderNavButton("next")}
-              <Link href={gfyViewData.listUrl}>
+              <Link ref={backRef} href={gfyViewData.listUrl}>
                 <Button variant="secondary">Back</Button>
               </Link>
             </div>

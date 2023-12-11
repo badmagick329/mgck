@@ -1,6 +1,8 @@
 // import Player from "@/components/VideoPlayer";
 import { ThemeToggler } from "@/components/ThemeToggler";
 import Gfys from "@/components/gfys/Gfys";
+import { Suspense } from "react";
+import Loading from "@/app/loading";
 
 export default function Home() {
   return (
@@ -12,7 +14,9 @@ export default function Home() {
       </div>
       <div className="py-4"></div>
       <div className="w-full h-full">
-        <Gfys />
+        <Suspense fallback={<Loading />}>
+          <Gfys />
+        </Suspense>
       </div>
     </main>
   );
