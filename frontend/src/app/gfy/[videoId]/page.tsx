@@ -21,6 +21,7 @@ export default function GfyView(props: Props) {
   const [windowWidth, setWindowWidth] = useState<number>(0);
   const [windowHeight, setWindowHeight] = useState<number>(0);
   const { gfyViewData, setGfyViewData } = useGlobalContext();
+  const [videoLoading, setVideoLoading] = useState<boolean>(true);
   const leftRef = useRef<HTMLAnchorElement>(null);
   const rightRef = useRef<HTMLAnchorElement>(null);
   const backRef = useRef<HTMLAnchorElement>(null);
@@ -101,6 +102,30 @@ export default function GfyView(props: Props) {
     );
   }
 
+  function renderPlayer() {
+    if (!gfyDetail) {
+      return (
+        <div className="flex flex-col items-center justify-center h-screen max-w-screen m-0">
+          <Loading />
+        </div>
+      );
+    }
+    return (
+      <video
+        className={videoLoading ? "hidden" : "block"}
+        onLoadedData={() => {
+          setVideoLoading(false);
+        }}
+        controls
+        muted
+        autoPlay
+        loop
+      >
+        <source src={gfyDetail.video_url} type="video/mp4" />
+      </video>
+    );
+  }
+
   function mobileView() {
     if (!gfyDetail) {
       return (
@@ -112,9 +137,7 @@ export default function GfyView(props: Props) {
     return (
       <div className="flex flex-col items-center justify-between h-screen max-w-screen m-0">
         <div className="flex flex-col w-full h-4/5 justify-center">
-          <video controls muted autoPlay loop>
-            <source src={gfyDetail.video_url} type="video/mp4" />
-          </video>
+          {renderPlayer()}
         </div>
         <div className="flex flex-col w-full h-1/5 justify-center py-2">
           <div className="hidden xs:flex flex-wrap justify-center gap-2 py-2 overflow-y-scroll">
@@ -160,11 +183,7 @@ export default function GfyView(props: Props) {
     return (
       <div className="flex flex-col items-center justify-center h-screen max-w-screen m-0">
         <div className="flex w-full h-full justify-between">
-          <div className="flex w-4/5 justify-center">
-            <video controls muted autoPlay loop>
-              <source src={gfyDetail.video_url} type="video/mp4" />
-            </video>
-          </div>
+          <div className="flex w-4/5 justify-center">{renderPlayer()}</div>
           <div className="hidden md:w-1/5 md:flex md:flex-wrap md:flex-col h-full justify-between">
             <div className="flex flex-col space-y-2 p-2 w-full max-h-full">
               {windowHeight > MOBILE_BREAKPOINT && (
