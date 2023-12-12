@@ -7,7 +7,7 @@ import Loading from "@/app/loading";
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center p-6">
-      <div className="flex w-screen justify-end">
+      <div className="flex w-screen justify-end mr-8">
         <div className="px-4">
           <ThemeToggler />
         </div>

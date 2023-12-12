@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useGlobalContext } from "@/app/context/store";
 import { ImArrowLeft, ImArrowRight } from "react-icons/im";
+import Loading from "@/app/loading";
 
 type Props = {
   params: {
@@ -102,12 +103,16 @@ export default function GfyView(props: Props) {
 
   function mobileView() {
     if (!gfyDetail) {
-      return <div>Loading...</div>;
+      return (
+        <div className="flex flex-col items-center justify-center h-screen max-w-screen m-0">
+          <Loading />
+        </div>
+      );
     }
     return (
       <div className="flex flex-col items-center justify-between h-screen max-w-screen m-0">
         <div className="flex flex-col w-full h-4/5 justify-center">
-          <video controls preload="metadata" muted autoPlay loop>
+          <video controls muted autoPlay loop>
             <source src={gfyDetail.video_url} type="video/mp4" />
           </video>
         </div>
@@ -146,13 +151,17 @@ export default function GfyView(props: Props) {
 
   function desktopView() {
     if (!gfyDetail) {
-      return <div>Loading...</div>;
+      return (
+        <div className="flex flex-col items-center justify-center h-screen max-w-screen m-0">
+          <Loading />
+        </div>
+      );
     }
     return (
       <div className="flex flex-col items-center justify-center h-screen max-w-screen m-0">
         <div className="flex w-full h-full justify-between">
           <div className="flex w-4/5 justify-center">
-            <video controls preload="metadata" muted autoPlay loop>
+            <video controls muted autoPlay loop>
               <source src={gfyDetail.video_url} type="video/mp4" />
             </video>
           </div>
