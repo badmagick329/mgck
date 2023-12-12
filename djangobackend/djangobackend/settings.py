@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "corsheaders",
     "drf_yasg",
     "urlshortener",
     "redditvideo",
@@ -59,7 +58,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -89,12 +87,6 @@ WSGI_APPLICATION = "djangobackend.wsgi.application"
 CSRF_TRUSTED_ORIGINS = [
     BASE_URL,
 ]
-if DEBUG:
-    CORS_ORIGIN_ALLOW_ALL = True
-else:
-    CORS_ALLOWED_ORIGINS = [
-        BASE_URL,
-    ]
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
