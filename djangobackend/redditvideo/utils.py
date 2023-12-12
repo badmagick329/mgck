@@ -55,7 +55,7 @@ def download_video(url: str, filename: Path) -> VideoResult:
 
 @as_result(Exception, RedditAudioNotFound)
 def download_audio(url: str, filename: Path) -> AudioResult:
-    post_fixes = ("audio", "AUDIO_128", "AUDIO_96", "AUDIO_64")
+    post_fixes = ("audio", "AUDIO_128", "AUDIO_64")
     r = None
     for pf in post_fixes:
         r = requests.get(url.format(pf))
