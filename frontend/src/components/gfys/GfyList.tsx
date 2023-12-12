@@ -1,6 +1,6 @@
 "use client";
 import { useGlobalContext } from "@/app/context/store";
-import { searchGfys } from "@/actions/actions";
+// import { searchGfys } from "@/actions/actions";
 import { parseGfyResponse } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -13,21 +13,50 @@ import {
 } from "@/lib/utils";
 import Link from "next/link";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
 export default function GfyList() {
   const { data, setData, gfyViewData, setGfyViewData } = useGlobalContext();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
+  // const _fetchData = async () => {
+  //   let now = performance.now();
+  //   let currentTime = performance.timeOrigin + performance.now();
+  //   console.log(`Calling action at : ${currentTime}`);
+  //   const resp = await searchGfys(formDataFromSearchParams(searchParams));
+  //   console.log("searchGfys took", performance.now() - now, "ms");
+  //   now = performance.now();
+  //   const d = parseGfyResponse(resp);
+  //   now = performance.now();
+  //   setData(d);
+  // };
+
   const fetchData = async () => {
+    const formData = formDataFromSearchParams(searchParams);
+    const title = formData.get("title") || "";
+    const tags = formData.get("tags") || "";
+    const page = formData.get("page") || "1";
+    let account = formData.get("account") || "";
+    if (account == "All") {
+      account = "";
+    }
+    const apiUrl = new URL(`${BASE_URL}/api/gfys`);
+    apiUrl.searchParams.append("title", title as string);
+    apiUrl.searchParams.append("tags", tags as string);
+    apiUrl.searchParams.append("account", account as string);
+    apiUrl.searchParams.append("page", page as string);
     let now = performance.now();
-    let currentTime = performance.timeOrigin + performance.now();
-    console.log(`Calling action at : ${currentTime}`);
-    const resp = await searchGfys(formDataFromSearchParams(searchParams));
-    console.log("searchGfys took", performance.now() - now, "ms");
-    now = performance.now();
-    const d = parseGfyResponse(resp);
-    now = performance.now();
-    setData(d);
+    let resp = await fetch(apiUrl.toString(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    console.log("fetch took", performance.now() - now, "ms");
+    const d = await resp.json();
+    // TODO: Validation
+    setData(parseGfyResponse(d));
   };
 
   useEffect(() => {
