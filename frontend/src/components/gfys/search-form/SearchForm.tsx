@@ -1,15 +1,12 @@
 "use client";
 import { useGlobalContext } from "@/app/context/store";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createURL } from "@/lib/utils";
-import { ImArrowLeft, ImArrowRight } from "react-icons/im";
 import { fetchAccounts } from "@/actions/actions";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { IoMdSearch } from "react-icons/io";
-import { GrClearOption } from "react-icons/gr";
+import SearchNav from "@/components/gfys/search-form/SearchNav";
 
 import { cn } from "@/lib/utils";
 import {
@@ -30,10 +27,7 @@ type FormParams = {
   tags: string;
 };
 
-type IconType = typeof ImArrowLeft | typeof ImArrowRight;
-
 export default function SearchForm() {
-  const { data, setData } = useGlobalContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -44,8 +38,6 @@ export default function SearchForm() {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState("");
-  const leftRef = useRef<HTMLAnchorElement>(null);
-  const rightRef = useRef<HTMLAnchorElement>(null);
   const FIELD_WIDTH = "w-[12rem]";
 
   useEffect(() => {
@@ -67,23 +59,6 @@ export default function SearchForm() {
       }
     };
     updateAccounts();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const inputs = document.querySelectorAll("input");
-      for (let i = 0; i < inputs.length; i++) {
-        if (inputs[i] === document.activeElement) {
-          return;
-        }
-      }
-      if (e.key === "ArrowLeft" || e.key === "h") {
-        leftRef.current?.click();
-      } else if (e.key === "ArrowRight" || e.key === "l") {
-        rightRef.current?.click();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
   }, []);
 
   function createURLparams(clearPage = false) {
@@ -118,26 +93,6 @@ export default function SearchForm() {
     const newParams = createURLparams(true);
     const newURL = createURL(pathname, newParams.toString());
     router.push(newURL);
-  }
-
-  function renderNavButton(url: string | null, Icon: IconType, ref: any) {
-    if (!data.previous && !data.next) {
-      return <></>;
-    }
-    if (url) {
-      return (
-        <Link ref={ref} href={createURL(pathname, url.split("?")[1])}>
-          <Button variant="secondary">
-            <Icon />
-          </Button>
-        </Link>
-      );
-    }
-    return (
-      <Button variant="secondary" disabled>
-        <Icon />
-      </Button>
-    );
   }
 
   function renderComboBox() {
@@ -222,7 +177,7 @@ export default function SearchForm() {
         {selectedAccount === "" ? null : renderComboBox()}
         <div className="flex justify-center gap-2 md:justify-end">
           <Button type="submit" variant="secondary">
-            <IoMdSearch />
+            Search
           </Button>
         </div>
       </form>
@@ -232,10 +187,7 @@ export default function SearchForm() {
   return (
     <div className="flex flex-col items-center">
       {renderForm()}
-      <div className="flex space-x-2 justify-center my-4">
-        {renderNavButton(data.previous, ImArrowLeft, leftRef)}
-        {renderNavButton(data.next, ImArrowRight, rightRef)}
-      </div>
+      <SearchNav attachListeners={true} />
     </div>
   );
 }

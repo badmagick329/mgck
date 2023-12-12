@@ -6,12 +6,19 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { imgurIdToJpg } from "@/lib/utils";
 import { useSearchParams, usePathname } from "next/navigation";
+import type { Metadata } from "next";
 import {
   cleanedSearchParams,
   createURL,
   formDataFromSearchParams,
 } from "@/lib/utils";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Red Velvet Gfy Archive",
+  description: "Search through Red Velvet Gfys now moved to Imgur",
+};
+
 
 export default function GfyList() {
   const { data, setData, gfyViewData, setGfyViewData } = useGlobalContext();
