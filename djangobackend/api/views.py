@@ -40,7 +40,7 @@ class GfyDetails(APIView):
 
     @method_decorator(cache_page(CACHE_TTL))
     @swagger_auto_schema(
-        operation_description="Get video of gif",
+        operation_description="Get video of gfy",
         manual_parameters=[
             openapi.Parameter(
                 name="id",
@@ -156,7 +156,6 @@ class GfysList(generics.ListAPIView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        print(f"query_params: {self.request.query_params}")
         gfys = filter_gfys(
             self.request.query_params.get("title", ""),
             self.request.query_params.get("tags", ""),

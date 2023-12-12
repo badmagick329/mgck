@@ -120,13 +120,12 @@ export default function SearchForm() {
                 return (
                   <CommandItem
                     key={s}
-                    value={s}
                     defaultChecked={selectedAccount === s}
                     onSelect={(currentValue) => {
-                      // console.log(`currentValue: ${currentValue}`);
-                      setSelectedAccount(s === "All" ? "All" : s);
+                      setSelectedAccount(
+                        currentValue === selectedAccount ? "All" : s
+                      );
                       setOpen(false);
-                      // console.log(`selectedAccount: ${selectedAccount}`);
                     }}
                   >
                     <Check

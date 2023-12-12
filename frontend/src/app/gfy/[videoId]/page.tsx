@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from "react";
 import { useGlobalContext } from "@/app/context/store";
 import { ImArrowLeft, ImArrowRight } from "react-icons/im";
 import Loading from "@/app/loading";
+import { ThemeToggler } from "@/components/ThemeToggler";
 
 type Props = {
   params: {
@@ -20,7 +21,8 @@ export default function GfyView(props: Props) {
   const [gfyDetail, setGfyDetail] = useState<GfyDetailResponse | null>(null);
   const [windowWidth, setWindowWidth] = useState<number>(0);
   const [windowHeight, setWindowHeight] = useState<number>(0);
-  const { gfyViewData, setGfyViewData } = useGlobalContext();
+  const { gfyViewData, setGfyViewData, videoVolume, setVideoVolume } =
+    useGlobalContext();
   const [videoLoading, setVideoLoading] = useState<boolean>(true);
   const leftRef = useRef<HTMLAnchorElement>(null);
   const rightRef = useRef<HTMLAnchorElement>(null);
@@ -113,13 +115,21 @@ export default function GfyView(props: Props) {
     return (
       <video
         className={videoLoading ? "hidden" : "block"}
-        onLoadedData={() => {
+        onLoadedData={(e) => {
           setVideoLoading(false);
+          videoVolume === 0
+            ? (e.currentTarget.muted = true)
+            : (e.currentTarget.volume = videoVolume);
+        }}
+        onVolumeChange={(e) => {
+          e.currentTarget.muted
+            ? setVideoVolume(0)
+            : setVideoVolume(e.currentTarget.volume);
         }}
         controls
-        muted
         autoPlay
         loop
+        {...(videoVolume === 0 ? { muted: true } : {})}
       >
         <source src={gfyDetail.video_url} type="video/mp4" />
       </video>
@@ -186,6 +196,13 @@ export default function GfyView(props: Props) {
           <div className="flex w-4/5 justify-center">{renderPlayer()}</div>
           <div className="hidden md:w-1/5 md:flex md:flex-wrap md:flex-col h-full justify-between">
             <div className="flex flex-col space-y-2 p-2 w-full max-h-full">
+              {windowHeight > MOBILE_BREAKPOINT && (
+                <div className="flex justify-end">
+                  <div className="px-4">
+                    <ThemeToggler />
+                  </div>
+                </div>
+              )}
               {windowHeight > MOBILE_BREAKPOINT && (
                 <span className="text-sm lg:text-base xl:text-xl break-words">
                   {gfyDetail.title}
