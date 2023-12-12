@@ -26,6 +26,7 @@ export function parseGfyResponse(resp: GfyResponse) {
     count: resp.count,
     next: resp.next,
     previous: resp.previous,
+    totalPages: resp.total_pages,
     gfys: newData,
   } as GfyParsedResponse;
 }
@@ -62,11 +63,17 @@ export function cleanedSearchParams(urlSearchParams: URLSearchParams) {
   return urlSearchParams;
 }
 
-export function createURL(pathname: string, paramsString: string) {
-  const urlSearchParams = cleanedSearchParams(
-    new URLSearchParams(paramsString)
-  );
-  const newParams = urlSearchParams.toString();
+export function createURL(
+  pathname: string,
+  paramsString: string,
+  asPage: string | null = null
+) {
+  const urlSearchParams = new URLSearchParams(paramsString);
+  if (asPage) {
+    urlSearchParams.set("page", asPage.toString());
+  }
+  const cleanParams = cleanedSearchParams(urlSearchParams);
+  const newParams = cleanParams.toString();
   if (newParams) {
     return `${pathname}?${newParams}`;
   }

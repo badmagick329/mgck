@@ -14,6 +14,8 @@ interface ContextProps {
   setData: Dispatch<SetStateAction<GfyParsedResponse>>;
   gfyViewData: GfyViewData;
   setGfyViewData: Dispatch<SetStateAction<GfyViewData>>;
+  videoVolume: number;
+  setVideoVolume: Dispatch<SetStateAction<number>>;
 }
 
 const GlobalContext = createContext<ContextProps>({
@@ -21,6 +23,8 @@ const GlobalContext = createContext<ContextProps>({
   setData: () => {},
   gfyViewData: {} as GfyViewData,
   setGfyViewData: () => {},
+  videoVolume: 0,
+  setVideoVolume: () => {},
 });
 
 export const GlobalContextProvider = ({ children }: any) => {
@@ -28,6 +32,7 @@ export const GlobalContextProvider = ({ children }: any) => {
     count: 0,
     previous: null,
     next: null,
+    totalPages: 0,
     gfys: [],
   });
   const [gfyViewData, setGfyViewData] = useState<GfyViewData>({
@@ -35,10 +40,18 @@ export const GlobalContextProvider = ({ children }: any) => {
     videoIds: [] as string[],
     listUrl: "",
   });
+  const [volume, setVolume] = useState<number>(0);
 
   return (
     <GlobalContext.Provider
-      value={{ data, setData, gfyViewData, setGfyViewData }}
+      value={{
+        data,
+        setData,
+        gfyViewData,
+        setGfyViewData,
+        videoVolume: volume,
+        setVideoVolume: setVolume,
+      }}
     >
       {children}
     </GlobalContext.Provider>

@@ -25,7 +25,7 @@ REDDIT_SECRET = os.environ.get("REDDIT_SECRET", "")
 REDDIT_ID = os.environ.get("REDDIT_ID", "")
 REDDIT_AGENT = os.environ.get("REDDIT_AGENT", "")
 TOKEN = os.environ.get("TOKEN", "")
-CONTAINERED = os.environ.get("DB_HOST","") != "localhost"
+CONTAINERED = os.environ.get("DB_HOST", "") != "localhost"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -33,7 +33,7 @@ CONTAINERED = os.environ.get("DB_HOST","") != "localhost"
 SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = int(os.environ["DEBUG"])
 API_CACHE_TTL = 60 * 5  # 5 minutes
-GFY_PAGE_SIZE=os.environ.get("GFY_PAGE_SIZE", 100)
+GFY_PAGE_SIZE = os.environ.get("GFY_PAGE_SIZE", 100)
 
 ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(" ")
 
@@ -103,7 +103,8 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    # "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "gfys.paginator.GfyPagination",
     "PAGE_SIZE": GFY_PAGE_SIZE,
 }
 
@@ -114,7 +115,7 @@ SWAGGER_SETTINGS = {
 
 USE_X_FORWARDED_HOST = True
 if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -151,7 +152,9 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/uploads/"
-MEDIA_ROOT = os.environ["UPLOADS_STATIC"] if CONTAINERED else os.environ["UPLOADS"]
+MEDIA_ROOT = (
+    os.environ["UPLOADS_STATIC"] if CONTAINERED else os.environ["UPLOADS"]
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

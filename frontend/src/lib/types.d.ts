@@ -4,6 +4,7 @@ export type GfyParsedResponse = {
   count: number;
   previous: string | null;
   next: string | null;
+  totalPages: number;
   gfys: GfyData[];
 };
 
@@ -27,8 +28,9 @@ export type GfyResult = {
 
 export type GfyResponse = {
   count: number;
-  next: string | null;
   previous: string | null;
+  next: string | null;
+  total_pages: number;
   results: GfyResult[];
 };
 
