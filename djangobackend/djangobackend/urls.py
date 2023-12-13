@@ -26,7 +26,7 @@ urlpatterns = [
     path("reddit/", include("redditvideo.urls")),
     path("files/", include("fileuploader.urls")),
     path("kpop/", include("kpopcomebacks.urls")),
-    path("gfys/", include("gfys.urls")),
+    path("gfysv0/", include("gfys.urls")),
     path("emojify/", include("emojify.urls")),
     path("api/", include("api.urls")),
     path("", include("urlshortener.urls")),
