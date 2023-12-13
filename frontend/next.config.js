@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: "/gfysv2",
+  basePath: "/gfys",
   images: {
     remotePatterns: [
       {
