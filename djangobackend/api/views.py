@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 
 app_name = ApiConfig.name
 CACHE_TTL = settings.API_CACHE_TTL
+CDN_IS_ACTIVE = settings.CDN_IS_ACTIVE
 
 
 class GfyDetailsThrottle(UserRateThrottle):
@@ -46,17 +47,17 @@ class GfyDetails(APIView):
                 name="id",
                 in_=openapi.IN_PATH,
                 type=openapi.TYPE_STRING,
-                description="The imgur id of the gfy",
+                description="The object id of the gfy",
             ),
         ],
         responses={
             200: openapi.Response(
-                description="Video of gif",
+                description="Video of gfy",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
                         "title": openapi.Schema(
-                            description="The imgur title of the gfy",
+                            description="The title of the gfy",
                             type=openapi.TYPE_STRING,
                         ),
                         "tags": openapi.Schema(
@@ -90,22 +91,20 @@ class GfyDetails(APIView):
         },
     )
     def get(self, request, *args, **kwargs):
-        nextGfy = Gfy.objects.filter(imgur_id=kwargs["id"]).first()
-        if nextGfy is None:
+        gfy = Gfy.objects.filter(object_id=kwargs["id"]).first()
+        if gfy is None:
             return Response(status=404)
         return Response(
             {
-                "title": nextGfy.imgur_title,
-                "tags": nextGfy.tags.all().values_list("name", flat=True),
-                "date": nextGfy.date,
-                "account": nextGfy.account.name,
-                "video_url": id_to_imgur_mp4(nextGfy.imgur_id),
+                "title": gfy.imgur_title,
+                "tags": gfy.tags.all().values_list("name", flat=True),
+                "date": gfy.date,
+                "account": gfy.account.name,
+                "video_url": gfy.video_url
+                if gfy.video_id and CDN_IS_ACTIVE
+                else gfy.imgur_mp4_url,
             }
         )
-
-
-def id_to_imgur_mp4(id: str):
-    return f"https://i.imgur.com/{id}.mp4"
 
 
 class GfysListThrottle(UserRateThrottle):

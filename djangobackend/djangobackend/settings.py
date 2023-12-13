@@ -19,6 +19,8 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_URL = os.environ["BASE_URL"]
+VIDEO_URL = os.environ["VIDEO_URL"]
+CDN_IS_ACTIVE = int(os.environ.get("CDN_IS_ACTIVE", 0))
 REDDIT_VIDEOS = os.environ.get("REDDIT_VIDEOS", "")
 REDDIT_VIDEOS_STATIC = os.environ.get("REDDIT_VIDEOS_STATIC", "")
 REDDIT_SECRET = os.environ.get("REDDIT_SECRET", "")
@@ -26,10 +28,6 @@ REDDIT_ID = os.environ.get("REDDIT_ID", "")
 REDDIT_AGENT = os.environ.get("REDDIT_AGENT", "")
 TOKEN = os.environ.get("TOKEN", "")
 CONTAINERED = os.environ.get("DB_HOST", "") != "localhost"
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
 SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = int(os.environ["DEBUG"])
 API_CACHE_TTL = 60 * 5  # 5 minutes
