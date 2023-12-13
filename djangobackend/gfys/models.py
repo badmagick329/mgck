@@ -2,9 +2,11 @@ import re
 from datetime import date as Date
 from datetime import datetime
 
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import models
 
-from django.contrib.auth.models import User
+VIDEO_URL = settings.VIDEO_URL
 
 
 class GfyUser(models.Model):
@@ -15,6 +17,7 @@ class GfyUser(models.Model):
 
     def __str__(self):
         return f"<GfyUser(user={self.user}, account={self.account})>"
+
 
 class Tag(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -47,8 +50,16 @@ class Gfy(models.Model):
     IMGUR_BASE_URL = "https://i.imgur.com/"
     GFYCAT_BASE_URL = "https://gfycat.com/"
 
-    imgur_id = models.CharField(max_length=20)
+    object_id = models.CharField(
+        max_length=20, unique=True, blank=True, null=True, default=None
+    )
+    imgur_id = models.CharField(
+        max_length=20, unique=True, blank=True, null=True
+    )
     gfy_id = models.CharField(max_length=100, blank=True, null=True)
+    video_id = models.CharField(
+        max_length=20, unique=True, blank=True, null=True, default=None
+    )
     tags = models.ManyToManyField(Tag, related_name="gfys")
     imgur_title = models.CharField(max_length=255)
     gfy_title = models.CharField(max_length=255, blank=True, null=True)
@@ -59,14 +70,22 @@ class Gfy(models.Model):
 
     class Meta:
         ordering = ["-date"]
-        unique_together = ["imgur_id"]
 
     def __str__(self):
         return (
-            f"<Gfy(id={self.id}, imgur_id={self.imgur_id}, gfy_id={self.gfy_id}, "  # type: ignore
+            f"<Gfy(id={self.id}, imgur_id={self.imgur_id}, object_id={self.object_id}, "  # type: ignore
+            f"gfy_id={self.gfy_id}, video_id={self.video_id}, "
             f"imgur_title={self.imgur_title}, gfy_title={self.gfy_title}, "
             f"date={self.date}), account={self.account}>"
         )
+
+    def init_object_id(self):
+        assert self.video_id or self.imgur_id
+        self.object_id = self.video_id or self.imgur_id
+
+    @property
+    def video_url(self) -> str:
+        return f"{VIDEO_URL}/{self.video_id}.mp4"
 
     @property
     def imgur_url(self) -> str:
@@ -132,7 +151,9 @@ class Gfy(models.Model):
             date = Gfy.date_from(tags)
             if date is not None:
                 return date
-        return Gfy.date_from([w.strip() for w in title.split(" ") if w.strip()])
+        return Gfy.date_from(
+            [w.strip() for w in title.split(" ") if w.strip()]
+        )
 
     @staticmethod
     def date_from(words: list[str]) -> Date | None:
