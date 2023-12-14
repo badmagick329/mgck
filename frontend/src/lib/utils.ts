@@ -103,3 +103,24 @@ export function formDataFromSearchParamsString(searchParamsString: string) {
   const urlSearchParams = new URLSearchParams(cleanedParams);
   return formDataFromSearchParams(urlSearchParams);
 }
+
+export async function copyToClipboard(text: string) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "absolute";
+    textArea.style.left = "-999999px";
+    document.body.prepend(textArea);
+    textArea.select();
+    try {
+      document.execCommand("copy");
+    } catch (error) {
+      console.error(error);
+      return Promise.reject(error);
+    } finally {
+      textArea.remove();
+    }
+    return Promise.resolve();
+  }

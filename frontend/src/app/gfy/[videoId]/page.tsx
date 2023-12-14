@@ -8,6 +8,9 @@ import { useGlobalContext } from "@/app/context/store";
 import { ImArrowLeft, ImArrowRight } from "react-icons/im";
 import Loading from "@/app/loading";
 import { ThemeToggler } from "@/components/ThemeToggler";
+import { cn, copyToClipboard } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { MdOutlineContentCopy } from "react-icons/md";
 
 type Props = {
   params: {
@@ -28,6 +31,7 @@ export default function GfyView(props: Props) {
   const rightRef = useRef<HTMLAnchorElement>(null);
   const backRef = useRef<HTMLAnchorElement>(null);
   const MOBILE_BREAKPOINT = 768;
+  const { toast } = useToast();
 
   const fetchDetails = async () => {
     const gfyDetail = await fetchGfy(props.params.videoId);
@@ -136,6 +140,128 @@ export default function GfyView(props: Props) {
     );
   }
 
+  function renderDesktopDetails() {
+    if (!gfyDetail) {
+      return <></>;
+    }
+    return (
+      <>
+        {windowHeight > MOBILE_BREAKPOINT && (
+          <div className="flex justify-end">
+            <div className="px-4">
+              <ThemeToggler />
+            </div>
+          </div>
+        )}
+        {windowHeight > MOBILE_BREAKPOINT && (
+          <span className="text-sm lg:text-base xl:text-xl break-words">
+            {gfyDetail.title}
+          </span>
+        )}
+        <div className="flex flex-col">
+          <div className="flex flex-wrap gap-2 py-2">
+            {windowHeight > MOBILE_BREAKPOINT &&
+              gfyDetail.tags.map((t, key) => {
+                return (
+                  <Link
+                    key={key}
+                    href={{
+                      pathname: "/",
+                      query: { tags: t },
+                    }}
+                  >
+                    <div className="my-2">
+                      <span className="py-1 sm:py-2 sm:px-1 border-2 rounded-lg hover:cursor text-sm bg-gray-400 text-black dark:bg-gray-800 dark:text-white">
+                        {t}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+          </div>
+        </div>
+        {gfyDetail.date && windowHeight > MOBILE_BREAKPOINT && (
+          <span className="text-sm lg:text-base xl:text-xl">
+            <strong>Date:</strong> {gfyDetail.date}
+          </span>
+        )}
+        {windowHeight > MOBILE_BREAKPOINT && (
+          <span className="text-sm lg:text-base xl:text-xl">
+            <strong>Account:</strong> {gfyDetail.account}
+          </span>
+        )}
+      </>
+    );
+  }
+
+  function renderNavButtons() {
+    return (
+      <div className="flex w-full flex-wrap gap-2 justify-center py-2">
+        {renderNavButton("previous")}
+        {renderNavButton("next")}
+        {gfyViewData?.listUrl && (
+          <Link ref={backRef} href={gfyViewData.listUrl}>
+            <Button variant="secondary">Back</Button>
+          </Link>
+        )}
+      </div>
+    );
+  }
+
+  function renderShareButton(url: string, text: string) {
+    return (
+      <Button
+        variant="secondary"
+        className="text-bold w-24"
+        onClick={() =>
+          copyToClipboard(url)
+            .then((res) => {
+              toast({
+                className: cn(
+                  "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
+                ),
+                variant: "default",
+                description: `Copied ${url} to clipboard!`,
+                duration: 3000,
+              });
+            })
+            .catch((err) => {
+              toast({
+                className: cn(
+                  "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
+                ),
+                variant: "default",
+                description: "Failed to copy link to clipboard 😔",
+                duration: 3000,
+              });
+            })
+        }
+      >
+        <span className="flex w-full items-center justify-center gap-2">
+          <MdOutlineContentCopy />
+          <span>{text}</span>
+        </span>
+      </Button>
+    );
+  }
+
+  function renderShareButtons() {
+    console.log(gfyDetail?.imgur_id);
+    console.log(gfyDetail?.video_url);
+    return (
+      <div className="flex flex-wrap justify-center gap-2 py-2">
+        {gfyDetail?.imgur_id &&
+          renderShareButton(
+            `https://imgur.com/${gfyDetail?.imgur_id}.mp4`,
+            "Imgur"
+          )}
+        {gfyDetail?.video_url &&
+          gfyDetail?.video_url.includes("imgur") === false &&
+          renderShareButton(gfyDetail?.video_url, "HQ")}
+      </div>
+    );
+  }
+
   function mobileView() {
     if (!gfyDetail) {
       return (
@@ -168,14 +294,9 @@ export default function GfyView(props: Props) {
                 </Link>
               ))}
           </div>
-          <div className="flex w-full space-x-2 justify-center py-2">
-            {renderNavButton("previous")}
-            {renderNavButton("next")}
-            {gfyViewData?.listUrl && (
-              <Link ref={backRef} href={gfyViewData.listUrl}>
-                <Button variant="secondary">Back</Button>
-              </Link>
-            )}
+          <div className="flex flex-col">
+            {renderShareButtons()}
+            {renderNavButtons()}
           </div>
         </div>
       </div>
@@ -196,59 +317,11 @@ export default function GfyView(props: Props) {
           <div className="flex w-4/5 justify-center">{renderPlayer()}</div>
           <div className="hidden md:w-1/5 md:flex md:flex-wrap md:flex-col h-full justify-between">
             <div className="flex flex-col space-y-2 p-2 w-full max-h-full">
-              {windowHeight > MOBILE_BREAKPOINT && (
-                <div className="flex justify-end">
-                  <div className="px-4">
-                    <ThemeToggler />
-                  </div>
-                </div>
-              )}
-              {windowHeight > MOBILE_BREAKPOINT && (
-                <span className="text-sm lg:text-base xl:text-xl break-words">
-                  {gfyDetail.title}
-                </span>
-              )}
-              <div className="flex flex-col">
-                <div className="flex flex-wrap gap-2 py-2">
-                  {windowHeight > MOBILE_BREAKPOINT &&
-                    gfyDetail.tags.map((t, key) => {
-                      return (
-                        <Link
-                          key={key}
-                          href={{
-                            pathname: "/",
-                            query: { tags: t },
-                          }}
-                        >
-                          <div className="my-2">
-                            <span className="py-1 sm:py-2 sm:px-1 border-2 rounded-lg hover:cursor text-sm bg-gray-400 text-black dark:bg-gray-800 dark:text-white">
-                              {t}
-                            </span>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                </div>
-              </div>
-              {gfyDetail.date && windowHeight > MOBILE_BREAKPOINT && (
-                <span className="text-sm lg:text-base xl:text-xl">
-                  <strong>Date:</strong> {gfyDetail.date}
-                </span>
-              )}
-              {windowHeight > MOBILE_BREAKPOINT && (
-                <span className="text-sm lg:text-base xl:text-xl">
-                  <strong>Account:</strong> {gfyDetail.account}
-                </span>
-              )}
+              {renderDesktopDetails()}
             </div>
-            <div className="flex w-full flex-wrap gap-2 justify-center py-2">
-              {renderNavButton("previous")}
-              {renderNavButton("next")}
-              {gfyViewData?.listUrl && (
-                <Link ref={backRef} href={gfyViewData.listUrl}>
-                  <Button variant="secondary">Back</Button>
-                </Link>
-              )}
+            <div className="flex flex-col">
+              {renderShareButtons()}
+              {renderNavButtons()}
             </div>
           </div>
         </div>

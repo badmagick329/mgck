@@ -39,6 +39,7 @@ export type GfyDetailResponse = {
   tags: string[];
   date: string | null;
   account: string;
+  imgur_id: string;
   video_url: string;
 };
 
