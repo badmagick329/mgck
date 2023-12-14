@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 
+from django.conf import settings
 from django.shortcuts import HttpResponseRedirect, render
 from fileuploader.models import UploadUser
 from urlshortener.apps import UrlshortenerConfig
@@ -21,7 +22,9 @@ def index(request):
         or request.user.is_superuser
     )
     return render(
-        request, f"{app_name}/index.html", context={"can_upload": can_upload}
+        request,
+        f"{app_name}/index.html",
+        context={"can_upload": can_upload, "base_url": BASE_URL},
     )
 
 
