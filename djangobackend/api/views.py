@@ -73,6 +73,10 @@ class GfyDetails(APIView):
                             description="The account name belonging to the gfy",
                             type=openapi.TYPE_STRING,
                         ),
+                        "imgur_id": openapi.Schema(
+                            description="The imgur id of the gfy",
+                            type=openapi.TYPE_STRING,
+                        ),
                         "video_url": openapi.Schema(
                             description="The video url of the gfy",
                             type=openapi.TYPE_STRING,
@@ -83,6 +87,7 @@ class GfyDetails(APIView):
                         "tags": ["tag1", "tag2"],
                         "date": "2021-01-01",
                         "account": "account",
+                        "imgur_id": "imgur_id",
                         "video_url": "https://i.imgur.com/imgur_id.mp4",
                     },
                 ),
@@ -100,6 +105,7 @@ class GfyDetails(APIView):
                 "tags": gfy.tags.all().values_list("name", flat=True),
                 "date": gfy.date,
                 "account": gfy.account.name,
+                "imgur_id": gfy.imgur_id,
                 "video_url": gfy.video_url
                 if gfy.video_id and CDN_IS_ACTIVE
                 else gfy.imgur_mp4_url,

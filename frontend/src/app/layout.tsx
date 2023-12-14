@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Search through Red Velvet Gfys now moved to Imgur",
 };
 
+import { Toaster } from "@/components/ui/toaster"
+
 export default function RootLayout({
   children,
 }: {
@@ -25,6 +27,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <GlobalContextProvider>{children}</GlobalContextProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
