@@ -246,8 +246,6 @@ export default function GfyView(props: Props) {
   }
 
   function renderShareButtons() {
-    console.log(gfyDetail?.imgur_id);
-    console.log(gfyDetail?.video_url);
     return (
       <div className="flex flex-wrap justify-center gap-2 py-2">
         {gfyDetail?.imgur_id &&
