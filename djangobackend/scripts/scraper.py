@@ -20,6 +20,8 @@ import pendulum
 import praw
 import requests
 from bs4 import BeautifulSoup as bs
+from praw.models.reddit.subreddit import Subreddit
+from praw.models.reddit.wikipage import WikiPage
 from prawcore.exceptions import BadRequest
 
 django.setup()
@@ -181,7 +183,7 @@ class Scraper:
         self.updating = False
         self.logger.info("Update complete")
 
-    def scrape_url(self, url: str) -> list[ReleaseData]:
+    def _scrape_url_old(self, url: str) -> list[ReleaseData]:
         # For reference
         # table_headers = [
         #     "day",
@@ -204,6 +206,35 @@ class Scraper:
                 f"Error scraping {url}. status_code code: {response.status}"
             )
         return release_list
+
+    def scrape_url(self, url: str) -> list[ReleaseData]:
+        # For reference
+        # table_headers = [
+        #     "day",
+        #     "time",
+        #     "artist",
+        #     "album title",
+        #     "album type",
+        #     "title track",
+        #     "streaming",
+        # ]
+        month = url.split("/")[-2]
+        year = int(url.split("/")[-3])
+        try:
+            subreddit = self.reddit.subreddit("kpop")
+            wiki_page: WikiPage = subreddit.wiki[
+                f"upcoming-releases/{year}/{month}"
+            ]
+            html = wiki_page.content_html
+            release_list = self.get_release_list(html, month, str(year))
+            return release_list
+        except Exception as e:
+            self.logger.error(
+                f"Error scraping {url}. status_code code: {e}",
+                exc_info=e,
+                stack_info=True,
+            )
+            return []
 
     def generate_urls(
         self, next_month_and_year: tuple[str, int] | None = None
@@ -243,7 +274,9 @@ class Scraper:
             return self.month_strings[0], pendulum.now().year + 1
         return self.month_strings[idx], pendulum.now().year
 
-    def merge_cbs(self, old_cbs: list[dict], new_cbs: list[dict]) -> list[dict]:
+    def merge_cbs(
+        self, old_cbs: list[dict], new_cbs: list[dict]
+    ) -> list[dict]:
         """
         Merge new_cbs into old_cbs. All old_cb dates that are in new_cbs are replaced with new_cbs
         """
@@ -257,7 +290,9 @@ class Scraper:
         return merged_cbs
 
     @staticmethod
-    def get_release_list(html: str, month: str, year: str) -> list[ReleaseData]:
+    def get_release_list(
+        html: str, month: str, year: str
+    ) -> list[ReleaseData]:
         release_list = list()
         soup = bs(html, "lxml")
         rows = soup.select("table")[0].select("tbody")[0].select("tr")
