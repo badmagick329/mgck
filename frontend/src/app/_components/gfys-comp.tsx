@@ -1,12 +1,12 @@
 import { Suspense } from "react";
-import SearchForm from "@/components/gfys/search-form/SearchForm";
-import GfyList from "@/components/gfys/GfyList";
+import SearchForm from "./search-form";
+import GfyList from "./gfy-list";
 import Loading from "@/app/loading";
-import SearchNav from "@/components/gfys/search-form/SearchNav";
+import SearchNav from "./search-nav";
 
 export default function Gfys() {
   return (
-    <div className={"flex flex-col px-10 w-full h-full items-center"}>
+    <div className={"flex h-full w-full flex-col items-center px-10"}>
       <Suspense fallback={<Loading />}>
         <SearchForm />
       </Suspense>

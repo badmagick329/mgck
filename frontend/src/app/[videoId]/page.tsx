@@ -7,7 +7,7 @@ import { useEffect, useState, useRef } from "react";
 import { useGlobalContext } from "@/app/context/store";
 import { ImArrowLeft, ImArrowRight } from "react-icons/im";
 import Loading from "@/app/loading";
-import { ThemeToggler } from "@/components/ThemeToggler";
+import { ThemeToggler } from "@/components/theme-toggler";
 import { cn, copyToClipboard } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { MdOutlineContentCopy } from "react-icons/md";
@@ -88,7 +88,7 @@ export default function GfyView(props: Props) {
     return (
       <Link
         href={{
-          pathname: `/gfy/${gfyViewData.videoIds[gfyViewData.index + offset]}`,
+          pathname: `/${gfyViewData.videoIds[gfyViewData.index + offset]}`,
         }}
         ref={direction === "previous" ? leftRef : rightRef}
         replace={true}
@@ -111,7 +111,7 @@ export default function GfyView(props: Props) {
   function renderPlayer() {
     if (!gfyDetail) {
       return (
-        <div className="flex flex-col items-center justify-center h-screen max-w-screen m-0">
+        <div className="max-w-screen m-0 flex h-screen flex-col items-center justify-center">
           <Loading />
         </div>
       );
@@ -154,7 +154,7 @@ export default function GfyView(props: Props) {
           </div>
         )}
         {windowHeight > MOBILE_BREAKPOINT && (
-          <span className="text-sm lg:text-base xl:text-xl break-words">
+          <span className="break-words text-sm lg:text-base xl:text-xl">
             {gfyDetail.title}
           </span>
         )}
@@ -171,7 +171,7 @@ export default function GfyView(props: Props) {
                     }}
                   >
                     <div className="my-2">
-                      <span className="py-1 sm:py-2 sm:px-1 border-2 rounded-lg hover:cursor text-sm bg-gray-400 text-black dark:bg-gray-800 dark:text-white">
+                      <span className="hover:cursor rounded-lg border-2 bg-gray-400 py-1 text-sm text-black dark:bg-gray-800 dark:text-white sm:px-1 sm:py-2">
                         {t}
                       </span>
                     </div>
@@ -196,7 +196,7 @@ export default function GfyView(props: Props) {
 
   function renderNavButtons() {
     return (
-      <div className="flex w-full flex-wrap gap-2 justify-center py-2">
+      <div className="flex w-full flex-wrap justify-center gap-2 py-2">
         {renderNavButton("previous")}
         {renderNavButton("next")}
         {gfyViewData?.listUrl && (
@@ -218,7 +218,7 @@ export default function GfyView(props: Props) {
             .then((res) => {
               toast({
                 className: cn(
-                  "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
+                  "fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]"
                 ),
                 variant: "default",
                 description: `Copied ${url} to clipboard!`,
@@ -228,7 +228,7 @@ export default function GfyView(props: Props) {
             .catch((err) => {
               toast({
                 className: cn(
-                  "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
+                  "fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]"
                 ),
                 variant: "default",
                 description: "Failed to copy link to clipboard 😔",
@@ -263,18 +263,18 @@ export default function GfyView(props: Props) {
   function mobileView() {
     if (!gfyDetail) {
       return (
-        <div className="flex flex-col items-center justify-center h-screen max-w-screen m-0">
+        <div className="max-w-screen m-0 flex h-screen flex-col items-center justify-center">
           <Loading />
         </div>
       );
     }
     return (
-      <div className="flex flex-col items-center justify-between h-screen max-w-screen m-0">
-        <div className="flex flex-col w-full h-4/5 justify-center">
+      <div className="max-w-screen m-0 flex h-screen flex-col items-center justify-between">
+        <div className="flex h-4/5 w-full flex-col justify-center">
           {renderPlayer()}
         </div>
-        <div className="flex flex-col w-full h-1/5 justify-center py-2">
-          <div className="hidden xs:flex flex-wrap justify-center gap-2 py-2 overflow-y-scroll">
+        <div className="flex h-1/5 w-full flex-col justify-center py-2">
+          <div className="hidden flex-wrap justify-center gap-2 overflow-y-scroll py-2 xs:flex">
             {windowHeight > MOBILE_BREAKPOINT &&
               gfyDetail.tags.map((t, key) => (
                 <Link
@@ -285,7 +285,7 @@ export default function GfyView(props: Props) {
                   }}
                 >
                   <div className="my-2">
-                    <span className="py-1 sm:py-2 sm:px-1 border-2 rounded-lg hover:cursor text-sm bg-gray-400 text-black dark:bg-gray-800 dark:text-white">
+                    <span className="hover:cursor rounded-lg border-2 bg-gray-400 py-1 text-sm text-black dark:bg-gray-800 dark:text-white sm:px-1 sm:py-2">
                       {t}
                     </span>
                   </div>
@@ -304,17 +304,17 @@ export default function GfyView(props: Props) {
   function desktopView() {
     if (!gfyDetail) {
       return (
-        <div className="flex flex-col items-center justify-center h-screen max-w-screen m-0">
+        <div className="max-w-screen m-0 flex h-screen flex-col items-center justify-center">
           <Loading />
         </div>
       );
     }
     return (
-      <div className="flex flex-col items-center justify-center h-screen max-w-screen m-0">
-        <div className="flex w-full h-full justify-between">
+      <div className="max-w-screen m-0 flex h-screen flex-col items-center justify-center">
+        <div className="flex h-full w-full justify-between">
           <div className="flex w-4/5 justify-center">{renderPlayer()}</div>
-          <div className="hidden md:w-1/5 md:flex md:flex-wrap md:flex-col h-full justify-between">
-            <div className="flex flex-col space-y-2 p-2 w-full max-h-full">
+          <div className="hidden h-full justify-between md:flex md:w-1/5 md:flex-col md:flex-wrap">
+            <div className="flex max-h-full w-full flex-col space-y-2 p-2">
               {renderDesktopDetails()}
             </div>
             <div className="flex flex-col">

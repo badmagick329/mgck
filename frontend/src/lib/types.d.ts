@@ -52,13 +52,3 @@ export type GfyViewData = {
   videoIds: string[];
   listUrl: string;
 };
-
-// TODO: Remove these?
-export type GfyURLParams = ReadonlyURLSearchParams & {
-  title: string;
-  tags: string;
-};
-
-export type GfySearchParams = {
-  searchParams: GfyURLParams;
-};

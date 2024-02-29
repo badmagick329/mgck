@@ -19,14 +19,8 @@ export default function GfyList() {
   const pathname = usePathname();
 
   const fetchData = async () => {
-    let now = performance.now();
-    let currentTime = performance.timeOrigin + performance.now();
-    console.log(`Calling action at : ${currentTime}`);
     const resp = await searchGfys(formDataFromSearchParams(searchParams));
-    console.log("searchGfys took", performance.now() - now, "ms");
-    now = performance.now();
     const d = parseGfyResponse(resp);
-    now = performance.now();
     setData(d);
   };
 
@@ -49,7 +43,7 @@ export default function GfyList() {
   }, [data]);
 
   return (
-    <div className="flex flex-wrap w-full py-2 gap-2 justify-center overflow-hidden lg:w-2/3">
+    <div className="flex w-full flex-wrap justify-center gap-2 overflow-hidden py-2 lg:w-2/3">
       {data.gfys.map((d, key) => (
         <Link
           key={key}
@@ -64,8 +58,8 @@ export default function GfyList() {
           }}
         >
           <Image
-            className="object-cover rounded-md hover:ring-2 hover:ring-offset-2
-                  hover:ring-indigo-500 hover:cursor-pointer"
+            className="rounded-md object-cover hover:cursor-pointer hover:ring-2
+                  hover:ring-indigo-500 hover:ring-offset-2"
             src={imgurIdToJpg(d.imgurId)}
             alt="imgur"
             width={250}

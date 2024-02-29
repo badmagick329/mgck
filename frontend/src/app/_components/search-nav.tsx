@@ -124,8 +124,8 @@ export default function SearchNav({ attachListeners }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center mt-4 space-y-2">
-      <div className="flex space-x-2 justify-center">
+    <div className="mt-4 flex flex-col items-center space-y-2">
+      <div className="flex justify-center space-x-2">
         {renderNavButton(data.previous, "first")}
         {renderNavButton(data.previous, "previous")}
         {renderNavButton(data.next, "next")}

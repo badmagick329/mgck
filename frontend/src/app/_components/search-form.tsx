@@ -1,12 +1,11 @@
 "use client";
-import { useGlobalContext } from "@/app/context/store";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createURL } from "@/lib/utils";
 import { fetchAccounts } from "@/actions/actions";
 import { Check, ChevronsUpDown } from "lucide-react";
-import SearchNav from "@/components/gfys/search-form/SearchNav";
+import SearchNav from "./search-nav";
 
 import { cn } from "@/lib/utils";
 import {
@@ -149,7 +148,7 @@ export default function SearchForm() {
     return (
       <form
         onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-2"
+        className="grid grid-cols-1 gap-2 md:grid-cols-2"
       >
         <input
           className={`flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${FIELD_WIDTH}`}
