@@ -54,7 +54,7 @@ export default function GfyList() {
         <Link
           key={key}
           href={{
-            pathname: `/gfy/${d.imgurId}`,
+            pathname: `/${d.imgurId}`,
           }}
           onClick={() => {
             setGfyViewData({
