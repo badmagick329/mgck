@@ -32,6 +32,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
       ],
     },
+    twitter: {
+      card: "player",
+      site: "@mgck",
+      players: [
+        {
+          playerUrl: `https://mgck.ink/gfys/${params.videoId}`,
+          streamUrl: `https://i.imgur.com/${gfyDetail.imgur_id}.mp4`,
+          width: 720,
+          height: 480,
+        },
+      ],
+    },
   };
 }
 
