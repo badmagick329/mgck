@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 app_name = ApiConfig.name
 CACHE_TTL = settings.API_CACHE_TTL
-CDN_IS_ACTIVE = settings.CDN_IS_ACTIVE
+USE_HOSTED_URL = settings.USE_HOSTED_URL
 
 
 class GfyDetailsThrottle(UserRateThrottle):
@@ -108,7 +108,7 @@ class GfyDetails(APIView):
                 "imgur_id": gfy.imgur_id,
                 "video_url": (
                     gfy.video_url
-                    if gfy.video_id and CDN_IS_ACTIVE
+                    if gfy.video_id and USE_HOSTED_URL
                     else gfy.imgur_mp4_url
                 ),
             }
