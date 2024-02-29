@@ -12,3 +12,4 @@ logs/
 certbot/
 irene/*
 crontab
+deploy.sh
