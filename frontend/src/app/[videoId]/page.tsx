@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "video.other",
       videos: [
         {
-          url: `https://mgck.ink/gfys/${params.videoId}.mp4`,
+          url: `https://mgck.ink/gfy-videos/${params.videoId}.mp4`,
           width: 720,
           height: 480,
           type: "video/mp4",
@@ -37,8 +37,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       site: "@mgck",
       players: [
         {
-          playerUrl: `https://mgck.ink/gfys/${params.videoId}.mp4`,
-          streamUrl: `https://mgck.ink/gfys/${params.videoId}.mp4`,
+          playerUrl: `https://mgck.ink/gfy-videos/${params.videoId}.mp4`,
+          streamUrl: `https://mgck.ink/gfy-videos/${params.videoId}.mp4`,
           width: 720,
           height: 480,
         },
