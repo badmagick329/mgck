@@ -20,7 +20,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_URL = os.environ["BASE_URL"]
 VIDEO_URL = os.environ["VIDEO_URL"]
-CDN_IS_ACTIVE = int(os.environ.get("CDN_IS_ACTIVE", 0))
+USE_HOSTED_URL = int(os.environ.get("USE_HOSTED_URL", 0))
 REDDIT_VIDEOS = os.environ.get("REDDIT_VIDEOS", "")
 REDDIT_VIDEOS_STATIC = os.environ.get("REDDIT_VIDEOS_STATIC", "")
 REDDIT_SECRET = os.environ.get("REDDIT_SECRET", "")

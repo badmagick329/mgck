@@ -106,9 +106,11 @@ class GfyDetails(APIView):
                 "date": gfy.date,
                 "account": gfy.account.name,
                 "imgur_id": gfy.imgur_id,
-                "video_url": gfy.video_url
-                if gfy.video_id and CDN_IS_ACTIVE
-                else gfy.imgur_mp4_url,
+                "video_url": (
+                    gfy.video_url
+                    if gfy.video_id and CDN_IS_ACTIVE
+                    else gfy.imgur_mp4_url
+                ),
             }
         )
 
