@@ -1,6 +1,7 @@
-from gfys.models import Tag
 import pytest
 from django.db.utils import IntegrityError
+from gfys.models import Tag
+
 
 @pytest.mark.django_db
 def test_tag_unique():
