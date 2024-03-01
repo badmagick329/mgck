@@ -7,7 +7,9 @@ from kpopcomebacks.models import Release
 PAGE_SIZE = 6
 
 
-def format_comebacks(comebacks: list[Release], page_number: str | None = None) -> dict:
+def format_comebacks(
+    comebacks: list[Release], page_number: str | None = None
+) -> dict:
     paginator = Paginator(comebacks, PAGE_SIZE)
     if page_number is None:
         page_number = get_closest_page(paginator)
@@ -33,7 +35,9 @@ def format_comebacks(comebacks: list[Release], page_number: str | None = None) -
         "previous_jump": prev_jump,
         "next_jump": next_jump,
         "first": 1 if page.number != 1 else None,
-        "last": paginator.num_pages if page.number != paginator.num_pages else None,
+        "last": (
+            paginator.num_pages if page.number != paginator.num_pages else None
+        ),
         "total": paginator.num_pages,
     }
     return {
