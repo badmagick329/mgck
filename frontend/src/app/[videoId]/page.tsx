@@ -17,17 +17,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "video.other",
       videos: [
         {
-          url: `https://mgck.ink/gfy-videos/${params.videoId}.mp4`,
-          width: 720,
-          height: 480,
+          url: `https://mgck.ink/gfys/${params.videoId}.mp4`,
+          width: 1920,
+          height: 1080,
           type: "video/mp4",
         },
       ],
       images: [
         {
           url: `https://i.imgur.com/${gfyDetail.imgur_id}.jpg`,
-          width: 720,
-          height: 480,
+          width: 1920,
+          height: 1080,
           alt: `${gfyDetail.title}`,
         },
       ],
@@ -37,10 +37,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       site: "@mgck",
       players: [
         {
-          playerUrl: `https://mgck.ink/gfy-videos/${params.videoId}.mp4`,
-          streamUrl: `https://mgck.ink/gfy-videos/${params.videoId}.mp4`,
-          width: 720,
-          height: 480,
+          playerUrl: `https://mgck.ink/gfys/${params.videoId}.mp4`,
+          streamUrl: `https://mgck.ink/gfys/${params.videoId}.mp4`,
+          width: 1920,
+          height: 1080,
         },
       ],
     },
