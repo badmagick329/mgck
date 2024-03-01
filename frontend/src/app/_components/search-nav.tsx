@@ -18,13 +18,9 @@ type IconType =
   | typeof ImBackward2
   | typeof ImForward3;
 
-type Props = {
-  attachListeners: boolean;
-};
-
 type NavType = "first" | "previous" | "next" | "last";
 
-export default function SearchNav({ attachListeners }: Props) {
+export default function SearchNav({ onClient }: { onClient: boolean }) {
   const { data } = useGlobalContext();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pathname = usePathname();
@@ -32,7 +28,7 @@ export default function SearchNav({ attachListeners }: Props) {
   const rightRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    if (!attachListeners) {
+    if (!onClient) {
       return;
     }
     const handleKeyDown = (e: KeyboardEvent) => {
