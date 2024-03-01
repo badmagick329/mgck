@@ -2,10 +2,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
-from django.template.response import HttpResponse, TemplateResponse
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from gfys.models import Account, Gfy, GfyUser
-from gfys.utils import create_gfy, filter_gfys, format_gfys, fetch_imgur_title
+from gfys.utils import create_gfy, fetch_imgur_title, filter_gfys, format_gfys
 
 
 def index(request):
@@ -22,7 +22,7 @@ def imgur_form(request):
     return TemplateResponse(request, "gfys/imgurform.html", {})
 
 
-@login_required(login_url="login/")
+@login_required(login_url="login/")  # type: ignore
 def imgur_upload(request):
     if not GfyUser.objects.filter(user=request.user).exists():
         return HttpResponse(
@@ -59,7 +59,8 @@ def imgur_upload(request):
             {"success": res.unwrap()},
         )
 
-@login_required(login_url="login/")
+
+@login_required(login_url="login/")  # type: ignore
 def fetch_title(request):
     if request.method != "POST":
         return
@@ -90,8 +91,8 @@ def gfylist(request):
     )
 
 
-def video(request, imgur_id):
-    gfy = Gfy.objects.get(imgur_id=imgur_id)
+def video(request, object_id):
+    gfy = Gfy.objects.get(object_id=object_id)
     tags = [t.name for t in gfy.tags.all()]
     account_name = gfy.account.name if gfy.account else None
     return TemplateResponse(

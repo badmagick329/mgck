@@ -1,8 +1,8 @@
 import re
 from datetime import datetime
 
-from django.conf import settings
-from django.shortcuts import HttpResponseRedirect, render
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from fileuploader.models import UploadUser
 from urlshortener.apps import UrlshortenerConfig
 from urlshortener.models import ShortURL
