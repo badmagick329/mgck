@@ -12,5 +12,5 @@ urlpatterns = [
     path("imgur-form", views.imgur_form, name="imgur-form"),
     path("imgur-upload", views.imgur_upload, name="imgur-upload"),
     path("fetch-title", views.fetch_title, name="fetch-title"),
-    path("video/<str:imgur_id>", views.video, name="video"),
+    path("video/<str:object_id>", views.video, name="video"),
 ]

@@ -22,7 +22,7 @@ class GfyUser(models.Model):
 class Tag(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
-    class Meta:
+    class Meta:  # type: ignore
         ordering = ["name"]
 
     def __repr__(self):
@@ -35,7 +35,7 @@ class Tag(models.Model):
 class Account(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
-    class Meta:
+    class Meta:  # type: ignore
         ordering = ["name"]
 
     def __repr__(self):
@@ -68,7 +68,7 @@ class Gfy(models.Model):
         Account, on_delete=models.CASCADE, blank=True, null=True
     )
 
-    class Meta:
+    class Meta:  # type: ignore
         ordering = ["-date"]
 
     def __str__(self):
@@ -178,10 +178,8 @@ class Gfy(models.Model):
         match = re.search(cls.IMGUR_RE, data["imgur_url"])
         if match is None:
             raise ValueError(f"Invalid imgur_url {data['imgur_url']}")
-        saved_gfy = cls.objects.filter(imgur_id=match.group(1))
-        if saved_gfy.exists():
-            gfy = saved_gfy.first()
-        else:
+        gfy = cls.objects.filter(imgur_id=match.group(1)).first()
+        if gfy is None:
             imgur_id = match.group(1)
             gfy_id = data.get("gfy_id", None)
             imgur_title = data["imgur_title"]
