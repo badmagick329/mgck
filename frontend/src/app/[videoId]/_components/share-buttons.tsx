@@ -60,7 +60,7 @@ async function handleCopyClipboardClick(url: string, toast: ToastType) {
       ),
       variant: "default",
       description: `Copied ${url} to clipboard!`,
-      duration: 3000,
+      duration: 1500,
     });
   } catch {
     toast({
@@ -69,7 +69,7 @@ async function handleCopyClipboardClick(url: string, toast: ToastType) {
       ),
       variant: "default",
       description: "Failed to copy link to clipboard",
-      duration: 3000,
+      duration: 1500,
     });
   }
 }

@@ -1,4 +1,5 @@
 import { ReadonlyURLSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export type GfyParsedResponse = {
   count: number;
@@ -52,3 +53,10 @@ export type GfyViewData = {
   videoIds: string[];
   listUrl: string;
 };
+
+export type SearchFormParams = {
+  title: string;
+  tags: string;
+};
+
+type SearchParams = ReturnType<typeof useSearchParams>;
