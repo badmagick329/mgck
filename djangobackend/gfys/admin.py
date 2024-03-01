@@ -1,5 +1,5 @@
 from django.contrib import admin
-from gfys.models import Gfy, Tag, Account, GfyUser
+from gfys.models import Account, Gfy, GfyUser, Tag
 
 
 class GfyAdmin(admin.ModelAdmin):
@@ -24,9 +24,11 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ("name",)
     search_fields = ["name"]
 
+
 class AccountAdmin(admin.ModelAdmin):
     list_display = ("name",)
     search_fields = ["name"]
+
 
 class GfyUserAdmin(admin.ModelAdmin):
     list_display = ("user", "account")

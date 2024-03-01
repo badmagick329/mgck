@@ -22,7 +22,10 @@ def upload_file(request):
             return render(
                 request,
                 "fileuploader/success.html",
-                {"filename": instance.file.name, "file_url": instance.file.url},
+                {
+                    "filename": instance.file.name,
+                    "file_url": instance.file.url,
+                },
             )
         else:
             return render(
