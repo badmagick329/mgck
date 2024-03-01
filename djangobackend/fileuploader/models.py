@@ -1,13 +1,15 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from django.contrib.auth.models import User
+
 
 class UploadUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"<UploadUser(user={self.user})>"
+
 
 class UploadedFile(models.Model):
     file = models.FileField(upload_to="")

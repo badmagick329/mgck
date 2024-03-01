@@ -7,7 +7,7 @@ class Artist(models.Model):
     name = models.CharField(max_length=510)
 
     def __repr__(self):
-        return f"<Artist(id={self.id}, name={self.name})>"
+        return f"<Artist(id={self.id}, name={self.name})>"  # type: ignore
 
     def __str__(self):
         return self.name
@@ -22,12 +22,18 @@ class Release(models.Model):
     reddit_urls = models.JSONField(null=True, blank=True)
     urls = models.JSONField(null=True, blank=True)
 
-    class Meta:
-        unique_together = ["artist", "album", "title", "release_date", "release_type"]
+    class Meta:  # type: ignore
+        unique_together = [
+            "artist",
+            "album",
+            "title",
+            "release_date",
+            "release_type",
+        ]
 
     def __str__(self):
         return (
-            f"<Release(id={self.id}, artist={self.artist}, "
+            f"<Release(id={self.id}, artist={self.artist}, "  # type: ignore
             f"album={self.album}, title={self.title}, "
             f"release_date={self.release_date}, "
             f"release_type={self.release_type}, "
@@ -37,7 +43,7 @@ class Release(models.Model):
 
     def to_dict(self):
         return {
-            "id": self.id,
+            "id": self.id,  # type: ignore
             "artist": self.artist.name,
             "album": self.album,
             "title": self.title,
@@ -52,7 +58,7 @@ class ReleaseType(models.Model):
     name = models.CharField(max_length=510)
 
     def __repr__(self):
-        return f"<ReleaseType(id={self.id}, name={self.name})>"
+        return f"<ReleaseType(id={self.id}, name={self.name})>"  # type: ignore
 
     def __str__(self):
         return self.name

@@ -1,18 +1,22 @@
 import re
 from datetime import datetime
-import requests
 
+import requests
+from bs4 import BeautifulSoup as bs
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Count, F, Q, QuerySet
 from gfys.models import Account, Gfy, Tag
 from result import Result
 from result.result import as_result
-from bs4 import BeautifulSoup as bs
 
 PAGE_SIZE = 50
-IMGUR_RE = re.compile(r"https?://(?:(?:www\.)|(?:i\.))?imgur\.com/([^\.^ ^/]+)")
-IMGUR_A_RE = re.compile(r"https?://(?:(?:www\.)|(?:i\.))?imgur\.com/a/([^\.^ ^/]+)")
+IMGUR_RE = re.compile(
+    r"https?://(?:(?:www\.)|(?:i\.))?imgur\.com/([^\.^ ^/]+)"
+)
+IMGUR_A_RE = re.compile(
+    r"https?://(?:(?:www\.)|(?:i\.))?imgur\.com/a/([^\.^ ^/]+)"
+)
 
 
 def format_gfys(
@@ -45,9 +49,9 @@ def format_gfys(
         "previous_jump": prev_jump,
         "next_jump": next_jump,
         "first": 1 if page.number != 1 else None,
-        "last": paginator.num_pages
-        if page.number != paginator.num_pages
-        else None,
+        "last": (
+            paginator.num_pages if page.number != paginator.num_pages else None
+        ),
         "total": paginator.num_pages,
     }
     return {
@@ -117,9 +121,10 @@ def create_gfy(
         t, _ = Tag.objects.get_or_create(name=tag)
         gfy.tags.add(t)
     Gfy.update_date(gfy)
-    return gfy.imgur_mp4_url
+    return gfy.imgur_mp4_url  # type: ignore
 
-def fetch_imgur_title(url:str) -> str | None:
+
+def fetch_imgur_title(url: str) -> str | None:
     match = IMGUR_RE.match(url)
     if not match:
         return ""
@@ -129,19 +134,20 @@ def fetch_imgur_title(url:str) -> str | None:
     soup = bs(text, "lxml")
     title = soup.select("meta[name='twitter:title']")
     if title:
-        title = title.pop()['content']
+        title = title.pop()["content"]
         if title == "imgur.com":
             title = ""
-    return title or ""
+    return title or ""  # type: ignore
 
-def imgur_id_from_url(url:str) -> str | None:
+
+def imgur_id_from_url(url: str) -> str | None:
     match = IMGUR_A_RE.match(url)
     if match:
         text = requests.get(url).text
         soup = bs(text, "lxml")
         mp4_tag = soup.select("meta[name='twitter:player:stream']")
         if mp4_tag:
-            url = mp4_tag.pop()['content']
+            url = mp4_tag.pop()["content"]  # type: ignore
         else:
             return None
     match = IMGUR_RE.match(url)

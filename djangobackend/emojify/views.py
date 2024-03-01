@@ -39,7 +39,12 @@ def converter(message):
     return (
         " ".join(
             list(
-                (map(lambda x: f"{random.choice(emojis)} {x}", message.split()))
+                (
+                    map(
+                        lambda x: f"{random.choice(emojis)} {x}",
+                        message.split(),
+                    )
+                )
             )
         )[2:]
         + " "

@@ -1,7 +1,8 @@
-from fileuploader.models import UploadedFile
 from django import forms
+from fileuploader.models import UploadedFile
+
 
 class UploadedFileForm(forms.ModelForm):
-    class Meta:
+    class Meta:  # type: ignore
         model = UploadedFile
-        fields = ['file']
+        fields = ["file"]

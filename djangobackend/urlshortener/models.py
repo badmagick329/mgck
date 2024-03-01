@@ -10,6 +10,7 @@ from djangobackend.settings import BASE_URL
 MAX_ID = 20
 load_dotenv()
 
+
 class ShortURL(models.Model):
     ID_SIZE = 4
     url = models.URLField()

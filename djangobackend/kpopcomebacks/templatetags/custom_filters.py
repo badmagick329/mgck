@@ -8,4 +8,3 @@ register = template.Library()
 @stringfilter
 def shorten(value):
     return value.split("&")[0]
-

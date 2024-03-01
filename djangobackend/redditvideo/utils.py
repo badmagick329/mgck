@@ -4,13 +4,19 @@ from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 
 import requests
-from redditvideo.types import AudioResult, MuxingResult, VideoResult
+from redditvideo.types import AudioResult, VideoResult
 from result.result import as_result
 
-from djangobackend.exceptions import (DownloadError, MuxingError,
-                                      RedditAudioNotFound)
-from djangobackend.settings import (CONTAINERED, REDDIT_VIDEOS,
-                                    REDDIT_VIDEOS_STATIC)
+from djangobackend.exceptions import (
+    DownloadError,
+    MuxingError,
+    RedditAudioNotFound,
+)
+from djangobackend.settings import (
+    CONTAINERED,
+    REDDIT_VIDEOS,
+    REDDIT_VIDEOS_STATIC,
+)
 
 VIDEO_RE = r"(https?://v\.redd\.it)/(\w+)/(\w+\.mp4)"
 
@@ -44,7 +50,7 @@ def download(
 
 
 @as_result(Exception)
-def download_video(url: str, filename: Path) -> VideoResult:
+def download_video(url: str, filename: Path):
     r = requests.get(url)
     if r.status_code != 200:
         raise DownloadError
@@ -54,7 +60,7 @@ def download_video(url: str, filename: Path) -> VideoResult:
 
 
 @as_result(Exception, RedditAudioNotFound)
-def download_audio(url: str, filename: Path) -> AudioResult:
+def download_audio(url: str, filename: Path):
     post_fixes = ("audio", "AUDIO_128", "AUDIO_64")
     r = None
     for pf in post_fixes:
@@ -70,14 +76,14 @@ def download_audio(url: str, filename: Path) -> AudioResult:
 
 
 @as_result(MuxingError)
-def mux(video: str, audio: str, output: Path) -> MuxingResult:
+def mux(video: Path, audio: Path, output: Path):
     cmd = (
         'ffmpeg -y -i "{}" -i "{}" -c:v copy -c:a copy '
         '-async 1 -hide_banner -loglevel error "{}"'
     )
-    cmd = cmd.format(video, audio, str(output))
+    cmd = cmd.format(str(video), str(audio), str(output))
     subprocess.run(cmd, shell=True)
-    if Path(output).exists():
+    if output.exists():
         return output.name
     raise MuxingError()
 
@@ -85,10 +91,10 @@ def mux(video: str, audio: str, output: Path) -> MuxingResult:
 def process_results(
     vresult: VideoResult,
     aresult: AudioResult,
-    vfile: str,
-    afile: str,
+    vfile: Path,
+    afile: Path,
     ofile: Path,
-) -> str | None:
+):
     if vresult.is_err():
         return None
     if aresult.is_err():

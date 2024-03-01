@@ -1,6 +1,7 @@
-from gfys.models import Account
 import pytest
 from django.db.utils import IntegrityError
+from gfys.models import Account
+
 
 @pytest.mark.django_db
 def test_account_unique():
