@@ -18,7 +18,7 @@ export default function SearchTextInput({
       name={name}
       placeholder={name.slice(0, 1).toUpperCase() + name.slice(1)}
       autoComplete="off"
-      type="text"
+      type="search"
       defaultValue={searchParams?.get(name) || ""}
       onChange={(e) => setFormParams({ ...formParams, [name]: e.target.value })}
     />

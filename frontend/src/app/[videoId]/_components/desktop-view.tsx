@@ -1,6 +1,5 @@
 "use client";
 import { GfyDetailResponse } from "@/lib/types";
-import Loading from "@/app/loading";
 import DesktopDetails from "./desktop-details";
 import GfyPlayer from "./gfy-player";
 import ShareButtons from "./share-buttons";
@@ -12,11 +11,7 @@ export default function DesktopView({
   gfyDetail: GfyDetailResponse | null;
 }) {
   if (!gfyDetail) {
-    return (
-      <div className="max-w-screen m-0 flex h-screen flex-col items-center justify-center">
-        <Loading />
-      </div>
-    );
+    return null;
   }
   return (
     <div className="max-w-screen m-0 flex h-screen flex-col items-center justify-center">

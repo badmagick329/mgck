@@ -1,7 +1,5 @@
 import { ThemeToggler } from "@/components/theme-toggler";
 import Gfys from "./_components/gfys-comp";
-import { Suspense } from "react";
-import Loading from "@/app/loading";
 
 export default function Home() {
   return (
@@ -13,9 +11,7 @@ export default function Home() {
       </div>
       <div className="py-4"></div>
       <div className="h-full w-full">
-        <Suspense fallback={<Loading />}>
-          <Gfys />
-        </Suspense>
+        <Gfys />
       </div>
     </main>
   );
