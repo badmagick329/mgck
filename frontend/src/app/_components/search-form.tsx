@@ -1,12 +1,12 @@
 "use client";
-import SearchNav from "./search-nav";
+import SearchNavigation from "./search-navigation";
 import SearchFormContent from "./search-form-content";
 
 export default function SearchForm() {
   return (
     <div className="flex flex-col items-center">
       <SearchFormContent />
-      <SearchNav onClient={true} />
+      <SearchNavigation onClient={true} />
     </div>
   );
 }

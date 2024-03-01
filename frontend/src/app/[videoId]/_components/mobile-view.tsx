@@ -1,5 +1,4 @@
 import { GfyDetailResponse } from "@/lib/types";
-import Loading from "@/app/loading";
 import GfyPlayer from "./gfy-player";
 import ShareButtons from "./share-buttons";
 import NavButtons from "./nav-buttons";
@@ -10,11 +9,7 @@ export default function MobileView({
   gfyDetail: GfyDetailResponse | null;
 }) {
   if (!gfyDetail) {
-    return (
-      <div className="max-w-screen m-0 flex h-screen flex-col items-center justify-center">
-        <Loading />
-      </div>
-    );
+    return null;
   }
   return (
     <div className="max-w-screen m-0 flex h-screen flex-col items-center justify-between">
