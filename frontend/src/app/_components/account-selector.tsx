@@ -1,9 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "next/navigation";
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
-import { fetchAccounts } from "@/actions/actions";
+import { useState, Dispatch, SetStateAction } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { SearchFormParams } from "@/lib/types";
 
 import { cn } from "@/lib/utils";
 import {
@@ -20,39 +17,16 @@ import {
 } from "@/components/ui/popover";
 
 export default function AccountSelector({
-  setFormParams,
+  accounts,
   selectedAccount,
   setSelectedAccount,
 }: {
-  setFormParams: Dispatch<SetStateAction<SearchFormParams>>;
+  accounts: string[];
   selectedAccount: string;
   setSelectedAccount: Dispatch<SetStateAction<string>>;
 }) {
   const [open, setOpen] = useState(false);
-  const searchParams = useSearchParams();
-  const [accounts, setAccounts] = useState<string[]>([]);
   const FIELD_WIDTH = "w-[12rem]";
-
-  useEffect(() => {
-    const titleParam = (searchParams.get("title") || "") as string;
-    const tagsParam = (searchParams.get("tags") || "") as string;
-    setFormParams({
-      title: titleParam,
-      tags: tagsParam,
-    });
-    const updateAccounts = async () => {
-      const resp = await fetchAccounts();
-      const newAccounts = ["All", ...resp.accounts];
-      setAccounts(newAccounts);
-      const accountParam = (searchParams.get("account") || "").trim() as string;
-      if (newAccounts.indexOf(accountParam) == -1) {
-        setSelectedAccount("All");
-      } else {
-        setSelectedAccount(accountParam);
-      }
-    };
-    updateAccounts();
-  }, []);
 
   if (selectedAccount === "") {
     return null;
