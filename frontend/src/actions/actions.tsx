@@ -53,6 +53,12 @@ export async function fetchAccounts() {
 }
 
 export async function addGfyView(videoUrl: string) {
-  // TODO: Implement
-  console.log("Adding view for", videoUrl);
+  const apiUrl = `${BASE_URL}/api/gfy/views`;
+  let res = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ videoUrl }),
+  });
 }

@@ -47,6 +47,7 @@ class Account(models.Model):
 
 class Gfy(models.Model):
     IMGUR_RE = re.compile(r"https://i.imgur.com/(.*).mp4")
+    HQ_VIDEO_RE = re.compile(r"https://mgck.ink/gfy-videos/(.*).mp4")
     IMGUR_BASE_URL = "https://i.imgur.com/"
     GFYCAT_BASE_URL = "https://gfycat.com/"
 
@@ -76,7 +77,7 @@ class Gfy(models.Model):
             f"<Gfy(id={self.id}, imgur_id={self.imgur_id}, object_id={self.object_id}, "  # type: ignore
             f"gfy_id={self.gfy_id}, video_id={self.video_id}, "
             f"imgur_title={self.imgur_title}, gfy_title={self.gfy_title}, "
-            f"date={self.date}), account={self.account}>"
+            f"date={self.date}, account={self.account})>"
         )
 
     def init_object_id(self):
@@ -226,3 +227,31 @@ class Gfy(models.Model):
         date = cls.gfy_date(tags, title)
         gfy.date = date
         gfy.save()
+
+    def add_view(self) -> None:
+        GfyView.objects.create(gfy=self)
+
+    @property
+    def view_count(self) -> int:
+        return GfyView.objects.filter(gfy=self).count()
+
+    @classmethod
+    def id_from_url(cls, video_url: str) -> str | None:
+        if match := cls.HQ_VIDEO_RE.match(video_url):
+            return match.group(1)
+        if match := cls.IMGUR_RE.match(video_url):
+            return match.group(1)
+        return None
+
+
+class GfyView(models.Model):
+    gfy = models.ForeignKey(Gfy, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:  # type: ignore
+        ordering = ["-date"]
+
+    def __str__(self):
+        return (
+            f"<GfyView(gfy_object_id={self.gfy.object_id} date={self.date})>"
+        )

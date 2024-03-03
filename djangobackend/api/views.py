@@ -1,6 +1,7 @@
 from api.apps import ApiConfig
 from api.serializers import GfysListSerializer
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
@@ -171,3 +172,15 @@ class GfysList(generics.ListAPIView):
             self.request.query_params.get("account", ""),
         )
         return gfys
+
+
+class GfyViewCountView(APIView):
+    throttle_classes = [GfyDetailsThrottle]
+
+    def post(self, request, *args, **kwargs):
+        video_url = request.data.get("videoUrl")
+        object_id = Gfy.id_from_url(video_url)
+        gfy = get_object_or_404(Gfy, object_id=object_id)
+        gfy.add_view()
+        print("view count is ", gfy.view_count)
+        return Response({"message": "success", "viewCount": gfy.view_count})

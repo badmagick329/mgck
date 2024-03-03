@@ -24,4 +24,9 @@ urlpatterns = [
     path("gfys", views.GfysList.as_view(), name="gfys"),
     path("gfys/<str:id>", views.GfyDetails.as_view(), name="gfy"),
     path("accounts", views.AccountsList.as_view(), name="accounts"),
+    path(
+        "gfy/views",
+        views.GfyViewCountView.as_view(),
+        name="gfy-views",
+    ),
 ]

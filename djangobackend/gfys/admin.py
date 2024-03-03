@@ -1,5 +1,5 @@
 from django.contrib import admin
-from gfys.models import Account, Gfy, GfyUser, Tag
+from gfys.models import Account, Gfy, GfyUser, GfyView, Tag
 
 
 class GfyAdmin(admin.ModelAdmin):
@@ -39,3 +39,4 @@ admin.site.register(Gfy, GfyAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Account, AccountAdmin)
 admin.site.register(GfyUser, GfyUserAdmin)
+admin.site.register(GfyView)
