@@ -8,16 +8,19 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const gfyDetail = await fetchGfy(params.videoId);
+  const baseURL = gfyDetail.video_url.includes("imgur.com/")
+    ? "https://imgur.com"
+    : "https://mgck.ink";
   return {
-    metadataBase: new URL("https://mgck.ink"),
+    metadataBase: new URL(baseURL),
     title: `${gfyDetail.title}`,
     openGraph: {
       title: `${gfyDetail.title}`,
-      url: `https://mgck.ink/gfys/${params.videoId}`,
+      url: gfyDetail.video_url,
       type: "video.other",
       videos: [
         {
-          url: `https://mgck.ink/gfy-videos/${params.videoId}.mp4`,
+          url: gfyDetail.video_url,
           width: 1920,
           height: 1080,
           type: "video/mp4",
@@ -37,8 +40,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       site: "@mgck",
       players: [
         {
-          playerUrl: `https://mgck.ink/gfy-videos/${params.videoId}.mp4`,
-          streamUrl: `https://mgck.ink/gfy-videos/${params.videoId}.mp4`,
+          playerUrl: gfyDetail.video_url,
+          streamUrl: gfyDetail.video_url,
           width: 1920,
           height: 1080,
         },
