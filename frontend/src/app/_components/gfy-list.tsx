@@ -62,9 +62,9 @@ export default function GfyList() {
                   hover:ring-indigo-500 hover:ring-offset-2"
             src={imgurIdToJpg(d.imgurId)}
             alt="imgur"
-            width={250}
-            height={250}
-            style={{ width: "250px", height: "250px" }}
+            width={150}
+            height={150}
+            style={{ width: "150px", height: "150px" }}
             quality={75}
             unoptimized
           />
