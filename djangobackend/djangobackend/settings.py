@@ -30,7 +30,7 @@ TOKEN = os.environ.get("TOKEN", "")
 CONTAINERED = os.environ.get("DB_HOST", "") != "localhost"
 SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = int(os.environ["DEBUG"])
-API_CACHE_TTL = 60 * 5  # 5 minutes
+API_CACHE_TTL = 2
 GFY_PAGE_SIZE = os.environ.get("GFY_PAGE_SIZE", 100)
 
 ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(" ")
