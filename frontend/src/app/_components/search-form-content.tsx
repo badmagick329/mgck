@@ -19,8 +19,8 @@ export default function SearchFormContent() {
   const router = useRouter();
 
   useEffect(() => {
-    const titleParam = (searchParams.get("title") || "") as string;
-    const tagsParam = (searchParams.get("tags") || "") as string;
+    const titleParam = searchParams.get("title") || "";
+    const tagsParam = searchParams.get("tags") || "";
     setFormParams({
       title: titleParam,
       tags: tagsParam,
@@ -30,8 +30,8 @@ export default function SearchFormContent() {
 
   function clearForm() {
     setFormParams({ title: "", tags: "" });
+    setSelectedAccount("All");
     router.push(pathname);
-    initializeAccounts(searchParams, setAccounts, setSelectedAccount);
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -65,6 +65,7 @@ export default function SearchFormContent() {
       />
       <AccountSelector
         accounts={accounts}
+        searchParams={searchParams}
         selectedAccount={selectedAccount}
         setSelectedAccount={setSelectedAccount}
       />

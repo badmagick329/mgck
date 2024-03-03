@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { useState, Dispatch, SetStateAction } from "react";
+import { useState, Dispatch, SetStateAction, useEffect } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { SearchParams } from "@/lib/types";
+import { useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import {
@@ -22,11 +24,17 @@ export default function AccountSelector({
   setSelectedAccount,
 }: {
   accounts: string[];
+  searchParams: SearchParams;
   selectedAccount: string;
   setSelectedAccount: Dispatch<SetStateAction<string>>;
 }) {
   const [open, setOpen] = useState(false);
   const FIELD_WIDTH = "w-[12rem]";
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    updateAccounts(searchParams, accounts, setSelectedAccount);
+  }, [searchParams]);
 
   if (selectedAccount === "") {
     return null;
@@ -79,4 +87,17 @@ export default function AccountSelector({
       </PopoverContent>
     </Popover>
   );
+}
+
+async function updateAccounts(
+  searchParams: SearchParams,
+  accounts: string[],
+  setSelectedAccount: Dispatch<SetStateAction<string>>
+) {
+  const accountParam = (searchParams.get("account") || "").trim() as string;
+  if (accounts.indexOf(accountParam) == -1) {
+    setSelectedAccount("All");
+  } else {
+    setSelectedAccount(accountParam);
+  }
 }
