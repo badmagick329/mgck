@@ -8,11 +8,8 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const gfyDetail = await fetchGfy(params.videoId);
-  const baseURL = gfyDetail.video_url.includes("imgur.com/")
-    ? "https://imgur.com"
-    : "https://mgck.ink";
   return {
-    metadataBase: new URL(baseURL),
+    metadataBase: new URL("https://mgck.ink"),
     title: `${gfyDetail.title}`,
     openGraph: {
       title: `${gfyDetail.title}`,

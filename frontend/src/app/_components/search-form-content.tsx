@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { createURL } from "@/lib/utils";
+import { fetchAccounts } from "@/actions/actions";
 import AccountSelector from "./account-selector";
 import { SearchFormParams, SearchParams } from "@/lib/types";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -14,21 +15,40 @@ export default function SearchFormContent() {
     tags: "",
   });
   const [selectedAccount, setSelectedAccount] = useState("");
+  const [accounts, setAccounts] = useState<string[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    const titleParam = (searchParams.get("title") || "") as string;
+    const tagsParam = (searchParams.get("tags") || "") as string;
+    setFormParams({
+      title: titleParam,
+      tags: tagsParam,
+    });
+    initializeAccounts(searchParams, setAccounts, setSelectedAccount);
+  }, []);
+
+  function clearForm() {
+    setFormParams({ title: "", tags: "" });
+    router.push(pathname);
+    initializeAccounts(searchParams, setAccounts, setSelectedAccount);
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const newURL = getNewURL(
+      e,
+      formParams,
+      searchParams,
+      selectedAccount,
+      pathname,
+      setFormParams
+    );
+    router.push(newURL);
+  }
 
   return (
     <form
-      onSubmit={(e) => {
-        const newURL = getNewURL(
-          e,
-          formParams,
-          searchParams,
-          selectedAccount,
-          pathname,
-          setFormParams
-        );
-        router.push(newURL);
-      }}
+      onSubmit={handleSubmit}
       className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-4"
     >
       <SearchTextInput
@@ -44,13 +64,16 @@ export default function SearchFormContent() {
         setFormParams={setFormParams}
       />
       <AccountSelector
-        setFormParams={setFormParams}
+        accounts={accounts}
         selectedAccount={selectedAccount}
         setSelectedAccount={setSelectedAccount}
       />
       <div className="flex justify-center gap-2 md:justify-end lg:justify-center">
         <Button type="submit" variant="secondary">
           Search
+        </Button>
+        <Button variant="secondary" onClick={clearForm}>
+          Clear
         </Button>
       </div>
     </form>
@@ -106,4 +129,20 @@ function createURLparams(
     urlSearchParams.delete("page");
   }
   return urlSearchParams;
+}
+
+async function initializeAccounts(
+  searchParams: SearchParams,
+  setAccounts: Dispatch<SetStateAction<string[]>>,
+  setSelectedAccount: Dispatch<SetStateAction<string>>
+) {
+  const resp = await fetchAccounts();
+  const newAccounts = ["All", ...resp.accounts];
+  setAccounts(newAccounts);
+  const accountParam = (searchParams.get("account") || "").trim() as string;
+  if (newAccounts.indexOf(accountParam) == -1) {
+    setSelectedAccount("All");
+  } else {
+    setSelectedAccount(accountParam);
+  }
 }
