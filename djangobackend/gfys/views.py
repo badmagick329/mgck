@@ -1,11 +1,16 @@
+import json
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 from gfys.models import Account, Gfy, GfyUser
 from gfys.utils import create_gfy, fetch_imgur_title, filter_gfys, format_gfys
+
+from djangobackend.settings import TOKEN
 
 
 def index(request):
@@ -127,3 +132,37 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("gfys:login"))
+
+
+@csrf_exempt
+def gfy_upload(request):
+    if request.method != "POST":
+        return JsonResponse({"message": "Invalid request"}, status=400)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"message": "Invalid request"}, status=400)
+    token = data.get("token", "")
+    if token != TOKEN:
+        return JsonResponse({"error": "Invalid token"}, status=403)
+
+    imgur_url = data.get("imgur_url", "")
+    video_url = data.get("video_url", "")
+    title = data.get("title", "")
+    tags = data.get("tags", [])
+    account = data.get("account", None)
+    try:
+        gfy = Gfy.create_gfy_from_upload(
+            title, tags, account, imgur_url, video_url
+        )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse(
+        {
+            "message": "success",
+            "object_id": gfy.object_id,
+            "imgur_id": gfy.imgur_id,
+            "video_url": gfy.video_url,
+        }
+    )

@@ -89,6 +89,32 @@ class Gfy(models.Model):
             self.init_object_id()
         super().save(*args, **kwargs)
 
+    @classmethod
+    def create_gfy_from_upload(
+        cls,
+        title: str,
+        tags: list[str],
+        account: str,
+        imgur_url: str,
+        video_url: str,
+    ) -> "Gfy":
+        imgur_id = cls.id_from_url(imgur_url)
+        video_id = cls.id_from_url(video_url)
+        if imgur_id is None or video_id is None:
+            raise ValueError("Invalid imgur_url or video_url")
+
+        gfy = cls.objects.create(
+            imgur_title=title,
+            imgur_id=imgur_id,
+            video_id=video_id,
+        )
+        cls._update_tags(gfy, tags)
+        cls._update_account(gfy, account)
+        cls.update_date(gfy)
+        gfy.init_object_id()
+        gfy.save()
+        return gfy
+
     @property
     def video_url(self) -> str:
         return f"{VIDEO_URL}/{self.video_id}.mp4"
