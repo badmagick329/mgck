@@ -83,6 +83,11 @@ class Gfy(models.Model):
         assert self.video_id or self.imgur_id
         self.object_id = self.video_id or self.imgur_id
 
+    def save(self, *args, **kwargs):
+        if not self.object_id:
+            self.init_object_id()
+        super().save(*args, **kwargs)
+
     @property
     def video_url(self) -> str:
         return f"{VIDEO_URL}/{self.video_id}.mp4"
