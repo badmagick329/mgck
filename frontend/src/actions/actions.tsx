@@ -51,3 +51,8 @@ export async function fetchAccounts() {
   // TODO: Validation
   return data as AccountsResponse;
 }
+
+export async function addGfyView(videoUrl: string) {
+  // TODO: Implement
+  console.log("Adding view for", videoUrl);
+}
