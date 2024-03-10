@@ -55,13 +55,14 @@ export default function SearchFormContent() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <SearchTextInput
           name={"title"}
           searchParams={searchParams}
           formParams={formParams}
           setFormParams={setFormParams}
           placeholder={"Title"}
+          tooltip={"Search by title"}
         />
         <SearchTextInput
           name={"tags"}
@@ -69,6 +70,7 @@ export default function SearchFormContent() {
           formParams={formParams}
           setFormParams={setFormParams}
           placeholder={"Tags (, separated)"}
+          tooltip={"Search by tags separated by commas"}
         />
         <AccountSelector
           accounts={accounts}
@@ -82,6 +84,9 @@ export default function SearchFormContent() {
           formParams={formParams}
           setFormParams={setFormParams}
           placeholder={"Start Date (YYMMDD)"}
+          tooltip={
+            "Filter gfys from before this date. Valid formats: YYMMDD, YYYYMMDD, YYYY-MM-DD"
+          }
         />
         <SearchTextInput
           name={"end_date"}
@@ -89,6 +94,9 @@ export default function SearchFormContent() {
           formParams={formParams}
           setFormParams={setFormParams}
           placeholder={"End Date (YYMMDD)"}
+          tooltip={
+            "Filter gfys after this date. Valid formats: YYMMDD, YYYYMMDD, YYYY-MM-DD"
+          }
         />
       </div>
       <div className="flex justify-center gap-2">
