@@ -12,6 +12,7 @@ import {
   formDataFromSearchParams,
 } from "@/lib/utils";
 import Link from "next/link";
+import GfyPreview from "./gfy-preview";
 
 export default function GfyList() {
   const { data, setData, gfyViewData, setGfyViewData } = useGlobalContext();
@@ -45,30 +46,7 @@ export default function GfyList() {
   return (
     <div className="flex w-full flex-wrap justify-center gap-2 overflow-hidden py-2 lg:w-2/3">
       {data.gfys.map((d, key) => (
-        <Link
-          key={key}
-          href={{
-            pathname: `/${d.imgurId}`,
-          }}
-          onClick={() => {
-            setGfyViewData({
-              ...gfyViewData,
-              index: key,
-            });
-          }}
-        >
-          <Image
-            className="rounded-md object-cover hover:cursor-pointer hover:ring-2
-                  hover:ring-indigo-500 hover:ring-offset-2"
-            src={imgurIdToJpg(d.imgurId)}
-            alt="imgur"
-            width={150}
-            height={150}
-            style={{ width: "150px", height: "150px" }}
-            quality={75}
-            unoptimized
-          />
-        </Link>
+        <GfyPreview key={key} title={d.title} imgurId={d.imgurId} index={key} />
       ))}
     </div>
   );
