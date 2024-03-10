@@ -57,6 +57,8 @@ export type GfyViewData = {
 export type SearchFormParams = {
   title: string;
   tags: string;
+  start_date: string;
+  end_date: string;
 };
 
 type SearchParams = ReturnType<typeof useSearchParams>;

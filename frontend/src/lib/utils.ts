@@ -88,10 +88,14 @@ export function formDataFromSearchParams(
   const tagsParam = (searchParams.get("tags") || "") as string;
   const pageParam = (searchParams.get("page") || "1") as string;
   const accountParam = (searchParams.get("account") || "") as string;
+  const startDateParam = (searchParams.get("start_date") || "") as string;
+  const endDateParam = (searchParams.get("end_date") || "") as string;
   formData.append("title", titleParam);
   formData.append("tags", tagsParam);
   formData.append("page", pageParam);
   formData.append("account", accountParam);
+  formData.append("start_date", startDateParam);
+  formData.append("end_date", endDateParam);
   return formData;
 }
 
@@ -105,22 +109,45 @@ export function formDataFromSearchParamsString(searchParamsString: string) {
 }
 
 export async function copyToClipboard(text: string) {
-    if (navigator.clipboard && window.isSecureContext) {
-      return navigator.clipboard.writeText(text);
-    }
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "absolute";
-    textArea.style.left = "-999999px";
-    document.body.prepend(textArea);
-    textArea.select();
-    try {
-      document.execCommand("copy");
-    } catch (error) {
-      console.error(error);
-      return Promise.reject(error);
-    } finally {
-      textArea.remove();
-    }
-    return Promise.resolve();
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
   }
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "absolute";
+  textArea.style.left = "-999999px";
+  document.body.prepend(textArea);
+  textArea.select();
+  try {
+    document.execCommand("copy");
+  } catch (error) {
+    console.error(error);
+    return Promise.reject(error);
+  } finally {
+    textArea.remove();
+  }
+  return Promise.resolve();
+}
+
+/**
+ * Take a YYMMDD, YYYYMMDD or YYYY-MM-DD string and return a YYYY-MM-DD string
+ * or null if invalid.
+ */
+export function validDateStringOrNull(date: string) {
+  date = date.trim();
+  if (date.length !== 6 && date.length !== 8 && date.length !== 10) {
+    return null;
+  }
+  if (date.length === 6) {
+    date = `20${date}`;
+  }
+
+  if (date.length === 8) {
+    date = date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
+  }
+
+  if (isNaN(Date.parse(date))) {
+    return null;
+  }
+  return date;
+}

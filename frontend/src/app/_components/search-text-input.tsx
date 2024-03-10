@@ -6,11 +6,13 @@ export default function SearchTextInput({
   searchParams,
   formParams,
   setFormParams,
+  placeholder,
 }: {
-  name: "title" | "tags";
+  name: "title" | "tags" | "start_date" | "end_date";
   searchParams: SearchParams;
   formParams: SearchFormParams;
   setFormParams: Dispatch<SetStateAction<SearchFormParams>>;
+  placeholder: string;
 }) {
   useEffect(() => {
     setFormParams({
@@ -23,7 +25,7 @@ export default function SearchTextInput({
     <input
       className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-[12rem]"
       name={name}
-      placeholder={name.slice(0, 1).toUpperCase() + name.slice(1)}
+      placeholder={placeholder}
       autoComplete="off"
       type="search"
       value={formParams[name]}
