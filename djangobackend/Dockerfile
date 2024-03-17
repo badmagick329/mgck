@@ -8,7 +8,7 @@ RUN pip install --upgrade pip
 COPY pyproject.toml poetry.lock ./
 RUN pip install poetry
 RUN poetry config virtualenvs.create false
-RUN poetry install --without dev
+RUN poetry install --without dev --no-root
 RUN mkdir /uploads
 RUN mkdir /redditvideos
 
