@@ -150,6 +150,8 @@ def gfy_upload(request):
     video_url = data.get("video_url", "")
     title = data.get("title", "")
     tags = data.get("tags", [])
+    width = data.get("width", None)
+    height = data.get("height", None)
     account = data.get("account", None)
     try:
         gfy = Gfy.create_gfy_from_upload(

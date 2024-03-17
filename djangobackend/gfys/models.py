@@ -98,6 +98,8 @@ class Gfy(models.Model):
         title: str,
         tags: list[str],
         account: str,
+        width: int | None,
+        height: int | None,
         imgur_url: str,
         video_url: str,
     ) -> "Gfy":
@@ -110,6 +112,8 @@ class Gfy(models.Model):
             imgur_title=title,
             imgur_id=imgur_id,
             video_id=video_id,
+            width=width,
+            height=height,
         )
         cls._update_tags(gfy, tags)
         cls._update_account(gfy, account)
