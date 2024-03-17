@@ -6,9 +6,9 @@ RUN apt-get update && apt-get install -y ffmpeg cron
 
 RUN pip install --upgrade pip
 COPY pyproject.toml poetry.lock ./
-RUN pip install poetry
+RUN pip install poetry==1.8.2
 RUN poetry config virtualenvs.create false
-RUN poetry install --without dev --no-root
+RUN poetry install --no-root --without dev
 RUN mkdir /uploads
 RUN mkdir /redditvideos
 
