@@ -79,6 +79,7 @@ class Gfy(models.Model):
             f"<Gfy(id={self.id}, imgur_id={self.imgur_id}, object_id={self.object_id}, "  # type: ignore
             f"gfy_id={self.gfy_id}, video_id={self.video_id}, "
             f"imgur_title={self.imgur_title}, gfy_title={self.gfy_title}, "
+            f"width={self.width}, height={self.height}, "
             f"date={self.date}, account={self.account})>"
         )
 

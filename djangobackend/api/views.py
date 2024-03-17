@@ -107,6 +107,8 @@ class GfyDetails(APIView):
                 "date": gfy.date,
                 "account": gfy.account.name,
                 "imgur_id": gfy.imgur_id,
+                "width": gfy.width,
+                "height": gfy.height,
                 "video_url": (
                     gfy.video_url
                     if gfy.video_id and USE_HOSTED_URL

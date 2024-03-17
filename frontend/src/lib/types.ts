@@ -41,6 +41,8 @@ export type GfyDetailResponse = {
   date: string | null;
   account: string;
   imgur_id: string;
+  width: number | null;
+  height: number | null;
   video_url: string;
 };
 
