@@ -8,6 +8,9 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const gfyDetail = await fetchGfy(params.videoId);
+  const width = gfyDetail.width || 1920;
+  const height = gfyDetail.height || 1080;
+
   return {
     metadataBase: new URL("https://mgck.ink"),
     title: `${gfyDetail.title}`,
@@ -18,16 +21,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       videos: [
         {
           url: gfyDetail.video_url,
-          width: 1920,
-          height: 1080,
+          width,
+          height,
           type: "video/mp4",
         },
       ],
       images: [
         {
           url: `https://i.imgur.com/${gfyDetail.imgur_id}.jpg`,
-          width: 1920,
-          height: 1080,
+          width,
+          height,
           alt: `${gfyDetail.title}`,
         },
       ],
@@ -39,8 +42,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         {
           playerUrl: gfyDetail.video_url,
           streamUrl: gfyDetail.video_url,
-          width: 1920,
-          height: 1080,
+          width,
+          height,
         },
       ],
     },
