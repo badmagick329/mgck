@@ -68,6 +68,8 @@ class Gfy(models.Model):
     account = models.ForeignKey(
         Account, on_delete=models.CASCADE, blank=True, null=True
     )
+    width = models.IntegerField(blank=True, null=True)
+    height = models.IntegerField(blank=True, null=True)
 
     class Meta:  # type: ignore
         ordering = ["-date"]
