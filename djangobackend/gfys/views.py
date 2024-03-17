@@ -155,7 +155,13 @@ def gfy_upload(request):
     account = data.get("account", None)
     try:
         gfy = Gfy.create_gfy_from_upload(
-            title, tags, account, imgur_url, video_url
+            title,
+            tags,
+            account,
+            width,
+            height,
+            imgur_url,
+            video_url,
         )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
