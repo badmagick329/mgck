@@ -63,4 +63,4 @@ export type SearchFormParams = {
   end_date: string;
 };
 
-type SearchParams = ReturnType<typeof useSearchParams>;
+export type SearchParams = ReturnType<typeof useSearchParams>;
