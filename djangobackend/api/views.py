@@ -78,6 +78,14 @@ class GfyDetails(APIView):
                             description="The imgur id of the gfy",
                             type=openapi.TYPE_STRING,
                         ),
+                        "width": openapi.Schema(
+                            description="The width of the gfy",
+                            type=openapi.TYPE_INTEGER,
+                        ),
+                        "height": openapi.Schema(
+                            description="The height of the gfy",
+                            type=openapi.TYPE_INTEGER,
+                        ),
                         "video_url": openapi.Schema(
                             description="The video url of the gfy",
                             type=openapi.TYPE_STRING,
@@ -89,6 +97,8 @@ class GfyDetails(APIView):
                         "date": "2021-01-01",
                         "account": "account",
                         "imgur_id": "imgur_id",
+                        "width": 1920,
+                        "height": 1080,
                         "video_url": "https://i.imgur.com/imgur_id.mp4",
                     },
                 ),
