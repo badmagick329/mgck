@@ -22,7 +22,7 @@ VIDEO_DIMENSIONS = BASE_DIR / "scripts" / "data" / "video_dimensions.json"
 def main():
     with open(VIDEO_DIMENSIONS, "r", encoding="utf-8") as f:
         data = json.load(f)
-    for i,d in enumerate(data):
+    for i, d in enumerate(data):
         gfy = Gfy.objects.filter(video_id=d["file"]).first()
         if gfy is None:
             print(f"\nNo gfy found for {d['file']}")
