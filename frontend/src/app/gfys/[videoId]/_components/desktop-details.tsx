@@ -1,6 +1,7 @@
 import { GfyDetailResponse } from "@/lib/types";
 import { ThemeToggler } from "@/components/theme-toggler";
 import Link from "next/link";
+import { GFYS_BASE } from "@/lib/consts";
 
 export default function DesktopDetails({
   gfyDetail,
@@ -24,7 +25,7 @@ export default function DesktopDetails({
               <Link
                 key={key}
                 href={{
-                  pathname: "/",
+                  pathname: `${GFYS_BASE}`,
                   query: { tags: tag },
                 }}
               >
