@@ -1,15 +1,42 @@
 import Link from "next/link";
-import { ImArrowLeft, ImArrowRight } from "react-icons/im";
-import { useGlobalContext } from "@/app/gfys/context/store";
-import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { GFYS_BASE } from "@/lib/consts";
+import { ImArrowLeft, ImArrowRight } from "react-icons/im";
+import { useRef, useEffect } from "react";
+import { useGlobalContext } from "@/app/context/store";
+import { IoIosUndo } from "react-icons/io";
 
-export default function NavButton({
-  direction,
-}: {
-  direction: "previous" | "next";
-}) {
+export default function NavButtons() {
+  const backRef = useRef<HTMLAnchorElement>(null);
+  const { gfyViewData } = useGlobalContext();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown" || e.key === "j") {
+        backRef.current?.click();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  return (
+    <div className="flex justify-center gap-2">
+      <NavButton direction="previous" />
+      <NavButton direction="next" />
+      {gfyViewData?.listUrl && (
+        <Link ref={backRef} href={gfyViewData.listUrl}>
+          <Button variant="secondary">
+            <IoIosUndo />
+          </Button>
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function NavButton({ direction }: { direction: "previous" | "next" }) {
   const Icon = direction === "previous" ? ImArrowLeft : ImArrowRight;
   const { gfyViewData, setGfyViewData } = useGlobalContext();
   const leftRef = useRef<HTMLAnchorElement>(null);
@@ -56,7 +83,7 @@ export default function NavButton({
   return (
     <Link
       href={{
-        pathname: `${GFYS_BASE}/${gfyViewData.videoIds[gfyViewData.index + offset]}`,
+        pathname: `/${gfyViewData.videoIds[gfyViewData.index + offset]}`,
       }}
       ref={direction === "previous" ? leftRef : rightRef}
       replace={true}

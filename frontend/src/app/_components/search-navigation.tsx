@@ -1,5 +1,5 @@
 "use client";
-import { useGlobalContext } from "@/app/gfys/context/store";
+import { useGlobalContext } from "@/app/context/store";
 import { usePathname } from "next/navigation";
 import { useRef, useEffect, useState } from "react";
 import NavButton from "./nav-button";

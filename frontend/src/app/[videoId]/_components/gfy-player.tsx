@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGlobalContext } from "@/app/gfys/context/store";
+import { useGlobalContext } from "@/app/context/store";
 import { addGfyView } from "@/actions/actions";
 
 export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {

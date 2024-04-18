@@ -1,9 +1,9 @@
 "use client";
 import { GfyDetailResponse } from "@/lib/types";
 import { useState, useEffect } from "react";
-import DesktopView from "@/app/gfys/[videoId]/_components/desktop-view";
+import DesktopView from "@/app/[videoId]/_components/desktop-view";
 import useWindowSize from "@/app/hooks/use-window-resize";
-import MobileView from "@/app/gfys/[videoId]/_components/mobile-view";
+import MobileView from "@/app/[videoId]/_components/mobile-view";
 
 type Props = {
   params: {
