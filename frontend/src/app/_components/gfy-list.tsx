@@ -1,20 +1,23 @@
 "use client";
-import { useGlobalContext } from "@/app/gfys/context/store";
+import { useGlobalContext } from "@/app/context/store";
 import { searchGfys } from "@/actions/actions";
 import { parseGfyResponse } from "@/lib/utils";
+import Image from "next/image";
 import { useEffect } from "react";
+import { imgurIdToJpg } from "@/lib/utils";
 import { useSearchParams, usePathname } from "next/navigation";
 import {
   cleanedSearchParams,
   createURL,
   formDataFromSearchParams,
 } from "@/lib/utils";
+import Link from "next/link";
 import GfyPreview from "./gfy-preview";
-import { GFYS_BASE } from "@/lib/consts";
 
 export default function GfyList() {
-  const { data, setData, setGfyViewData } = useGlobalContext();
+  const { data, setData, gfyViewData, setGfyViewData } = useGlobalContext();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const fetchData = async () => {
     const resp = await searchGfys(formDataFromSearchParams(searchParams));
@@ -36,7 +39,7 @@ export default function GfyList() {
     setGfyViewData({
       index: 0,
       videoIds: data.gfys.map((g) => g.imgurId),
-      listUrl: createURL(GFYS_BASE, urlSearchParams.toString()),
+      listUrl: createURL(pathname, urlSearchParams.toString()),
     });
   }, [data]);
 
