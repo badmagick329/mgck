@@ -149,16 +149,17 @@ class Scraper:
         urls = self.generate_urls()
         urls = urls[-3:]
         if from_json:
-            saved_cbs = self.cbs_from_json(self.JSON_FILE)
+            saved_cbs = self.cbs_from_json(self.JSON_FILE) or []
         else:
             saved_cbs = self.cbs_from_db()
+        merged_cbs = list()
         for url in urls:
             try:
                 self.logger.info(f"Scraping {url}")
                 cbs = self.scrape_url(url)
                 new_cbs = [cb.to_dict() for cb in cbs]
                 self.logger.info(f"Fetching youtube urls")
-                new_cbs = self.extract_youtube_urls(saved_cbs, new_cbs)
+                new_cbs = self.extract_youtube_urls(saved_cbs, new_cbs) or []
             except Exception as e:
                 self.logger.error(f"Error scraping {url}\n{e}")
                 return
@@ -166,7 +167,10 @@ class Scraper:
                 self.logger.debug(
                     f"Merging {len(new_cbs)} releases with {len(saved_cbs)} releases"
                 )
-                merged_cbs = self.merge_cbs(saved_cbs, new_cbs)
+                merged = self.merge_cbs(saved_cbs, new_cbs)
+                if merged:
+                    merged_cbs.extend(merged)
+                self.logger.debug(f"Merged {len(merged)} releases")
             except Exception as e:
                 self.logger.error(f"Error merging\n{e}")
                 return
@@ -348,7 +352,7 @@ class Scraper:
 
     def extract_youtube_urls(
         self, saved_cbs: list[dict], cbs: list[dict]
-    ) -> list[dict]:
+    ) -> list[dict] | None:
         """
         Get youtube urls from reddit posts. Return altered cbs
         """
