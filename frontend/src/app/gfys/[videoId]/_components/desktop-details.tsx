@@ -1,7 +1,7 @@
 import { GfyDetailResponse } from "@/lib/types";
 import { ThemeToggler } from "@/components/theme-toggler";
 import Link from "next/link";
-import { GFYS_BASE } from "@/lib/consts";
+import { GFYS_BASE } from "@/lib/consts/urls";
 
 export default function DesktopDetails({
   gfyDetail,

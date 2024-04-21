@@ -3,7 +3,7 @@ import { ImArrowLeft, ImArrowRight } from "react-icons/im";
 import { useGlobalContext } from "@/app/gfys/context/store";
 import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { GFYS_BASE } from "@/lib/consts";
+import { GFYS_BASE } from "@/lib/consts/urls";
 
 export default function NavButton({
   direction,
