@@ -1,9 +1,3 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Kpop comebacks",
-};
-
 export default function KpopPage() {
   return (
     <main className="flex min-h-screen flex-col items-center pt-16">

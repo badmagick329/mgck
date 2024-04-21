@@ -30,7 +30,7 @@ export default function OutputField({
           output={output}
         />
       </div>
-      <span className="border-2 rounded-md p-2">{output}</span>
+      <span className="rounded-md border-2 p-2">{output}</span>
     </>
   );
 }
