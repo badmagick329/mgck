@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useGlobalContext } from "@/app/context/store";
+import { useGlobalContext } from "@/app/gfys/context/store";
 import { imgurIdToJpg, imgurIdToMp4 } from "@/lib/utils";
 import Link from "next/link";
 import {
@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { GFYS_BASE } from "@/lib/consts";
 
 export default function GfyPreview({
   title,
@@ -27,7 +28,7 @@ export default function GfyPreview({
           <div>
             <Link
               href={{
-                pathname: `/${imgurId}`,
+                pathname: `${GFYS_BASE}/${imgurId}`,
               }}
               onClick={() => {
                 setGfyViewData({
