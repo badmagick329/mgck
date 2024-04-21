@@ -3,8 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "devlocal": "next dev -H 0.0.0.0 -p 3000",
+    "dev": "next dev -H 0.0.0.0 -p 3000",
     "build": "next build",
     "start": "next start",
     "startlocal": "next start -H 0.0.0.0 -p 3000",
@@ -39,10 +38,26 @@
     "zod": "^3.22.4"
   },
   "prettier": {
-    "trailingComma": "es5",
-    "tabWidth": 2,
     "semi": true,
-    "singleQuote": false
+    "singleQuote": true,
+    "jsxSingleQuote": true,
+    "tabWidth": 2,
+    "useTabs": false,
+    "trailingComma": "es5",
+    "printWidth": 80,
+    "importOrder": [
+      "^@core/(.*)$",
+      "<THIRD_PARTY_MODULES>",
+      "^@server/(.*)$",
+      "^@ui/(.*)$",
+      "^[./]"
+    ],
+    "importOrderSeparation": true,
+    "importOrderSortSpecifiers": true,
+    "plugins": [
+      "@trivago/prettier-plugin-sort-imports",
+      "prettier-plugin-tailwindcss"
+    ]
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
@@ -56,9 +71,5 @@
     "prettier-plugin-tailwindcss": "^0.5.14",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
-  },
-  "plugins": [
-    "@trivago/prettier-plugin-sort-imports",
-    "prettier-plugin-tailwindcss"
-  ]
+  }
 }
