@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useGlobalContext } from "@/app/gfys/context/store";
-import { imgurIdToJpg, imgurIdToMp4 } from "@/lib/utils";
+import { imgurIdToJpg, imgurIdToMp4 } from "@/lib/utils/gfys";
 import Link from "next/link";
 import {
   Tooltip,
@@ -54,7 +54,7 @@ export default function GfyPreview({
         <TooltipContent>
           <div className="flex flex-col gap-2">
             <p className="max-w-[250px] break-words">{title}</p>
-            <div className="flex justify-center p-2 rounded-md">
+            <div className="flex justify-center rounded-md p-2">
               <video className="rounded-md" autoPlay loop muted width="200">
                 <source src={imgurIdToMp4(imgurId)} />
               </video>

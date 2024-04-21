@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { DEFAULT_EMOJIS } from "@/lib/consts";
 import { useToast } from "@/components/ui/use-toast";
-import { cn } from "@/lib/utils";
-import { emojifyText, copyToClipboard } from "@/lib/utils";
+import { cn, emojifyText, copyToClipboard } from "@/lib/utils";
+
+type ToastType = ReturnType<typeof useToast>["toast"];
 
 type EmojifyButtonsProps = {
   messageInput: string;
@@ -21,9 +22,26 @@ export default function EmojifyButtons({
 }: EmojifyButtonsProps) {
   const { toast } = useToast();
 
-  async function handleCopy() {
+  return (
+    <>
+      <Button onClick={() => setOutput(emojifyText(messageInput, emojisInput))}>
+        Regenerate
+      </Button>
+      <Button onClick={() => setEmojisInput(DEFAULT_EMOJIS.join(" "))}>
+        Reset
+      </Button>
+      <Button
+        onClick={() => handleCopy(output, toast)}
+      >
+        Copy
+      </Button>
+    </>
+  );
+}
+
+async function handleCopy(text: string, toast: ToastType) {
     try {
-      await copyToClipboard(output);
+      await copyToClipboard(text);
       toast({
         className: cn(
           "fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]"
@@ -42,21 +60,4 @@ export default function EmojifyButtons({
         duration: 1000,
       });
     }
-  }
-
-  return (
-    <>
-      <Button onClick={() => setOutput(emojifyText(messageInput, emojisInput))}>
-        Regenerate
-      </Button>
-      <Button onClick={() => setEmojisInput(DEFAULT_EMOJIS.join(" "))}>
-        Reset
-      </Button>
-      <Button
-        onClick={handleCopy}
-      >
-        Copy
-      </Button>
-    </>
-  );
 }
