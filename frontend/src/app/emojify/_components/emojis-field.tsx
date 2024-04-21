@@ -12,7 +12,7 @@ export default function EmojisField({
   return (
     <>
       <Input
-        className="bg-gray-300 rounded-md p-2 dark:bg-gray-800"
+        className="rounded-md bg-gray-300 p-2 dark:bg-gray-800"
         onChange={(e) => setEmojisInput(e.target.value.slice(0, 1000))}
         value={emojisInput}
         placeholder="Enter emojis (or words) separated by spaces"

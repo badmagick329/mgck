@@ -27,13 +27,13 @@ export default function EmojifyPage() {
   }, []);
 
   return (
-    <main className="flex w-full min-h-screen flex-col">
+    <main className="flex min-h-screen w-full flex-col">
       <div className="self-end p-2">
         <ThemeToggler />
       </div>
-      <div className="flex flex-col items-center justify-center flex-grow">
-        <div className="flex flex-col w-full max-w-[800px] gap-4">
-          <span className="flex text-2xl justify-center">{headerMessage}</span>
+      <div className="flex flex-grow flex-col items-center justify-center">
+        <div className="flex w-full max-w-[800px] flex-col gap-4">
+          <span className="flex justify-center text-2xl">{headerMessage}</span>
           <MessageField
             messageInput={messageInput}
             setMessageInput={setMessageInput}

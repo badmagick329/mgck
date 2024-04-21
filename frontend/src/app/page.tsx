@@ -21,7 +21,7 @@ export default function Index() {
         const [url, message] = entry;
         return (
           <Link href={url}>
-            <Button className="w-96 font-semibold text-lg">{message}</Button>
+            <Button className="w-96 text-lg font-semibold">{message}</Button>
           </Link>
         );
       })}
