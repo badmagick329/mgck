@@ -41,7 +41,7 @@ function ShareButton({
     <Button
       variant="secondary"
       className={cn("text-bold")}
-      onClick={() => handleCopyClipboardClick(url, toast)}
+      onClick={() => handleCopy(url, toast)}
     >
       <span className="flex items-center gap-2">
         <MdOutlineContentCopy />
@@ -51,7 +51,7 @@ function ShareButton({
   );
 }
 
-async function handleCopyClipboardClick(url: string, toast: ToastType) {
+async function handleCopy(url: string, toast: ToastType) {
   try {
     await copyToClipboard(url);
     toast({

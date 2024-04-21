@@ -1,5 +1,5 @@
 import GfyView from "./_components/gfy-view";
-import { fetchGfy } from "@/actions/actions";
+import { fetchGfy } from "@/actions/gfys";
 import { Metadata } from "next";
 
 type Props = {

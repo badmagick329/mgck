@@ -1,4 +1,4 @@
-import { randomChoice, emojifyText } from "@/lib/utils";
+import { emojifyText } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import EmojifyButtons from "./emojify-buttons";
 

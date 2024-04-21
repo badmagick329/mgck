@@ -1,14 +1,14 @@
 "use client";
 import { useGlobalContext } from "@/app/gfys/context/store";
-import { searchGfys } from "@/actions/actions";
-import { parseGfyResponse } from "@/lib/utils";
+import { searchGfys } from "@/actions/gfys";
+import { parseGfyResponse } from "@/lib/utils/gfys";
 import { useEffect } from "react";
-import { useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   cleanedSearchParams,
   createURL,
   formDataFromSearchParams,
-} from "@/lib/utils";
+} from "@/lib/utils/gfys";
 import GfyPreview from "./gfy-preview";
 import { GFYS_BASE } from "@/lib/consts/urls";
 

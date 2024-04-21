@@ -1,4 +1,4 @@
-import { createURL } from "@/lib/utils";
+import { createURL } from "@/lib/utils/gfys";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
