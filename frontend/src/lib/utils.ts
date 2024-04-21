@@ -151,3 +151,18 @@ export function validDateStringOrNull(date: string) {
   }
   return date;
 }
+
+export function randomChoice<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export function emojifyText(message: string, emojisInput: string) {
+  if (!message) return "Emojified message will appear here";
+  if (!emojisInput) return message;
+  const words = message.split(" ").filter((word) => word.length > 0);
+  const emojis = emojisInput.split(" ").filter((emoji) => emoji.length > 1);
+  const wordsWithEmojis = words.map(
+    (word) => `${word} ${randomChoice(emojis)}`
+  );
+  return wordsWithEmojis.join(" ");
+}

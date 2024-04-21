@@ -2,7 +2,7 @@
 import { GfyDetailResponse } from "@/lib/types";
 import { useState, useEffect } from "react";
 import DesktopView from "@/app/gfys/[videoId]/_components/desktop-view";
-import useWindowSize from "@/app/hooks/use-window-resize";
+import useWindowSize from "@/hooks/use-window-resize";
 import MobileView from "@/app/gfys/[videoId]/_components/mobile-view";
 
 type Props = {

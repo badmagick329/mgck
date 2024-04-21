@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { GFYS_BASE } from "@/lib/consts";
+import { GFYS_BASE } from "@/lib/consts/urls";
 
 export default function GfyPreview({
   title,

@@ -10,7 +10,7 @@ import {
   formDataFromSearchParams,
 } from "@/lib/utils";
 import GfyPreview from "./gfy-preview";
-import { GFYS_BASE } from "@/lib/consts";
+import { GFYS_BASE } from "@/lib/consts/urls";
 
 export default function GfyList() {
   const { data, setData, setGfyViewData } = useGlobalContext();
