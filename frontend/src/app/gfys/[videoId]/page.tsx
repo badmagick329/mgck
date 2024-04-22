@@ -1,6 +1,8 @@
-import GfyView from "./_components/gfy-view";
-import { fetchGfy } from "@/actions/gfys";
-import { Metadata } from "next";
+import { fetchGfy } from '@/actions/gfys';
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+
+import GfyView from './_components/gfy-view';
 
 type Props = {
   params: { videoId: string };
@@ -8,22 +10,27 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const gfyDetail = await fetchGfy(params.videoId);
+  if (gfyDetail === null) {
+    return {
+      title: 'Not Found',
+    };
+  }
   const width = gfyDetail.width || 1920;
   const height = gfyDetail.height || 1080;
 
   return {
-    metadataBase: new URL("https://mgck.ink"),
+    metadataBase: new URL('https://mgck.ink'),
     title: `${gfyDetail.title}`,
     openGraph: {
       title: `${gfyDetail.title}`,
       url: gfyDetail.video_url,
-      type: "video.other",
+      type: 'video.other',
       videos: [
         {
           url: gfyDetail.video_url,
           width,
           height,
-          type: "video/mp4",
+          type: 'video/mp4',
         },
       ],
       images: [
@@ -36,8 +43,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ],
     },
     twitter: {
-      card: "player",
-      site: "@mgck",
+      card: 'player',
+      site: '@mgck',
       players: [
         {
           playerUrl: gfyDetail.video_url,
@@ -56,5 +63,8 @@ export default async function GfyPage({
   params: { videoId: string };
 }) {
   const gfyDetail = await fetchGfy(params.videoId);
+  if (gfyDetail === null) {
+    return notFound();
+  }
   return <GfyView params={params} gfyDetail={gfyDetail} />;
 }
