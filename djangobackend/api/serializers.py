@@ -63,4 +63,6 @@ class GfysListSerializer(serializers.BaseSerializer):
             "gfy_title": instance.gfy_title,
             "date": instance.date,
             "account": instance.account.name if instance.account else None,
+            "width": instance.width,
+            "height": instance.height,
         }

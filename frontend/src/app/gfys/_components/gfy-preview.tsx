@@ -14,10 +14,14 @@ export default function GfyPreview({
   title,
   imgurId,
   index,
+  width,
+  height,
 }: {
   title: string;
   imgurId: string;
   index: number;
+  width: number | null;
+  height: number | null;
 }) {
   const { gfyViewData, setGfyViewData } = useGlobalContext();
 
@@ -55,13 +59,40 @@ export default function GfyPreview({
           <div className="flex flex-col gap-2">
             <p className="max-w-[250px] break-words">{title}</p>
             <div className="flex justify-center rounded-md p-2">
-              <video className="rounded-md" autoPlay loop muted width="200">
-                <source src={imgurIdToMp4(imgurId)} />
-              </video>
+              <VideoComponent imgurId={imgurId} width={width} height={height} />
             </div>
           </div>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
+}
+
+function VideoComponent({ imgurId, width, height }: { imgurId: string, width: number | null, height: number | null }) {
+  const maxVideoWidth = 400
+  if (width === null || height === null) {
+    return (
+      <video className="rounded-md" autoPlay loop muted width={(maxVideoWidth / 2).toString()}>
+        <source src={imgurIdToMp4(imgurId)} />
+      </video>
+    )
+  }
+
+  if (width > height) {
+    return (
+      <video className="rounded-md" autoPlay loop muted width={maxVideoWidth.toString()}>
+        <source src={imgurIdToMp4(imgurId)} />
+      </video>
+    )
+  }
+
+  if (width <= height) {
+    const widthDivisor = height / maxVideoWidth
+    const videoWidth = Math.round(width / widthDivisor)
+    return (
+      <video className="rounded-md" autoPlay loop muted width={videoWidth}>
+        <source src={imgurIdToMp4(imgurId)} />
+      </video>
+    )
+  }
 }

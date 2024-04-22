@@ -15,6 +15,8 @@ export type GfyData = {
   tags: string[];
   date: string;
   account: string;
+  width: number | null;
+  height: number | null;
 };
 
 export type GfyResult = {
@@ -25,6 +27,8 @@ export type GfyResult = {
   date: string;
   account: string;
   tags: string[];
+  width: number | null;
+  height: number | null;
 };
 
 export type GfyResponse = {

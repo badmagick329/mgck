@@ -24,10 +24,6 @@ export default function GfyList() {
 
   useEffect(() => {
     fetchData();
-  }, []);
-
-  useEffect(() => {
-    fetchData();
   }, [searchParams]);
 
   useEffect(() => {
@@ -43,7 +39,7 @@ export default function GfyList() {
   return (
     <div className="flex w-full flex-wrap justify-center gap-2 overflow-hidden py-2 lg:w-2/3">
       {data.gfys.map((d, key) => (
-        <GfyPreview key={key} title={d.title} imgurId={d.imgurId} index={key} />
+        <GfyPreview key={key} title={d.title} imgurId={d.imgurId} index={key} width={d.width} height={d.height} />
       ))}
     </div>
   );

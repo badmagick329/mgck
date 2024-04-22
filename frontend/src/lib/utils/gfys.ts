@@ -5,7 +5,7 @@ import {
   GfyParsedResponse,
 } from "@/lib/types";
 
-export function parseGfyResponse(resp: GfyResponse) {
+export function parseGfyResponse(resp: GfyResponse): GfyParsedResponse {
   const newData: Array<GfyData> = [];
   resp.results?.map((d: GfyResult) => {
     newData.push({
@@ -14,6 +14,8 @@ export function parseGfyResponse(resp: GfyResponse) {
       tags: d.tags,
       date: d.date,
       account: d.account,
+      width: d.width || null,
+      height: d.height || null,
     });
   });
   return {
@@ -22,7 +24,7 @@ export function parseGfyResponse(resp: GfyResponse) {
     previous: resp.previous,
     totalPages: resp.total_pages,
     gfys: newData,
-  } as GfyParsedResponse;
+  }
 }
 
 export function imgurIdToMp4(imgurId: string) {
