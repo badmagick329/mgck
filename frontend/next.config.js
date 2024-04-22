@@ -3,10 +3,16 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        hostname: "**",
+        hostname: '**',
       },
     ],
   },
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+  output: 'standalone',
 };
 
 module.exports = nextConfig;
