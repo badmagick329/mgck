@@ -14,7 +14,6 @@ export default function NotFound() {
         alt='hamster'
         width={120}
         height={130}
-        unoptimized
       />
       <Link href='/'>
         <Button className='text-xl underline' variant='link' size='lg'>
