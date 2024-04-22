@@ -49,6 +49,7 @@ export default function GfyPreview({
                 width={150}
                 height={150}
                 style={{ width: '150px', height: '150px' }}
+                unoptimized
               />
             </Link>
           </div>
