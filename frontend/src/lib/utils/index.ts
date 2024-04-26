@@ -1,11 +1,8 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import {
-  GfyData,
-  GfyResult,
-  GfyResponse,
-  GfyParsedResponse,
-} from "@/lib/types";
+import { useToast } from '@/components/ui/use-toast';
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+type ToastType = ReturnType<typeof useToast>['toast'];
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,14 +12,14 @@ export async function copyToClipboard(text: string) {
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(text);
   }
-  const textArea = document.createElement("textarea");
+  const textArea = document.createElement('textarea');
   textArea.value = text;
-  textArea.style.position = "absolute";
-  textArea.style.left = "-999999px";
+  textArea.style.position = 'absolute';
+  textArea.style.left = '-999999px';
   document.body.prepend(textArea);
   textArea.select();
   try {
-    document.execCommand("copy");
+    document.execCommand('copy');
   } catch (error) {
     console.error(error);
     return Promise.reject(error);
@@ -46,7 +43,7 @@ export function validDateStringOrNull(date: string) {
   }
 
   if (date.length === 8) {
-    date = date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
+    date = date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
   }
 
   if (isNaN(Date.parse(date))) {
@@ -60,12 +57,35 @@ export function randomChoice<T>(arr: T[]): T {
 }
 
 export function emojifyText(message: string, emojisInput: string) {
-  if (!message) return "Emojified message will appear here";
+  if (!message) return 'Emojified message will appear here';
   if (!emojisInput) return message;
-  const words = message.split(" ").filter((word) => word.length > 0);
-  const emojis = emojisInput.split(" ").filter((emoji) => emoji.length > 1);
+  const words = message.split(' ').filter((word) => word.length > 0);
+  const emojis = emojisInput.split(' ').filter((emoji) => emoji.length > 1);
   const wordsWithEmojis = words.map(
     (word) => `${word} ${randomChoice(emojis)}`
   );
-  return wordsWithEmojis.join(" ");
+  return wordsWithEmojis.join(' ');
+}
+
+export async function handleCopyToClipboard(text: string, toast: ToastType) {
+  try {
+    await copyToClipboard(text);
+    toast({
+      className: cn(
+        'fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]'
+      ),
+      variant: 'default',
+      description: `Copied to clipboard`,
+      duration: 1000,
+    });
+  } catch (error) {
+    toast({
+      className: cn(
+        'fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]'
+      ),
+      variant: 'default',
+      description: `Failed to copy to clipboard`,
+      duration: 1000,
+    });
+  }
 }

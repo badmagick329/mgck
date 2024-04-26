@@ -5,31 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 
+import ResponseOutput from './response-output';
+
 export default function UrlShortenerForm() {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
   const [output, setOutput] = useState('');
 
   return (
-    <div className='flex flex-col items-center gap-4'>
+    <div className='flex flex-col flex-wrap items-center gap-4 px-4'>
       <span className='text-xl font-semibold md:text-2xl'>URL Shortener</span>
       <span className='text-red-500'>{error}</span>
       <form
-        className='flex flex-col items-center gap-4 md:w-96'
-        action={async () => {
-          const result = await shortenUrl(url);
-          if (result.error) {
-            setError(result.error);
-            return;
-          }
-          if (!result.url) {
-            setError('Failed to shorten URL');
-            return;
-          }
-          setError('');
-          setUrl('');
-          setOutput(result.url);
-        }}
+        className='flex flex-col flex-wrap items-center gap-4 md:w-96'
+        action={() => submitForm(url, setUrl, setError, setOutput)}
       >
         <Input
           placeholder='https://example.com'
@@ -42,17 +31,28 @@ export default function UrlShortenerForm() {
         />
         <Button type='submit'>Shorten</Button>
       </form>
-      {output && (
-        <div className='flex items-center justify-center gap-4'>
-          <span className='md:text-xl'>Shortened URL 👉</span>
-          <Button
-            className='font-semibold text-green-500 md:text-xl'
-            variant='link'
-          >
-            {output}
-          </Button>
-        </div>
-      )}
+      {output && <ResponseOutput output={output} />}
     </div>
   );
+}
+
+async function submitForm(
+  url: string,
+  setUrl: (url: string) => void,
+  setError: (error: string) => void,
+  setOutput: (output: string) => void
+) {
+  const result = await shortenUrl(url);
+
+  if (result.error) {
+    setError(result.error);
+    return;
+  }
+  if (!result.url) {
+    setError('Failed to shorten URL');
+    return;
+  }
+  setError('');
+  setUrl('');
+  setOutput(result.url);
 }
