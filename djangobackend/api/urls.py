@@ -1,4 +1,4 @@
-from api import views
+from api.views import gfys
 from django.urls import path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -21,12 +21,12 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    path("gfys", views.GfysList.as_view(), name="gfys"),
-    path("gfys/<str:id>", views.GfyDetails.as_view(), name="gfy"),
-    path("accounts", views.AccountsList.as_view(), name="accounts"),
+    path("gfys", gfys.GfysList.as_view(), name="gfys"),
+    path("gfys/<str:id>", gfys.GfyDetails.as_view(), name="gfy"),
+    path("accounts", gfys.AccountsList.as_view(), name="accounts"),
     path(
         "gfy/views",
-        views.GfyViewCountView.as_view(),
+        gfys.GfyViewCountView.as_view(),
         name="gfy-views",
     ),
 ]

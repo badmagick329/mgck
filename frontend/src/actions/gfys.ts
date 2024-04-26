@@ -1,5 +1,6 @@
 'use server';
 
+import { API_GFYS, API_GFY_ACCOUNTS, API_GFY_VIEWS } from '@/lib/consts/urls';
 import { AccountsResponse, GfyDetailResponse, GfyResponse } from '@/lib/types';
 import { validDateStringOrNull } from '@/lib/utils';
 
@@ -21,7 +22,7 @@ export async function searchGfys(formData: FormData) {
   if (account == 'All') {
     account = '';
   }
-  const apiUrl = new URL(`${BASE_URL}/api/gfys`);
+  const apiUrl = new URL(`${BASE_URL}${API_GFYS}`);
   apiUrl.searchParams.append('title', title);
   apiUrl.searchParams.append('tags', tags);
   apiUrl.searchParams.append('start_date', start_date);
@@ -40,7 +41,7 @@ export async function searchGfys(formData: FormData) {
 }
 
 export async function fetchGfy(videoId: string) {
-  const apiUrl = new URL(`${BASE_URL}/api/gfys/${videoId}`);
+  const apiUrl = new URL(`${BASE_URL}${API_GFYS}/${videoId}`);
   let res = await fetch(apiUrl.toString(), {
     method: 'GET',
     headers: {
@@ -56,7 +57,7 @@ export async function fetchGfy(videoId: string) {
 }
 
 export async function fetchAccounts() {
-  const apiUrl = new URL(`${BASE_URL}/api/accounts`);
+  const apiUrl = new URL(`${BASE_URL}${API_GFY_ACCOUNTS}`);
   let res = await fetch(apiUrl.toString(), {
     method: 'GET',
     headers: {
@@ -69,7 +70,7 @@ export async function fetchAccounts() {
 }
 
 export async function addGfyView(videoUrl: string) {
-  const apiUrl = `${BASE_URL}/api/gfy/views`;
+  const apiUrl = `${BASE_URL}${API_GFY_VIEWS}`;
   let res = await fetch(apiUrl, {
     method: 'POST',
     headers: {

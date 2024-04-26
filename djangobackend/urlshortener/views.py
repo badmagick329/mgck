@@ -1,85 +1,57 @@
 import re
-from datetime import datetime
 
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
-from fileuploader.models import UploadUser
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from urlshortener.apps import UrlshortenerConfig
 from urlshortener.models import ShortURL
-
-from djangobackend.settings import BASE_URL
 
 app_name = UrlshortenerConfig.name
 
 
-def shortener(request):
-    return render(request, f"{app_name}/shortener.html")
-
-
-def index(request):
-    can_upload = not request.user.is_anonymous and (
-        UploadUser.objects.filter(user=request.user).exists()
-        or request.user.is_superuser
-    )
-    return render(
-        request,
-        f"{app_name}/index.html",
-        context={"can_upload": can_upload, "base_url": BASE_URL},
-    )
-
-
-def shorten(request):
+@api_view(["POST"])
+def shorten_api(request):
     if request.method != "POST":
-        return HttpResponseRedirect("/")
-    source_url = request.POST.get("source_url", "").strip()
-    if source_url == "" or "." not in source_url:
-        return error(request, "Please enter a valid URL")
-    if " " in source_url:
-        return error(request, f"{source_url} is not a valid URL")
-    if is_duplicate(source_url):
-        return error(request, f"{source_url} has already been shortened")
-    custom_id = request.POST.get("custom_id", "").strip()
+        return Response({"error": "Method not allowed"}, status=405)
+    source_url = request.data.get("source_url", "").strip()
+    custom_id = request.data.get("custom_id", "").strip()
+
+    invalid_message = ShortURL.validate_url(source_url)
+    if invalid_message:
+        return Response({"error": invalid_message}, status=400)
+
     if custom_id:
-        url_id = ShortURL.request_custom_id(custom_id)
-        if isinstance(url_id, Exception):
-            return error(request, str(url_id))
+        url_id = ShortURL.generate_custom_id(custom_id)
     else:
-        url_id = ShortURL.create_id()
-    short_url = ShortURL.objects.create(
-        url=request.POST["source_url"], short_id=url_id
+        url_id = ShortURL.generate_id()
+
+    if isinstance(url_id, Exception):
+        return Response({"error": str(url_id)}, status=400)
+
+    short_url = ShortURL.objects.create(url=source_url, short_id=url_id)
+    return Response(
+        {
+            "url": short_url.redirect_url,
+        }
     )
-    return render(
-        request,
-        f"{app_name}/shortened.html",
-        context={"short_url": short_url.redirect_url},
-    )
 
 
-def is_duplicate(source_url):
-    url_id = source_url.replace(BASE_URL, "")[1:].split("?")[0]
-    saved_ids = ShortURL.objects.values_list("short_id", flat=True)
-    return url_id in saved_ids
-
-
-def target_url(request, short_id):
-    if not request.method == "GET":
-        return
+@api_view(["GET"])
+def target_url_api(request, short_id: str):
     if not short_id:
-        return error(request, f"{short_id} is not a valid short URL")
+        return Response(
+            {"error": f"{short_id} is not a valid short URL"}, status=400
+        )
     short_url = ShortURL.objects.filter(short_id=short_id).first()
     if not short_url:
-        return error(request, f"Shortened ID '{short_id}' not found")
-    short_url.accessed = datetime.now()
-    short_url.save()
+        return Response(
+            {"error": f"Shortened ID '{short_id}' not found"}, status=404
+        )
     url = short_url.url
+    short_url.visit()
     if not re.match(r"^https?://", url):
         url = f"http://{url}"
-    return HttpResponseRedirect(url)
-
-
-def error(request, message: str):
-    return render(
-        request,
-        f"{app_name}/error.html",
-        context={"message": message},
+    return Response(
+        {
+            "url": url,
+        }
     )
