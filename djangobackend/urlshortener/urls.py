@@ -5,8 +5,10 @@ from urlshortener.apps import UrlshortenerConfig
 app_name = UrlshortenerConfig.name
 
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("s/", views.shortener, name="shortener"),
-    path("shorten/", views.shorten, name="shorten"),
-    path("<str:short_id>", views.target_url, name="target_url"),
+    path("api/urlshortener/shorten/", views.shorten_api, name="shorten_api"),
+    path(
+        "api/urlshortener/shortened/<str:short_id>",
+        views.target_url_api,
+        name="target_url_api",
+    ),
 ]

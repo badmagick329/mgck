@@ -1,6 +1,6 @@
+import random
 import string
-from itertools import product
-from typing import Iterable
+from datetime import datetime
 
 from django.db import models
 from dotenv import load_dotenv
@@ -12,11 +12,11 @@ load_dotenv()
 
 
 class ShortURL(models.Model):
-    ID_SIZE = 4
     url = models.URLField()
     short_id = models.CharField(max_length=MAX_ID, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     accessed = models.DateTimeField(auto_now=True)
+    number_of_uses = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return (
@@ -24,26 +24,20 @@ class ShortURL(models.Model):
             f"short_id={self.short_id}, "
             f"created={self.created}, "
             f"accessed={self.accessed}, "
+            f"number_of_uses={self.number_of_uses}, "
             f"redirect_url={self.redirect_url}>"
         )
 
     @classmethod
-    def create_id(cls) -> str | None:
+    def generate_id(cls) -> str | Exception:
         saved_ids = cls.objects.values_list("short_id", flat=True)
-        saved_ids = set(saved_ids)
-        ids = set()
-        for perm in permute(string.ascii_letters + string.digits, cls.ID_SIZE):
-            if perm in saved_ids:
-                continue
-            ids.add(perm)
-            if len(ids) >= 50000:
-                break
-        if not ids:
-            return None
-        return ids.pop()
+        code = ShortCode().available_code(list(saved_ids))
+        if code is None:
+            return ValueError(f"All IDs in use")
+        return code
 
     @classmethod
-    def request_custom_id(cls, custom_id: str) -> str | Exception:
+    def generate_custom_id(cls, custom_id: str) -> str | Exception:
         if " " in custom_id:
             return ValueError("Custom ID cannot contain spaces")
         if len(custom_id) > MAX_ID:
@@ -59,7 +53,39 @@ class ShortURL(models.Model):
     def redirect_url(self) -> str:
         return f"{BASE_URL}/{self.short_id}"
 
+    def visit(self) -> None:
+        self.number_of_uses += 1
+        self.accessed = datetime.now()
+        self.save()
 
-def permute(chars: str, max_length: int) -> Iterable[str]:
-    for perm in product(chars, repeat=max_length):
-        yield "".join(perm)
+    @staticmethod
+    def validate_url(url: str) -> str | None:
+        print("Validating", url)
+        if url == "" or "." not in url or " " in url:
+            return "Please enter a valid URL"
+        return None
+
+
+class ShortCode:
+    chars: str
+    size: int
+
+    def __init__(
+        self,
+        chars: str | None = None,
+        size: int | None = None,
+    ) -> None:
+        self.chars = chars or (string.ascii_letters + string.digits)
+        self.size = size or 4
+
+    @property
+    def max_ids(self):
+        return len(self.chars) ** self.size
+
+    def available_code(self, saved_ids: list[str]) -> str | None:
+        id_ = "".join(random.choices(self.chars, k=self.size))
+        if len(saved_ids) >= self.max_ids:
+            return None
+        while id_ in saved_ids:
+            id_ = "".join(random.choices(self.chars, k=self.size))
+        return id_

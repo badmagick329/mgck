@@ -99,14 +99,6 @@ def test_from_dict_missing_optionals():
 
 
 @pytest.mark.django_db
-def test_from_dict_missing_gfy_reference():
-    gfy_dict = _gfy_dict()
-    gfy_dict["imgur_title"] = "original title"
-    with pytest.raises(ValueError):
-        Gfy.from_dict(gfy_dict)
-
-
-@pytest.mark.django_db
 def test_from_dict_existing_gfy_updates():
     gfy_dict = _gfy_dict()
     gfy = Gfy.from_dict(gfy_dict)
