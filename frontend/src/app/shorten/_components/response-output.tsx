@@ -2,14 +2,10 @@
 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { copyToClipboard } from '@/lib/utils';
-import { useState } from 'react';
-
-const DEFAULT_MESSAGE = 'Copy to clipboard';
+import { handleCopyToClipboard } from '@/lib/utils';
 
 export default function ResponseOutput({ output }: { output: string }) {
   const { toast } = useToast();
-  const [buttonText, setButtonText] = useState(DEFAULT_MESSAGE);
 
   return (
     <div className='flex flex-col items-center gap-4'>
@@ -24,21 +20,8 @@ export default function ResponseOutput({ output }: { output: string }) {
           </a>
         </Button>
       </div>
-      <Button
-        onClick={async () => {
-          if (buttonText === 'Copied!') return;
-
-          try {
-            await copyToClipboard(output);
-            setButtonText('Copied!');
-            setTimeout(() => setButtonText(DEFAULT_MESSAGE), 1000);
-          } catch (error) {
-            setButtonText('Failed to copy');
-            setTimeout(() => setButtonText(DEFAULT_MESSAGE), 1000);
-          }
-        }}
-      >
-        {buttonText}
+      <Button onClick={() => handleCopyToClipboard(output, toast)}>
+        Copy to clipboard
       </Button>
       <span className='text-sm'>
         Shortened URLs will be removed after a year of inactivity
