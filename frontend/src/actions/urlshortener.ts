@@ -8,10 +8,11 @@ import {
 const BASE_URL = process.env.BASE_URL;
 
 export async function shortenUrl(
-  url: string
+  url: string,
+  customCode: string
 ): Promise<{ url?: string; error?: string }> {
   const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_SHORTEN}`);
-  const body = JSON.stringify({ source_url: url });
+  const body = JSON.stringify({ source_url: url, custom_id: customCode });
   let res = await fetch(apiUrl.toString(), {
     method: 'POST',
     headers: {

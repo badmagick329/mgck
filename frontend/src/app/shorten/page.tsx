@@ -20,7 +20,9 @@ export default function UrlShortenerPage() {
         <span className='text-red-500'>{error}</span>
         <form
           className='flex flex-col flex-wrap items-center gap-4 md:w-96'
-          action={() => submitForm(url, setUrl, setError, setOutput)}
+          action={() =>
+            submitForm(url, customCode, setUrl, setError, setOutput)
+          }
         >
           <Input
             placeholder='https://example.com'
@@ -51,11 +53,12 @@ export default function UrlShortenerPage() {
 
 async function submitForm(
   url: string,
+  customCode: string,
   setUrl: (url: string) => void,
   setError: (error: string) => void,
   setOutput: (output: string) => void
 ) {
-  const result = await shortenUrl(url);
+  const result = await shortenUrl(url, customCode);
 
   if (result.error) {
     setError(result.error);
