@@ -3,7 +3,7 @@ import { Toaster } from '@/components/ui/toaster';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Emojify 😀 Your 😳 Message',
+  title: 'URL Shortener',
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
