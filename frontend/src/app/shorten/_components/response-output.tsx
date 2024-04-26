@@ -23,7 +23,7 @@ export default function ResponseOutput({ output }: { output: string }) {
       <Button onClick={() => handleCopyToClipboard(output, toast)}>
         Copy to clipboard
       </Button>
-      <span className='text-sm'>
+      <span className='text-sm text-gray-400'>
         Shortened URLs will be removed after a year of inactivity
       </span>
     </div>
