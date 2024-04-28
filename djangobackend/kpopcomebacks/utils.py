@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from kpopcomebacks.models import Release
 
 PAGE_SIZE = 6
@@ -61,7 +61,7 @@ def get_closest_page(paginator: Paginator) -> int:
 
 def filter_comebacks(
     artist: str, title: str, start_date: str, end_date: str, exact: bool
-) -> list[Release]:
+) -> QuerySet[Release]:
     artist = artist.strip().lower()
     title = title.strip().lower()
     filters = list()
