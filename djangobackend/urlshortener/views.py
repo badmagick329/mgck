@@ -19,6 +19,12 @@ def shorten_api(request):
     if invalid_message:
         return Response({"error": invalid_message}, status=400)
 
+    is_short_url = ShortURL.is_short_url(source_url)
+    if is_short_url:
+        return Response(
+            {"error": "Shortened URLs cannot be shortened again"}, status=400
+        )
+
     if custom_id:
         url_id = ShortURL.generate_custom_id(custom_id)
     else:

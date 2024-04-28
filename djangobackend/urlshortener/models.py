@@ -60,10 +60,21 @@ class ShortURL(models.Model):
 
     @staticmethod
     def validate_url(url: str) -> str | None:
-        print("Validating", url)
         if url == "" or "." not in url or " " in url:
             return "Please enter a valid URL"
         return None
+
+    @classmethod
+    def is_short_url(cls, url: str) -> bool:
+        base_url = BASE_URL.split("://")[1]
+        if base_url not in url:
+            return False
+
+        split = url.split("/")
+        if len(split) != 4:
+            return False
+
+        return cls.objects.filter(short_id=split[-1]).exists()
 
 
 class ShortCode:
