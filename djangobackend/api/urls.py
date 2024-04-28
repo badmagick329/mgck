@@ -1,4 +1,4 @@
-from api.views import gfys
+from api.views import gfys, kpopcomebacks
 from django.urls import path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -6,9 +6,9 @@ from rest_framework import permissions
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Gif List API",
+        title="mgck API",
         default_version="v1",
-        description="API for gif list",
+        description="API endpoints for mgck",
         license=openapi.License(name="BSD License"),
     ),
     public=True,
@@ -28,5 +28,10 @@ urlpatterns = [
         "gfy/views",
         gfys.GfyViewCountView.as_view(),
         name="gfy-views",
+    ),
+    path(
+        "kpopcomebacks",
+        kpopcomebacks.KpopComebackList.as_view(),
+        name="kpopcomebacks",
     ),
 ]
