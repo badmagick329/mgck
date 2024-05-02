@@ -1,5 +1,5 @@
-import { ReadonlyURLSearchParams } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+import { ReadonlyURLSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export type GfyParsedResponse = {
   count: number;
@@ -68,3 +68,21 @@ export type SearchFormParams = {
 };
 
 export type SearchParams = ReturnType<typeof useSearchParams>;
+
+export type ComebacksResult = {
+  count: number;
+  previous: string | null;
+  next: string | null;
+  total_pages: number;
+  results: ComebackResponse[];
+};
+
+export type ComebackResponse = {
+  id: number;
+  title: string;
+  artist: string;
+  album: string;
+  date: string;
+  release_type: string;
+  urls: string[];
+};

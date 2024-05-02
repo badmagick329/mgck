@@ -108,8 +108,11 @@ class KpopComebackListSerializer(serializers.BaseSerializer):
 
     def to_representation(self, instance):
         return {
+            "id": instance.id,
             "title": instance.title,
             "artist": instance.artist.name,
             "date": datetime.strftime(instance.release_date, "%Y-%m-%d"),
+            "album": instance.album,
+            "release_type": instance.release_type.name,
             "urls": instance.urls,
         }
