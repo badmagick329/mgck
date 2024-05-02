@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
-import { GlobalContextProvider } from "@/app/gfys/context/store";
+import { GlobalContextProvider } from '@/app/gfys/context/store';
+import { Toaster } from '@/components/ui/toaster';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Kpop comebacks",
+  title: 'Kpop comebacks',
 };
-
-import { Toaster } from "@/components/ui/toaster";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
