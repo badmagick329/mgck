@@ -24,6 +24,7 @@ export default async function KpopPage() {
         <div className='grid grid-cols-1 gap-12 px-4 xl:grid-cols-2 2xl:grid-cols-3'>
           {comebacks.map((comeback) => (
             <ComebackCard
+              key={comeback.id}
               title={comeback.title}
               artist={comeback.artist}
               album={comeback.album}
