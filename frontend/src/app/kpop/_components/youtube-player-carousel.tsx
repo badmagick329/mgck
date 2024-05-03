@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import {
   Carousel,
   CarouselApi,
@@ -12,8 +11,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { YOUTUBE_VIDEO_WIDTH } from '@/lib/consts';
-import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
+import { VIDEO_CAROUSEL_WIDTH } from '@/lib/consts';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import CarouselButtons from './carousel-buttons';
@@ -25,7 +24,6 @@ export default function YoutubePlayerCarousel({ urls }: { urls: string[] }) {
   const [count, setCount] = useState(0);
   const [current, setCurrent] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const maxWidth = `max-w-[${YOUTUBE_VIDEO_WIDTH}px]`;
 
   if (videoIds.length === 0) {
     return null;
@@ -52,7 +50,11 @@ export default function YoutubePlayerCarousel({ urls }: { urls: string[] }) {
   }, [carouselApi]);
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className={maxWidth}>
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className={VIDEO_CAROUSEL_WIDTH}
+    >
       <div className='flex flex-col justify-center gap-4'>
         <CollapsibleTrigger asChild>
           <div className='flex justify-center gap-2 text-xs font-bold hover:cursor-pointer'>
@@ -67,7 +69,7 @@ export default function YoutubePlayerCarousel({ urls }: { urls: string[] }) {
               align: 'center',
             }}
             orientation='horizontal'
-            className={`relative ${maxWidth} overflow-hidden`}
+            className={`relative ${VIDEO_CAROUSEL_WIDTH} overflow-hidden`}
           >
             <CarouselContent>
               {videoIds.map((videoId) => (

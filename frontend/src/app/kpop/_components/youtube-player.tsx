@@ -1,4 +1,4 @@
-import { YOUTUBE_VIDEO_WIDTH } from '@/lib/consts';
+import { YOUTUBE_WIDTH } from '@/lib/consts';
 
 export default function YoutubePlayer({ videoId }: { videoId: string }) {
   return (
@@ -8,7 +8,7 @@ export default function YoutubePlayer({ videoId }: { videoId: string }) {
       allow='autoplay; encrypted-media'
       allowFullScreen
       title='video'
-      width={YOUTUBE_VIDEO_WIDTH}
+      width={YOUTUBE_WIDTH}
     />
   );
 }
