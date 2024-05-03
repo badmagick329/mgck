@@ -66,6 +66,6 @@ class KpopComebackList(generics.ListAPIView):
             self.request.query_params.get("title", ""),
             self.request.query_params.get("start_date", ""),
             self.request.query_params.get("end_date", ""),
-            self.request.query_params.get("exact", "") == "exact",
+            self.request.query_params.get("exact", "") != "",
         )
         return comebacks
