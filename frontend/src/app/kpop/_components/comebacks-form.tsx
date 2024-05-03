@@ -2,12 +2,27 @@ import { Input } from '@/components/ui/input';
 import useDebounce from '@/hooks/use-debounce';
 import useURLState from '@/hooks/use-url-state';
 import { searchParamsToFormData } from '@/lib/utils';
+import { useEffect } from 'react';
 
 export default function ComebacksForm() {
   const formKeys = ['title', 'artist', 'start-date', 'end-date', 'exact'];
-  const { searchParams, formDataToURLState } = useURLState({ formKeys });
+  const { router, pathname, searchParams, formDataToURLState } = useURLState({
+    formKeys,
+  });
   const debounce = useDebounce(300);
   const defaultFormData = searchParamsToFormData(searchParams);
+
+  useEffect(() => {
+    if (defaultFormData.get('start-date') !== null) {
+      return;
+    }
+    const today = new Date();
+    today.setDate(today.getDate() - 3);
+    const startDate = today.toISOString().split('T')[0];
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('start-date', startDate);
+    router.replace(`${pathname}?${newSearchParams.toString()}`);
+  }, []);
 
   return (
     <form
