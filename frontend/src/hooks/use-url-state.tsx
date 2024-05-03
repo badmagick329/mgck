@@ -38,5 +38,7 @@ export default function useURLState({ formKeys }: { formKeys: string[] }) {
     paramNames: formKeys,
     getNewURL,
     formDataToURLState,
+    router,
+    pathname,
   };
 }
