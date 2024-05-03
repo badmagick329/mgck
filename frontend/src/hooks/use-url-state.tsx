@@ -33,12 +33,24 @@ export default function useURLState({ formKeys }: { formKeys: string[] }) {
     router.refresh();
   }
 
+  function clearURLState() {
+    // const newSearchParams = new URLSearchParams(searchParams);
+    // formKeys.forEach((key) => {
+    //   newSearchParams.delete(key);
+    // });
+    // const newURL = `${pathname}?${newSearchParams.toString()}`;
+    const newURL = pathname;
+    router.replace(newURL);
+    router.refresh();
+  }
+
   return {
     searchParams,
-    paramNames: formKeys,
+    formKeys,
     getNewURL,
     formDataToURLState,
     router,
     pathname,
+    clearURLState,
   };
 }

@@ -100,3 +100,16 @@ export function searchParamsToFormData(
   }
   return formData;
 }
+
+export function clearFormInputs(form: HTMLFormElement | null) {
+  if (!form) return;
+  for (const input of form) {
+    if (input instanceof HTMLInputElement) {
+      if (input.type === 'checkbox') {
+        input.checked = false;
+        continue;
+      }
+      input.value = '';
+    }
+  }
+}
