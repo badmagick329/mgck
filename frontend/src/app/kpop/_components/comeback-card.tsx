@@ -9,7 +9,6 @@ type ComebackProps = {
   urls: string[];
 };
 
-
 export default function ComebackCard({
   title,
   artist,
@@ -19,7 +18,7 @@ export default function ComebackCard({
   urls,
 }: ComebackProps) {
   return (
-    <div className='bg-background-light flex flex-col items-center gap-4 rounded-md border-2 p-4'>
+    <div className='flex max-w-[400px] flex-col items-center gap-4 rounded-md border-2 bg-background-light p-4'>
       <div className='flex w-full flex-col items-center gap-6'>
         <div className='flex w-full flex-col items-center gap-4'>
           <span className='flex justify-end text-sm font-bold text-gray-600 dark:text-gray-400'>
