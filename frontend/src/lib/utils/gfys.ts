@@ -4,6 +4,7 @@ import {
   GfyResponse,
   GfyParsedResponse,
 } from "@/lib/types";
+import { ReadonlyURLSearchParams } from "next/navigation";
 
 export function parseGfyResponse(resp: GfyResponse): GfyParsedResponse {
   const newData: Array<GfyData> = [];
@@ -39,7 +40,6 @@ export function imgurIdToUrl(imgurId: string) {
   return `https://i.imgur.com/${imgurId}`;
 }
 
-import { ReadonlyURLSearchParams } from "next/navigation";
 
 export function cleanedSearchParams(urlSearchParams: URLSearchParams) {
   if (urlSearchParams.get("title")?.trim() == "") {
@@ -94,6 +94,7 @@ export function formDataFromSearchParams(
   formData.append("end_date", endDateParam);
   return formData;
 }
+
 
 export function formDataFromSearchParamsString(searchParamsString: string) {
   let cleanedParams = searchParamsString;
