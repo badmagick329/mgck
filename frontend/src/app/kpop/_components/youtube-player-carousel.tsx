@@ -55,9 +55,9 @@ export default function YoutubePlayerCarousel({ urls }: { urls: string[] }) {
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className={maxWidth}>
       <div className='flex flex-col justify-center gap-4'>
         <CollapsibleTrigger asChild>
-          <div className='flex justify-center gap-2 hover:cursor-pointer'>
+          <div className='flex justify-center gap-2 text-xs font-bold hover:cursor-pointer'>
             {toggleText}
-            {isOpen ? <ChevronUp /> : <ChevronDown />}
+            {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent className='space-y-2'>
