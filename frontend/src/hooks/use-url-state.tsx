@@ -2,36 +2,24 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-export default function useURLState({
-  formDefaults,
-}: {
-  formDefaults: { param: string; defaultValue: string }[];
-}) {
+export default function useURLState({ formKeys }: { formKeys: string[] }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const paramNames = formDefaults.map((arg) => arg.param);
-
-  function getDefaultURL() {
-    const defaultFormData = new FormData();
-    for (const { param, defaultValue } of formDefaults) {
-      defaultFormData.set(param, defaultValue);
-    }
-    return getNewURL(defaultFormData);
-  }
 
   function getNewURL(formData: FormData) {
     const newSearchParams = new URLSearchParams(searchParams);
+
     for (const [key, value] of formData.entries()) {
-      if (typeof value !== 'string') {
+      if (typeof value !== 'string' || value === undefined) {
         continue;
       }
       if (value === '') {
         newSearchParams.delete(key);
         continue;
       }
-      if (!paramNames.includes(key)) {
-        console.error(`Invalid key: ${key} Valid keys: `, paramNames);
+      if (!formKeys.includes(key)) {
+        console.error(`Invalid key: ${key} Valid keys: `, formKeys);
         continue;
       }
       newSearchParams.set(key, value);
@@ -39,18 +27,16 @@ export default function useURLState({
     return `${pathname}?${newSearchParams.toString()}`;
   }
 
-  function formToURLState(form: HTMLFormElement | null) {
-    const formData = new FormData(form || undefined);
+  function formDataToURLState(formData: FormData) {
     const newURL = getNewURL(formData);
-    router.push(newURL);
+    router.replace(newURL);
     router.refresh();
   }
 
   return {
     searchParams,
-    paramNames,
+    paramNames: formKeys,
     getNewURL,
-    formToURLState,
-    getDefaultURL,
+    formDataToURLState,
   };
 }

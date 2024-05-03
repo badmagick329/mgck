@@ -10,23 +10,10 @@ export async function fetchComebacks(formData?: FormData) {
   if (!formData) {
     formData = new FormData();
   }
-  const apiUrl = new URL(`${BASE_URL}${API_KPOP}`);
-  let title = formData.get('title')?.toString() || '';
-  let artist = formData.get('artist')?.toString() || '';
-  let start_date = formData.get('start_date')?.toString() || '';
-  if (start_date) {
-    start_date = validDateStringOrNull(start_date) || '';
-  }
-  let end_date = formData.get('end_date')?.toString() || '';
-  if (end_date) {
-    end_date = validDateStringOrNull(end_date) || '';
-  }
-  const page = formData.get('page')?.toString() || '1';
-  apiUrl.searchParams.append('title', title);
-  apiUrl.searchParams.append('artist', artist);
-  apiUrl.searchParams.append('start_date', start_date);
-  apiUrl.searchParams.append('end_date', end_date);
-  apiUrl.searchParams.append('page', page);
+  const { title, artist, startDate, endDate, page, exact } =
+    _preparedFormValues(formData);
+  const apiUrl = _createURL(title, artist, startDate, endDate, page, exact);
+
   let res = await fetch(apiUrl.toString(), {
     method: 'GET',
     headers: {
@@ -35,4 +22,45 @@ export async function fetchComebacks(formData?: FormData) {
   });
   const data = await res.json();
   return data as ComebacksResult;
+}
+
+function _preparedFormValues(formData: FormData) {
+  let title = formData.get('title')?.toString() || '';
+  let artist = formData.get('artist')?.toString() || '';
+  let startDate = formData.get('start-date')?.toString() || '';
+  if (startDate) {
+    startDate = validDateStringOrNull(startDate) || '';
+  }
+  let endDate = formData.get('end-date')?.toString() || '';
+  if (endDate) {
+    endDate = validDateStringOrNull(endDate) || '';
+  }
+  let page = formData.get('page')?.toString() || '1';
+  let exact = Boolean(formData.get('exact')) ? 'on' : '';
+  return {
+    title,
+    artist,
+    startDate,
+    endDate,
+    page,
+    exact,
+  };
+}
+
+function _createURL(
+  title: string,
+  artist: string,
+  startDate: string,
+  endDate: string,
+  page: string,
+  exact: string
+) {
+  const apiUrl = new URL(`${BASE_URL}${API_KPOP}`);
+  apiUrl.searchParams.append('title', title);
+  apiUrl.searchParams.append('artist', artist);
+  apiUrl.searchParams.append('start_date', startDate);
+  apiUrl.searchParams.append('end_date', endDate);
+  apiUrl.searchParams.append('page', page);
+  apiUrl.searchParams.append('exact', exact);
+  return apiUrl;
 }
