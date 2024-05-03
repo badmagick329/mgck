@@ -1,5 +1,3 @@
-import { Separator } from '@/components/ui/separator';
-
 import YoutubePlayerCarousel from './youtube-player-carousel';
 
 type ComebackProps = {

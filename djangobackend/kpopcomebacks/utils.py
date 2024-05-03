@@ -8,7 +8,7 @@ PAGE_SIZE = 6
 
 
 def format_comebacks(
-    comebacks: list[Release], page_number: str | None = None
+    comebacks: QuerySet[Release], page_number: str | None = None
 ) -> dict:
     paginator = Paginator(comebacks, PAGE_SIZE)
     if page_number is None:
