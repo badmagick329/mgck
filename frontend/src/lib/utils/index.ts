@@ -1,5 +1,6 @@
 import { useToast } from '@/components/ui/use-toast';
 import { type ClassValue, clsx } from 'clsx';
+import { ReadonlyURLSearchParams } from 'next/navigation';
 import { twMerge } from 'tailwind-merge';
 
 type ToastType = ReturnType<typeof useToast>['toast'];
@@ -88,4 +89,14 @@ export async function handleCopyToClipboard(text: string, toast: ToastType) {
       duration: 1000,
     });
   }
+}
+
+export function searchParamsToFormData(
+  searchParams: ReadonlyURLSearchParams | URLSearchParams
+) {
+  const formData = new FormData();
+  for (const [key, value] of searchParams) {
+    formData.append(key, value);
+  }
+  return formData;
 }
