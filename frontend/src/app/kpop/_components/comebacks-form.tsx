@@ -69,7 +69,25 @@ export default function ComebacksForm() {
         <label className='ml-2'>Exact Artist Match</label>
       </div>
       <div className='flex justify-between'>
-        <Button onClick={(e) => {}}>Show Recent</Button>
+        <Button
+          onClick={(e) => {
+            const form = e.currentTarget.form;
+            if (!form) {
+              return;
+            }
+            const startDateInput = form.querySelector<HTMLInputElement>(
+              'input[name="start-date"]'
+            );
+            if (!startDateInput) {
+              return;
+            }
+            startDateInput.value = recentDate();
+            const formData = new FormData(form);
+            formDataToURLState(formData);
+          }}
+        >
+          Show Recent
+        </Button>
         <Button
           onClick={(e) => {
             clearURLState();
