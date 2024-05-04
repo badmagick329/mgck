@@ -111,7 +111,7 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
               debounce(() => formDataToURLState(formData));
             }}
           />
-          <label className='ml-2'>Exact Artist Match</label>
+          <label className='ml-2'>Exact Match</label>
         </div>
         <div className='flex justify-between'>
           <Button

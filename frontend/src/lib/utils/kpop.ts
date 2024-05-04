@@ -23,7 +23,7 @@ export const namesAndPlaceHolders = [
   },
   {
     name: 'exact',
-    placeholder: 'Exact Artist Match',
+    placeholder: 'Exact Match',
   },
 ];
 export const formKeys = namesAndPlaceHolders.map(({ name }) => name);
