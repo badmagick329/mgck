@@ -39,36 +39,39 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
 
   return (
     <form onSubmit={(e) => e.preventDefault()}>
-      <Button
-        variant='ghost'
-        className='fixed left-0 top-[50%] h-36'
-        size='icon'
-        disabled={previousIsDisabled}
-        onClick={() => {
-          const newURL = getPreviousPageURL(searchParams, pathname);
-          if (newURL) {
-            router.replace(newURL);
-            router.refresh();
-          }
-        }}
-      >
-        <ChevronLeft size={MEDIUM_ICON} />
-      </Button>
-      <Button
-        variant='ghost'
-        className='fixed right-0 top-[50%] h-36'
-        size='icon'
-        disabled={nextIsDisabled}
-        onClick={() => {
-          const newURL = getNextPageURL(searchParams, pathname, totalPages);
-          if (newURL) {
-            router.replace(newURL);
-            router.refresh();
-          }
-        }}
-      >
-        <ChevronRight size={MEDIUM_ICON} />
-      </Button>
+      {!previousIsDisabled && (
+        <Button
+          variant='plain'
+          className='fixed left-0 top-[50%] h-36 active:bg-background'
+          size='icon'
+          onClick={() => {
+            const newURL = getPreviousPageURL(searchParams, pathname);
+            if (newURL) {
+              router.replace(newURL);
+              router.refresh();
+            }
+          }}
+        >
+          <ChevronLeft size={MEDIUM_ICON} />
+        </Button>
+      )}
+      {!nextIsDisabled && (
+        <Button
+          variant='plain'
+          className='fixed right-0 top-[50%] h-36 active:bg-background'
+          size='icon'
+          disabled={nextIsDisabled}
+          onClick={() => {
+            const newURL = getNextPageURL(searchParams, pathname, totalPages);
+            if (newURL) {
+              router.replace(newURL);
+              router.refresh();
+            }
+          }}
+        >
+          <ChevronRight size={MEDIUM_ICON} />
+        </Button>
+      )}
       <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
         {namesAndPlaceHolders
           .slice(0, namesAndPlaceHolders.length - 1)
