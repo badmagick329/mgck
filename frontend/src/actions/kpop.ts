@@ -1,30 +1,43 @@
 'use server';
 
 import { API_KPOP } from '@/lib/consts/urls';
-import { ComebacksResult } from '@/lib/types';
+import { ComebacksResult, ServerError } from '@/lib/types';
 import { validDateStringOrNull } from '@/lib/utils';
 
 const BASE_URL = process.env.BASE_URL;
 
-export async function fetchComebacks(formData?: FormData) {
+export async function fetchComebacks(
+  formData?: FormData
+): Promise<ComebacksResult | ServerError> {
   if (!formData) {
     formData = new FormData();
   }
   const { title, artist, startDate, endDate, page, exact } =
-    _preparedFormValues(formData);
-  const apiUrl = _createURL(title, artist, startDate, endDate, page, exact);
+    preparedFormValues(formData);
+  const apiUrl = createURL(title, artist, startDate, endDate, page, exact);
 
-  let res = await fetch(apiUrl.toString(), {
+  const res = await fetch(apiUrl.toString(), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
   });
-  const data = await res.json();
-  return data as ComebacksResult;
+  if (res.ok) {
+    const data = await res.json();
+    // TODO: Validation
+    return data as ComebacksResult;
+  } else {
+    if (res.status >= 500) {
+      return 'Server Error';
+    } else if (res.status === 404) {
+      return 'Page Not Found';
+    } else {
+      return 'Unknown Error';
+    }
+  }
 }
 
-function _preparedFormValues(formData: FormData) {
+function preparedFormValues(formData: FormData) {
   let title = formData.get('title')?.toString() || '';
   let artist = formData.get('artist')?.toString() || '';
   let startDate = formData.get('start-date')?.toString() || '';
@@ -47,7 +60,7 @@ function _preparedFormValues(formData: FormData) {
   };
 }
 
-function _createURL(
+function createURL(
   title: string,
   artist: string,
   startDate: string,
