@@ -28,3 +28,17 @@ export const namesAndPlaceHolders = [
 ];
 export const formKeys = namesAndPlaceHolders.map(({ name }) => name);
 
+export function searchParamsAreEmpty(searchParams: URLSearchParams) {
+  for (const key of formKeys) {
+    if (searchParams.has(key)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function getRecentDateParams(searchParams: URLSearchParams) {
+  const newSearchParams = new URLSearchParams(searchParams);
+  newSearchParams.set('start-date', recentDate());
+  return newSearchParams;
+}
