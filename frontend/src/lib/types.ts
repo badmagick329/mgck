@@ -86,3 +86,5 @@ export type ComebackResponse = {
   release_type: string;
   urls: string[];
 };
+
+export type ServerError = 'Server Error' | 'Page Not Found' | 'Unknown Error';

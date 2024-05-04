@@ -2,29 +2,44 @@
 
 import { fetchComebacks } from '@/actions/kpop';
 import { ThemeToggler } from '@/components/theme-toggler';
-import { ComebackResponse, ComebacksResult } from '@/lib/types';
+import { ComebackResponse, ComebacksResult, ServerError } from '@/lib/types';
 import { searchParamsToFormData } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import ComebackCard from './_components/comeback-card';
 import ComebacksForm from './_components/comebacks-form';
+import ErrorResponse from './_components/error-response';
+import Loading from './loading';
 
 export default function KpopPage() {
   const [comebacksResult, setComebacksResult] =
     useState<ComebacksResult | null>(null);
   const [comebacks, setComebacks] = useState<ComebackResponse[]>([]);
   const searchParams = useSearchParams();
+  const [serverError, setServerError] = useState<ServerError | null>(null);
 
   useEffect(() => {
     (async () => {
       const comebacksResult = await fetchComebacks(
         searchParamsToFormData(searchParams)
       );
-      setComebacksResult(comebacksResult);
-      setComebacks(comebacksResult.results);
+      if (typeof comebacksResult === 'string') {
+        setServerError(comebacksResult);
+      } else {
+        setComebacksResult(comebacksResult);
+        setComebacks(comebacksResult.results);
+      }
     })();
   }, [searchParams]);
+
+  if (serverError) {
+    return <ErrorResponse serverError={serverError} />;
+  }
+
+  if (comebacksResult === null) {
+    return <Loading />;
+  }
 
   return (
     <main className='flex min-h-screen flex-col items-center gap-4'>
@@ -32,7 +47,7 @@ export default function KpopPage() {
         <ThemeToggler />
       </div>
       <h2 className='text-2xl font-semibold'>Upcoming Comebacks</h2>
-      <ComebacksForm />
+      <ComebacksForm totalPages={comebacksResult.total_pages} />
       <div className='flex flex-col items-center gap-4 pt-4'>
         <div className='grid grid-cols-1 gap-12 px-4 xl:grid-cols-2 2xl:grid-cols-3'>
           {comebacks.map((comeback) => (
