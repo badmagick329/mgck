@@ -4,7 +4,13 @@ import useDebounce from '@/hooks/use-debounce';
 import useURLState from '@/hooks/use-url-state';
 import { MEDIUM_ICON } from '@/lib/consts';
 import { clearFormInputs, searchParamsToFormData } from '@/lib/utils';
-import { formKeys, namesAndPlaceHolders, recentDate } from '@/lib/utils/kpop';
+import {
+  formKeys,
+  getRecentDateParams,
+  namesAndPlaceHolders,
+  recentDate,
+  searchParamsAreEmpty,
+} from '@/lib/utils/kpop';
 import {
   getNextPageURL,
   getPreviousPageURL,
@@ -20,20 +26,15 @@ const DEBOUNCE_TIME = 350;
 
 export default function ComebacksForm({ totalPages }: { totalPages: number }) {
   const { router, pathname, searchParams, formDataToURLState, clearURLState } =
-    useURLState({
-      formKeys,
-    });
+    useURLState({ formKeys });
   const debounce = useDebounce(DEBOUNCE_TIME);
   const defaultFormData = searchParamsToFormData(searchParams);
 
   useEffect(() => {
-    for (const key of formKeys) {
-      if (searchParams.has(key)) {
-        return;
-      }
+    if (!searchParamsAreEmpty(searchParams)) {
+      return;
     }
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set('start-date', recentDate());
+    const newSearchParams = getRecentDateParams(searchParams);
     router.replace(`${pathname}?${newSearchParams.toString()}`);
   }, []);
   const previousIsDisabled = !hasPreviousPage(searchParams);
