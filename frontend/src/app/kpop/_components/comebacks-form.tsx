@@ -27,8 +27,10 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
   const defaultFormData = searchParamsToFormData(searchParams);
 
   useEffect(() => {
-    if (defaultFormData.get('start-date') !== null) {
-      return;
+    for (const key of formKeys) {
+      if (searchParams.has(key)) {
+        return;
+      }
     }
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set('start-date', recentDate());
