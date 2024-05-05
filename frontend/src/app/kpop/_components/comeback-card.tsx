@@ -1,4 +1,5 @@
-import YoutubePlayerCarousel from './youtube-player-carousel';
+import YoutubeLinks from './youtube-links';
+import YoutubeSearchLink from './youtube-search-link';
 
 type ComebackProps = {
   title: string;
@@ -17,6 +18,17 @@ export default function ComebackCard({
   releaseDate,
   urls,
 }: ComebackProps) {
+  const videoIds = urls
+    .map((url) => {
+      if (url.includes('v=')) {
+        return url.split('v=')[1];
+      } else if (url.includes('youtu.be/')) {
+        return url.split('youtu.be/')[1].split('?')[0];
+      }
+      return '';
+    })
+    .filter(Boolean);
+
   return (
     <div className='flex max-w-[400px] flex-col items-center gap-4 rounded-md border-2 bg-background-light p-4'>
       <div className='flex w-full flex-col items-center gap-6'>
@@ -37,7 +49,11 @@ export default function ComebackCard({
             {releaseType}
           </span>
         </div>
-        <YoutubePlayerCarousel urls={urls} />
+        {videoIds.length > 0 ? (
+          <YoutubeLinks videoIds={videoIds} />
+        ) : (
+          <YoutubeSearchLink artist={artist} title={title} />
+        )}
       </div>
     </div>
   );
