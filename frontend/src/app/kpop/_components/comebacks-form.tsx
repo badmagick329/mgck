@@ -87,7 +87,13 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
               onChange={(e) => {
                 const form = e.currentTarget.form;
                 const formData = new FormData(form || undefined);
-                debounce(() => formDataToURLState(formData));
+                debounce(() => {
+                  const oldSearchParams = new URLSearchParams(searchParams);
+                  if (oldSearchParams.has('page')) {
+                    oldSearchParams.delete('page');
+                  }
+                  formDataToURLState(formData, oldSearchParams);
+                });
               }}
             />
           ))}
@@ -108,7 +114,13 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
               } else {
                 formData.set('exact', '');
               }
-              debounce(() => formDataToURLState(formData));
+              debounce(() => {
+                const oldSearchParams = new URLSearchParams(searchParams);
+                if (oldSearchParams.has('page')) {
+                  oldSearchParams.delete('page');
+                }
+                formDataToURLState(formData, oldSearchParams);
+              });
             }}
           />
           <label className='ml-2'>Exact Match</label>
