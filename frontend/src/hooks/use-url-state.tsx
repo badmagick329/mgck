@@ -7,8 +7,11 @@ export default function useURLState({ formKeys }: { formKeys: string[] }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  function getNewURL(formData: FormData) {
-    const newSearchParams = new URLSearchParams(searchParams);
+  function getNewURL(
+    formData: FormData,
+    oldSearchParams: URLSearchParams = searchParams
+  ) {
+    const newSearchParams = new URLSearchParams(oldSearchParams);
 
     for (const [key, value] of formData.entries()) {
       if (typeof value !== 'string' || value === undefined) {
@@ -27,8 +30,11 @@ export default function useURLState({ formKeys }: { formKeys: string[] }) {
     return `${pathname}?${newSearchParams.toString()}`;
   }
 
-  function formDataToURLState(formData: FormData) {
-    const newURL = getNewURL(formData);
+  function formDataToURLState(
+    formData: FormData,
+    searchParams?: URLSearchParams
+  ) {
+    const newURL = getNewURL(formData, searchParams);
     router.replace(newURL);
     router.refresh();
   }

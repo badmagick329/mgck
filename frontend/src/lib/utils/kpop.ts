@@ -7,11 +7,11 @@ export function recentDate(pastDays: number = 3) {
 export const namesAndPlaceHolders = [
   {
     name: 'start-date',
-    placeholder: 'Start Date (YYYY-MM-DD)',
+    placeholder: 'Start Date (YYMMDD)',
   },
   {
     name: 'end-date',
-    placeholder: 'End Date (YYYY-MM-DD)',
+    placeholder: 'End Date (YYMMDD)',
   },
   {
     name: 'artist',
