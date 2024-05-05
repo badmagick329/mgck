@@ -18,8 +18,7 @@ import { useEffect, useMemo, useState } from 'react';
 import CarouselButtons from './carousel-buttons';
 import YoutubePlayer from './youtube-player';
 
-export default function YoutubePlayerCarousel({ urls }: { urls: string[] }) {
-  const videoIds = urls.map((url) => url.split('v=')[1]).filter(Boolean);
+export default function YoutubeLinks({ videoIds }: { videoIds: string[] }) {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [count, setCount] = useState(0);
   const [current, setCurrent] = useState(0);
