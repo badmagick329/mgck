@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { MEDIUM_ICON, SMALL_ICON } from '@/lib/consts';
+import { SMALLER_ICON } from '@/lib/consts';
 import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
@@ -13,11 +13,13 @@ export default function YoutubeSearchLink({
 }) {
   const url = encodeURI(`${SEARCH_BASE}${artist} ${title}`);
   return (
-    <Link href={url} target='_blank'>
-      <Button className='flex gap-2' variant='link'>
-        <span>Search youtube</span>
-        <ExternalLink size={SMALL_ICON} />
-      </Button>
+    <Link
+      className='flex items-center justify-center gap-2 py-1 font-bold hover:underline'
+      href={url}
+      target='_blank'
+    >
+      <span className='text-xs'>Search youtube</span>
+      <ExternalLink size={SMALLER_ICON} />
     </Link>
   );
 }

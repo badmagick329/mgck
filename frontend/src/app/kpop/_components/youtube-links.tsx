@@ -54,10 +54,10 @@ export default function YoutubeLinks({ videoIds }: { videoIds: string[] }) {
       onOpenChange={setIsOpen}
       className={VIDEO_CAROUSEL_WIDTH}
     >
-      <div className='flex flex-col justify-center gap-4'>
+      <div className='flex w-full flex-col justify-center gap-4 py-1'>
         <CollapsibleTrigger asChild>
-          <div className='flex justify-center gap-2 text-xs font-bold hover:cursor-pointer'>
-            {toggleText}
+          <div className='flex justify-center gap-2 pl-14 text-xs font-bold hover:cursor-pointer'>
+            <span>{toggleText}</span>
             {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </div>
         </CollapsibleTrigger>
