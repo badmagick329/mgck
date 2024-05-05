@@ -1,6 +1,7 @@
 'use client';
 
 import { fetchComebacks } from '@/actions/kpop';
+import ScrollIndicator from '@/components/scroll-indicator';
 import { ThemeToggler } from '@/components/theme-toggler';
 import { ComebackResponse, ComebacksResult, ServerError } from '@/lib/types';
 import { searchParamsToFormData } from '@/lib/utils';
@@ -43,6 +44,7 @@ export default function KpopPage() {
 
   return (
     <main className='flex min-h-screen flex-col items-center gap-4'>
+      <ScrollIndicator colorValue='hsl(224,80%,50%)' />
       <div className='flex w-full justify-end px-2 pt-2'>
         <ThemeToggler />
       </div>

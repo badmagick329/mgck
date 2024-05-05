@@ -44,8 +44,8 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
     <form onSubmit={(e) => e.preventDefault()}>
       {!previousIsDisabled && (
         <Button
-          variant='plain'
-          className='fixed left-0 top-[50%] h-36 active:bg-background'
+          variant='plainBorder'
+          className='fixed left-0 top-[45%] ml-1 h-36 active:bg-background'
           size='icon'
           onClick={() => {
             const newURL = getPreviousPageURL(searchParams, pathname);
@@ -60,8 +60,8 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
       )}
       {!nextIsDisabled && (
         <Button
-          variant='plain'
-          className='fixed right-0 top-[50%] h-36 active:bg-background'
+          variant='plainBorder'
+          className='fixed right-0 top-[45%] mr-1 h-36 active:bg-background'
           size='icon'
           disabled={nextIsDisabled}
           onClick={() => {
