@@ -62,6 +62,7 @@ export default function ComebackCard({
             videoIds={videoIds}
             title={title}
             artist={artist}
+            releaseDate={releaseDate}
           />
         </div>
       </div>
