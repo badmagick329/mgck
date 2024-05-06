@@ -39,6 +39,6 @@ export function searchParamsAreEmpty(searchParams: URLSearchParams) {
 
 export function getRecentDateParams(searchParams: URLSearchParams) {
   const newSearchParams = new URLSearchParams(searchParams);
-  newSearchParams.set('start-date', recentDate().replace(/-/g, '').slice(2));
+  newSearchParams.set('start-date', recentDate().replaceAll('-', '').slice(2));
   return newSearchParams;
 }
