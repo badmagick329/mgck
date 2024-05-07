@@ -187,30 +187,6 @@ class Scraper:
         self.updating = False
         self.logger.info("Update complete")
 
-    def _scrape_url_old(self, url: str) -> list[ReleaseData]:
-        # For reference
-        # table_headers = [
-        #     "day",
-        #     "time",
-        #     "artist",
-        #     "album title",
-        #     "album type",
-        #     "title track",
-        #     "streaming",
-        # ]
-        month = url.split("/")[-2]
-        year = int(url.split("/")[-3])
-        release_list = list()
-        response = requests.get(url, headers=self.headers)
-        if response.status_code == 200:
-            html = response.text
-            release_list = self.get_release_list(html, month, year)
-        else:
-            self.logger.error(
-                f"Error scraping {url}. status_code code: {response.status}"
-            )
-        return release_list
-
     def scrape_url(self, url: str) -> list[ReleaseData]:
         # For reference
         # table_headers = [
@@ -486,6 +462,7 @@ class Scraper:
                     Release.objects.bulk_create(create_releases)
                     create_releases = list()
             else:
+                print(f"Updating release {cb['id']}\n{cb}\n")
                 release = Release.objects.get(id=cb["id"])
                 release.reddit_urls = cb["reddit_urls"]
                 release.urls = cb["urls"] if cb["urls"] else release.urls
@@ -516,8 +493,16 @@ class Scraper:
 
 def main():
     urls = sys.argv[1:]
-    scraper = Scraper(LOG_LEVEL)
-    scraper.scrape(urls)
+    retries = 2
+    while retries > 0:
+        try:
+            scraper = Scraper(LOG_LEVEL)
+            scraper.scrape(urls)
+            break
+        except Exception as e:
+            retries -= 1
+            if retries == 0:
+                raise e
 
 
 if __name__ == "__main__":
