@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0 -p 3000",
+    "dev": "next dev -p 5000",
+    "devlocal": "next dev -H 0.0.0.0 -p 5000",
     "build": "next build",
     "start": "next start",
-    "startlocal": "next start -H 0.0.0.0 -p 3000",
+    "startlocal": "next start -H 0.0.0.0 -p 5000",
     "test": "jest",
     "lint": "next lint"
   },
