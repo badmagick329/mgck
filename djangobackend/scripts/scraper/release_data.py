@@ -77,3 +77,14 @@ class ReleaseData:
             reddit_urls=release.reddit_urls or [],
             urls=release.urls,
         )
+
+    @staticmethod
+    def dicts_eq(r1: dict, r2: dict) -> bool:
+        return (
+            r1["release_date"] == r2["release_date"]
+            and r1["artist"] == r2["artist"]
+            and r1["title"] == r2["title"]
+            and r1["album"] == r2["album"]
+            and r1["release_type"] == r2["release_type"]
+            and r1["reddit_urls"] == r2["reddit_urls"]
+        )

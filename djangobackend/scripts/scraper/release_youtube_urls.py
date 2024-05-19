@@ -31,7 +31,7 @@ class ReleaseYoutubeUrls:
             for release in self._new_releases:
                 if self._url_is_updated(release):
                     self._logger.debug(
-                        "Skipping releases with no urls found or not update required"
+                        "Skipping releases with no urls found or no update required"
                     )
                     continue
 
@@ -51,7 +51,7 @@ class ReleaseYoutubeUrls:
                 stack_info=True,
             )
 
-    def _process_reddit_urls(self, release: dict):
+    def _process_reddit_urls(self, release: dict) -> None:
         youtube_urls = list()
         invalid_urls = list()
         for reddit_url in release["reddit_urls"]:
@@ -79,7 +79,7 @@ class ReleaseYoutubeUrls:
 
     def _in_saved_releases(self, release: dict) -> dict | None:
         for saved_cb in self._saved_releases:
-            if _release_dicts_eq(release, saved_cb):
+            if ReleaseData.dicts_eq(release, saved_cb):
                 return saved_cb
 
     def _url_is_updated(self, release: dict) -> bool:
@@ -90,19 +90,8 @@ class ReleaseYoutubeUrls:
         return release["urls"] is not None and not urls_need_updating
 
 
-def _url_to_id(url: str):
+def _url_to_id(url: str) -> str:
     if "comments" in url:
         return url.split("comments/")[-1].split("/")[0]
     else:
         return url.replace("/", "")
-
-
-def _release_dicts_eq(r1: dict, r2: dict) -> bool:
-    return (
-        r1["release_date"] == r2["release_date"]
-        and r1["artist"] == r2["artist"]
-        and r1["title"] == r2["title"]
-        and r1["album"] == r2["album"]
-        and r1["release_type"] == r2["release_type"]
-        and r1["reddit_urls"] == r2["reddit_urls"]
-    )
