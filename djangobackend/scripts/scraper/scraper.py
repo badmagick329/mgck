@@ -211,10 +211,10 @@ class Scraper:
                     create_releases = list()
             else:
                 print(f"Updating release {release['id']}\n{release}\n")
-                release = Release.objects.get(id=release["id"])
-                release.reddit_urls = release["reddit_urls"]  # type: ignore
-                release.urls = release["urls"] if release["urls"] else release.urls  # type: ignore
-                update_releases.append(release)
+                release_from_db = Release.objects.get(id=release["id"])
+                release_from_db.reddit_urls = release["reddit_urls"]  # type: ignore
+                release_from_db.urls = release["urls"] if release["urls"] else release_from_db.urls  # type: ignore
+                update_releases.append(release_from_db)
                 if len(update_releases) == BATCH:
                     Release.objects.bulk_update(
                         update_releases, fields=["reddit_urls", "urls"]
