@@ -41,17 +41,17 @@ class Release(models.Model):
             f"urls={self.urls})>"
         )
 
-    def to_dict(self):
-        return {
-            "id": self.id,  # type: ignore
-            "artist": self.artist.name,
-            "album": self.album,
-            "title": self.title,
-            "release_date": datetime.strftime(self.release_date, "%Y-%m-%d"),
-            "release_type": self.release_type.name,
-            "reddit_urls": self.reddit_urls,
-            "urls": [u.split("&")[0] for u in self.urls],
-        }
+    # def to_dict(self):
+    #     return {
+    #         "id": self.id,  # type: ignore
+    #         "artist": self.artist.name,
+    #         "album": self.album,
+    #         "title": self.title,
+    #         "release_date": datetime.strftime(self.release_date, "%Y-%m-%d"),
+    #         "release_type": self.release_type.name,
+    #         "reddit_urls": self.reddit_urls,
+    #         "urls": [u.split("&")[0] for u in self.urls] or [],
+    #     }
 
 
 class ReleaseType(models.Model):

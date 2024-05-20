@@ -7,17 +7,17 @@ from .release_data import ReleaseData
 
 
 class ReleaseYoutubeUrls:
-    _saved_releases: list[dict]
-    _new_releases: list[dict]
+    _saved_releases: list[ReleaseData]
+    _new_releases: list[ReleaseData]
     _logger: logging.Logger
     _reddit: Reddit
-    releases: list[dict]
+    releases: list[ReleaseData]
 
     def __init__(
         self,
         reddit: Reddit,
-        saved_releases: list[dict],
-        new_releases: list[dict],
+        saved_releases: list[ReleaseData],
+        new_releases: list[ReleaseData],
         logger: logging.Logger,
     ) -> None:
         self._saved_releases = saved_releases
@@ -36,11 +36,11 @@ class ReleaseYoutubeUrls:
                     continue
 
                 saved_releases = self._in_saved_releases(release)
-                if saved_releases and saved_releases["urls"]:
+                if saved_releases and saved_releases.urls:
                     self._logger.debug(
-                        f"Using saved youtube urls {saved_releases['urls']}"
+                        f"Using saved youtube urls {saved_releases.urls}"
                     )
-                    release["urls"] = saved_releases["urls"]
+                    release.urls = saved_releases.urls
                     continue
 
                 self._process_reddit_urls(release)
@@ -51,10 +51,10 @@ class ReleaseYoutubeUrls:
                 stack_info=True,
             )
 
-    def _process_reddit_urls(self, release: dict) -> None:
+    def _process_reddit_urls(self, release: ReleaseData) -> None:
         youtube_urls = list()
         invalid_urls = list()
-        for reddit_url in release["reddit_urls"]:
+        for reddit_url in release.reddit_urls:
             if "youtube" in reddit_url or "youtu.be" in reddit_url:
                 self._logger.debug(
                     f"Found youtube url in reddit_url: {reddit_url}"
@@ -70,24 +70,24 @@ class ReleaseYoutubeUrls:
                 continue
             self._logger.debug(f"Found youtube url in reddit post: {post.url}")
             youtube_urls.append(post.url)
-        release["reddit_urls"] = [
-            url for url in release["reddit_urls"] if url not in invalid_urls
+        release.reddit_urls = [
+            url for url in release.reddit_urls if url not in invalid_urls
         ]
         self._logger.debug(f"Youtube urls found: {youtube_urls}")
-        release["urls"] = youtube_urls
+        release.urls = youtube_urls
         self.releases.append(release)
 
-    def _in_saved_releases(self, release: dict) -> dict | None:
-        for saved_cb in self._saved_releases:
-            if ReleaseData.dicts_eq(release, saved_cb):
-                return saved_cb
+    def _in_saved_releases(self, release: ReleaseData) -> ReleaseData | None:
+        for saved_release in self._saved_releases:
+            if release == saved_release:
+                return saved_release
 
-    def _url_is_updated(self, release: dict) -> bool:
-        has_reddit_urls = len(release["reddit_urls"]) > 0
-        urls_is_empty = release["urls"] is None or len(release["urls"]) == 0
+    def _url_is_updated(self, release: ReleaseData) -> bool:
+        has_reddit_urls = len(release.reddit_urls) > 0
+        urls_is_empty = release.urls is None or len(release.urls) == 0
         urls_need_updating = urls_is_empty and has_reddit_urls
 
-        return release["urls"] is not None and not urls_need_updating
+        return release.urls is not None and not urls_need_updating
 
 
 def _url_to_id(url: str) -> str:

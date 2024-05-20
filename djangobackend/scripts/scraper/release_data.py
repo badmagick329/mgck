@@ -7,7 +7,7 @@ from kpopcomebacks.models import Artist, Release, ReleaseType
 
 @dataclass
 class ReleaseData:
-    release_date: str | dt
+    release_date: str
     artist: str
     title: str
     album: str
@@ -64,9 +64,6 @@ class ReleaseData:
 
     @staticmethod
     def from_release(release: Release) -> "ReleaseData":
-        # assert isinstance(
-        #     release.release_date, _Date
-        # ), "Error creating ReleaseData from Release: release_date is not a datetime object."
         return ReleaseData(
             id=release.id,  # type: ignore
             release_date=dt.strftime(release.release_date, "%Y-%m-%d"),  # type: ignore
@@ -87,4 +84,30 @@ class ReleaseData:
             and r1["album"] == r2["album"]
             and r1["release_type"] == r2["release_type"]
             and r1["reddit_urls"] == r2["reddit_urls"]
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ReleaseData):
+            return False
+        return (
+            self.release_date == other.release_date
+            and self.artist == other.artist
+            and self.title == other.title
+            and self.album == other.album
+            and self.release_type == other.release_type
+            and self.reddit_urls == other.reddit_urls
+        )
+
+    def __str__(self) -> str:
+        return (
+            f"<ReleaseData("
+            f"id={self.id}, "
+            f"release_date={self.release_date}, "
+            f"artist={self.artist}, "
+            f"title={self.title}, "
+            f"album={self.album}, "
+            f"release_type={self.release_type}, "
+            f"reddit_urls={self.reddit_urls}, "
+            f"urls={self.urls}"
+            f")>"
         )
