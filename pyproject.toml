@@ -47,6 +47,6 @@ extend-exclude = '''
 )
 '''
 
-[tools.pyright]
-include= ["./djangobackend"]
-exclude= [ "**/node_modules", "**/__pycache__" ]
+[tool.pyright]
+include = ["./djangobackend"]
+exclude = ["**/node_modules", "**/__pycache__"]
