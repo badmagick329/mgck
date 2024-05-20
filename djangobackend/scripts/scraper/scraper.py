@@ -17,7 +17,7 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "djangobackend.settings"
 import django
 
 django.setup()
-from scripts.scraper.database import Database as db
+from scripts.scraper.database import DatabaseReader, DatabaseWriter
 from scripts.scraper.kpop_data_from_subreddit import KpopDataFromSubreddit
 from scripts.scraper.logger import get_stream_logger
 from scripts.scraper.parsed_html import ParsedHTML
@@ -35,8 +35,17 @@ class Scraper:
     updating: bool
     wiki_urls: WikiUrls
     reddit: Reddit
+    db_reader: DatabaseReader
+    db_writer: DatabaseWriter
 
-    def __init__(self, log_level: int | None = None) -> None:
+    def __init__(
+        self,
+        db_reader: DatabaseReader,
+        db_writer: DatabaseWriter,
+        log_level: int | None = None,
+    ) -> None:
+        self.db_reader = db_reader
+        self.db_writer = db_writer
         self.logger = get_stream_logger(log_level)
         self.reddit = praw.Reddit(
             client_id=REDDIT_ID,
@@ -51,7 +60,7 @@ class Scraper:
 
     def scrape(self):
         urls = self._get_recent_urls()
-        saved_releases = db.get_saved_releases()
+        saved_releases = self.db_reader.get_recent_saved_releases()
         merged_releases = self._fetch_releases_from_urls(urls, saved_releases)
         self._update_db(merged_releases)
 
@@ -60,8 +69,8 @@ class Scraper:
         return self.wiki_urls.urls[-3:]
 
     def _fetch_releases_from_urls(
-        self, urls: list[str], saved_releases: list[dict]
-    ) -> list[dict]:
+        self, urls: list[str], saved_releases: list[ReleaseData]
+    ) -> list[ReleaseData]:
         new_releases = []
         merged_releases = []
         for url in urls:
@@ -92,12 +101,13 @@ class Scraper:
             return []
 
     def _fetch_release_data_from_url(
-        self, url: str, saved_releases: list[dict], new_releases: list[dict]
+        self,
+        url: str,
+        saved_releases: list[ReleaseData],
+        new_releases: list[ReleaseData],
     ) -> bool:
         try:
-            release_data_from_url = [
-                r.to_dict() for r in self._process_url(url)
-            ]
+            release_data_from_url = [r for r in self._process_url(url)]
             release_youtube_urls = ReleaseYoutubeUrls(
                 self.reddit,
                 saved_releases,
@@ -114,43 +124,43 @@ class Scraper:
 
     def _merge_releases(
         self,
-        saved_releases: list[dict],
-        new_releases: list[dict],
-        merged_releases: list[dict],
+        saved_releases: list[ReleaseData],
+        new_releases: list[ReleaseData],
+        merged_releases: list[ReleaseData],
     ) -> bool:
         try:
-            merged = self._create_merged_releases(saved_releases, new_releases)
-            for merged_release in merged:
+            newly_merged = self._create_merged_releases(
+                saved_releases, new_releases
+            )
+            for merged_release in newly_merged:
                 if merged_release not in merged_releases:
                     merged_releases.append(merged_release)
 
-            self.logger.debug(f"Merged {len(merged)} releases")
+            self.logger.debug(f"Merged {len(newly_merged)} releases")
             return True
         except Exception as e:
             self.logger.error(f"Error merging\n{e}")
             return False
 
     def _create_merged_releases(
-        self, old_releases: list[dict], new_releases: list[dict]
-    ) -> list[dict]:
+        self, old_releases: list[ReleaseData], new_releases: list[ReleaseData]
+    ) -> list[ReleaseData]:
         """
         Merge new_releases into old_releases.
         All old_release dates that are in new_releases are replaced with new_releases
         """
-        old_releases = deepcopy(old_releases)
-        old_releases = sorted(old_releases, key=lambda x: x["release_date"])
-        remove_dates = list(set([cb["release_date"] for cb in new_releases]))
-        merged_cbs = [
-            c for c in old_releases if c["release_date"] not in remove_dates
+        old_releases = sorted(old_releases, key=lambda x: x.release_date)
+        remove_dates = list(set([r.release_date for r in new_releases]))
+        merged_releases = [
+            r for r in old_releases if r.release_date not in remove_dates
         ]
-        merged_cbs.extend(new_releases)
-        return merged_cbs
+        merged_releases.extend(new_releases)
+        return merged_releases
 
-    def _update_db(self, releases: list[dict]):
-        releases = self._unique_releases(releases)
+    def _update_db(self, releases: list[ReleaseData]):
         self.updating = True
         try:
-            db.save_to_db(releases)
+            self.db_writer.save_to_db(releases)
             self.updating = False
             self.logger.info("Update complete")
         except Exception as e:
@@ -159,25 +169,16 @@ class Scraper:
         finally:
             self.updating = False
 
-    @staticmethod
-    def _unique_releases(releases: list[dict]) -> list[dict]:
-        unique_releases = list()
-        for release in releases:
-            is_unique = True
-            for urelease in unique_releases:
-                if ReleaseData.dicts_eq(release, urelease):
-                    is_unique = False
-                    break
-            if is_unique:
-                unique_releases.append(release)
-        return unique_releases
-
 
 def main():
+    from scripts.scraper.database import Database
+
+    db = Database()
+
     retries = 2
     while retries > 0:
         try:
-            scraper = Scraper(LOG_LEVEL)
+            scraper = Scraper(db, db, LOG_LEVEL)
             scraper.scrape()
             break
         except Exception as e:
