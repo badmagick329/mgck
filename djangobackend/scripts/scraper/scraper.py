@@ -58,8 +58,9 @@ class Scraper:
         self.wiki_urls = WikiUrls()
         self.updating = False
 
-    def scrape(self):
-        urls = self._get_recent_urls()
+    def scrape(self, urls: list[str] | None = None):
+        if not urls:
+            urls = self._get_recent_urls()
         saved_releases = self.db_reader.get_recent_saved_releases()
         merged_releases = self._fetch_releases_from_urls(urls, saved_releases)
         self._update_db(merged_releases)
@@ -171,15 +172,18 @@ class Scraper:
 
 
 def main():
+    import sys
+
     from scripts.scraper.database import Database
 
     db = Database()
+    urls = sys.argv[1:] if len(sys.argv) > 1 else None
 
     retries = 2
     while retries > 0:
         try:
             scraper = Scraper(db, db, LOG_LEVEL)
-            scraper.scrape()
+            scraper.scrape(urls)
             break
         except Exception as e:
             retries -= 1
