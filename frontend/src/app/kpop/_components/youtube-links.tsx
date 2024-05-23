@@ -11,7 +11,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { VIDEO_CAROUSEL_WIDTH } from '@/lib/consts';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -52,11 +51,11 @@ export default function YoutubeLinks({ videoIds }: { videoIds: string[] }) {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className={VIDEO_CAROUSEL_WIDTH}
+      className={`flex w-full justify-center`}
     >
       <div className='flex w-full flex-col justify-center gap-4 py-1'>
         <CollapsibleTrigger asChild>
-          <div className='flex justify-center gap-2 pl-14 text-xs font-bold hover:cursor-pointer'>
+          <div className='flex justify-center gap-2 text-xs font-bold hover:cursor-pointer'>
             <span>{toggleText}</span>
             {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </div>
@@ -66,9 +65,10 @@ export default function YoutubeLinks({ videoIds }: { videoIds: string[] }) {
             setApi={setCarouselApi}
             opts={{
               align: 'center',
+              loop: true,
             }}
             orientation='horizontal'
-            className={`relative ${VIDEO_CAROUSEL_WIDTH} overflow-hidden`}
+            className='3xs:px-1 2xs:px-6 xs:px-10'
           >
             <CarouselContent>
               {videoIds.map((videoId) => (
