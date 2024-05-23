@@ -1,3 +1,10 @@
+export function dateStringIsToday(dateString: string) {
+  const today = new Date();
+  const todayString = today.toISOString().split('T')[0];
+  const targetDateString = new Date(dateString).toISOString().split('T')[0];
+  return todayString === targetDateString;
+}
+
 export function recentDate(pastDays: number = 3) {
   const today = new Date();
   today.setDate(today.getDate() - pastDays);
