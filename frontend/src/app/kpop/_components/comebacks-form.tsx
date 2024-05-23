@@ -25,6 +25,10 @@ import { useEffect } from 'react';
 import ComebackFormInput from './comeback-form-input';
 
 type Debounce = ReturnType<typeof useDebounce>;
+type FormDataToURLState = (
+  formData: FormData,
+  searchParams?: URLSearchParams | undefined
+) => void;
 
 export default function ComebacksForm({ totalPages }: { totalPages: number }) {
   const DEBOUNCE_TIME = 350;
@@ -97,8 +101,12 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
           <label className='pl-2'>Exact Match</label>
         </div>
         <div className='flex justify-between gap-2'>
-          <Button onClick={onRecentClick(formDataToURLState)}>Recent</Button>
-          <Button onClick={onTodayClick(formDataToURLState)}>Today</Button>
+          <Button onClick={onRecentClick(formDataToURLState, searchParams)}>
+            Recent
+          </Button>
+          <Button onClick={onTodayClick(formDataToURLState, searchParams)}>
+            Today
+          </Button>
           <Button onClick={onClearClick(clearURLState)}>Clear</Button>
         </div>
       </div>
@@ -138,10 +146,7 @@ function onPreviousClick(
 function onInputChange(
   debounce: Debounce,
   searchParams: ReadonlyURLSearchParams,
-  formDataToURLState: (
-    formData: FormData,
-    searchParams?: URLSearchParams | undefined
-  ) => void
+  formDataToURLState: FormDataToURLState
 ) {
   return (e: React.ChangeEvent<HTMLInputElement>) => {
     const form = e.currentTarget.form;
@@ -163,7 +168,10 @@ function onClearClick(clearURLState: () => void) {
   };
 }
 
-function onTodayClick(formDataToURLState: (formData: FormData) => void) {
+function onTodayClick(
+  formDataToURLState: FormDataToURLState,
+  searchParams: ReadonlyURLSearchParams
+) {
   return (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     const form = e.currentTarget.form;
     if (!form) {
@@ -184,11 +192,18 @@ function onTodayClick(formDataToURLState: (formData: FormData) => void) {
     startDateInput.value = recentDate(0);
     endDateInput.value = recentDate(0);
     const formData = new FormData(form);
-    formDataToURLState(formData);
+    const oldSearchParams = new URLSearchParams(searchParams);
+    if (oldSearchParams.has('page')) {
+      oldSearchParams.delete('page');
+    }
+    formDataToURLState(formData, oldSearchParams);
   };
 }
 
-function onRecentClick(formDataToURLState: (formData: FormData) => void) {
+function onRecentClick(
+  formDataToURLState: FormDataToURLState,
+  searchParams: ReadonlyURLSearchParams
+) {
   return (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     const form = e.currentTarget.form;
     if (!form) {
@@ -209,17 +224,18 @@ function onRecentClick(formDataToURLState: (formData: FormData) => void) {
     startDateInput.value = recentDate();
     endDateInput.value = '';
     const formData = new FormData(form);
-    formDataToURLState(formData);
+    const oldSearchParams = new URLSearchParams(searchParams);
+    if (oldSearchParams.has('page')) {
+      oldSearchParams.delete('page');
+    }
+    formDataToURLState(formData, oldSearchParams);
   };
 }
 
 function toggleExactSearch(
   debounce: Debounce,
   searchParams: ReadonlyURLSearchParams,
-  formDataToURLState: (
-    formData: FormData,
-    searchParams?: URLSearchParams | undefined
-  ) => void
+  formDataToURLState: FormDataToURLState
 ) {
   return (e: React.ChangeEvent<HTMLInputElement>) => {
     const form = e.currentTarget.form;
