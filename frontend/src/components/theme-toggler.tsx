@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
 export function ThemeToggler() {
-  const { setTheme, theme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -15,7 +15,7 @@ export function ThemeToggler() {
     return <Button size='icon' variant='outline'></Button>;
   }
 
-  if (theme === 'dark') {
+  if (resolvedTheme === 'dark') {
     return (
       <Button size='icon' variant='outline' onClick={() => setTheme('light')}>
         <Sun />
