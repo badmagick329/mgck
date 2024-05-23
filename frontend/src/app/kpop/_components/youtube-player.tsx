@@ -1,5 +1,3 @@
-import { YOUTUBE_WIDTH } from '@/lib/consts';
-
 export default function YoutubePlayer({ videoId }: { videoId: string }) {
   return (
     <iframe
@@ -8,7 +6,7 @@ export default function YoutubePlayer({ videoId }: { videoId: string }) {
       allow='autoplay; encrypted-media'
       allowFullScreen
       title='video'
-      width={YOUTUBE_WIDTH}
+      width={280}
     />
   );
 }
