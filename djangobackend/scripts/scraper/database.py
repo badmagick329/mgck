@@ -68,15 +68,10 @@ class Database:
         for release in releases:
             release_exists = Release.objects.filter(id=release.id).exists()
             if not release_exists:
-                print(
-                    f"Checking if release with date {release.release_date} "
-                    f"exists\n{release}\n{remove_dates_as_string}\n\n"
-                )
                 release_exists = (
                     release.release_date not in remove_dates_as_string
                 )
             if release_exists:
-                print(f"Updating release {release.id}\n{release}\n")
                 release_from_db = Release.objects.get(id=release.id)
                 release_from_db.reddit_urls = release.reddit_urls  # type: ignore
                 release_from_db.urls = (  # type: ignore
