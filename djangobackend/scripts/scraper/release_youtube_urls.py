@@ -51,6 +51,18 @@ class ReleaseYoutubeUrls:
                 stack_info=True,
             )
 
+    def _url_is_updated(self, release: ReleaseData) -> bool:
+        has_reddit_urls = len(release.reddit_urls) > 0
+        urls_is_empty = release.urls is None or len(release.urls) == 0
+        urls_need_updating = urls_is_empty and has_reddit_urls
+
+        return release.urls is not None and not urls_need_updating
+
+    def _in_saved_releases(self, release: ReleaseData) -> ReleaseData | None:
+        for saved_release in self._saved_releases:
+            if release == saved_release:
+                return saved_release
+
     def _process_reddit_urls(self, release: ReleaseData) -> None:
         youtube_urls = list()
         invalid_urls = list()
@@ -76,18 +88,6 @@ class ReleaseYoutubeUrls:
         self._logger.debug(f"Youtube urls found: {youtube_urls}")
         release.urls = youtube_urls
         self.releases.append(release)
-
-    def _in_saved_releases(self, release: ReleaseData) -> ReleaseData | None:
-        for saved_release in self._saved_releases:
-            if release == saved_release:
-                return saved_release
-
-    def _url_is_updated(self, release: ReleaseData) -> bool:
-        has_reddit_urls = len(release.reddit_urls) > 0
-        urls_is_empty = release.urls is None or len(release.urls) == 0
-        urls_need_updating = urls_is_empty and has_reddit_urls
-
-        return release.urls is not None and not urls_need_updating
 
 
 def _url_to_id(url: str) -> str:

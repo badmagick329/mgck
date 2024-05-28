@@ -2,7 +2,6 @@
 import logging
 import os
 import sys
-from copy import deepcopy
 from pathlib import Path
 
 import praw
@@ -17,8 +16,13 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "djangobackend.settings"
 import django
 
 django.setup()
-from scripts.scraper.database import DatabaseReader, DatabaseWriter
-from scripts.scraper.kpop_data_from_subreddit import KpopDataFromSubreddit
+from datetime import timedelta
+
+from scripts.scraper.database import Database, DatabaseReader, DatabaseWriter
+from scripts.scraper.fetched_releases import (
+    FetchedReleases,
+    FetchedReleasesFromSubreddit,
+)
 from scripts.scraper.logger import get_stream_logger
 from scripts.scraper.parsed_html import ParsedHTML
 from scripts.scraper.release_data import ReleaseData
@@ -31,43 +35,38 @@ LOG_LEVEL = logging.INFO
 
 
 class Scraper:
-    subreddit_data: KpopDataFromSubreddit
-    updating: bool
-    wiki_urls: WikiUrls
-    reddit: Reddit
-    db_reader: DatabaseReader
-    db_writer: DatabaseWriter
+    _wiki_urls: WikiUrls
+    _db_reader: DatabaseReader
+    _db_writer: DatabaseWriter
+    _reddit: Reddit
+    _fetched_releases: FetchedReleases
+    _logger: logging.Logger
 
     def __init__(
         self,
+        reddit: Reddit,
+        fetched_releases: FetchedReleases,
         db_reader: DatabaseReader,
         db_writer: DatabaseWriter,
-        log_level: int | None = None,
+        logger: logging.Logger,
     ) -> None:
-        self.db_reader = db_reader
-        self.db_writer = db_writer
-        self.logger = get_stream_logger(log_level)
-        self.reddit = praw.Reddit(
-            client_id=REDDIT_ID,
-            client_secret=REDDIT_SECRET,
-            user_agent=REDDIT_AGENT,
-        )
-        self.subreddit_data = KpopDataFromSubreddit(
-            self.reddit, log_level=log_level
-        )
-        self.wiki_urls = WikiUrls()
-        self.updating = False
+        self._reddit = reddit
+        self._fetched_releases = fetched_releases
+        self._db_reader = db_reader
+        self._db_writer = db_writer
+        self._logger = logger
+        self._wiki_urls = WikiUrls()
 
     def scrape(self, urls: list[str] | None = None):
         if not urls:
             urls = self._get_recent_urls()
-        saved_releases = self.db_reader.get_recent_saved_releases()
+        saved_releases = self._db_reader.get_recent_saved_releases()
         merged_releases = self._fetch_releases_from_urls(urls, saved_releases)
         self._update_db(merged_releases)
 
     def _get_recent_urls(self):
-        self.wiki_urls.generate_urls()
-        return self.wiki_urls.urls[-3:]
+        self._wiki_urls.generate_urls()
+        return self._wiki_urls.urls[-3:]
 
     def _fetch_releases_from_urls(
         self, urls: list[str], saved_releases: list[ReleaseData]
@@ -87,18 +86,18 @@ class Scraper:
                 break
         return merged_releases
 
-    def _process_url(self, url: str) -> list[ReleaseData]:
+    def _parse_html(self, url: str) -> list[ReleaseData]:
         try:
-            self.logger.info(f"Scraping {url}")
-            wiki_page = self.subreddit_data.read_url(url)
-            assert wiki_page is not None, f"Wiki page is None for {url}"
-            html = wiki_page.content_html
+            self._logger.info(f"Scraping {url}")
+            self._fetched_releases.read_url(url)
+            html = self._fetched_releases.html
             assert isinstance(html, str), f"Wiki page content is not a string"
             parsed_html = ParsedHTML(html, url)
             release_list = parsed_html.release_list()
+            release_list.sort(key=lambda r: r.release_date)
             return release_list
         except Exception as e:
-            self.logger.error(f"Error scraping {url}\n{e}")
+            self._logger.error(f"Error scraping {url}\n{e}")
             return []
 
     def _fetch_release_data_from_url(
@@ -108,19 +107,19 @@ class Scraper:
         new_releases: list[ReleaseData],
     ) -> bool:
         try:
-            release_data_from_url = [r for r in self._process_url(url)]
+            release_data_from_url = [r for r in self._parse_html(url)]
             release_youtube_urls = ReleaseYoutubeUrls(
-                self.reddit,
+                self._reddit,
                 saved_releases,
                 release_data_from_url,
-                self.logger,
+                self._logger,
             )
             release_youtube_urls.extract()
             if release_youtube_urls.releases:
                 new_releases.extend(release_youtube_urls.releases)
             return True
         except Exception as e:
-            self.logger.error(f"Error scraping {url}\n{e}")
+            self._logger.error(f"Error scraping {url}\n{e}")
             return False
 
     def _merge_releases(
@@ -137,10 +136,10 @@ class Scraper:
                 if merged_release not in merged_releases:
                     merged_releases.append(merged_release)
 
-            self.logger.debug(f"Merged {len(newly_merged)} releases")
+            self._logger.debug(f"Merged {len(newly_merged)} releases")
             return True
         except Exception as e:
-            self.logger.error(f"Error merging\n{e}")
+            self._logger.error(f"Error merging\n{e}")
             return False
 
     def _create_merged_releases(
@@ -159,30 +158,33 @@ class Scraper:
         return merged_releases
 
     def _update_db(self, releases: list[ReleaseData]):
-        self.updating = True
         try:
-            self.db_writer.save_to_db(releases)
-            self.updating = False
-            self.logger.info("Update complete")
+            self._db_writer.save_to_db(releases)
+            self._logger.info("Update complete")
         except Exception as e:
-            self.logger.error(f"Error saving {e}", exc_info=e, stack_info=True)
+            self._logger.error(
+                f"Error saving {e}", exc_info=e, stack_info=True
+            )
             return
-        finally:
-            self.updating = False
 
 
 def main():
     import sys
 
-    from scripts.scraper.database import Database
-
-    db = Database()
     urls = sys.argv[1:] if len(sys.argv) > 1 else None
 
+    db = Database()
+    reddit = praw.Reddit(
+        client_id=REDDIT_ID,
+        client_secret=REDDIT_SECRET,
+        user_agent=REDDIT_AGENT,
+    )
+    logger = get_stream_logger(LOG_LEVEL)
+    fetched_releases = FetchedReleasesFromSubreddit(reddit, logger)
     retries = 2
     while retries > 0:
         try:
-            scraper = Scraper(db, db, LOG_LEVEL)
+            scraper = Scraper(reddit, fetched_releases, db, db, logger)
             scraper.scrape(urls)
             break
         except Exception as e:
