@@ -60,30 +60,30 @@ class Scraper:
     def scrape(self, urls: list[str] | None = None):
         if not urls:
             urls = self._get_recent_urls()
-        saved_releases = self._db_reader.get_recent_saved_releases()
-        merged_releases = self._fetch_releases_from_urls(urls, saved_releases)
-        self._update_db(merged_releases)
+        for url in urls:
+            saved_releases = self._db_reader.get_recent_saved_releases()
+            merged_releases = self._fetch_releases_from_url(
+                url, saved_releases
+            )
+            self._update_db(merged_releases)
 
     def _get_recent_urls(self):
         self._wiki_urls.generate_urls()
         return self._wiki_urls.urls[-3:]
 
-    def _fetch_releases_from_urls(
-        self, urls: list[str], saved_releases: list[ReleaseData]
+    def _fetch_releases_from_url(
+        self, url: str, saved_releases: list[ReleaseData]
     ) -> list[ReleaseData]:
         new_releases = []
         merged_releases = []
-        for url in urls:
-            is_successful = self._fetch_release_data_from_url(
-                url, saved_releases, new_releases
-            )
-            if not is_successful:
-                break
-            is_successful = self._merge_releases(
-                saved_releases, new_releases, merged_releases
-            )
-            if not is_successful:
-                break
+
+        is_successful = self._fetch_release_data_from_url(
+            url, saved_releases, new_releases
+        )
+        if not is_successful:
+            return merged_releases
+        self._merge_releases(saved_releases, new_releases, merged_releases)
+
         return merged_releases
 
     def _parse_html(self, url: str) -> list[ReleaseData]:
