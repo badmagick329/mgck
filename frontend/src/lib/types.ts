@@ -1,4 +1,3 @@
-import { ReadonlyURLSearchParams } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 
 export type GfyParsedResponse = {
@@ -88,3 +87,9 @@ export type ComebackResponse = {
 };
 
 export type ServerError = 'Server Error' | 'Page Not Found' | 'Unknown Error';
+
+export type CriterionType = {
+  label: string;
+  weight: number;
+  maxValue: number
+}
