@@ -3,17 +3,25 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 // import Criterion from './criterion';
-import { CriterionType } from '@/lib/types';
-import { useState } from 'react';
+import { ChooseState, CriterionType } from '@/lib/types';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 import CriteriaTable from './criteria-table';
 
-export default function Criteria() {
+type CriteriaProps = {
+  useChooseState: Dispatch<SetStateAction<ChooseState | undefined>>;
+  chooseState?: ChooseState;
+};
+
+export default function Criteria({
+  chooseState,
+  useChooseState,
+}: CriteriaProps) {
   const [criteria, setCriteria] = useState<CriterionType[]>([]);
   const [criterionInput, setCriterionInput] = useState('');
 
   return (
-    <div className='flex flex-col gap-4'>
+    <div className='flex w-[100%] max-w-[720px] flex-col gap-4 px-2 md:w-[80%]'>
       <Button
         onClick={() => {
           if (!criterionInput) {
