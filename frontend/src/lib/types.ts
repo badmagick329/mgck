@@ -91,5 +91,14 @@ export type ServerError = 'Server Error' | 'Page Not Found' | 'Unknown Error';
 export type CriterionType = {
   label: string;
   weight: number;
-  maxValue: number
-}
+  maxValue: number;
+};
+
+export type ChoiceType = {
+  criteria: CriterionType[];
+  name: string;
+};
+
+export type ChooseState = {
+  choices: ChoiceType[];
+};
