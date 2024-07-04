@@ -2,25 +2,23 @@ import { Slider } from '@/components/ui/slider';
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { CriterionType } from '@/lib/types';
-import { useState } from 'react';
 
 export default function CriteriaTable({
-  criteria,
+  getCriteria,
+  getWeight,
+  setCriterion,
 }: {
-  criteria: CriterionType[];
+  getCriteria: () => string[];
+  getWeight: (criterion: string) => number;
+  setCriterion: (criterion: string, weight: number) => void;
 }) {
-  const [weight, setWeight] = useState(50);
-
   return (
     <Table>
-      <TableCaption>Choice Criteria</TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead>Weight</TableHead>
@@ -28,21 +26,23 @@ export default function CriteriaTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {criteria.map((c) => {
+        {getCriteria().map((c) => {
           return (
-            <TableRow key={c.label}>
+            <TableRow key={c}>
               <TableCell>
                 <div>
-                  <span>{weight}</span>
+                  <span>{getWeight(c)}</span>
                   <Slider
-                    defaultValue={[50]}
+                    defaultValue={[getWeight(c)]}
                     max={100}
                     step={1}
-                    onValueChange={(e: Array<number>) => setWeight(e[0])}
+                    onValueChange={(e: Array<number>) => {
+                      setCriterion(c, e[0]);
+                    }}
                   />
                 </div>
               </TableCell>
-              <TableCell className='text-right'>{c.label}</TableCell>
+              <TableCell className='text-right'>{c}</TableCell>
             </TableRow>
           );
         })}

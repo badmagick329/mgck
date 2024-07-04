@@ -2,55 +2,57 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-// import Criterion from './criterion';
-import { ChooseState, CriterionType } from '@/lib/types';
-import { Dispatch, SetStateAction, useState } from 'react';
+import {
+  GetCriteria,
+  GetWeight,
+  RemoveCriterion,
+  SetCriterion,
+} from '@/hooks/use-choices-state';
+import { useState } from 'react';
 
 import CriteriaTable from './criteria-table';
 
 type CriteriaProps = {
-  useChooseState: Dispatch<SetStateAction<ChooseState | undefined>>;
-  chooseState?: ChooseState;
+  setCriterion: SetCriterion;
+  removeCriterion: RemoveCriterion;
+  getCriteria: GetCriteria;
+  getWeight: GetWeight;
 };
 
 export default function Criteria({
-  chooseState,
-  useChooseState,
+  getCriteria,
+  setCriterion,
+  removeCriterion,
+  getWeight,
 }: CriteriaProps) {
-  const [criteria, setCriteria] = useState<CriterionType[]>([]);
   const [criterionInput, setCriterionInput] = useState('');
 
   return (
     <div className='flex w-[100%] max-w-[720px] flex-col gap-4 px-2 md:w-[80%]'>
-      <Button
-        onClick={() => {
-          if (!criterionInput) {
-            return;
-          }
+      <div className='flex justify-center'>
+        <Button
+          onClick={() => {
+            const trimmedInput = criterionInput.trim();
+            if (!trimmedInput || getCriteria().includes(trimmedInput)) {
+              return;
+            }
 
-          setCriteria([
-            ...criteria,
-            {
-              label: criterionInput,
-              weight: 1,
-              maxValue: 4,
-            },
-          ]);
-          setCriterionInput('');
-        }}
-      >
-        Add criteria
-      </Button>
+            setCriterion(trimmedInput);
+            setCriterionInput('');
+          }}
+        >
+          Add criteria
+        </Button>
+      </div>
       <Input
         onChange={(e) => setCriterionInput(e.target.value)}
         value={criterionInput}
       />
-      {/* <div className='flex flex-col gap-2'>
-        {criteria.map((c, index) => (
-          <Criterion key={index} label={c} />
-        ))}
-      </div> */}
-      <CriteriaTable criteria={criteria} />
+      <CriteriaTable
+        getCriteria={getCriteria}
+        getWeight={getWeight}
+        setCriterion={setCriterion}
+      />
     </div>
   );
 }
