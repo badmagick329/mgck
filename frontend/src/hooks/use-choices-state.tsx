@@ -67,11 +67,30 @@ export default function useChoicesState() {
     [choices]
   );
 
+  const getCriterionValue = useCallback(
+    (choice: string, criterion: string) => {
+      for (const c of choices) {
+        if (c.name !== choice) {
+          continue;
+        }
+        for (const [crit, val] of Object.entries(c.criteriaValues)) {
+          if (crit === criterion) {
+            return val;
+          }
+        }
+      }
+      return null;
+    },
+    [choices]
+  );
+
   const setValue = useCallback(
     (criterion: string, choice: string, value: number) => {
-      for (const c of choices) {
+      const newChoices = structuredClone(choices);
+      for (const c of newChoices) {
         if (c.name === choice) {
           c.criteriaValues[criterion] = value;
+          setChoices(newChoices);
           return;
         }
       }
@@ -110,6 +129,7 @@ export default function useChoicesState() {
     addChoice,
     removeChoice,
     getCriteriaValues,
+    getCriterionValue,
   };
 }
 
@@ -126,3 +146,7 @@ export type SetValue = (
 export type AddChoice = (choice: string) => void;
 export type RemoveChoice = (choice: string) => void;
 export type GetCriteriaValues = (choice: string) => Record<string, number>;
+export type GetCriterionValue = (
+  choice: string,
+  criterion: string
+) => number | null;
