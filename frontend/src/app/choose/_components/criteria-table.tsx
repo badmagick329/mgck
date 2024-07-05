@@ -7,16 +7,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  GetCriteria,
+  GetWeight,
+  SetCriterion,
+} from '@/hooks/use-choices-state';
+
+type CriteriaTableProps = {
+  getCriteria: GetCriteria;
+  getWeight: GetWeight;
+  setCriterion: SetCriterion;
+};
 
 export default function CriteriaTable({
   getCriteria,
   getWeight,
   setCriterion,
-}: {
-  getCriteria: () => string[];
-  getWeight: (criterion: string) => number;
-  setCriterion: (criterion: string, weight: number) => void;
-}) {
+}: CriteriaTableProps) {
   return (
     <Table>
       <TableHeader>
