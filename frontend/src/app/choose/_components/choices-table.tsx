@@ -10,6 +10,7 @@ import {
 import {
   GetChoices,
   GetCriteriaValues,
+  GetCriterionValue,
   SetValue,
 } from '@/hooks/use-choices-state';
 
@@ -17,12 +18,14 @@ type ChoicesTableProps = {
   getChoices: GetChoices;
   getCriteriaValues: GetCriteriaValues;
   setValue: SetValue;
+  getCriterionValue: GetCriterionValue;
 };
 
 export default function ChoicesTable({
   getChoices,
   getCriteriaValues,
   setValue,
+  getCriterionValue,
 }: ChoicesTableProps) {
   return (
     <Table>
@@ -44,10 +47,14 @@ export default function ChoicesTable({
                         key={`${c}_${entry[0]}}`}
                         className='flex w-[60px] flex-col gap-2'
                       >
-                        <span>{entry[0]}</span>
+                        <div className='flex flex-col gap-2'>
+                          <span>{entry[0]}</span>
+                          <span>{getCriterionValue(c, entry[0])}</span>
+                        </div>
                         <Slider
                           defaultValue={[1]}
                           max={5}
+                          min={1}
                           step={1}
                           onValueChange={(e: Array<number>) => {
                             setValue(entry[0], c, e[0]);

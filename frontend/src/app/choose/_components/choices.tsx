@@ -6,6 +6,7 @@ import {
   AddChoice,
   GetChoices,
   GetCriteriaValues,
+  GetCriterionValue,
   RemoveChoice,
   SetValue,
 } from '@/hooks/use-choices-state';
@@ -19,6 +20,7 @@ type ChoicesProps = {
   setValue: SetValue;
   removeChoice: RemoveChoice;
   getCriteriaValues: GetCriteriaValues;
+  getCriterionValue: GetCriterionValue;
 };
 
 export default function Choices({
@@ -27,6 +29,7 @@ export default function Choices({
   setValue,
   removeChoice,
   getCriteriaValues,
+  getCriterionValue,
 }: ChoicesProps) {
   const [choiceInput, setChoiceInput] = useState('');
 
@@ -52,6 +55,7 @@ export default function Choices({
         value={choiceInput}
       />
       <ChoicesTable
+        getCriterionValue={getCriterionValue}
         getChoices={getChoices}
         getCriteriaValues={getCriteriaValues}
         setValue={setValue}
