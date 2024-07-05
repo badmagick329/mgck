@@ -20,8 +20,9 @@ export default function useChoicesState() {
       const newChoices = [];
       for (const choice of choices) {
         const newCriteria = { ...choice.criteriaValues, [criterion]: 1 };
-        newChoices.push({ ...choice, criteria: newCriteria });
+        newChoices.push({ ...choice, criteriaValues: newCriteria });
       }
+      setChoices(newChoices);
     },
     [weights, choices]
   );
@@ -53,6 +54,18 @@ export default function useChoicesState() {
   );
 
   const getChoices = useCallback(() => choices.map((c) => c.name), [choices]);
+
+  const getCriteriaValues = useCallback(
+    (choice: string) => {
+      for (const c of choices) {
+        if (c.name === choice) {
+          return c.criteriaValues;
+        }
+      }
+      return {};
+    },
+    [choices]
+  );
 
   const setValue = useCallback(
     (criterion: string, choice: string, value: number) => {
@@ -96,6 +109,7 @@ export default function useChoicesState() {
     setValue,
     addChoice,
     removeChoice,
+    getCriteriaValues,
   };
 }
 
@@ -111,3 +125,4 @@ export type SetValue = (
 ) => void;
 export type AddChoice = (choice: string) => void;
 export type RemoveChoice = (choice: string) => void;
+export type GetCriteriaValues = (choice: string) => Record<string, number>;

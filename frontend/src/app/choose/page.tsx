@@ -14,6 +14,8 @@ export default function ChoosePage() {
     getChoices,
     setValue,
     removeChoice,
+    addChoice,
+    getCriteriaValues,
   } = useChoicesState();
 
   return (
@@ -25,9 +27,11 @@ export default function ChoosePage() {
         removeCriterion={removeCriterion}
       />
       <Choices
+        addChoice={addChoice}
         getChoices={getChoices}
         setValue={setValue}
         removeChoice={removeChoice}
+        getCriteriaValues={getCriteriaValues}
       />
     </div>
   );
