@@ -19,7 +19,10 @@ export default function useChoicesState() {
       });
       const newChoices = [];
       for (const choice of choices) {
-        const newCriteria = { ...choice.criteriaValues, [criterion]: 1 };
+        const newCriteria = {
+          ...choice.criteriaValues,
+          [criterion]: getCriterionValue(choice.name, criterion) || 1,
+        };
         newChoices.push({ ...choice, criteriaValues: newCriteria });
       }
       setChoices(newChoices);
@@ -81,7 +84,7 @@ export default function useChoicesState() {
       }
       return null;
     },
-    [choices]
+    [choices, weights]
   );
 
   const setValue = useCallback(
@@ -119,6 +122,22 @@ export default function useChoicesState() {
     [choices]
   );
 
+  const calculatedResults = useCallback(() => {
+    const results: Result[] = [];
+    choices.map((choice) => {
+      let score = 0;
+      for (const [crit, val] of Object.entries(choice.criteriaValues)) {
+        score += val * (getWeight(crit) / 100);
+      }
+      results.push({
+        choice: choice.name,
+        score,
+      });
+    });
+    results.sort((a, b) => b.score - a.score);
+    return results;
+  }, [choices, weights]);
+
   return {
     setCriterion,
     getWeight,
@@ -130,6 +149,7 @@ export default function useChoicesState() {
     removeChoice,
     getCriteriaValues,
     getCriterionValue,
+    calculatedResults,
   };
 }
 
@@ -150,3 +170,8 @@ export type GetCriterionValue = (
   choice: string,
   criterion: string
 ) => number | null;
+export type Result = {
+  score: number;
+  choice: string;
+};
+export type CalculatedResults = () => Result[];
