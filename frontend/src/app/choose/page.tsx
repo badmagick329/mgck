@@ -3,6 +3,7 @@
 import useChoicesState from '@/hooks/use-choices-state';
 
 import Choices from './_components/choices';
+import ChoicesOutput from './_components/choices-output';
 import Criteria from './_components/criteria';
 
 export default function ChoosePage() {
@@ -17,6 +18,7 @@ export default function ChoosePage() {
     addChoice,
     getCriteriaValues,
     getCriterionValue,
+    calculatedResults,
   } = useChoicesState();
 
   return (
@@ -35,6 +37,7 @@ export default function ChoosePage() {
         getCriteriaValues={getCriteriaValues}
         getCriterionValue={getCriterionValue}
       />
+      <ChoicesOutput calculatedResults={calculatedResults} />
     </div>
   );
 }
