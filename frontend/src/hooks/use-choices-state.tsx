@@ -10,6 +10,12 @@ type Choice = {
 export default function useChoicesState() {
   const [weights, setWeights] = useState<Record<string, number>>({});
   const [choices, setChoices] = useState<Choice[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
+
+  function updateState(newChoices: Choice[]) {
+    setChoices(newChoices);
+    calculatedResults();
+  }
 
   const setCriterion = useCallback(
     (criterion: string, weight?: number) => {
@@ -25,7 +31,7 @@ export default function useChoicesState() {
         };
         newChoices.push({ ...choice, criteriaValues: newCriteria });
       }
-      setChoices(newChoices);
+      updateState(newChoices);
     },
     [weights, choices]
   );
@@ -51,7 +57,7 @@ export default function useChoicesState() {
         delete newCriteria[criterion];
         newChoices.push({ ...choice, criteria: newCriteria });
       }
-      setChoices(newChoices);
+      updateState(newChoices);
     },
     [weights, choices]
   );
@@ -93,7 +99,7 @@ export default function useChoicesState() {
       for (const c of newChoices) {
         if (c.name === choice) {
           c.criteriaValues[criterion] = value;
-          setChoices(newChoices);
+          updateState(newChoices);
           return;
         }
       }
@@ -103,27 +109,39 @@ export default function useChoicesState() {
 
   const addChoice = useCallback(
     (choice: string) => {
+      console.log('adding choice');
       const defaultCriteria: Record<string, number> = {};
       for (const criterion of getCriteria()) {
+        console.log('adding criterion', criterion);
         defaultCriteria[criterion] = 1;
       }
-      setChoices([
+      const newChoices = [
         ...choices,
         { name: choice, criteriaValues: defaultCriteria },
-      ]);
+      ];
+      console.log('new choices',newChoices)
+      console.log('updating state');
+      updateState(newChoices);
     },
     [choices]
   );
 
   const removeChoice = useCallback(
     (choice: string) => {
-      setChoices(choices.filter((c) => c.name !== choice));
+      updateState(choices.filter((c) => c.name !== choice));
     },
     [choices]
   );
 
   const calculatedResults = useCallback(() => {
     const results: Result[] = [];
+    if (!choices || !weights) {
+      // if (results) {
+      //   setResults([]);
+      // }
+      return;
+    }
+
     choices.map((choice) => {
       let score = 0;
       for (const [crit, val] of Object.entries(choice.criteriaValues)) {
@@ -135,6 +153,7 @@ export default function useChoicesState() {
       });
     });
     results.sort((a, b) => b.score - a.score);
+    setResults(results);
     return results;
   }, [choices, weights]);
 
@@ -149,7 +168,7 @@ export default function useChoicesState() {
     removeChoice,
     getCriteriaValues,
     getCriterionValue,
-    calculatedResults,
+    results,
   };
 }
 
@@ -174,4 +193,3 @@ export type Result = {
   score: number;
   choice: string;
 };
-export type CalculatedResults = () => Result[];

@@ -2,8 +2,8 @@
 
 import useChoicesState from '@/hooks/use-choices-state';
 
+import ChartOutput from './_components/chart-output';
 import Choices from './_components/choices';
-import ChoicesOutput from './_components/choices-output';
 import Criteria from './_components/criteria';
 
 export default function ChoosePage() {
@@ -18,7 +18,7 @@ export default function ChoosePage() {
     addChoice,
     getCriteriaValues,
     getCriterionValue,
-    calculatedResults,
+    results,
   } = useChoicesState();
 
   return (
@@ -37,7 +37,10 @@ export default function ChoosePage() {
         getCriteriaValues={getCriteriaValues}
         getCriterionValue={getCriterionValue}
       />
-      <ChoicesOutput calculatedResults={calculatedResults} />
+      <div className='w-[80%]'>
+        <ChartOutput chartData={results} />
+      </div>
+      {/* <ChoicesOutput calculatedResults={calculatedResults} /> */}
     </div>
   );
 }
