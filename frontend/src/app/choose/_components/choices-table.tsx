@@ -14,6 +14,8 @@ import {
   SetValue,
 } from '@/hooks/use-choices-state';
 
+import Instruction from './instruction';
+
 type ChoicesTableProps = {
   getChoices: GetChoices;
   getCriteriaValues: GetCriteriaValues;
@@ -27,49 +29,58 @@ export default function ChoicesTable({
   setValue,
   getCriterionValue,
 }: ChoicesTableProps) {
+  if (getChoices().length === 0) {
+    return null;
+  }
+  const instructionText =
+    '4. Adjust the values for each option using the slider.';
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Values</TableHead>
-          <TableHead className='text-right'>Name</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {getChoices().map((c) => {
-          return (
-            <TableRow key={c}>
-              <TableCell>
-                <div className='flex gap-2'>
-                  {Object.entries(getCriteriaValues(c)).map((entry) => {
-                    return (
-                      <div
-                        key={`${c}_${entry[0]}}`}
-                        className='flex w-[60px] flex-col gap-2'
-                      >
-                        <div className='flex flex-col gap-2'>
-                          <span>{entry[0]}</span>
-                          <span>{getCriterionValue(c, entry[0])}</span>
+    <div className='flex flex-col pt-4'>
+      <Instruction text={instructionText} />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Values</TableHead>
+            <TableHead className='text-right'>Option</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {getChoices().map((c) => {
+            return (
+              <TableRow key={c}>
+                <TableCell>
+                  <div className='flex gap-2'>
+                    {Object.entries(getCriteriaValues(c)).map((entry) => {
+                      return (
+                        <div
+                          key={`${c}_${entry[0]}}`}
+                          className='flex w-[60px] flex-col gap-2'
+                        >
+                          <div className='flex flex-col gap-2'>
+                            <span>{entry[0]}</span>
+                            <span>{getCriterionValue(c, entry[0])}</span>
+                          </div>
+                          <Slider
+                            defaultValue={[1]}
+                            max={5}
+                            min={1}
+                            step={1}
+                            onValueChange={(e: Array<number>) => {
+                              setValue(entry[0], c, e[0]);
+                            }}
+                          />
                         </div>
-                        <Slider
-                          defaultValue={[1]}
-                          max={5}
-                          min={1}
-                          step={1}
-                          onValueChange={(e: Array<number>) => {
-                            setValue(entry[0], c, e[0]);
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </TableCell>
-              <TableCell className='text-right'>{c}</TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+                      );
+                    })}
+                  </div>
+                </TableCell>
+                <TableCell className='text-right'>{c}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

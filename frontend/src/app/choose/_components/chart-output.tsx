@@ -40,7 +40,7 @@ type ChartOutputProps = {
 type ChartData = Result[];
 
 export default function ChartOutput({ chartData }: { chartData: Result[] }) {
-  if (!chartData) {
+  if (chartData.length === 0) {
     return null;
   }
 

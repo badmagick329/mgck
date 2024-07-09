@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import {
   AddChoice,
   GetChoices,
+  GetCriteria,
   GetCriteriaValues,
   GetCriterionValue,
   RemoveChoice,
@@ -13,6 +14,7 @@ import {
 import { useState } from 'react';
 
 import ChoicesTable from './choices-table';
+import Instruction from './instruction';
 
 type ChoicesProps = {
   addChoice: AddChoice;
@@ -21,6 +23,7 @@ type ChoicesProps = {
   removeChoice: RemoveChoice;
   getCriteriaValues: GetCriteriaValues;
   getCriterionValue: GetCriterionValue;
+  getCriteria: GetCriteria;
 };
 
 export default function Choices({
@@ -30,30 +33,38 @@ export default function Choices({
   removeChoice,
   getCriteriaValues,
   getCriterionValue,
+  getCriteria,
 }: ChoicesProps) {
   const [choiceInput, setChoiceInput] = useState('');
+  if (getCriteria().length === 0) {
+    return null;
+  }
+  const instructionText = '3. Add the options you want to compare.';
 
   return (
-    <div className='flex w-[100%] max-w-[720px] flex-col gap-4 px-2 md:w-[80%]'>
-      <div className='flex justify-center'>
-        <Button
-          onClick={() => {
-            const trimmedInput = choiceInput.trim();
-            if (!trimmedInput || getChoices().includes(trimmedInput)) {
-              return;
-            }
+    <div className='flex w-[100%] max-w-[720px] flex-col gap-4 px-2 pt-6 md:w-[80%]'>
+      <Instruction text={instructionText} />
+      <div className='flex gap-2'>
+        <Input
+          onChange={(e) => setChoiceInput(e.target.value)}
+          value={choiceInput}
+        />
+        <div>
+          <Button
+            onClick={() => {
+              const trimmedInput = choiceInput.trim();
+              if (!trimmedInput || getChoices().includes(trimmedInput)) {
+                return;
+              }
 
-            addChoice(trimmedInput);
-            setChoiceInput('');
-          }}
-        >
-          Add choice
-        </Button>
+              addChoice(trimmedInput);
+              setChoiceInput('');
+            }}
+          >
+            Add
+          </Button>
+        </div>
       </div>
-      <Input
-        onChange={(e) => setChoiceInput(e.target.value)}
-        value={choiceInput}
-      />
       <ChoicesTable
         getCriterionValue={getCriterionValue}
         getChoices={getChoices}

@@ -11,6 +11,7 @@ import {
 import { useState } from 'react';
 
 import CriteriaTable from './criteria-table';
+import Instruction from './instruction';
 
 type CriteriaProps = {
   setCriterion: SetCriterion;
@@ -26,28 +27,33 @@ export default function Criteria({
   getWeight,
 }: CriteriaProps) {
   const [criterionInput, setCriterionInput] = useState('');
+  const instructionText =
+    '1. Begin by adding the criteria to base your choice on.';
 
   return (
     <div className='flex w-[100%] max-w-[720px] flex-col gap-4 px-2 md:w-[80%]'>
-      <div className='flex justify-center'>
-        <Button
-          onClick={() => {
-            const trimmedInput = criterionInput.trim();
-            if (!trimmedInput || getCriteria().includes(trimmedInput)) {
-              return;
-            }
+      <Instruction text={instructionText} />
+      <div className='flex gap-2'>
+        <Input
+          onChange={(e) => setCriterionInput(e.target.value)}
+          value={criterionInput}
+        />
+        <div>
+          <Button
+            onClick={() => {
+              const trimmedInput = criterionInput.trim();
+              if (!trimmedInput || getCriteria().includes(trimmedInput)) {
+                return;
+              }
 
-            setCriterion(trimmedInput);
-            setCriterionInput('');
-          }}
-        >
-          Add criteria
-        </Button>
+              setCriterion(trimmedInput);
+              setCriterionInput('');
+            }}
+          >
+            Add
+          </Button>
+        </div>
       </div>
-      <Input
-        onChange={(e) => setCriterionInput(e.target.value)}
-        value={criterionInput}
-      />
       <CriteriaTable
         getCriteria={getCriteria}
         getWeight={getWeight}
