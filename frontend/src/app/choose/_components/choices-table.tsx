@@ -40,7 +40,7 @@ export default function ChoicesTable({
     '4. Adjust the values for each option using the slider.';
 
   return (
-    <div className='flex flex-col pt-4'>
+    <div className='flex flex-col py-4'>
       <Instruction text={instructionText} />
       <Table>
         <TableHeader>

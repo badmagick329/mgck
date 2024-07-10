@@ -15,6 +15,7 @@ import { useState } from 'react';
 
 import ChoicesTable from './choices-table';
 import Instruction from './instruction';
+import Spacer from './spacer';
 
 type ChoicesProps = {
   addChoice: AddChoice;
@@ -56,7 +57,7 @@ export default function Choices({
   }
 
   return (
-    <div className='flex flex-col gap-4 px-2 pt-6'>
+    <div className='flex flex-col gap-4 pt-6'>
       <Instruction text={instructionText} />
       <div className='flex gap-2'>
         <Input
@@ -68,6 +69,7 @@ export default function Choices({
           <Button onClick={handleAdd}>Add</Button>
         </div>
       </div>
+      <Spacer />
       <ChoicesTable
         getCriterionValue={getCriterionValue}
         getChoices={getChoices}
