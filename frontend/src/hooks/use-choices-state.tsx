@@ -136,9 +136,6 @@ export default function useChoicesState() {
   const calculatedResults = useCallback(() => {
     const results: Result[] = [];
     if (!choices || !weights) {
-      // if (results) {
-      //   setResults([]);
-      // }
       return;
     }
 

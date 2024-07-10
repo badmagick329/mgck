@@ -50,12 +50,12 @@ export default function ChoicesTable({
             return (
               <TableRow key={c}>
                 <TableCell>
-                  <div className='flex gap-2'>
+                  <div className='flex flex-wrap gap-2'>
                     {Object.entries(getCriteriaValues(c)).map((entry) => {
                       return (
                         <div
                           key={`${c}_${entry[0]}}`}
-                          className='flex w-[60px] flex-col gap-2'
+                          className='flex w-[80px] flex-col gap-2'
                         >
                           <div className='flex flex-col gap-2'>
                             <span>{entry[0]}</span>

@@ -23,23 +23,25 @@ export default function ChoosePage() {
 
   return (
     <div className='flex flex-col items-center gap-6 pt-16'>
-      <Criteria
-        setCriterion={setCriterion}
-        getWeight={getWeight}
-        getCriteria={getCriteria}
-        removeCriterion={removeCriterion}
-      />
-      <Choices
-        addChoice={addChoice}
-        getChoices={getChoices}
-        setValue={setValue}
-        removeChoice={removeChoice}
-        getCriteriaValues={getCriteriaValues}
-        getCriterionValue={getCriterionValue}
-        getCriteria={getCriteria}
-      />
-      <div className='w-[80%]'>
-        <ChartOutput chartData={results} />
+      <div className='flex w-full max-w-[720px] flex-col md:max-w-[80%] 2xl:max-w-[70%]'>
+        <Criteria
+          setCriterion={setCriterion}
+          getWeight={getWeight}
+          getCriteria={getCriteria}
+          removeCriterion={removeCriterion}
+        />
+        <Choices
+          addChoice={addChoice}
+          getChoices={getChoices}
+          setValue={setValue}
+          removeChoice={removeChoice}
+          getCriteriaValues={getCriteriaValues}
+          getCriterionValue={getCriterionValue}
+          getCriteria={getCriteria}
+        />
+        <div className='flex justify-center p-4'>
+          <ChartOutput chartData={results} />
+        </div>
       </div>
     </div>
   );

@@ -31,7 +31,7 @@ export default function Criteria({
     '1. Begin by adding the criteria to base your choice on.';
 
   return (
-    <div className='flex w-[100%] max-w-[720px] flex-col gap-4 px-2 md:w-[80%]'>
+    <div className='flex flex-col gap-4 px-2'>
       <Instruction text={instructionText} />
       <div className='flex gap-2'>
         <Input
