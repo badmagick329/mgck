@@ -12,6 +12,7 @@ import {
   GetWeight,
   SetCriterion,
 } from '@/hooks/use-choices-state';
+import { useState } from 'react';
 
 import Instruction from './instruction';
 
@@ -26,6 +27,8 @@ export default function CriteriaTable({
   getWeight,
   setCriterion,
 }: CriteriaTableProps) {
+  const [sliderValue, setSliderValue] = useState();
+
   if (getCriteria().length === 0) {
     return null;
   }
@@ -54,6 +57,7 @@ export default function CriteriaTable({
                       max={100}
                       min={1}
                       step={1}
+                      sliderValue={getWeight(c)}
                       onValueChange={(e: Array<number>) => {
                         setCriterion(c, e[0]);
                       }}

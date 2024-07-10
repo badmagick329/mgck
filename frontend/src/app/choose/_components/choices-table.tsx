@@ -56,6 +56,9 @@ export default function ChoicesTable({
                 <TableCell>
                   <div className='flex flex-wrap gap-2'>
                     {Object.entries(getCriteriaValues(c)).map((entry) => {
+                      const value = getCriterionValue(c, entry[0]);
+                      const sliderValue =
+                        (value || 0) * (125 / maxValue) - 125 / maxValue;
                       return (
                         <div
                           key={`${c}_${entry[0]}}`}
@@ -63,13 +66,14 @@ export default function ChoicesTable({
                         >
                           <div className='flex flex-col gap-2'>
                             <span>{entry[0]}</span>
-                            <span>{getCriterionValue(c, entry[0])}</span>
+                            <span>{value}</span>
                           </div>
                           <Slider
                             defaultValue={[1]}
                             max={maxValue}
                             min={minValue}
                             step={1}
+                            sliderValue={sliderValue}
                             onValueChange={(e: Array<number>) => {
                               setValue(entry[0], c, e[0]);
                             }}
