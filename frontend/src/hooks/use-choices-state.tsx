@@ -149,7 +149,7 @@ export default function useChoicesState() {
       for (let i = 0; i < criteria.length; i++) {
         score += normalisedValues[i] * (getWeight(criteria[i]) / 100) * 100;
       }
-      score = score / criteria.length;
+      score = +(score / criteria.length).toFixed(1);
 
       results.push({
         choice: choice.name,

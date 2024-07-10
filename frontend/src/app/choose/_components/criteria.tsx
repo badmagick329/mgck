@@ -12,6 +12,7 @@ import { useState } from 'react';
 
 import CriteriaTable from './criteria-table';
 import Instruction from './instruction';
+import Spacer from './spacer';
 
 type CriteriaProps = {
   setCriterion: SetCriterion;
@@ -41,7 +42,7 @@ export default function Criteria({
   }
 
   return (
-    <div className='flex flex-col gap-4 px-2'>
+    <div className='flex flex-col gap-4 pt-6'>
       <Instruction text={instructionText} />
       <div className='flex gap-2'>
         <Input
@@ -53,6 +54,7 @@ export default function Criteria({
           <Button onClick={handleAdd}>Add</Button>
         </div>
       </div>
+      <Spacer />
       <CriteriaTable
         getCriteria={getCriteria}
         getWeight={getWeight}
