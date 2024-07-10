@@ -9,15 +9,6 @@ import {
 import { Result } from '@/hooks/use-choices-state';
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
 
-const chartData = [
-  { month: 'January', desktop: 186, mobile: 80 },
-  { month: 'February', desktop: 305, mobile: 200 },
-  { month: 'March', desktop: 237, mobile: 120 },
-  { month: 'April', desktop: 73, mobile: 190 },
-  { month: 'May', desktop: 209, mobile: 130 },
-  { month: 'June', desktop: 214, mobile: 140 },
-];
-
 const chartConfig = {
   desktop: {
     label: 'Desktop',
@@ -29,22 +20,10 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-type DataRow = {
-  choice: string;
-  score: number;
-};
-
-type ChartOutputProps = {
-  chartData: DataRow[];
-};
-type ChartData = Result[];
-
 export default function ChartOutput({ chartData }: { chartData: Result[] }) {
   if (chartData.length === 0) {
     return null;
   }
-
-  console.log(chartData);
 
   return (
     <ChartContainer

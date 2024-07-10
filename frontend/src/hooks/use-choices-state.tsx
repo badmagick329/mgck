@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type Choice = {
   name: string;
@@ -12,10 +12,9 @@ export default function useChoicesState() {
   const [choices, setChoices] = useState<Choice[]>([]);
   const [results, setResults] = useState<Result[]>([]);
 
-  function updateState(newChoices: Choice[]) {
-    setChoices(newChoices);
+  useEffect(() => {
     calculatedResults();
-  }
+  }, [weights, choices]);
 
   const setCriterion = useCallback(
     (criterion: string, weight?: number) => {
@@ -31,7 +30,7 @@ export default function useChoicesState() {
         };
         newChoices.push({ ...choice, criteriaValues: newCriteria });
       }
-      updateState(newChoices);
+      setChoices(newChoices);
     },
     [weights, choices]
   );
@@ -57,7 +56,7 @@ export default function useChoicesState() {
         delete newCriteria[criterion];
         newChoices.push({ ...choice, criteria: newCriteria });
       }
-      updateState(newChoices);
+      setChoices(newChoices);
     },
     [weights, choices]
   );
@@ -99,7 +98,7 @@ export default function useChoicesState() {
       for (const c of newChoices) {
         if (c.name === choice) {
           c.criteriaValues[criterion] = value;
-          updateState(newChoices);
+          setChoices(newChoices);
           return;
         }
       }
@@ -119,16 +118,16 @@ export default function useChoicesState() {
         ...choices,
         { name: choice, criteriaValues: defaultCriteria },
       ];
-      console.log('new choices',newChoices)
+      console.log('new choices', newChoices);
       console.log('updating state');
-      updateState(newChoices);
+      setChoices(newChoices);
     },
     [choices]
   );
 
   const removeChoice = useCallback(
     (choice: string) => {
-      updateState(choices.filter((c) => c.name !== choice));
+      setChoices(choices.filter((c) => c.name !== choice));
     },
     [choices]
   );
