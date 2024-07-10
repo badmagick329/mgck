@@ -21,7 +21,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function ChartOutput({ chartData }: { chartData: Result[] }) {
-  if (chartData.length === 0) {
+  if (chartData.length <= 1) {
     return null;
   }
 
@@ -39,7 +39,7 @@ export default function ChartOutput({ chartData }: { chartData: Result[] }) {
           axisLine={true}
           tickFormatter={(value) => value.slice(0, 4)}
         />
-        <YAxis dataKey='score' />
+        <YAxis ticks={[0, 25, 50, 75, 100]} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <Bar
           dataKey='score'

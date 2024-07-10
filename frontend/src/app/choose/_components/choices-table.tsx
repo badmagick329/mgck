@@ -21,6 +21,8 @@ type ChoicesTableProps = {
   getCriteriaValues: GetCriteriaValues;
   setValue: SetValue;
   getCriterionValue: GetCriterionValue;
+  minValue: number;
+  maxValue: number;
 };
 
 export default function ChoicesTable({
@@ -28,6 +30,8 @@ export default function ChoicesTable({
   getCriteriaValues,
   setValue,
   getCriterionValue,
+  minValue,
+  maxValue,
 }: ChoicesTableProps) {
   if (getChoices().length === 0) {
     return null;
@@ -63,8 +67,8 @@ export default function ChoicesTable({
                           </div>
                           <Slider
                             defaultValue={[1]}
-                            max={5}
-                            min={1}
+                            max={maxValue}
+                            min={minValue}
                             step={1}
                             onValueChange={(e: Array<number>) => {
                               setValue(entry[0], c, e[0]);

@@ -19,6 +19,8 @@ export default function ChoosePage() {
     getCriteriaValues,
     getCriterionValue,
     results,
+    MIN_VALUE: minValue,
+    MAX_VALUE: maxValue,
   } = useChoicesState();
 
   return (
@@ -38,6 +40,8 @@ export default function ChoosePage() {
           getCriteriaValues={getCriteriaValues}
           getCriterionValue={getCriterionValue}
           getCriteria={getCriteria}
+          minValue={minValue}
+          maxValue={maxValue}
         />
         <div className='flex justify-center p-4'>
           <ChartOutput chartData={results} />

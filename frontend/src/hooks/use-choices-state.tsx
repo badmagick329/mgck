@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+const MAX_VALUE = 5;
+const MIN_VALUE = 1;
+
 type Choice = {
   name: string;
   criteriaValues: Record<string, number>;
@@ -20,7 +23,7 @@ export default function useChoicesState() {
     (criterion: string, weight?: number) => {
       setWeights({
         ...weights,
-        [criterion]: weight === undefined ? 50 : weight,
+        [criterion]: weight === undefined ? 100 : weight,
       });
       const newChoices = [];
       for (const choice of choices) {
@@ -108,18 +111,14 @@ export default function useChoicesState() {
 
   const addChoice = useCallback(
     (choice: string) => {
-      console.log('adding choice');
       const defaultCriteria: Record<string, number> = {};
       for (const criterion of getCriteria()) {
-        console.log('adding criterion', criterion);
         defaultCriteria[criterion] = 1;
       }
       const newChoices = [
         ...choices,
         { name: choice, criteriaValues: defaultCriteria },
       ];
-      console.log('new choices', newChoices);
-      console.log('updating state');
       setChoices(newChoices);
     },
     [choices]
@@ -139,15 +138,25 @@ export default function useChoicesState() {
     }
 
     choices.map((choice) => {
+      const normalisedValues = normalise(
+        Object.values(choice.criteriaValues),
+        MIN_VALUE,
+        MAX_VALUE
+      );
+      const criteria = Object.keys(choice.criteriaValues);
+
       let score = 0;
-      for (const [crit, val] of Object.entries(choice.criteriaValues)) {
-        score += val * (getWeight(crit) / 100);
+      for (let i = 0; i < criteria.length; i++) {
+        score += normalisedValues[i] * (getWeight(criteria[i]) / 100) * 100;
       }
+      score = score / criteria.length;
+
       results.push({
         choice: choice.name,
         score,
       });
     });
+
     results.sort((a, b) => b.score - a.score);
     setResults(results);
     return results;
@@ -165,7 +174,17 @@ export default function useChoicesState() {
     getCriteriaValues,
     getCriterionValue,
     results,
+    MAX_VALUE,
+    MIN_VALUE,
   };
+}
+
+function normaliseValue(v: number, minVal: number, maxVal: number): number {
+  return (v - minVal) / (maxVal - minVal);
+}
+
+function normalise(values: number[], minVal: number, maxVal: number): number[] {
+  return values.map((v) => (v - minVal) / (maxVal - minVal));
 }
 
 export type SetCriterion = (criterion: string, weight?: number) => void;

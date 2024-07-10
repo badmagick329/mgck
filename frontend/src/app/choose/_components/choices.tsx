@@ -24,6 +24,8 @@ type ChoicesProps = {
   getCriteriaValues: GetCriteriaValues;
   getCriterionValue: GetCriterionValue;
   getCriteria: GetCriteria;
+  minValue: number;
+  maxValue: number;
 };
 
 export default function Choices({
@@ -34,6 +36,8 @@ export default function Choices({
   getCriteriaValues,
   getCriterionValue,
   getCriteria,
+  minValue,
+  maxValue,
 }: ChoicesProps) {
   const [choiceInput, setChoiceInput] = useState('');
   if (getCriteria().length === 0) {
@@ -70,6 +74,8 @@ export default function Choices({
         getChoices={getChoices}
         getCriteriaValues={getCriteriaValues}
         setValue={setValue}
+        minValue={minValue}
+        maxValue={maxValue}
       />
     </div>
   );
