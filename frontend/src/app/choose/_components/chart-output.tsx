@@ -7,7 +7,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Result } from '@/hooks/use-choices-state';
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 const chartConfig = {
   desktop: {
@@ -36,11 +36,18 @@ export default function ChartOutput({ chartData }: { chartData: Result[] }) {
           dataKey='choice'
           tickLine={false}
           tickMargin={10}
-          axisLine={false}
-          tickFormatter={(value) => value.slice(0, 3)}
+          axisLine={true}
+          tickFormatter={(value) => value.slice(0, 4)}
         />
+        <YAxis dataKey='score' />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey='score' fill='var(--color-desktop)' radius={4} />
+        <Bar
+          dataKey='score'
+          fill='var(--color-desktop)'
+          radius={4}
+          label={{ fill: 'white', fontSize: 16 }}
+          barSize={48}
+        />
       </BarChart>
     </ChartContainer>
   );
