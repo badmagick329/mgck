@@ -45,6 +45,16 @@ export default function Choices({
   }
   const instructionText = '3. Add the options you want to compare.';
 
+  function handleAdd() {
+    const trimmedInput = choiceInput.trim();
+    if (!trimmedInput || getChoices().includes(trimmedInput)) {
+      return;
+    }
+
+    addChoice(trimmedInput);
+    setChoiceInput('');
+  }
+
   return (
     <div className='flex flex-col gap-4 px-2 pt-6'>
       <Instruction text={instructionText} />
@@ -52,21 +62,10 @@ export default function Choices({
         <Input
           onChange={(e) => setChoiceInput(e.target.value)}
           value={choiceInput}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
         />
         <div>
-          <Button
-            onClick={() => {
-              const trimmedInput = choiceInput.trim();
-              if (!trimmedInput || getChoices().includes(trimmedInput)) {
-                return;
-              }
-
-              addChoice(trimmedInput);
-              setChoiceInput('');
-            }}
-          >
-            Add
-          </Button>
+          <Button onClick={handleAdd}>Add</Button>
         </div>
       </div>
       <ChoicesTable
