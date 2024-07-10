@@ -30,6 +30,16 @@ export default function Criteria({
   const instructionText =
     '1. Begin by adding the criteria to base your choice on.';
 
+  function handleAdd() {
+    const trimmedInput = criterionInput.trim();
+    if (!trimmedInput || getCriteria().includes(trimmedInput)) {
+      return;
+    }
+
+    setCriterion(trimmedInput);
+    setCriterionInput('');
+  }
+
   return (
     <div className='flex flex-col gap-4 px-2'>
       <Instruction text={instructionText} />
@@ -37,21 +47,10 @@ export default function Criteria({
         <Input
           onChange={(e) => setCriterionInput(e.target.value)}
           value={criterionInput}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
         />
         <div>
-          <Button
-            onClick={() => {
-              const trimmedInput = criterionInput.trim();
-              if (!trimmedInput || getCriteria().includes(trimmedInput)) {
-                return;
-              }
-
-              setCriterion(trimmedInput);
-              setCriterionInput('');
-            }}
-          >
-            Add
-          </Button>
+          <Button onClick={handleAdd}>Add</Button>
         </div>
       </div>
       <CriteriaTable
