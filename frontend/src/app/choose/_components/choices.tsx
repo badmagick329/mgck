@@ -42,7 +42,7 @@ export default function Choices({
   const instructionText = '3. Add the options you want to compare.';
 
   return (
-    <div className='flex w-[100%] max-w-[720px] flex-col gap-4 px-2 pt-6 md:w-[80%]'>
+    <div className='flex flex-col gap-4 px-2 pt-6'>
       <Instruction text={instructionText} />
       <div className='flex gap-2'>
         <Input

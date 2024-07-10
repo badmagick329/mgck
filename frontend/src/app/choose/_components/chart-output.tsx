@@ -47,7 +47,10 @@ export default function ChartOutput({ chartData }: { chartData: Result[] }) {
   console.log(chartData);
 
   return (
-    <ChartContainer config={chartConfig} className='min-h-[200px] w-full'>
+    <ChartContainer
+      config={chartConfig}
+      className='min-h-[200px] w-full md:max-w-[720px]'
+    >
       <BarChart accessibilityLayer data={chartData}>
         <CartesianGrid vertical={false} />
         <XAxis
