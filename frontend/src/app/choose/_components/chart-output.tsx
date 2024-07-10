@@ -10,13 +10,9 @@ import { Result } from '@/hooks/use-choices-state';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 const chartConfig = {
-  desktop: {
-    label: 'Desktop',
-    color: '#2563eb',
-  },
-  mobile: {
-    label: 'Mobile',
-    color: '#60a5fa',
+  score: {
+    label: 'Score',
+    color: '#111827',
   },
 } satisfies ChartConfig;
 
@@ -43,8 +39,8 @@ export default function ChartOutput({ chartData }: { chartData: Result[] }) {
         <ChartTooltip content={<ChartTooltipContent />} />
         <Bar
           dataKey='score'
-          fill='var(--color-desktop)'
-          radius={4}
+          fill='var(--color-score)'
+          radius={2}
           label={{ fill: 'white', fontSize: 16 }}
           barSize={48}
         />
