@@ -25,8 +25,7 @@ export default function ChoosePage() {
   } = useChoicesState();
 
   return (
-    <div className='flex flex-col items-center gap-6 pt-6'>
-      <span>Some stuff here</span>
+    <div className='flex flex-col items-center gap-6 px-2 pt-6'>
       <div className='flex w-full max-w-[720px] flex-col md:max-w-[80%] 2xl:max-w-[70%]'>
         <Criteria
           setCriterion={setCriterion}

@@ -8,11 +8,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   GetChoices,
   GetCriteriaValues,
   GetCriterionValue,
   SetValue,
 } from '@/hooks/use-choices-state';
+import { truncateText } from '@/lib/utils';
 
 import Instruction from './instruction';
 
@@ -40,7 +47,7 @@ export default function ChoicesTable({
     '4. Adjust the values for each option using the slider.';
 
   return (
-    <div className='flex flex-col py-4'>
+    <div className='flex w-full flex-col py-4'>
       <Instruction text={instructionText} />
       <Table>
         <TableHeader>
@@ -65,7 +72,18 @@ export default function ChoicesTable({
                           className='flex w-[80px] flex-col gap-2'
                         >
                           <div className='flex flex-col gap-2'>
-                            <span>{entry[0]}</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className='break-words'>
+                                    {truncateText(entry[0])}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <span>{entry[0]}</span>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             <span>{value}</span>
                           </div>
                           <Slider
@@ -83,7 +101,18 @@ export default function ChoicesTable({
                     })}
                   </div>
                 </TableCell>
-                <TableCell className='text-right'>{c}</TableCell>
+                <TableCell className='text-right'>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className='break-words'>{truncateText(c)}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span>{c}</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
               </TableRow>
             );
           })}

@@ -32,7 +32,7 @@ export default function Criteria({
     '1. Begin by adding the criteria to base your choice on.';
 
   function handleAdd() {
-    const trimmedInput = criterionInput.trim();
+    const trimmedInput = criterionInput.trim().slice(0, 150);
     if (!trimmedInput || getCriteria().includes(trimmedInput)) {
       return;
     }
@@ -42,7 +42,7 @@ export default function Criteria({
   }
 
   return (
-    <div className='flex flex-col gap-4 pt-6'>
+    <div className='flex w-full flex-col gap-4 pt-6'>
       <Instruction text={instructionText} />
       <div className='flex gap-2'>
         <Input

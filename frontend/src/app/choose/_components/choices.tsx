@@ -47,7 +47,7 @@ export default function Choices({
   const instructionText = '3. Add the options you want to compare.';
 
   function handleAdd() {
-    const trimmedInput = choiceInput.trim();
+    const trimmedInput = choiceInput.trim().slice(0, 150);
     if (!trimmedInput || getChoices().includes(trimmedInput)) {
       return;
     }
@@ -57,7 +57,7 @@ export default function Choices({
   }
 
   return (
-    <div className='flex flex-col gap-4 pt-6'>
+    <div className='flex w-full flex-col gap-4 pt-6'>
       <Instruction text={instructionText} />
       <div className='flex gap-2'>
         <Input

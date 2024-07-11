@@ -34,11 +34,8 @@ export default function ChartOutput({ chartData }: { chartData: Result[] }) {
         <CardTitle>Choice Comparison</CardTitle>
         <CardDescription>Winner: {chartData[0].choice}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer
-          config={chartConfig}
-          className='min-h-96 w-full md:max-w-[720px]'
-        >
+      <CardContent className='flex w-full'>
+        <ChartContainer config={chartConfig} className='min-h-96 w-full'>
           <BarChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
@@ -54,7 +51,7 @@ export default function ChartOutput({ chartData }: { chartData: Result[] }) {
               dataKey='score'
               fill='var(--color-score)'
               radius={2}
-              label={{ fill: 'white', fontSize: 12 }}
+              label={{ fill: 'white', fontSize: 10 }}
               barSize={48}
             />
           </BarChart>
