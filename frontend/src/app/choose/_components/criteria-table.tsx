@@ -8,11 +8,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   GetCriteria,
   GetWeight,
   SetCriterion,
 } from '@/hooks/use-choices-state';
-import { useState } from 'react';
+import { truncateText } from '@/lib/utils';
 
 import Instruction from './instruction';
 
@@ -27,8 +33,6 @@ export default function CriteriaTable({
   getWeight,
   setCriterion,
 }: CriteriaTableProps) {
-  const [sliderValue, setSliderValue] = useState();
-
   if (getCriteria().length === 0) {
     return null;
   }
@@ -64,7 +68,18 @@ export default function CriteriaTable({
                     />
                   </div>
                 </TableCell>
-                <TableCell className='text-right'>{c}</TableCell>
+                <TableCell className='text-right'>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className='break-words'>{truncateText(c)}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span>{c}</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
               </TableRow>
             );
           })}

@@ -113,3 +113,7 @@ export function clearFormInputs(form: HTMLFormElement | null) {
     }
   }
 }
+
+export function truncateText(text: string, max: number = 28) {
+  return text.length > max - 3 ? `${text.slice(0, max)}...` : text;
+}
