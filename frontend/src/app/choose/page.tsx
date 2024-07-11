@@ -1,5 +1,6 @@
 'use client';
 
+import { ThemeToggler } from '@/components/theme-toggler';
 import useChoicesState from '@/hooks/use-choices-state';
 
 import ChartOutput from './_components/chart-output';
@@ -25,31 +26,34 @@ export default function ChoosePage() {
   } = useChoicesState();
 
   return (
-    <div className='flex flex-col items-center gap-6 px-2 pt-6'>
-      <div className='flex w-full max-w-[720px] flex-col md:max-w-[80%] 2xl:max-w-[70%]'>
-        <Criteria
-          setCriterion={setCriterion}
-          getWeight={getWeight}
-          getCriteria={getCriteria}
-          removeCriterion={removeCriterion}
-        />
-        <Spacer />
-        <Choices
-          addChoice={addChoice}
-          getChoices={getChoices}
-          setValue={setValue}
-          removeChoice={removeChoice}
-          getCriteriaValues={getCriteriaValues}
-          getCriterionValue={getCriterionValue}
-          getCriteria={getCriteria}
-          minValue={minValue}
-          maxValue={maxValue}
-        />
-        <Spacer />
-        <div className='flex justify-center p-4'>
+    <main className='flex min-h-screen w-full flex-col'>
+      <div className='self-end p-2'>
+        <ThemeToggler />
+      </div>
+      <div className='flex w-full justify-center px-2'>
+        <div className='flex w-full max-w-[800px] flex-col items-center'>
+          <Criteria
+            setCriterion={setCriterion}
+            getWeight={getWeight}
+            getCriteria={getCriteria}
+            removeCriterion={removeCriterion}
+          />
+          <Spacer />
+          <Choices
+            addChoice={addChoice}
+            getChoices={getChoices}
+            setValue={setValue}
+            removeChoice={removeChoice}
+            getCriteriaValues={getCriteriaValues}
+            getCriterionValue={getCriterionValue}
+            getCriteria={getCriteria}
+            minValue={minValue}
+            maxValue={maxValue}
+          />
+          <Spacer />
           <ChartOutput chartData={results} />
         </div>
       </div>
-    </div>
+    </main>
   );
 }
