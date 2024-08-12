@@ -82,21 +82,14 @@ export async function toEmote({
   const outputName = `${fileNameWithoutExt}_out.gif`;
   registerHandlers(ffmpeg, logMessageHandler, progressHandler);
 
-  // const ffmpegCmd = emoteCmd(file.name, 40, 40, outputName);
-  // const ret = await ffmpeg.exec(ffmpegCmd);
-  // console.log('executed', ret);
-  // unregisterHandlers(ffmpeg, logMessageHandler, progressHandler);
-  // const data = await ffmpeg.readFile(outputName);
-  // const blob = new Blob([data], { type: file.type.split('/')[0] });
-
   const blob = await emoteToSize(
     ffmpeg,
     file.name,
     outputName,
     'gif',
     setNewSize,
-    setIsConverting,
-    setIsDone
+    setIsDone,
+    setIsConverting
   );
 
   const url = URL.createObjectURL(blob);
