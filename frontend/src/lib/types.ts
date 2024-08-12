@@ -102,3 +102,23 @@ export type ChoiceType = {
 export type ChooseState = {
   choices: ChoiceType[];
 };
+
+export type FFmpegLogEvent = {
+  type: string;
+  message: string;
+};
+
+export type FFmpegProgressEvent = {
+  progress: number;
+  time: number;
+};
+
+export type FFmpegFileData = {
+  file: File;
+  outputUrl: string;
+  outputName: string;
+  progress: number;
+  size: number;
+  isConverting: boolean;
+  isDone: boolean;
+};
