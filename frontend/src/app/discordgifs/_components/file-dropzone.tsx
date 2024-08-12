@@ -25,6 +25,8 @@ export default function FileDropzone() {
         console.log('onDropAccepted', files);
       },
     });
+  const buttonDisabled =
+    fileDatas.every((d) => d.isDone) || fileDatas.length === 0;
 
   useEffect(() => {
     load(ffmpegRef, setIsLoaded);
@@ -158,10 +160,11 @@ export default function FileDropzone() {
         </p>
       </div>
       <button
-        className='rounded-md border-2 border-white px-4 py-2'
+        className='rounded-md border-2 border-foreground px-4 py-2 disabled:border-foreground/60 disabled:text-foreground/60'
         onClick={(e) => {
           doStuff();
         }}
+        disabled={buttonDisabled}
       >
         Do Stuff
       </button>
