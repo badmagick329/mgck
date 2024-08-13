@@ -1,7 +1,7 @@
 'use client';
 
+import { loadFFmpeg, toEmote } from '@/lib/discordgifs/ffmpeg-utils';
 import { FFmpegFileData, FFmpegProgressEvent } from '@/lib/types';
-import { loadFFmpeg, toEmote } from '@/lib/utils/ffmpeg-utils';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
