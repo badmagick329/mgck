@@ -112,7 +112,6 @@ async function emoteToSize(
   const sizeComparisons = [0, 0];
   const sizeLimit = 256 * 1024;
   const lowerBound = sizeLimit - sizeLimit * 0.025;
-  const upperBound = sizeLimit + sizeLimit * 0.025;
   let width = 128;
   let height = 128;
   let blob = null;
@@ -126,7 +125,7 @@ async function emoteToSize(
     const data = await ffmpeg.readFile(outputName);
     blob = new Blob([data], { type: fileType });
     setNewSize && setNewSize(blob.size);
-    if (blob.size > lowerBound && blob.size < upperBound) {
+    if (blob.size > lowerBound && blob.size < sizeLimit) {
       break;
     }
 
