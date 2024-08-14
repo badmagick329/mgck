@@ -8,9 +8,12 @@ import { useDropzone } from 'react-dropzone';
 
 import ConvertedFile from './converted-file';
 
+const MAX_FILES = 5;
+
 export default function FileDropzone() {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [fileDatas, setFileDatas] = useState<FFmpegFileData[]>([]);
+  const [dropError, setDropError] = useState<string | null>(null);
   const ffmpegRef = useRef<FFmpeg | null>(null);
   const { acceptedFiles, fileRejections, getRootProps, getInputProps } =
     useDropzone({
@@ -23,6 +26,17 @@ export default function FileDropzone() {
       },
       onDropAccepted: (files) => {
         console.log('onDropAccepted', files);
+        setDropError('');
+      },
+      maxFiles: MAX_FILES,
+      onDropRejected: (fileRejections) => {
+        for (const rejection of fileRejections) {
+          for (const err of rejection.errors) {
+            if (err.code === 'too-many-files') {
+              setDropError(`You can only upload upto ${MAX_FILES} files`);
+            }
+          }
+        }
       },
     });
   const buttonDisabled =
@@ -85,6 +99,7 @@ export default function FileDropzone() {
           return d;
         });
       });
+      await ffmpeg.deleteFile(data.file.name);
     }
   }
 
@@ -148,10 +163,11 @@ export default function FileDropzone() {
     <div className='flex w-full flex-col items-center gap-4 px-2'>
       <div
         {...getRootProps({ className: 'dropzone' })}
-        className='rounded-md bg-secondary px-4 py-2 hover:cursor-pointer'
+        className='flex flex-col items-center gap-2 rounded-md bg-secondary px-6 py-8 hover:cursor-pointer'
       >
         <input {...getInputProps()} />
-        <p>Drag n drop files here, or click to select files</p>
+        <p>Drag n drop files here, or click to select files.</p>
+        <p>You can select upto {MAX_FILES} files.</p>
         <p>
           Accepted types are{' '}
           <span className='font-semibold'>
@@ -168,6 +184,7 @@ export default function FileDropzone() {
       >
         Do Stuff
       </button>
+      {dropError && <p className='font-semibold text-red-500'>{dropError}</p>}
       {fileDatas.length > 0 &&
         fileDatas.map((data) => {
           return <ConvertedFile key={data.file.name} fileData={data} />;

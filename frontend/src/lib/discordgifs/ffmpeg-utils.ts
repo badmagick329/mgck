@@ -87,6 +87,7 @@ async function runConversion({
   setIsConverting && setIsConverting(true);
   let iteration = 0;
 
+  const startTime = performance.now();
   while (size !== null) {
     if (calculator.isDone) {
       break;
@@ -98,10 +99,12 @@ async function runConversion({
     blob = new Blob([data], { type: 'gif' });
     setNewSize && setNewSize(blob.size);
     size = calculator.getNewFrameSize(blob.size);
-    console.log(`iteration: ${++iteration}. size`, size);
-    // ++iteration;
+    // console.log(`iteration: ${++iteration}. size`, size);
+    ++iteration;
   }
-  console.log(`iteration: ${iteration}`);
+  console.log(
+    `iteration: ${iteration}. time taken ${((performance.now() - startTime) / 1000).toFixed(2)}s`
+  );
 
   return blob;
 }
