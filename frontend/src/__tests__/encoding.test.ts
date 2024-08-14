@@ -64,6 +64,48 @@ describe('Frame size calculator', () => {
     expect(calculator.isDone).toBe(true);
     expect(calculator.isSuccessful).toBe(false);
   });
+  test('file based change is bigger when the file size is much bigger than the limit', () => {
+    const calculator = new FrameSizeCalculator(sizeInfo.emote);
+    const bigSizes = [2048 * 1024, 1024 * 1024, 512 * 1024];
+    const smallerSizes = [260 * 1024, 258 * 1024, 256 * 1024];
+    const limit = 256 * 1024;
+    for (let i = 0; i < bigSizes.length; i++) {
+      const bigChange = calculator._calculateChangeSizeBasedOnFileSize(
+        calculator.info.changeSize,
+        bigSizes[i],
+        limit,
+        calculator.info.minChangeSize
+      );
+      const smallChange = calculator._calculateChangeSizeBasedOnFileSize(
+        calculator.info.changeSize,
+        smallerSizes[i],
+        limit,
+        calculator.info.minChangeSize
+      );
+      expect(bigChange).toBeGreaterThan(smallChange);
+    }
+  });
+  test('file based change is bigger when the file size is much smaller than the limit', () => {
+    const calculator = new FrameSizeCalculator(sizeInfo.emote);
+    const smallSizes = [50 * 1024, 80 * 1024, 100 * 1024];
+    const biggerSizes = [252 * 1024, 254 * 1024, 256 * 1024];
+    const limit = 256 * 1024;
+    for (let i = 0; i < smallSizes.length; i++) {
+      const smallChange = calculator._calculateChangeSizeBasedOnFileSize(
+        calculator.info.changeSize,
+        smallSizes[i],
+        limit,
+        calculator.info.minChangeSize
+      );
+      const bigChange = calculator._calculateChangeSizeBasedOnFileSize(
+        calculator.info.changeSize,
+        biggerSizes[i],
+        limit,
+        calculator.info.minChangeSize
+      );
+      expect(smallChange).toBeLessThan(bigChange);
+    }
+  });
 });
 
 function testNullReturnWithMul(mul: number, maxIterations: number) {
@@ -74,9 +116,6 @@ function testNullReturnWithMul(mul: number, maxIterations: number) {
   do {
     fileSize = mockNewFileSize(calculator._width, calculator._height, mul);
     if (fileSize) {
-      // console.log(
-      //   `fileSize: ${fileSize}. width x height: ${calculator._width} x ${calculator._height}`
-      // );
       result = calculator.getNewFrameSize(fileSize);
       if (result !== null) {
         expect(typeof result).toBe('object');

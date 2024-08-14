@@ -109,7 +109,7 @@ export class FrameSizeCalculator {
     }
 
     if (this._changeDirectionFlipped()) {
-      this._reduceChangeSize();
+      this._changeSize = this._reducedChangeSize();
     }
 
     if (this.changeSize === this.info.minChangeSize) {
@@ -196,23 +196,40 @@ export class FrameSizeCalculator {
     this._sizeComparisons[0] = this._lastFileSize - this.info.sizeLimit;
   }
 
-  _reduceChangeSize() {
-    let bias;
-    const divideBy = 1.5;
-    if (!this._lastFileSize) {
-      bias = 1;
-    } else {
-      const diff = this._lastFileSize - this.info.sizeLimit;
-      // big bias = file size is way off, don't reduce change size by alot
-      // small bias = file size is close, reduce change size by a smaller amount
-      bias = diff / this.info.sizeLimit;
-      bias = Math.min(bias, divideBy * 0.2);
-      bias = Math.max(bias, -(divideBy * 0.2));
-    }
-    this._changeSize = Math.max(
-      Math.round(this.changeSize / (divideBy + bias)),
+  _reducedChangeSize() {
+    return this._calculateChangeSizeBasedOnFileSize(
+      this.changeSize,
+      this._lastFileSize,
+      this.info.sizeLimit,
       this.info.minChangeSize
     );
+  }
+
+  _calculateChangeSizeBasedOnFileSize(
+    changeSize: number,
+    fileSize: null | number,
+    limit: number,
+    minChangeSize: number
+  ): number {
+    let bias;
+    const divideBy = 2.5;
+    if (!fileSize) {
+      return changeSize;
+    } else {
+      const diff = fileSize - limit;
+      // big bias = file size is way off, don't reduce change size by alot
+      // small bias = file size is close, reduce change size by a bigger value
+      bias = diff / limit;
+      // the cap on the higher end is smaller to avoid big size fluctuations
+      bias = Math.min(bias, 1.0);
+      bias = Math.max(bias, -1.3);
+    }
+
+    changeSize = Math.max(
+      Math.round(changeSize / (divideBy - bias)),
+      minChangeSize
+    );
+    return changeSize;
   }
 
   _sizeIsUnderLimit(): boolean {

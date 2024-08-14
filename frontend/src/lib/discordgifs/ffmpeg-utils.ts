@@ -98,10 +98,10 @@ async function runConversion({
     blob = new Blob([data], { type: 'gif' });
     setNewSize && setNewSize(blob.size);
     size = calculator.getNewFrameSize(blob.size);
-    // console.log(`iteration: ${++iteration}. size`, size);
-    ++iteration;
+    console.log(`iteration: ${++iteration}. size`, size);
+    // ++iteration;
   }
-  // console.log(`iteration: ${iteration}`);
+  console.log(`iteration: ${iteration}`);
 
   return blob;
 }
