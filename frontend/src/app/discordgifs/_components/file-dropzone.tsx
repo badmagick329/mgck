@@ -1,6 +1,6 @@
 'use client';
 
-import { loadFFmpeg, toEmote } from '@/lib/discordgifs/ffmpeg-utils';
+import { loadFFmpeg, toSticker } from '@/lib/discordgifs/ffmpeg-utils';
 import { FFmpegFileData, FFmpegProgressEvent } from '@/lib/types';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
@@ -77,7 +77,7 @@ export default function FileDropzone() {
       const progressHandler = ({ progress }: FFmpegProgressEvent) => {
         updateProgress(progress, i);
       };
-      const { url, outputName } = await toEmote({
+      const { url, outputName } = await toSticker({
         file: data.file,
         ffmpeg,
         progressHandler,

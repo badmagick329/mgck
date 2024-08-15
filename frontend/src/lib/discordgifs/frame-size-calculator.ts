@@ -3,10 +3,31 @@ export const sizeInfo = {
     changeSize: 40,
     minChangeSize: 1,
     sizeLimit: 256 * 1024,
+    sizeMargin: 0.03,
     startingWidth: 128,
     startingHeight: 128,
-    minWidth: 20,
-    minHeight: 20,
+    minWidth: 10,
+    minHeight: 10,
+  },
+  sticker: {
+    changeSize: 40,
+    minChangeSize: 1,
+    sizeLimit: 512 * 1024,
+    sizeMargin: 0.05,
+    startingWidth: 128,
+    startingHeight: 128,
+    minWidth: 10,
+    minHeight: 10,
+  },
+  pfp: {
+    changeSize: 120,
+    minChangeSize: 5,
+    sizeLimit: 10 * 1024 * 1024,
+    sizeMargin: 0.1,
+    startingWidth: 300,
+    startingHeight: 300,
+    minWidth: 50,
+    minHeight: 50,
   },
 };
 
@@ -19,6 +40,7 @@ export type SizeInfoProps = {
   changeSize: number;
   minChangeSize: number;
   sizeLimit: number;
+  sizeMargin: number;
   startingWidth: number;
   startingHeight: number;
   minWidth: number;
@@ -29,6 +51,7 @@ export class SizeInfo {
   changeSize: number;
   minChangeSize: number;
   sizeLimit: number;
+  sizeMargin: number;
   startingWidth: number;
   startingHeight: number;
   minWidth: number;
@@ -38,6 +61,7 @@ export class SizeInfo {
     changeSize,
     minChangeSize,
     sizeLimit,
+    sizeMargin,
     startingWidth,
     startingHeight,
     minWidth,
@@ -46,6 +70,7 @@ export class SizeInfo {
     this.changeSize = changeSize;
     this.minChangeSize = minChangeSize;
     this.sizeLimit = sizeLimit;
+    this.sizeMargin = sizeMargin;
     this.startingWidth = startingWidth;
     this.startingHeight = startingHeight;
     this.minWidth = minWidth;
@@ -61,6 +86,7 @@ export class FrameSizeCalculator {
   _sizeComparisons: Array<number>;
   _lastFileSize: number | null;
   _isDone: boolean;
+  _lossNormalizer: LossNormalizer;
 
   constructor(info: SizeInfo) {
     this.info = info;
@@ -70,10 +96,11 @@ export class FrameSizeCalculator {
     this._sizeComparisons = [0, 0];
     this._lastFileSize = null;
     this._isDone = false;
+    this._lossNormalizer = new LossNormalizer(0);
   }
 
   get lowerBound() {
-    return this.info.sizeLimit - this.info.sizeLimit * 0.03;
+    return this.info.sizeLimit * (1 - this.info.sizeMargin);
   }
 
   get isDone() {
@@ -232,6 +259,24 @@ export class FrameSizeCalculator {
     return changeSize;
   }
 
+  _calculateChangeSizeBasedOnFileSizev0(
+    changeSize: number,
+    fileSize: null | number,
+    limit: number,
+    minChangeSize: number
+  ): number {
+    if (!fileSize) {
+      return changeSize;
+    }
+    let loss = (fileSize - limit) * (fileSize - limit);
+    loss = this._lossNormalizer.normalize(loss);
+    changeSize = Math.max(
+      Math.round((changeSize / 1.25) * loss),
+      minChangeSize
+    );
+    return changeSize;
+  }
+
   _sizeIsUnderLimit(): boolean {
     return (
       this._lastFileSize !== null && this._lastFileSize < this.info.sizeLimit
@@ -252,5 +297,30 @@ export class FrameSizeCalculator {
       this._lastFileSize > this.lowerBound &&
       this._lastFileSize < this.info.sizeLimit
     );
+  }
+}
+
+class LossNormalizer {
+  minLoss: number;
+  maxLoss: number;
+
+  constructor(initialValue: number = 0) {
+    this.minLoss = initialValue;
+    this.maxLoss = initialValue;
+  }
+
+  normalize(value: number): number {
+    if (value < this.minLoss) this.minLoss = value;
+    if (value > this.maxLoss) this.maxLoss = value;
+
+    // prevent division by zero if all values are the same
+    if (this.minLoss === this.maxLoss) return 0;
+
+    return (value - this.minLoss) / (this.maxLoss - this.minLoss);
+  }
+
+  reset(initialValue: number = 0) {
+    this.minLoss = initialValue;
+    this.maxLoss = initialValue;
   }
 }
