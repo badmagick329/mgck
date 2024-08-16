@@ -14,6 +14,7 @@ type FFmpegFileConfig = { file: File; outputNameBase: string; info: SizeInfo };
 export class FFmpegManager {
   private ffmpeg: FFmpeg | null;
   private fileConfig: FFmpegFileConfig | null;
+  private outputType: keyof typeof sizeInfo;
   private logMessageCallback?: (e: FFmpegLogEvent) => void;
   private progressCallback?: (e: FFmpegProgressEvent) => void;
   private newSizeCallback?: (size: number) => void;
@@ -23,6 +24,7 @@ export class FFmpegManager {
   constructor() {
     this.ffmpeg = null;
     this.fileConfig = null;
+    this.outputType = 'emote';
   }
 
   public async load(): Promise<void> {
@@ -41,6 +43,17 @@ export class FFmpegManager {
     file,
     info,
   }: Pick<FFmpegFileConfig, 'file' | 'info'>): FFmpegManager {
+    let outputType = null;
+    for (const [key, val] of Object.entries(sizeInfo)) {
+      if (val === info) {
+        outputType = key as keyof typeof sizeInfo;
+        break;
+      }
+    }
+    if (!outputType) {
+      throw new Error('Invalid sizeInfo');
+    }
+    this.outputType = outputType;
     this.fileConfig = {
       file,
       outputNameBase: this.getOutputNameBase(file.name),
@@ -105,18 +118,37 @@ export class FFmpegManager {
     const { file, info } = this.fileConfig;
     await this.ffmpeg.writeFile(file.name, await fetchFile(file));
     const calculator = new FrameSizeCalculator(info);
+    const outputName = this.fullOutputName();
+    const blob = await this.run(calculator, outputName);
+
+    // TODO: Handle fail case
+    const url = URL.createObjectURL(blob!);
+    return {
+      url,
+      outputName,
+    };
+  }
+
+  private async run(calculator: FrameSizeCalculator, outputName: string) {
+    if (!this.ffmpeg) {
+      throw new Error('FFmpeg not loaded');
+    }
+    if (!this.fileConfig) {
+      throw new Error('FFmpegContrller config not set');
+    }
+
+    const { info } = this.fileConfig;
     let size: FrameSize | null = {
       width: info.startingWidth,
       height: info.startingHeight,
     };
     let blob = null;
     let iteration = 0;
-    const outputName = this.fullOutputName();
 
+    const startTime = performance.now();
     this.isConvertingCallback && this.isConvertingCallback(true);
     this.logMessageCallback && this.ffmpeg.on('log', this.logMessageCallback);
     this.progressCallback && this.ffmpeg.on('progress', this.progressCallback);
-    const startTime = performance.now();
     while (size !== null) {
       if (calculator.isDone) {
         break;
@@ -138,32 +170,23 @@ export class FFmpegManager {
     this.progressCallback && this.ffmpeg.off('progress', this.progressCallback);
     this.isDoneCallback && this.isDoneCallback(true);
     this.isConvertingCallback && this.isConvertingCallback(false);
-
     this.fileConfig = null;
 
-    // TODO: Handle fail case
-    const url = URL.createObjectURL(blob!);
-    return {
-      url,
-      outputName,
-    };
+    return blob;
   }
 
   private ext(): string {
     if (!this.fileConfig) {
       throw new Error('FFmpegManager config not set');
     }
-    return this.fileConfig.info.sizeLimit === sizeInfo.sticker.sizeLimit
-      ? '.png'
-      : '.gif';
+    return this.outputType === 'sticker' ? '.png' : '.gif';
   }
 
   private cmd(width: number): Array<string> {
     if (!this.fileConfig) {
       throw new Error('FFmpegManager config not set');
     }
-    const ext = this.ext();
-    if (ext === '.png') {
+    if (this.outputType === 'sticker') {
       return [
         '-y',
         '-i',
@@ -196,6 +219,6 @@ export class FFmpegManager {
 
   private getOutputNameBase(name: string): string {
     const nameWithoutExt = name.slice(0, name.lastIndexOf('.'));
-    return `${nameWithoutExt}_out`;
+    return `${nameWithoutExt}_${this.outputType}`;
   }
 }
