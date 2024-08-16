@@ -1,9 +1,9 @@
 'use client';
 
-import { loadFFmpeg, toSticker } from '@/lib/discordgifs/ffmpeg-utils';
+import { FFmpegManager } from '@/lib/discordgifs/ffmpeg-utils';
+import { sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
 import { FFmpegFileData, FFmpegProgressEvent } from '@/lib/types';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { MutableRefObject, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import ConvertedFile from './converted-file';
@@ -14,7 +14,7 @@ export default function FileDropzone() {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [fileDatas, setFileDatas] = useState<FFmpegFileData[]>([]);
   const [dropError, setDropError] = useState<string | null>(null);
-  const ffmpegRef = useRef<FFmpeg | null>(null);
+  const ffmpegRef = useRef<FFmpegManager>(new FFmpegManager());
   const { acceptedFiles, fileRejections, getRootProps, getInputProps } =
     useDropzone({
       accept: acceptedTypes,
@@ -43,11 +43,12 @@ export default function FileDropzone() {
     fileDatas.every((d) => d.isDone) || fileDatas.length === 0;
 
   useEffect(() => {
-    load(ffmpegRef, setIsLoaded);
+    (async () => {
+      await ffmpegRef.current.load();
+      setIsLoaded(true);
+    })();
     return () => {
-      if (ffmpegRef.current) {
-        ffmpegRef.current.terminate();
-      }
+      ffmpegRef.current.terminate();
     };
   }, []);
 
@@ -68,7 +69,7 @@ export default function FileDropzone() {
   }, [acceptedFiles]);
 
   async function doStuff() {
-    if (!ffmpegRef.current) {
+    if (!ffmpegRef.current.loaded()) {
       return;
     }
     const ffmpeg = ffmpegRef.current;
@@ -77,20 +78,22 @@ export default function FileDropzone() {
       const progressHandler = ({ progress }: FFmpegProgressEvent) => {
         updateProgress(progress, i);
       };
-      const { url, outputName } = await toSticker({
-        file: data.file,
-        ffmpeg,
-        progressHandler,
-        setNewSize: (size) => {
+      ffmpeg
+        .setFileConfig({
+          file: data.file,
+          info: sizeInfo.sticker,
+        })
+        .setProgressCallback(progressHandler)
+        .setNewSizeCallback((size) => {
           updateSize(size, i);
-        },
-        setIsConverting: (converting) => {
+        })
+        .setIsConvertingCallback((converting) => {
           setIsConverting(converting, i);
-        },
-        setIsDone: (done) => {
+        })
+        .setIsDoneCallback((done) => {
           setIsDone(done, i);
-        },
-      });
+        });
+      const { url, outputName } = await ffmpeg.convert();
       setFileDatas((prevData) => {
         return prevData.map((d, idx) => {
           if (idx === i) {
@@ -151,7 +154,7 @@ export default function FileDropzone() {
     return <p>Loading ffmpeg...</p>;
   }
 
-  if (!ffmpegRef.current) {
+  if (!ffmpegRef.current.loaded()) {
     return (
       <>
         <p>Failed to load ffmpeg. Refresh to try again</p>
@@ -199,12 +202,3 @@ const acceptedTypes = {
   'image/*': acceptedImageTypes,
   'video/*': acceptedVideoTypes,
 };
-
-async function load(
-  ffmpegRef: MutableRefObject<FFmpeg | null>,
-  setIsLoaded: (isLoaded: boolean) => void
-) {
-  const ffmpegResponse: FFmpeg = await loadFFmpeg();
-  ffmpegRef.current = ffmpegResponse;
-  setIsLoaded(true);
-}
