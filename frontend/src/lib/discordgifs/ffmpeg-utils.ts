@@ -9,210 +9,193 @@ import {
   sizeInfo,
 } from './frame-size-calculator';
 
-export async function loadFFmpeg(): Promise<FFmpeg> {
-  const ffmpeg = new FFmpeg();
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-  });
-  return ffmpeg;
-}
+type FFmpegFileConfig = { file: File; outputNameBase: string; info: SizeInfo };
 
-export async function toSticker({
-  file,
-  ffmpeg,
-  logMessageHandler,
-  progressHandler,
-  setNewSize,
-  setIsConverting,
-  setIsDone,
-}: {
-  file: File;
-  ffmpeg: FFmpeg;
-  logMessageHandler?: (e: FFmpegLogEvent) => void;
-  progressHandler?: (e: FFmpegProgressEvent) => void;
-  setNewSize?: (size: number) => void;
-  setIsConverting?: (converting: boolean) => void;
-  setIsDone?: (done: boolean) => void;
-}) {
-  await ffmpeg.writeFile(file.name, await fetchFile(file));
-  const fileNameWithoutExt = file.name.includes('.')
-    ? file.name.split('.')[0]
-    : file.name;
-  let outputName = `${fileNameWithoutExt}_out`;
+export class FFmpegManager {
+  private ffmpeg: FFmpeg | null;
+  private fileConfig: FFmpegFileConfig | null;
+  private logMessageCallback?: (e: FFmpegLogEvent) => void;
+  private progressCallback?: (e: FFmpegProgressEvent) => void;
+  private newSizeCallback?: (size: number) => void;
+  private isConvertingCallback?: (converting: boolean) => void;
+  private isDoneCallback?: (done: boolean) => void;
 
-  registerHandlers(ffmpeg, logMessageHandler, progressHandler);
-  let { blob, outputName: newName } = await runConversion({
-    ffmpeg,
+  constructor() {
+    this.ffmpeg = null;
+    this.fileConfig = null;
+  }
+
+  public async load(): Promise<void> {
+    this.ffmpeg = new FFmpeg();
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+    await this.ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(
+        `${baseURL}/ffmpeg-core.wasm`,
+        'application/wasm'
+      ),
+    });
+  }
+
+  public setFileConfig({
     file,
-    outputName,
-    info: sizeInfo.sticker,
-    setIsConverting,
-    setNewSize,
-  });
-  unregisterHandlers(ffmpeg, logMessageHandler, progressHandler);
-  setIsDone && setIsDone(true);
-  setIsConverting && setIsConverting(false);
+    info,
+  }: Pick<FFmpegFileConfig, 'file' | 'info'>): FFmpegManager {
+    this.fileConfig = {
+      file,
+      outputNameBase: this.getOutputNameBase(file.name),
+      info,
+    };
+    return this;
+  }
 
-  // TODO: Handle case when conversion fails
-  const url = URL.createObjectURL(blob!);
-  return {
-    url,
-    outputName: newName,
-  };
-}
+  public setLogMessageCallback(cb: (e: FFmpegLogEvent) => void): FFmpegManager {
+    this.logMessageCallback = cb;
+    return this;
+  }
 
-export async function toEmote({
-  file,
-  ffmpeg,
-  logMessageHandler,
-  progressHandler,
-  setNewSize,
-  setIsConverting,
-  setIsDone,
-}: {
-  file: File;
-  ffmpeg: FFmpeg;
-  logMessageHandler?: (e: FFmpegLogEvent) => void;
-  progressHandler?: (e: FFmpegProgressEvent) => void;
-  setNewSize?: (size: number) => void;
-  setIsConverting?: (converting: boolean) => void;
-  setIsDone?: (done: boolean) => void;
-}) {
-  await ffmpeg.writeFile(file.name, await fetchFile(file));
-  const fileNameWithoutExt = file.name.includes('.')
-    ? file.name.split('.')[0]
-    : file.name;
-  let outputName = `${fileNameWithoutExt}_out`;
+  public setProgressCallback(
+    cb: (e: FFmpegProgressEvent) => void
+  ): FFmpegManager {
+    this.progressCallback = cb;
+    return this;
+  }
 
-  registerHandlers(ffmpeg, logMessageHandler, progressHandler);
-  let { blob, outputName: newName } = await runConversion({
-    ffmpeg,
-    file,
-    outputName,
-    info: sizeInfo.emote,
-    setIsConverting,
-    setNewSize,
-  });
-  unregisterHandlers(ffmpeg, logMessageHandler, progressHandler);
-  setIsDone && setIsDone(true);
-  setIsConverting && setIsConverting(false);
+  public setNewSizeCallback(cb: (size: number) => void): FFmpegManager {
+    this.newSizeCallback = cb;
+    return this;
+  }
 
-  // TODO: Handle case when conversion fails
-  const url = URL.createObjectURL(blob!);
-  return {
-    url,
-    outputName: newName,
-  };
-}
+  public setIsConvertingCallback(
+    cb: (converting: boolean) => void
+  ): FFmpegManager {
+    this.isConvertingCallback = cb;
+    return this;
+  }
 
-async function runConversion({
-  ffmpeg,
-  file,
-  outputName,
-  info,
-  setNewSize,
-  setIsConverting,
-}: {
-  ffmpeg: FFmpeg;
-  file: File;
-  outputName: string;
-  info: SizeInfo;
-  setNewSize: ((size: number) => void) | undefined;
-  setIsConverting: ((converting: boolean) => void) | undefined;
-}): Promise<{
-  blob: Blob | null;
-  outputName: string;
-}> {
-  const calculator = new FrameSizeCalculator(info);
-  const ext =
-    calculator.info.sizeLimit === sizeInfo.sticker.sizeLimit ? '.png' : '.gif';
-  outputName = `${outputName}${ext}`;
-  let size: FrameSize | null = {
-    width: calculator.info.startingWidth,
-    height: calculator.info.startingHeight,
-  };
-  let blob = null;
-  setIsConverting && setIsConverting(true);
-  let iteration = 0;
+  public setIsDoneCallback(cb: (done: boolean) => void): FFmpegManager {
+    this.isDoneCallback = cb;
+    return this;
+  }
 
-  const startTime = performance.now();
-  while (size !== null) {
-    if (calculator.isDone) {
-      break;
+  public terminate(): void {
+    if (this.ffmpeg) {
+      this.ffmpeg.terminate();
     }
-    const ffmpegCmd =
-      ext === '.png'
-        ? apngCmd(file.name, size.width, size.height, outputName)
-        : gifCmd(file.name, size.width, size.height, outputName);
-    const ret = await ffmpeg.exec(ffmpegCmd);
-    // console.log('executed', ret);
-    const data = await ffmpeg.readFile(outputName);
-    blob = new Blob([data], { type: ext.slice(1) });
-    setNewSize && setNewSize(blob.size);
-    size = calculator.getNewFrameSize(blob.size);
-    // console.log(`iteration: ${++iteration}. size`, size);
-    ++iteration;
   }
-  console.log(
-    `iteration: ${iteration}. time taken ${((performance.now() - startTime) / 1000).toFixed(2)}s`
-  );
 
-  return {
-    blob,
-    outputName,
-  };
-}
-
-function registerHandlers(
-  ffmpeg: FFmpeg,
-  logMessageHandler?: (e: FFmpegLogEvent) => void,
-  progressHandler?: (e: FFmpegProgressEvent) => void
-) {
-  if (logMessageHandler) {
-    ffmpeg.on('log', logMessageHandler);
+  public async deleteFile(name: string): Promise<void> {
+    if (this.ffmpeg) {
+      await this.ffmpeg.deleteFile(name);
+    }
   }
-  if (progressHandler) {
-    ffmpeg.on('progress', progressHandler);
-  }
-}
 
-function unregisterHandlers(
-  ffmpeg: FFmpeg,
-  logMessageHandler?: (e: FFmpegLogEvent) => void,
-  progressHandler?: (e: FFmpegProgressEvent) => void
-) {
-  if (logMessageHandler) {
-    ffmpeg.off('log', logMessageHandler);
+  public loaded(): boolean {
+    return this.ffmpeg !== null;
   }
-  if (progressHandler) {
-    ffmpeg.off('progress', progressHandler);
+
+  public async convert() {
+    if (!this.ffmpeg) {
+      throw new Error('FFmpeg not loaded');
+    }
+    if (!this.fileConfig) {
+      throw new Error('FFmpegContrller config not set');
+    }
+
+    const { file, info } = this.fileConfig;
+    await this.ffmpeg.writeFile(file.name, await fetchFile(file));
+    const calculator = new FrameSizeCalculator(info);
+    let size: FrameSize | null = {
+      width: info.startingWidth,
+      height: info.startingHeight,
+    };
+    let blob = null;
+    let iteration = 0;
+    const outputName = this.fullOutputName();
+
+    this.isConvertingCallback && this.isConvertingCallback(true);
+    this.logMessageCallback && this.ffmpeg.on('log', this.logMessageCallback);
+    this.progressCallback && this.ffmpeg.on('progress', this.progressCallback);
+    const startTime = performance.now();
+    while (size !== null) {
+      if (calculator.isDone) {
+        break;
+      }
+      const ffmpegCmd = this.cmd(size.width);
+      const ret = await this.ffmpeg.exec(ffmpegCmd);
+      // console.log('executed', ret);
+      const data = await this.ffmpeg.readFile(outputName);
+      blob = new Blob([data], { type: this.ext().slice(1) });
+      this.newSizeCallback && this.newSizeCallback(blob.size);
+      size = calculator.getNewFrameSize(blob.size);
+      // console.log(`iteration: ${++iteration}. size`, size);
+      ++iteration;
+    }
+    console.log(
+      `iteration: ${iteration}. time taken ${((performance.now() - startTime) / 1000).toFixed(2)}s`
+    );
+    this.logMessageCallback && this.ffmpeg.off('log', this.logMessageCallback);
+    this.progressCallback && this.ffmpeg.off('progress', this.progressCallback);
+    this.isDoneCallback && this.isDoneCallback(true);
+    this.isConvertingCallback && this.isConvertingCallback(false);
+
+    this.fileConfig = null;
+
+    // TODO: Handle fail case
+    const url = URL.createObjectURL(blob!);
+    return {
+      url,
+      outputName,
+    };
   }
-}
 
-function gifCmd(input: string, width: number, height: number, output: string) {
-  return [
-    '-y',
-    '-i',
-    input,
-    '-filter_complex',
-    `[0:v] scale=${width}:-1 [a];[a] split [b][c];[b] palettegen [p];[c][p] paletteuse`,
-    output,
-  ];
-}
+  private ext(): string {
+    if (!this.fileConfig) {
+      throw new Error('FFmpegManager config not set');
+    }
+    return this.fileConfig.info.sizeLimit === sizeInfo.sticker.sizeLimit
+      ? '.png'
+      : '.gif';
+  }
 
-function apngCmd(input: string, width: number, height: number, output: string) {
-  return [
-    '-y',
-    '-i',
-    input,
-    '-f',
-    'apng',
-    '-plays',
-    '0',
-    '-vf',
-    `scale=${width}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`,
-    output,
-  ];
+  private cmd(width: number): Array<string> {
+    if (!this.fileConfig) {
+      throw new Error('FFmpegManager config not set');
+    }
+    const ext = this.ext();
+    if (ext === '.png') {
+      return [
+        '-y',
+        '-i',
+        this.fileConfig.file.name,
+        '-f',
+        'apng',
+        '-plays',
+        '0',
+        '-vf',
+        `scale=${width}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`,
+        `${this.fullOutputName()}`,
+      ];
+    }
+    return [
+      '-y',
+      '-i',
+      this.fileConfig.file.name,
+      '-filter_complex',
+      `[0:v] scale=${width}:-1 [a];[a] split [b][c];[b] palettegen [p];[c][p] paletteuse`,
+      `${this.fullOutputName()}`,
+    ];
+  }
+
+  private fullOutputName(): string {
+    if (!this.fileConfig) {
+      throw new Error('FFmpegManager config not set');
+    }
+    return `${this.fileConfig.outputNameBase}${this.ext()}`;
+  }
+
+  private getOutputNameBase(name: string): string {
+    const nameWithoutExt = name.slice(0, name.lastIndexOf('.'));
+    return `${nameWithoutExt}_out`;
+  }
 }
