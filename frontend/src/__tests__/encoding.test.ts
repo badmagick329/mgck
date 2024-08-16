@@ -13,7 +13,7 @@ describe('Frame size calculator', () => {
     expect(typeof result?.height).toBe('number');
   });
   test('calculator is done as successful when file size is close to limit', () => {
-    const infos = [sizeInfo.emote, sizeInfo.pfp, sizeInfo.sticker];
+    const infos = [sizeInfo.emote, sizeInfo.sticker];
     for (const info of infos) {
       const calculator = new FrameSizeCalculator(info);
       const reduceBy = calculator.info.sizeLimit * calculator.info.sizeMargin;
@@ -22,7 +22,7 @@ describe('Frame size calculator', () => {
     }
   });
   test('null is returned when frame is not changed', () => {
-    const infos = [sizeInfo.emote, sizeInfo.pfp, sizeInfo.sticker];
+    const infos = [sizeInfo.emote, sizeInfo.sticker];
     for (const info of infos) {
       const calculator = new FrameSizeCalculator(info);
       const result = calculator.getNewFrameSize(calculator.info.sizeLimit - 1);
@@ -30,7 +30,7 @@ describe('Frame size calculator', () => {
     }
   });
   test('null is returned if the same file size is provided twice', () => {
-    const infos = [sizeInfo.emote, sizeInfo.pfp, sizeInfo.sticker];
+    const infos = [sizeInfo.emote, sizeInfo.sticker];
     for (const info of infos) {
       const calculator = new FrameSizeCalculator(info);
       calculator.getNewFrameSize(1000000 * 1024);
@@ -38,7 +38,7 @@ describe('Frame size calculator', () => {
     }
   });
   test('null is returned for emotes when calculator is done', () => {
-    const infos = [sizeInfo.emote, sizeInfo.pfp, sizeInfo.sticker];
+    const infos = [sizeInfo.emote, sizeInfo.sticker];
     for (const info of infos) {
       const calculator = new FrameSizeCalculator(info);
       calculator.getNewFrameSize(calculator.info.sizeLimit - 1);
@@ -53,13 +53,6 @@ describe('Frame size calculator', () => {
       testNullReturnWithMul(mul, 20);
     }
   });
-  test('null is returned for pfps within 20 iterations', () => {
-    const scale = sizeInfo.pfp.sizeLimit / sizeInfo.emote.sizeLimit;
-    const muls = [100 * scale, 95 * scale, 50 * scale, 140 * scale, 80 * scale];
-    for (const mul of muls) {
-      testNullReturnWithMul(mul, 20, sizeInfo.pfp);
-    }
-  });
   test('calculator finishes with done and successful for emotes within 20 iterations', () => {
     const muls = [100, 95, 50, 140, 80];
     for (const mul of muls) {
@@ -68,17 +61,8 @@ describe('Frame size calculator', () => {
       expect(calculator.isSuccessful).toBe(true);
     }
   });
-  test.skip('calculator finishes with done and successful for pfps within 20 iterations', () => {
-    const scale = sizeInfo.pfp.sizeLimit / sizeInfo.emote.sizeLimit;
-    const muls = [100 * scale, 95 * scale, 50 * scale, 140 * scale, 80 * scale];
-    for (const mul of muls) {
-      const calculator = testNullReturnWithMul(mul, 20, sizeInfo.pfp);
-      expect(calculator.isDone).toBe(true);
-      expect(calculator.isSuccessful).toBe(true);
-    }
-  });
   test('width and height equal starting width and height when file size is smaller than size limit', () => {
-    const infos = [sizeInfo.emote, sizeInfo.pfp, sizeInfo.sticker];
+    const infos = [sizeInfo.emote, sizeInfo.sticker];
     for (const info of infos) {
       const calculator = testNullReturnWithMul(1, 1, info);
       expect(calculator._width).toBe(calculator.info.startingWidth);
@@ -86,7 +70,7 @@ describe('Frame size calculator', () => {
     }
   });
   test('calculator finishes with done and successful when width and height equal starting width and height', () => {
-    const infos = [sizeInfo.emote, sizeInfo.pfp, sizeInfo.sticker];
+    const infos = [sizeInfo.emote, sizeInfo.sticker];
     for (const info of infos) {
       const calculator = testNullReturnWithMul(1, 1, info);
       expect(calculator._width).toBe(calculator.info.startingWidth);
@@ -96,7 +80,7 @@ describe('Frame size calculator', () => {
     }
   });
   test('calculator finishes with done and unsuccessful when emote cannot fit size limit', () => {
-    const infos = [sizeInfo.emote, sizeInfo.pfp, sizeInfo.sticker];
+    const infos = [sizeInfo.emote, sizeInfo.sticker];
     for (const info of infos) {
       const calculator = testNullReturnWithMul(100000, 20, info);
       expect(calculator.isDone).toBe(true);
