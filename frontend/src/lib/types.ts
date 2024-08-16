@@ -1,5 +1,7 @@
 import { useSearchParams } from 'next/navigation';
 
+import { sizeInfo } from './discordgifs/frame-size-calculator';
+
 export type GfyParsedResponse = {
   count: number;
   previous: string | null;
@@ -115,8 +117,9 @@ export type FFmpegProgressEvent = {
 
 export type FFmpegFileData = {
   file: File;
-  outputUrl: string;
-  outputName: string;
+  outputUrls: Array<string>;
+  outputNames: Array<string>;
+  targets: Array<keyof typeof sizeInfo>;
   progress: number;
   size: number;
   isConverting: boolean;

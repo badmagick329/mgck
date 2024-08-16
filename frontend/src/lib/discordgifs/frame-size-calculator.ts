@@ -19,16 +19,16 @@ export const sizeInfo = {
     minWidth: 10,
     minHeight: 10,
   },
-  pfp: {
-    changeSize: 120,
-    minChangeSize: 5,
-    sizeLimit: 10 * 1024 * 1024,
-    sizeMargin: 0.1,
-    startingWidth: 300,
-    startingHeight: 300,
-    minWidth: 50,
-    minHeight: 50,
-  },
+  // pfp: {
+  //   changeSize: 120,
+  //   minChangeSize: 5,
+  //   sizeLimit: 10 * 1024 * 1024,
+  //   sizeMargin: 0.1,
+  //   startingWidth: 300,
+  //   startingHeight: 300,
+  //   minWidth: 50,
+  //   minHeight: 50,
+  // },
 };
 
 export type FrameSize = {
