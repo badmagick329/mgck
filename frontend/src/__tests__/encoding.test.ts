@@ -2,7 +2,7 @@ import {
   FrameSizeCalculator,
   SizeInfoProps,
   sizeInfo,
-} from '@/lib/discordgifs/frame-size-calculator';
+} from '@/lib/ffmpeg-utils/frame-size-calculator';
 
 describe('Frame size calculator', () => {
   test('a frame size is returned with width and height as numbers if size is changed', () => {

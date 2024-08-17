@@ -1,9 +1,14 @@
 'use client';
 
-import { FFmpegManager } from '@/lib/discordgifs/ffmpeg-utils';
-import { sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
-import { FFmpegFileData, FFmpegProgressEvent } from '@/lib/types';
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import {
+  FileAction,
+  FilesState,
+  filesStateReducer,
+} from '@/app/discordgifs/_utils/files-state';
+import { sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
+import { FFmpegManager } from '@/lib/ffmpeg-utils/manager';
+import { FFmpegProgressEvent } from '@/lib/types';
+import { Dispatch, useEffect, useReducer, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import ConvertedFile from './converted-file';
@@ -12,7 +17,7 @@ const MAX_FILES = 5;
 
 export default function FileDropzone() {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
-  const [fileDatas, setFileDatas] = useState<FFmpegFileData[]>([]);
+  const [filesState, dispatch] = useReducer(filesStateReducer, {});
   const [dropError, setDropError] = useState<string | null>(null);
   const ffmpegRef = useRef<FFmpegManager>(new FFmpegManager());
   const { acceptedFiles, fileRejections, getRootProps, getInputProps } =
@@ -51,25 +56,19 @@ export default function FileDropzone() {
   }, []);
 
   useEffect(() => {
-    const newFileDatas: FFmpegFileData[] = [];
+    dispatch({ type: 'removeAll', payload: {} });
     acceptedFiles.map((f) => {
-      newFileDatas.push({
-        file: f,
-        outputs: [],
-        outputTypes: ['emote'],
-        progress: 0,
-        size: 0,
-        isConverting: false,
-        isDone: false,
+      dispatch({
+        type: 'addFile',
+        payload: { file: f },
       });
     });
-    setFileDatas(newFileDatas);
   }, [acceptedFiles]);
 
   const buttonDisabled =
-    fileDatas.every((d) => d.isDone) ||
-    fileDatas.length === 0 ||
-    fileDatas.some((d) => d.isConverting);
+    Object.values(filesState).every((d) => d.isDone) ||
+    Object.values(filesState).length === 0 ||
+    Object.values(filesState).some((d) => d.isConverting);
 
   if (!isLoaded) {
     return <p>Loading ffmpeg...</p>;
@@ -101,24 +100,25 @@ export default function FileDropzone() {
       </div>
       <button
         className='rounded-md border-2 border-foreground px-4 py-2 disabled:border-foreground/60 disabled:text-foreground/60'
-        onClick={(e) => convert(ffmpegRef, fileDatas, setFileDatas)}
+        onClick={(e) => convert(ffmpegRef, filesState, dispatch)}
         disabled={buttonDisabled}
       >
         Convert
       </button>
       {dropError && <p className='font-semibold text-red-500'>{dropError}</p>}
-      {fileDatas.length > 0 &&
-        fileDatas.map((data, i) => {
-          return (
-            <ConvertedFile
-              key={data.file.name}
-              fileData={data}
-              setOutputTypes={(outputTypes: Array<keyof typeof sizeInfo>) => {
-                setOutputTypes(outputTypes, i, setFileDatas);
-              }}
-            />
-          );
-        })}
+      {Object.keys(filesState).length > 0 &&
+        Object.entries(filesState).map(([name, data], idx) => (
+          <ConvertedFile
+            key={name}
+            fileData={data}
+            setOutputTypes={(targets) => {
+              dispatch({
+                type: 'updateOutputTypes',
+                payload: { name, outputTypes: targets },
+              });
+            }}
+          />
+        ))}
     </div>
   );
 }
@@ -132,53 +132,41 @@ const acceptedTypes = {
 
 async function convert(
   ffmpegRef: React.MutableRefObject<FFmpegManager>,
-  fileDatas: FFmpegFileData[],
-  setFileDatas: Dispatch<SetStateAction<FFmpegFileData[]>>
+  filesState: FilesState,
+  dispatch: Dispatch<FileAction>
 ) {
   if (!ffmpegRef.current.loaded()) {
     return;
   }
   const ffmpeg = ffmpegRef.current;
-  for (let i = 0; i < fileDatas.length; i++) {
-    const data = fileDatas[i];
-    const progressHandler = ({ progress }: FFmpegProgressEvent) => {
-      updateProgress(progress, i, setFileDatas);
-    };
+  for (const [name, data] of Object.entries(filesState)) {
+    const {
+      progressCallback,
+      sizeCallback,
+      isConvertingCallback,
+      isDoneCallback,
+    } = createCallbacks(name, dispatch);
+    ffmpeg
+      .setProgressCallback(progressCallback)
+      .setNewSizeCallback(sizeCallback)
+      .setIsConvertingCallback(isConvertingCallback)
+      .setIsDoneCallback(isDoneCallback);
+
     for (const outputType of data.outputTypes) {
-      ffmpeg
-        .setFileConfig({
-          file: data.file,
-          info: sizeInfo[outputType],
-        })
-        .setProgressCallback(progressHandler)
-        .setNewSizeCallback((size) => {
-          updateSize(size, i, setFileDatas);
-        })
-        .setIsConvertingCallback((converting) => {
-          setIsConverting(converting, i, setFileDatas);
-        })
-        .setIsDoneCallback((done) => {
-          setIsDone(done, i, setFileDatas);
-        });
+      ffmpeg.setFileConfig({
+        file: data.file,
+        info: sizeInfo[outputType],
+      });
       const { url, outputName } = await ffmpeg.convert();
-      setFileDatas((prevData) => {
-        return prevData.map((d, idx) => {
-          if (idx === i) {
-            const outputUrls = fileDatas[i].outputs.map(({ url }) => url);
-            const outputs = fileDatas[i].outputs;
-            // const outputNames = fileDatas[i].outputNames;
-            // const savedUrls =
-            if (!outputUrls.includes(url)) {
-              outputs.push({
-                url,
-                name: outputName,
-                type: outputType,
-              });
-            }
-            return { ...d, outputs };
-          }
-          return d;
-        });
+      dispatch({
+        type: 'updateOutputs',
+        payload: {
+          name,
+          outputs: [
+            ...(data.outputs || []),
+            { name: outputName, url, type: outputType },
+          ],
+        },
       });
     }
 
@@ -186,77 +174,35 @@ async function convert(
   }
 }
 
-function updateProgress(
-  progress: number,
-  i: number,
-  setFileDatas: Dispatch<SetStateAction<FFmpegFileData[]>>
-) {
-  setFileDatas((prevDatas) => {
-    return prevDatas.map((d, index) => {
-      if (index === i) {
-        return { ...d, progress };
-      }
-      return d;
+function createCallbacks(name: string, dispatch: Dispatch<FileAction>) {
+  const progressCallback = ({ progress }: FFmpegProgressEvent) => {
+    dispatch({
+      type: 'updateProgress',
+      payload: { name, progress },
     });
-  });
-}
-
-function updateSize(
-  size: number,
-  i: number,
-  setFileDatas: Dispatch<SetStateAction<FFmpegFileData[]>>
-) {
-  setFileDatas((prevDatas) => {
-    return prevDatas.map((d, index) => {
-      if (index === i) {
-        return { ...d, size };
-      }
-      return d;
+  };
+  const sizeCallback = (size: number) => {
+    dispatch({
+      type: 'updateSize',
+      payload: { name, size },
     });
-  });
-}
-
-function setIsDone(
-  done: boolean,
-  i: number,
-  setFileDatas: Dispatch<SetStateAction<FFmpegFileData[]>>
-) {
-  setFileDatas((prevDatas) => {
-    return prevDatas.map((d, index) => {
-      if (index === i) {
-        return { ...d, isDone: done };
-      }
-      return d;
+  };
+  const isConvertingCallback = (isConverting: boolean) => {
+    dispatch({
+      type: 'updateIsConverting',
+      payload: { name, isConverting },
     });
-  });
-}
-
-function setIsConverting(
-  converting: boolean,
-  i: number,
-  setFileDatas: Dispatch<SetStateAction<FFmpegFileData[]>>
-) {
-  setFileDatas((prevDatas) => {
-    return prevDatas.map((d, index) => {
-      if (index === i) {
-        return { ...d, isConverting: converting };
-      }
-      return d;
+  };
+  const isDoneCallback = (isDone: boolean) => {
+    dispatch({
+      type: 'updateIsDone',
+      payload: { name, isDone },
     });
-  });
-}
-
-function setOutputTypes(
-  outputTypes: Array<keyof typeof sizeInfo>,
-  i: number,
-  setFileDatas: Dispatch<SetStateAction<FFmpegFileData[]>>
-) {
-  setFileDatas((prevDatas) => {
-    return prevDatas.map((d, index) => {
-      if (index === i) {
-        return { ...d, outputTypes };
-      }
-      return d;
-    });
-  });
+  };
+  return {
+    progressCallback,
+    sizeCallback,
+    isConvertingCallback,
+    isDoneCallback,
+  };
 }
