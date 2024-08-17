@@ -23,6 +23,10 @@ export type FileAction =
       payload: { name: string; outputs: Array<FFmpegFileDataOutput> };
     }
   | {
+      type: 'addOutput';
+      payload: { name: string; output: FFmpegFileDataOutput };
+    }
+  | {
       type: 'updateOutputTypes';
       payload: { name: string; outputTypes: Array<keyof typeof sizeInfo> };
     }
@@ -84,6 +88,17 @@ export const filesStateReducer = (
         [action.payload.name]: {
           ...state[action.payload.name],
           outputs: action.payload.outputs,
+        },
+      };
+    case 'addOutput':
+      return {
+        ...state,
+        [action.payload.name]: {
+          ...state[action.payload.name],
+          outputs: [
+            ...state[action.payload.name].outputs,
+            action.payload.output,
+          ],
         },
       };
     case 'updateOutputTypes':

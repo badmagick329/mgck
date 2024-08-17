@@ -159,13 +159,10 @@ async function convert(
       });
       const { url, outputName } = await ffmpeg.convert();
       dispatch({
-        type: 'updateOutputs',
+        type: 'addOutput',
         payload: {
           name,
-          outputs: [
-            ...(data.outputs || []),
-            { name: outputName, url, type: outputType },
-          ],
+          output: { name: outputName, url, type: outputType },
         },
       });
     }
