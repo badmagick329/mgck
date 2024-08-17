@@ -55,9 +55,8 @@ export default function FileDropzone() {
     acceptedFiles.map((f) => {
       newFileDatas.push({
         file: f,
-        outputUrls: [],
-        outputNames: [],
-        targets: ['emote'],
+        outputs: [],
+        outputTypes: ['emote'],
         progress: 0,
         size: 0,
         isConverting: false,
@@ -114,8 +113,8 @@ export default function FileDropzone() {
             <ConvertedFile
               key={data.file.name}
               fileData={data}
-              setTargets={(targets: Array<keyof typeof sizeInfo>) => {
-                setTargets(targets, i, setFileDatas);
+              setOutputTypes={(outputTypes: Array<keyof typeof sizeInfo>) => {
+                setOutputTypes(outputTypes, i, setFileDatas);
               }}
             />
           );
@@ -145,11 +144,11 @@ async function convert(
     const progressHandler = ({ progress }: FFmpegProgressEvent) => {
       updateProgress(progress, i, setFileDatas);
     };
-    for (const target of data.targets) {
+    for (const outputType of data.outputTypes) {
       ffmpeg
         .setFileConfig({
           file: data.file,
-          info: sizeInfo[target],
+          info: sizeInfo[outputType],
         })
         .setProgressCallback(progressHandler)
         .setNewSizeCallback((size) => {
@@ -165,13 +164,18 @@ async function convert(
       setFileDatas((prevData) => {
         return prevData.map((d, idx) => {
           if (idx === i) {
-            const outputUrls = fileDatas[i].outputUrls;
-            const outputNames = fileDatas[i].outputNames;
+            const outputUrls = fileDatas[i].outputs.map(({ url }) => url);
+            const outputs = fileDatas[i].outputs;
+            // const outputNames = fileDatas[i].outputNames;
+            // const savedUrls =
             if (!outputUrls.includes(url)) {
-              outputUrls.push(url);
-              outputNames.push(outputName);
+              outputs.push({
+                url,
+                name: outputName,
+                type: outputType,
+              });
             }
-            return { ...d, outputUrls, outputNames };
+            return { ...d, outputs };
           }
           return d;
         });
@@ -242,15 +246,15 @@ function setIsConverting(
   });
 }
 
-function setTargets(
-  targets: Array<keyof typeof sizeInfo>,
+function setOutputTypes(
+  outputTypes: Array<keyof typeof sizeInfo>,
   i: number,
   setFileDatas: Dispatch<SetStateAction<FFmpegFileData[]>>
 ) {
   setFileDatas((prevDatas) => {
     return prevDatas.map((d, index) => {
       if (index === i) {
-        return { ...d, targets };
+        return { ...d, outputTypes };
       }
       return d;
     });
