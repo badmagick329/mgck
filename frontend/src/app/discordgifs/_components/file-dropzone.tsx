@@ -157,12 +157,12 @@ async function convert(
         file: data.file,
         info: sizeInfo[outputType],
       });
-      const { url, outputName } = await ffmpeg.convert();
+      const { url, outputName, finalSize } = await ffmpeg.convert();
       dispatch({
         type: 'addOutput',
         payload: {
           name,
-          output: { name: outputName, url, type: outputType },
+          output: { name: outputName, url, type: outputType, finalSize },
         },
       });
     }

@@ -126,6 +126,7 @@ export class FFmpegManager {
     return {
       url,
       outputName,
+      finalSize: blob!.size,
     };
   }
 

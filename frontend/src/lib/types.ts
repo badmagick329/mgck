@@ -119,6 +119,7 @@ export type FFmpegFileDataOutput = {
   name: string;
   url: string;
   type: string;
+  finalSize?: number;
 };
 
 export type FFmpegFileData = {

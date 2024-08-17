@@ -18,7 +18,8 @@ export default function ConvertedFile({
     return null;
   }
   const fileSizeText = `${(file.size / 1024).toFixed(1)} KiB`;
-  const convertedSizeText = size ? `- ${(size / 1024).toFixed(1)} KiB` : '';
+  const convertedSizeText =
+    size && isConverting ? `- ${(size / 1024).toFixed(1)} KiB` : '';
 
   return (
     <div className='flex min-h-24 w-full items-center justify-center gap-4 rounded-md border-2 border-white px-2 py-4'>
@@ -53,10 +54,14 @@ export default function ConvertedFile({
         );
       })}
       <div className='flex gap-4'>
-        {outputs.map(({ url, name }) => {
+        {outputs.map(({ url, name, finalSize }) => {
+          const sizeText = finalSize
+            ? ` - ${(finalSize / 1024).toFixed(1)}KiB`
+            : '';
           return (
             <a key={url} href={url} download={name} className='text-primary'>
               {name}
+              {sizeText}
             </a>
           );
         })}
