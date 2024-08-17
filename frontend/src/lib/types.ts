@@ -1,6 +1,6 @@
 import { useSearchParams } from 'next/navigation';
 
-import { sizeInfo } from './discordgifs/frame-size-calculator';
+import { sizeInfo } from './ffmpeg-utils/frame-size-calculator';
 
 export type GfyParsedResponse = {
   count: number;

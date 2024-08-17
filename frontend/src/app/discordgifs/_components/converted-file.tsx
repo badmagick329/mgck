@@ -1,5 +1,5 @@
 import { Checkbox } from '@/components/ui/checkbox';
-import { sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
+import { sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
 import { FFmpegFileData } from '@/lib/types';
 
 const targetChoices = Object.keys(sizeInfo) as Array<keyof typeof sizeInfo>;
