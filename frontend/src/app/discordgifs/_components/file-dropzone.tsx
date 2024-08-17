@@ -68,7 +68,9 @@ export default function FileDropzone() {
   }, [acceptedFiles]);
 
   const buttonDisabled =
-    fileDatas.every((d) => d.isDone) || fileDatas.length === 0;
+    fileDatas.every((d) => d.isDone) ||
+    fileDatas.length === 0 ||
+    fileDatas.some((d) => d.isConverting);
 
   if (!isLoaded) {
     return <p>Loading ffmpeg...</p>;
