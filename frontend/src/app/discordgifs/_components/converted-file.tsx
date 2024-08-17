@@ -4,22 +4,16 @@ import { FFmpegFileData } from '@/lib/types';
 
 const targetChoices = Object.keys(sizeInfo) as Array<keyof typeof sizeInfo>;
 
+type ConvertedFileProps = {
+  fileData: FFmpegFileData;
+  setOutputTypes: (targets: Array<keyof typeof sizeInfo>) => void;
+};
+
 export default function ConvertedFile({
   fileData,
-  setTargets,
-}: {
-  fileData: FFmpegFileData;
-  setTargets: (targets: Array<keyof typeof sizeInfo>) => void;
-}) {
-  const {
-    file,
-    outputUrls,
-    outputNames,
-    progress,
-    size,
-    isConverting,
-    isDone,
-  } = fileData;
+  setOutputTypes,
+}: ConvertedFileProps) {
+  const { file, outputs, progress, size, isConverting, isDone } = fileData;
   if (!file) {
     return null;
   }
@@ -32,22 +26,25 @@ export default function ConvertedFile({
         {file.name} {convertedSizeText}
       </p>
       {targetChoices.map((choice, idx) => {
+        const key = `${file.name}-${choice}`;
         return (
-          <div key={choice}>
+          <div key={key}>
             <Checkbox
-              id={choice}
-              checked={fileData.targets.includes(choice)}
+              id={key}
+              checked={fileData.outputTypes.includes(choice)}
               onCheckedChange={(checked) => {
                 if (checked) {
-                  setTargets([...fileData.targets, choice]);
+                  setOutputTypes([...fileData.outputTypes, choice]);
                 } else {
-                  setTargets(fileData.targets.filter((t) => t !== choice));
+                  setOutputTypes(
+                    fileData.outputTypes.filter((t) => t !== choice)
+                  );
                 }
               }}
               disabled={isConverting || isDone}
             />
             <label
-              htmlFor={choice}
+              htmlFor={key}
               className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
             >
               {choice}
@@ -56,15 +53,10 @@ export default function ConvertedFile({
         );
       })}
       <div className='flex gap-4'>
-        {outputUrls.map((url, i) => {
+        {outputs.map(({ url, name }) => {
           return (
-            <a
-              key={url}
-              href={url}
-              download={outputNames[i]}
-              className='text-primary'
-            >
-              {outputNames[i]}
+            <a key={url} href={url} download={name} className='text-primary'>
+              {name}
             </a>
           );
         })}

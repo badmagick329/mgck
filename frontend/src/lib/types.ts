@@ -115,11 +115,16 @@ export type FFmpegProgressEvent = {
   time: number;
 };
 
+export type FFmpegFileDataOutput = {
+  name: string;
+  url: string;
+  type: string;
+};
+
 export type FFmpegFileData = {
   file: File;
-  outputUrls: Array<string>;
-  outputNames: Array<string>;
-  targets: Array<keyof typeof sizeInfo>;
+  outputs: Array<FFmpegFileDataOutput>;
+  outputTypes: Array<keyof typeof sizeInfo>;
   progress: number;
   size: number;
   isConverting: boolean;
