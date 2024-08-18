@@ -157,6 +157,7 @@ async function convert(
         file: data.file,
         info: sizeInfo[outputType],
       });
+      await ffmpeg.optimizeInput();
       const { url, outputName, finalSize } = await ffmpeg.convert();
       dispatch({
         type: 'addOutput',
@@ -165,6 +166,7 @@ async function convert(
           output: { name: outputName, url, type: outputType, finalSize },
         },
       });
+      await ffmpeg.cleanupOptimizedFile();
     }
 
     await ffmpeg.deleteFile(data.file.name);

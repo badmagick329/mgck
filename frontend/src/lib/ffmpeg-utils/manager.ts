@@ -107,6 +107,39 @@ export class FFmpegManager {
     return this.ffmpeg !== null;
   }
 
+  public async optimizeInput() {
+    if (!this.ffmpeg) {
+      throw new Error('FFmpeg not loaded');
+    }
+    if (!this.fileConfig) {
+      throw new Error('FFmpegContrller config not set');
+    }
+    const { file } = this.fileConfig;
+    if (file.size < 2 * 1024 * 1024) {
+      console.log('optimisation not needed');
+      return;
+    }
+    console.log('optimising input');
+    await this.ffmpeg.writeFile(file.name, await fetchFile(file));
+    const newName = this.newInputName();
+    const cmd = this.optimizedInputCommand();
+    await this.ffmpeg.exec(cmd);
+    const data = await this.ffmpeg.readFile(newName);
+    const blob = new Blob([data], { type: 'video/mp4' });
+    this.fileConfig.file = new File([blob], newName);
+  }
+
+  public async cleanupOptimizedFile() {
+    if (!this.fileConfig) {
+      throw new Error('FFmpegManager config not set');
+    }
+    try {
+      await this.deleteFile(this.newInputName());
+    } catch (e) {
+      console.error('Error deleting optimized file', e);
+    }
+  }
+
   public async convert() {
     if (!this.ffmpeg) {
       throw new Error('FFmpeg not loaded');
@@ -116,7 +149,11 @@ export class FFmpegManager {
     }
 
     const { file, info } = this.fileConfig;
-    await this.ffmpeg.writeFile(file.name, await fetchFile(file));
+    try {
+      await this.ffmpeg.readFile(file.name);
+    } catch (e) {
+      await this.ffmpeg.writeFile(file.name, await fetchFile(file));
+    }
     const calculator = new FrameSizeCalculator(info);
     const outputName = this.fullOutputName();
     const blob = await this.run(calculator, outputName);
@@ -154,7 +191,7 @@ export class FFmpegManager {
       if (calculator.isDone) {
         break;
       }
-      const ffmpegCmd = this.cmd(size.width);
+      const ffmpegCmd = this.outputCommand(size.width);
       const ret = await this.ffmpeg.exec(ffmpegCmd);
       // console.log('executed', ret);
       const data = await this.ffmpeg.readFile(outputName);
@@ -183,7 +220,7 @@ export class FFmpegManager {
     return this.outputType === 'sticker' ? '.png' : '.gif';
   }
 
-  private cmd(width: number): Array<string> {
+  private outputCommand(width: number): Array<string> {
     if (!this.fileConfig) {
       throw new Error('FFmpegManager config not set');
     }
@@ -211,11 +248,59 @@ export class FFmpegManager {
     ];
   }
 
+  private optimizedInputCommand(): Array<string> {
+    if (!this.fileConfig) {
+      throw new Error('FFmpegManager config not set');
+    }
+    if (this.outputType === 'sticker') {
+      return [
+        '-y',
+        '-i',
+        this.fileConfig.file.name,
+        '-b:v',
+        '1M',
+        '-an',
+        '-vf',
+        'scale=140:-1',
+        '-preset',
+        'veryfast',
+        `${this.newInputName()}`,
+      ];
+    }
+    return [
+      '-y',
+      '-i',
+      this.fileConfig.file.name,
+      '-b:v',
+      '1M',
+      '-an',
+      '-vf',
+      'scale=80:-1',
+      '-preset',
+      'veryfast',
+      `${this.newInputName()}`,
+    ];
+  }
+
   private fullOutputName(): string {
     if (!this.fileConfig) {
       throw new Error('FFmpegManager config not set');
     }
     return `${this.fileConfig.outputNameBase}${this.ext()}`;
+  }
+
+  private newInputName(): string {
+    if (!this.fileConfig) {
+      throw new Error('FFmpegManager config not set');
+    }
+    const baseName = this.fileConfig.file.name.slice(
+      0,
+      this.fileConfig.file.name.lastIndexOf('.')
+    );
+    if (this.outputType === 'sticker') {
+      return `${baseName}_sticker.mp4`;
+    }
+    return `${baseName}_emote.mp4`;
   }
 
   private getOutputNameBase(name: string): string {
