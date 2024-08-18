@@ -9,7 +9,12 @@ import {
   sizeInfo,
 } from './frame-size-calculator';
 
-type FFmpegFileConfig = { file: File; outputNameBase: string; info: SizeInfo };
+type FFmpegFileConfig = {
+  file: File;
+  outputNameBase: string;
+  info: SizeInfo;
+  optimizedInput: boolean;
+};
 
 export class FFmpegManager {
   private ffmpeg: FFmpeg | null;
@@ -58,6 +63,7 @@ export class FFmpegManager {
       file,
       outputNameBase: this.getOutputNameBase(file.name),
       info,
+      optimizedInput: false,
     };
     return this;
   }
@@ -127,14 +133,18 @@ export class FFmpegManager {
     const data = await this.ffmpeg.readFile(newName);
     const blob = new Blob([data], { type: 'video/mp4' });
     this.fileConfig.file = new File([blob], newName);
+    this.fileConfig.optimizedInput = true;
   }
 
-  public async cleanupOptimizedFile() {
+  private async cleanupOptimizedFile() {
     if (!this.fileConfig) {
       throw new Error('FFmpegManager config not set');
     }
+    if (!this.fileConfig.optimizedInput) {
+      return;
+    }
     try {
-      await this.deleteFile(this.newInputName());
+      await this.deleteFile(this.fileConfig.file.name);
     } catch (e) {
       console.error('Error deleting optimized file', e);
     }
@@ -208,6 +218,7 @@ export class FFmpegManager {
     this.progressCallback && this.ffmpeg.off('progress', this.progressCallback);
     this.isDoneCallback && this.isDoneCallback(true);
     this.isConvertingCallback && this.isConvertingCallback(false);
+    this.cleanupOptimizedFile();
     this.fileConfig = null;
 
     return blob;
