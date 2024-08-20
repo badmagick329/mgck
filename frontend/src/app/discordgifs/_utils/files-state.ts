@@ -1,5 +1,9 @@
-import { sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
-import { FFmpegFileData, FFmpegFileDataOutput } from '@/lib/types';
+import { SizeInfo, sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
+import {
+  FFmpegConversionState,
+  FFmpegFileData,
+  FFmpegFileDataOutput,
+} from '@/lib/types';
 
 export type FileAction =
   | {
@@ -9,14 +13,6 @@ export type FileAction =
   | {
       type: 'updateSize';
       payload: { name: string; size: number };
-    }
-  | {
-      type: 'updateIsConverting';
-      payload: { name: string; isConverting: boolean };
-    }
-  | {
-      type: 'updateIsDone';
-      payload: { name: string; isDone: boolean };
     }
   | {
       type: 'updateOutputs';
@@ -33,6 +29,14 @@ export type FileAction =
   | {
       type: 'addFile';
       payload: { file: File };
+    }
+  | {
+      type: 'updateTarget';
+      payload: { name: string; target: SizeInfo };
+    }
+  | {
+      type: 'updateConversionState';
+      payload: { name: string; conversionState: FFmpegConversionState };
     }
   | {
       type: 'removeFile';
@@ -66,22 +70,6 @@ export const filesStateReducer = (
           size: action.payload.size,
         },
       };
-    case 'updateIsConverting':
-      return {
-        ...state,
-        [action.payload.name]: {
-          ...state[action.payload.name],
-          isConverting: action.payload.isConverting,
-        },
-      };
-    case 'updateIsDone':
-      return {
-        ...state,
-        [action.payload.name]: {
-          ...state[action.payload.name],
-          isDone: action.payload.isDone,
-        },
-      };
     case 'updateOutputs':
       return {
         ...state,
@@ -90,7 +78,14 @@ export const filesStateReducer = (
           outputs: action.payload.outputs,
         },
       };
-    case 'addOutput':
+    case 'addOutput': {
+      const doneAfterAdding =
+        state[action.payload.name].outputs.length ===
+        state[action.payload.name].outputTypes.length - 1;
+      const conversionState = doneAfterAdding
+        ? 'done'
+        : state[action.payload.name].conversionState;
+
       return {
         ...state,
         [action.payload.name]: {
@@ -99,8 +94,10 @@ export const filesStateReducer = (
             ...state[action.payload.name].outputs,
             action.payload.output,
           ],
+          conversionState,
         },
       };
+    }
     case 'updateOutputTypes':
       return {
         ...state,
@@ -119,10 +116,28 @@ export const filesStateReducer = (
           outputTypes: ['emote'],
           progress: 0,
           size: 0,
-          isConverting: false,
-          isDone: false,
+          currentTarget: sizeInfo.emote,
+          conversionState: 'idle',
         },
       };
+    case 'updateTarget':
+      return {
+        ...state,
+        [action.payload.name]: {
+          ...state[action.payload.name],
+          currentTarget: action.payload.target,
+        },
+      };
+
+    case 'updateConversionState':
+      return {
+        ...state,
+        [action.payload.name]: {
+          ...state[action.payload.name],
+          conversionState: action.payload.conversionState,
+        },
+      };
+
     case 'removeFile':
       const { [action.payload.name]: _, ...rest } = state;
       return rest;

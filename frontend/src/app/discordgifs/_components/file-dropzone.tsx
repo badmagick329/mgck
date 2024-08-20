@@ -5,9 +5,9 @@ import {
   FilesState,
   filesStateReducer,
 } from '@/app/discordgifs/_utils/files-state';
-import { sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
+import { SizeInfo, sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
 import { FFmpegManager } from '@/lib/ffmpeg-utils/manager';
-import { FFmpegProgressEvent } from '@/lib/types';
+import { FFmpegConversionState, FFmpegProgressEvent } from '@/lib/types';
 import { Dispatch, useEffect, useReducer, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
@@ -65,10 +65,9 @@ export default function FileDropzone() {
     });
   }, [acceptedFiles]);
 
-  const buttonDisabled =
-    Object.values(filesState).every((d) => d.isDone) ||
-    Object.values(filesState).length === 0 ||
-    Object.values(filesState).some((d) => d.isConverting);
+  const buttonEnabled = Object.values(filesState).every(
+    (d) => d.conversionState === 'idle'
+  );
 
   if (!isLoaded) {
     return <p>Loading ffmpeg...</p>;
@@ -101,7 +100,7 @@ export default function FileDropzone() {
       <button
         className='rounded-md border-2 border-foreground px-4 py-2 disabled:border-foreground/60 disabled:text-foreground/60'
         onClick={(e) => convert(ffmpegRef, filesState, dispatch)}
-        disabled={buttonDisabled}
+        disabled={!buttonEnabled}
       >
         Convert
       </button>
@@ -142,21 +141,22 @@ async function convert(
   for (const [name, data] of Object.entries(filesState)) {
     const {
       progressCallback,
+      updateConversionStateCallback,
+      targetCallback,
       sizeCallback,
-      isConvertingCallback,
-      isDoneCallback,
     } = createCallbacks(name, dispatch);
     ffmpeg
       .setProgressCallback(progressCallback)
       .setNewSizeCallback(sizeCallback)
-      .setIsConvertingCallback(isConvertingCallback)
-      .setIsDoneCallback(isDoneCallback);
+      .setUpdateConversionStateCallback(updateConversionStateCallback);
 
     for (const outputType of data.outputTypes) {
       ffmpeg.setFileConfig({
         file: data.file,
         info: sizeInfo[outputType],
       });
+      targetCallback(sizeInfo[outputType]);
+      sizeCallback(0);
       const start = performance.now();
       await ffmpeg.optimizeInput();
       console.log(
@@ -183,28 +183,31 @@ function createCallbacks(name: string, dispatch: Dispatch<FileAction>) {
       payload: { name, progress },
     });
   };
+  const targetCallback = (target: SizeInfo) => {
+    dispatch({
+      type: 'updateTarget',
+      payload: { name, target },
+    });
+  };
   const sizeCallback = (size: number) => {
     dispatch({
       type: 'updateSize',
       payload: { name, size },
     });
   };
-  const isConvertingCallback = (isConverting: boolean) => {
+  const updateConversionStateCallback = (
+    conversionState: FFmpegConversionState
+  ) => {
     dispatch({
-      type: 'updateIsConverting',
-      payload: { name, isConverting },
+      type: 'updateConversionState',
+      payload: { name, conversionState },
     });
   };
-  const isDoneCallback = (isDone: boolean) => {
-    dispatch({
-      type: 'updateIsDone',
-      payload: { name, isDone },
-    });
-  };
+
   return {
     progressCallback,
+    targetCallback,
     sizeCallback,
-    isConvertingCallback,
-    isDoneCallback,
+    updateConversionStateCallback,
   };
 }
