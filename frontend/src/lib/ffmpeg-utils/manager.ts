@@ -1,7 +1,11 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
-import { FFmpegLogEvent, FFmpegProgressEvent } from '../types';
+import {
+  FFmpegConversionState,
+  FFmpegLogEvent,
+  FFmpegProgressEvent,
+} from '../types';
 import {
   FrameSize,
   FrameSizeCalculator,
@@ -23,8 +27,9 @@ export class FFmpegManager {
   private logMessageCallback?: (e: FFmpegLogEvent) => void;
   private progressCallback?: (e: FFmpegProgressEvent) => void;
   private newSizeCallback?: (size: number) => void;
-  private isConvertingCallback?: (converting: boolean) => void;
-  private isDoneCallback?: (done: boolean) => void;
+  private updateConversionStateCallback?: (
+    conversionState: FFmpegConversionState
+  ) => void;
 
   constructor() {
     this.ffmpeg = null;
@@ -34,7 +39,7 @@ export class FFmpegManager {
 
   public async load(): Promise<void> {
     this.ffmpeg = new FFmpeg();
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/umd';
     await this.ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(
@@ -85,15 +90,10 @@ export class FFmpegManager {
     return this;
   }
 
-  public setIsConvertingCallback(
-    cb: (converting: boolean) => void
+  public setUpdateConversionStateCallback(
+    cb: (conversionState: FFmpegConversionState) => void
   ): FFmpegManager {
-    this.isConvertingCallback = cb;
-    return this;
-  }
-
-  public setIsDoneCallback(cb: (done: boolean) => void): FFmpegManager {
-    this.isDoneCallback = cb;
+    this.updateConversionStateCallback = cb;
     return this;
   }
 
@@ -122,14 +122,18 @@ export class FFmpegManager {
     }
     const { file } = this.fileConfig;
     if (file.size < 2 * 1024 * 1024) {
-      console.log('optimisation not needed');
+      console.log('optimization not needed');
       return;
     }
-    console.log('optimising input');
+    console.log('optimizing input');
+    this.updateConversionStateCallback &&
+      this.updateConversionStateCallback('optimizing');
     await this.ffmpeg.writeFile(file.name, await fetchFile(file));
     const newName = this.newInputName();
     const cmd = this.optimizedInputCommand();
     await this.ffmpeg.exec(cmd);
+    this.updateConversionStateCallback &&
+      this.updateConversionStateCallback('busy');
     const data = await this.ffmpeg.readFile(newName);
     const blob = new Blob([data], { type: 'video/mp4' });
     this.fileConfig.file = new File([blob], newName);
@@ -185,6 +189,8 @@ export class FFmpegManager {
       throw new Error('FFmpegContrller config not set');
     }
 
+    await this.optimizeInput();
+
     const { info } = this.fileConfig;
     let size: FrameSize | null = {
       width: info.startingWidth,
@@ -194,9 +200,10 @@ export class FFmpegManager {
     let iteration = 0;
 
     const startTime = performance.now();
-    this.isConvertingCallback && this.isConvertingCallback(true);
     this.logMessageCallback && this.ffmpeg.on('log', this.logMessageCallback);
     this.progressCallback && this.ffmpeg.on('progress', this.progressCallback);
+    this.updateConversionStateCallback &&
+      this.updateConversionStateCallback('converting');
     while (size !== null) {
       if (calculator.isDone) {
         break;
@@ -211,13 +218,13 @@ export class FFmpegManager {
       // console.log(`iteration: ${++iteration}. size`, size);
       ++iteration;
     }
+    this.updateConversionStateCallback &&
+      this.updateConversionStateCallback('busy');
     console.log(
       `iteration: ${iteration}. time taken ${((performance.now() - startTime) / 1000).toFixed(2)}s`
     );
     this.logMessageCallback && this.ffmpeg.off('log', this.logMessageCallback);
     this.progressCallback && this.ffmpeg.off('progress', this.progressCallback);
-    this.isDoneCallback && this.isDoneCallback(true);
-    this.isConvertingCallback && this.isConvertingCallback(false);
     this.cleanupOptimizedFile();
     this.fileConfig = null;
 
@@ -269,7 +276,7 @@ export class FFmpegManager {
         '-i',
         this.fileConfig.file.name,
         '-b:v',
-        '1M',
+        '0.5M',
         '-an',
         '-vf',
         'scale=140:-1',
@@ -283,7 +290,7 @@ export class FFmpegManager {
       '-i',
       this.fileConfig.file.name,
       '-b:v',
-      '1M',
+      '0.5M',
       '-an',
       '-vf',
       'scale=80:-1',
@@ -308,10 +315,7 @@ export class FFmpegManager {
       0,
       this.fileConfig.file.name.lastIndexOf('.')
     );
-    if (this.outputType === 'sticker') {
-      return `${baseName}_sticker.mp4`;
-    }
-    return `${baseName}_emote.mp4`;
+    return `${baseName}_${this.outputType}.mp4`;
   }
 
   private getOutputNameBase(name: string): string {

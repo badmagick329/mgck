@@ -1,6 +1,6 @@
 import { useSearchParams } from 'next/navigation';
 
-import { sizeInfo } from './ffmpeg-utils/frame-size-calculator';
+import { SizeInfo, sizeInfo } from './ffmpeg-utils/frame-size-calculator';
 
 export type GfyParsedResponse = {
   count: number;
@@ -122,12 +122,19 @@ export type FFmpegFileDataOutput = {
   finalSize?: number;
 };
 
+export type FFmpegConversionState =
+  | 'idle'
+  | 'busy'
+  | 'optimizing'
+  | 'done'
+  | 'converting';
+
 export type FFmpegFileData = {
   file: File;
   outputs: Array<FFmpegFileDataOutput>;
   outputTypes: Array<keyof typeof sizeInfo>;
   progress: number;
   size: number;
-  isConverting: boolean;
-  isDone: boolean;
+  currentTarget?: SizeInfo;
+  conversionState: FFmpegConversionState;
 };
