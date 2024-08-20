@@ -22,8 +22,8 @@ export default function ProgressBar({
   }
   const targetSize = target.sizeLimit;
   const lower = targetSize - targetSize * 1.25;
-  // const lower = 0;
   const upper = targetSize + targetSize * 1.25;
+  current = current === 0 ? lower : current;
   const xPos = calcXPos(current, targetSize, lower, upper, maxXPos);
   const lowerBound = getLowerBound(target.sizeLimit, target.sizeMargin);
 
@@ -32,7 +32,7 @@ export default function ProgressBar({
       <StatusText conversionState={conversionState} />
       <div
         style={{ width: `${barWidth}px` }}
-        className='relative h-4 rounded-sm bg-gray-500 bg-gradient-to-b from-gray-600 via-gray-600/50 to-gray-600'
+        className='relative h-4 rounded-sm bg-gradient-to-b from-gray-600 via-gray-400/60 to-gray-600'
       >
         <VerticalBar
           size={target.sizeLimit}
