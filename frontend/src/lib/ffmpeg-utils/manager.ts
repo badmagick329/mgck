@@ -121,7 +121,7 @@ export class FFmpegManager {
       throw new Error('FFmpegContrller config not set');
     }
     const { file } = this.fileConfig;
-    if (file.size < 2 * 1024 * 1024) {
+    if (file.size < 0.6 * 1024 * 1024) {
       console.log('optimization not needed');
       return;
     }

@@ -87,7 +87,7 @@ export default function FileDropzone() {
       <div
         {...getRootProps({ className: 'dropzone' })}
         className={clsx(
-          'bg-secondaryDg flex flex-col items-center gap-4',
+          'flex flex-col items-center gap-4 bg-secondaryDg',
           'rounded-md px-6 py-8 hover:cursor-pointer',
           'shadow-glowSecondaryDg'
         )}
