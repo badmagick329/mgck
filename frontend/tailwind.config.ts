@@ -26,20 +26,35 @@ module.exports = {
       '2xl': '1900px',
     },
     extend: {
+      boxShadow: {
+        glowPrimaryDg:
+          '0 0 10px hsla(25, 95%, 53%, 1), 0 0 2px hsla(25, 95%, 53%, 1) inset',
+        glowSecondaryDg:
+          '0 0 10px hsla(0, 0%, 10%, 1), 0 0 2px hsla(0, 0%, 10%, 1) inset',
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
+        backgroundDg: 'hsl(var(--background-dg))',
         'background-light': 'hsl(var(--background-light))',
         foreground: 'hsl(var(--foreground))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
         },
+        primaryDg: {
+          DEFAULT: 'hsl(var(--primary-dg))',
+          foreground: 'hsl(var(--primary-dg-foreground))',
+        },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',
+        },
+        secondaryDg: {
+          DEFAULT: 'hsl(var(--secondary-dg))',
+          foreground: 'hsl(var(--secondary-dg-foreground))',
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
@@ -76,10 +91,16 @@ module.exports = {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: 0 },
         },
+        testanimation: {
+          '0%, 100%': { transform: 'rotate(0.0deg) scale(1.2)' },
+          '50%': { transform: 'scale(0.9) rotate(180deg)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        testanimation:
+          'testanimation 4s cubic-bezier(0.2, 0.75, 0.2, 1) infinite',
       },
     },
   },

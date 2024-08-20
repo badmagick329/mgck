@@ -8,6 +8,7 @@ import {
 import { SizeInfo, sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
 import { FFmpegManager } from '@/lib/ffmpeg-utils/manager';
 import { FFmpegConversionState, FFmpegProgressEvent } from '@/lib/types';
+import clsx from 'clsx';
 import { Dispatch, useEffect, useReducer, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
@@ -82,42 +83,54 @@ export default function FileDropzone() {
   }
 
   return (
-    <div className='flex w-full flex-col items-center gap-4 px-2'>
+    <div className='flex w-full flex-col items-center gap-8 px-2'>
       <div
         {...getRootProps({ className: 'dropzone' })}
-        className='flex flex-col items-center gap-2 rounded-md bg-secondary px-6 py-8 hover:cursor-pointer'
+        className={clsx(
+          'bg-secondaryDg flex flex-col items-center gap-4',
+          'rounded-md px-6 py-8 hover:cursor-pointer',
+          'shadow-glowSecondaryDg'
+        )}
       >
         <input {...getInputProps()} />
         <p>Drag n drop files here, or click to select files.</p>
-        <p>You can select upto {MAX_FILES} files.</p>
-        <p>
+        <p className='pb-4'>
           Accepted types are{' '}
           <span className='font-semibold'>
             {acceptedImageTypes.join(', ')}, {acceptedVideoTypes.join(', ')}
           </span>
         </p>
+        <p className='text-sm'>You can select upto {MAX_FILES} files.</p>
       </div>
       <button
-        className='rounded-md border-2 border-foreground px-4 py-2 disabled:border-foreground/60 disabled:text-foreground/60'
+        className={clsx(
+          `${buttonEnabled && 'hover:bg-primaryDg/80'}`,
+          `${!buttonEnabled ? 'bg-secondaryDg' : 'bg-primaryDg'}`,
+          `rounded-md border-2 border-orange-500`,
+          `px-4 py-2 disabled:border-orange-500/60 disabled:text-foreground/60`,
+          `shadow-glowPrimaryDg`
+        )}
         onClick={(e) => convert(ffmpegRef, filesState, dispatch)}
         disabled={!buttonEnabled}
       >
         Convert
       </button>
       {dropError && <p className='font-semibold text-red-500'>{dropError}</p>}
-      {Object.keys(filesState).length > 0 &&
-        Object.entries(filesState).map(([name, data], idx) => (
-          <ConvertedFile
-            key={name}
-            fileData={data}
-            setOutputTypes={(targets) => {
-              dispatch({
-                type: 'updateOutputTypes',
-                payload: { name, outputTypes: targets },
-              });
-            }}
-          />
-        ))}
+      <div className='mt-8 flex flex-wrap justify-center gap-8 px-4 text-center'>
+        {Object.keys(filesState).length > 0 &&
+          Object.entries(filesState).map(([name, data], idx) => (
+            <ConvertedFile
+              key={name}
+              fileData={data}
+              setOutputTypes={(targets) => {
+                dispatch({
+                  type: 'updateOutputTypes',
+                  payload: { name, outputTypes: targets },
+                });
+              }}
+            />
+          ))}
+      </div>
     </div>
   );
 }

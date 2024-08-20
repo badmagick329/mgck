@@ -117,3 +117,10 @@ export function clearFormInputs(form: HTMLFormElement | null) {
 export function truncateText(text: string, max: number = 28) {
   return text.length > max - 3 ? `${text.slice(0, max)}...` : text;
 }
+
+export function capitaliseWords(text: string) {
+  return text
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}

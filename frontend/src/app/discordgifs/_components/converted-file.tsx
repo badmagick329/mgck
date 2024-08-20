@@ -1,8 +1,11 @@
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox-dg';
 import { sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
 import { FFmpegFileData, FFmpegFileDataOutput } from '@/lib/types';
+import { capitaliseWords, truncateText } from '@/lib/utils';
+import clsx from 'clsx';
 import Image from 'next/image';
 
+import OutputPlaceholder from './output-placeholder';
 import ProgressBar from './progress-bar';
 
 const targetChoices = Object.keys(sizeInfo) as Array<keyof typeof sizeInfo>;
@@ -30,15 +33,21 @@ export default function ConvertedFile({
   }
 
   return (
-    <div className='flex min-h-24 w-full flex-col items-center justify-center gap-4 rounded-md border-2 border-white px-2 py-4'>
-      <p>{file.name}</p>
+    <div
+      className={clsx(
+        'flex min-h-80 min-w-72 flex-col items-center',
+        'gap-4 rounded-md px-2 py-4',
+        'bg-secondaryDg shadow-glowSecondaryDg'
+      )}
+    >
+      <p>{truncateText(file.name, 28)}</p>
       <ProgressBar
         target={target}
         current={size}
         iterationProgress={progress}
         conversionState={conversionState}
       />
-      <div className='flex gap-2'>
+      <div className='flex gap-16'>
         {targetChoices.map((choice, idx) => {
           const key = `${file.name}-${choice}`;
           return (
@@ -57,15 +66,16 @@ export default function ConvertedFile({
               />
               <label
                 htmlFor={key}
-                className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                className='text-sm font-medium leading-none hover:cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
               >
-                {choice}
+                {capitaliseWords(choice)}
               </label>
             </div>
           );
         })}
       </div>
-      <div className='flex gap-4'>
+      <div className='flex h-full w-full gap-4'>
+        {outputs.length === 0 && <OutputPlaceholder />}
         {outputs.map((output) => (
           <ConversionOutput key={output.url} output={output} />
         ))}
@@ -78,9 +88,9 @@ function ConversionOutput({ output }: { output: FFmpegFileDataOutput }) {
   const { url, name, finalSize, type } = output;
   const sizeText = finalSize ? `${(finalSize / 1024).toFixed(1)}KiB` : '';
   return (
-    <div className='flex flex-col items-center'>
+    <div className='mt-4 flex flex-col items-center'>
       <a
-        className='flex flex-col items-center justify-center gap-2 rounded-md px-2 py-2 hover:bg-slate-600 hover:text-primary/80'
+        className='hover:text-primaryDg/80 flex flex-col items-center justify-center gap-2 rounded-md px-2 py-2 hover:bg-slate-600'
         href={url}
         download={name}
       >
@@ -88,8 +98,8 @@ function ConversionOutput({ output }: { output: FFmpegFileDataOutput }) {
         <Image
           className='rounded-md'
           src={url}
-          width={80}
-          height={80}
+          width={60}
+          height={60}
           alt={name}
         />
         <p className='text-xs'>Download {type}</p>
