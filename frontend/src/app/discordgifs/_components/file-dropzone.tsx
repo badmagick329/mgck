@@ -86,9 +86,9 @@ export default function FileDropzone() {
       <div
         {...getRootProps({ className: 'dropzone' })}
         className={clsx(
-          'flex flex-col items-center gap-4 bg-secondaryDg',
+          'bg-secondary-dg flex flex-col items-center gap-4',
           'rounded-md px-6 py-8 hover:cursor-pointer',
-          `shadow-glowSecondaryDg ${dragEnter && 'scale-110'}`
+          `shadow-glow-secondary-dg ${dragEnter && 'scale-110'}`
         )}
       >
         <input {...getInputProps()} />
@@ -103,11 +103,11 @@ export default function FileDropzone() {
       </div>
       <button
         className={clsx(
-          `${buttonEnabled && 'hover:bg-primaryDg/80'}`,
-          `${!buttonEnabled ? 'bg-secondaryDg' : 'bg-primaryDg'}`,
+          `${buttonEnabled && 'hover:bg-primary-dg/80'}`,
+          `${!buttonEnabled ? 'bg-secondary-dg' : 'bg-primary-dg'}`,
           `rounded-md border-2 border-orange-500`,
           `px-4 py-2 disabled:border-orange-500/60 disabled:text-foreground/60`,
-          `shadow-glowPrimaryDg ${!buttonEnabled && dragEnter && 'animate-pulse'}`
+          `shadow-glow-primary-dg ${!buttonEnabled && dragEnter && 'animate-pulse'}`
         )}
         onClick={(e) => convert(ffmpegRef, filesState, dispatch)}
         disabled={!buttonEnabled}

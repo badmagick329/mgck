@@ -38,7 +38,7 @@ export default function ConvertedFile({
     <div
       className={clsx(
         'flex min-h-80 w-72 flex-col items-center gap-4 rounded-md px-2 py-4',
-        'bg-secondaryDg shadow-glowSecondaryDg'
+        'shadow-glow-secondary-dg bg-secondary-dg'
       )}
     >
       <p>{truncateText(file.name, 28)}</p>
@@ -62,7 +62,7 @@ export default function ConvertedFile({
           );
         })}
       </div>
-      <div className='flex h-full w-full items-center justify-center gap-4 border-2 border-white shadow-glowSecondaryDg'>
+      <div className='shadow-glow-secondary-dg flex h-full w-full items-center justify-center gap-4 border-2 border-white'>
         {outputs.length === 0 && <OutputPlaceholder />}
         {outputs.map((output) => (
           <ConversionOutput key={output.url} output={output} />

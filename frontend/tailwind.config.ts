@@ -27,9 +27,9 @@ module.exports = {
     },
     extend: {
       boxShadow: {
-        glowPrimaryDg:
+        'glow-primary-dg':
           '0 0 10px hsla(25, 95%, 53%, 1), 0 0 2px hsla(25, 95%, 53%, 1) inset',
-        glowSecondaryDg:
+        'glow-secondary-dg':
           '0 0 10px hsla(0, 0%, 10%, 1), 0 0 2px hsla(0, 0%, 10%, 1) inset',
       },
       colors: {
@@ -37,14 +37,14 @@ module.exports = {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
-        backgroundDg: 'hsl(var(--background-dg))',
+        'background-dg': 'hsl(var(--background-dg))',
         'background-light': 'hsl(var(--background-light))',
         foreground: 'hsl(var(--foreground))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
         },
-        primaryDg: {
+        'primary-dg': {
           DEFAULT: 'hsl(var(--primary-dg))',
           foreground: 'hsl(var(--primary-dg-foreground))',
         },
@@ -52,7 +52,7 @@ module.exports = {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',
         },
-        secondaryDg: {
+        'secondary-dg': {
           DEFAULT: 'hsl(var(--secondary-dg))',
           foreground: 'hsl(var(--secondary-dg-foreground))',
         },
