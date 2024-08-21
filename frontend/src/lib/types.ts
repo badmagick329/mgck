@@ -135,6 +135,6 @@ export type FFmpegFileData = {
   outputTypes: Array<keyof typeof sizeInfo>;
   progress: number;
   size: number;
-  currentTarget?: SizeInfo;
+  currentTarget: SizeInfo;
   conversionState: FFmpegConversionState;
 };
