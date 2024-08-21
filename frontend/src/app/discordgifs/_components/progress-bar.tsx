@@ -9,7 +9,6 @@ const maxXPos = (barWidth - ballSize) / scale;
 export default function ProgressBar({
   target,
   current,
-  iterationProgress,
   conversionState,
 }: {
   target?: SizeInfo;
@@ -39,8 +38,6 @@ export default function ProgressBar({
           lower={lower}
           upper={upper}
           totalWidth={barWidth}
-          shadowColor={'green'}
-          twColor={'bg-green-500/50'}
           conversionState={conversionState}
         />
         <VerticalBar
@@ -48,12 +45,9 @@ export default function ProgressBar({
           lower={lower}
           upper={upper}
           totalWidth={barWidth}
-          shadowColor={'green'}
-          twColor={'bg-green-500/50'}
           conversionState={conversionState}
         />
         <Ball xPos={xPos} conversionState={conversionState} />
-        <IterationProgress progress={iterationProgress} />
       </div>
     </div>
   );
@@ -91,16 +85,12 @@ function VerticalBar({
   lower,
   upper,
   totalWidth,
-  shadowColor,
-  twColor,
   conversionState,
 }: {
   size: number;
   lower: number;
   upper: number;
   totalWidth: number;
-  shadowColor: string;
-  twColor: string;
   conversionState: FFmpegConversionState;
 }) {
   if (conversionState === 'done') {
@@ -111,12 +101,12 @@ function VerticalBar({
   return (
     <div
       style={{
-        boxShadow: `0px 0px 2px ${shadowColor}, 0 0 2px ${shadowColor} inset`,
+        boxShadow: '0px 0px 2px green, 0 0 2px green inset',
         left: `calc(${posInPerc}% - ${Math.round(w / 2)}px)`,
         width: `${w}px`,
         zIndex: 2,
       }}
-      className={`absolute h-4 ${twColor}`}
+      className='absolute h-4 bg-green-500/50'
     ></div>
   );
 }

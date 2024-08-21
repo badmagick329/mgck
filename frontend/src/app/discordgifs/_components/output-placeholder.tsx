@@ -14,10 +14,10 @@ export default function OutputPlaceholder() {
       }}
       className='bg-secondaryDg'
     >
-      <Canvas>
-        <ambientLight intensity={Math.PI / 2} />
+      <Canvas camera={{ fov: 45, near: 0.1, far: 100, position: [0, 0, 9] }}>
+        <ambientLight intensity={Math.PI / 4} />
         <spotLight
-          position={[10, 10, 10]}
+          position={[20, 20, 20]}
           angle={0.15}
           penumbra={1}
           decay={0}

@@ -14,37 +14,38 @@ import { useDropzone } from 'react-dropzone';
 
 import ConvertedFile from './converted-file';
 
-const MAX_FILES = 5;
+const maxFiles = 5;
 
 export default function FileDropzone() {
-  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [isLoaded, setIsLoaded] = useState<boolean | null>(null);
   const [filesState, dispatch] = useReducer(filesStateReducer, {});
   const [dropError, setDropError] = useState<string | null>(null);
+  const [dragEnter, setDragEnter] = useState<boolean>(false);
   const ffmpegRef = useRef<FFmpegManager>(new FFmpegManager());
-  const { acceptedFiles, fileRejections, getRootProps, getInputProps } =
-    useDropzone({
-      accept: acceptedTypes,
-      onDragEnter: (e) => {
-        console.log('onDragEnter', e);
-      },
-      onDragLeave: (e) => {
-        console.log('onDragLeave', e);
-      },
-      onDropAccepted: (files) => {
-        console.log('onDropAccepted', files);
-        setDropError('');
-      },
-      maxFiles: MAX_FILES,
-      onDropRejected: (fileRejections) => {
-        for (const rejection of fileRejections) {
-          for (const err of rejection.errors) {
-            if (err.code === 'too-many-files') {
-              setDropError(`You can only upload upto ${MAX_FILES} files`);
-            }
+  const { acceptedFiles, getRootProps, getInputProps } = useDropzone({
+    accept: acceptedTypes,
+    onDragEnter: (e) => {
+      setDragEnter(true);
+    },
+    onDragLeave: (e) => {
+      setDragEnter(false);
+    },
+    onDropAccepted: (files) => {
+      setDragEnter(false);
+      setDropError('');
+    },
+    onDropRejected: (fileRejections) => {
+      for (const rejection of fileRejections) {
+        for (const err of rejection.errors) {
+          if (err.code === 'too-many-files') {
+            setDropError(`You can only upload upto ${maxFiles} files`);
+            return;
           }
         }
-      },
-    });
+      }
+    },
+    maxFiles,
+  });
 
   useEffect(() => {
     (async () => {
@@ -66,19 +67,17 @@ export default function FileDropzone() {
     });
   }, [acceptedFiles]);
 
-  const buttonEnabled = Object.values(filesState).every(
-    (d) => d.conversionState === 'idle'
-  );
+  const buttonEnabled =
+    Object.values(filesState).every((d) => d.conversionState === 'idle') &&
+    acceptedFiles.length > 0;
 
-  if (!isLoaded) {
-    return <p>Loading ffmpeg...</p>;
-  }
-
-  if (!ffmpegRef.current.loaded()) {
+  if (isLoaded === false) {
     return (
-      <>
-        <p>Failed to load ffmpeg. Refresh to try again</p>
-      </>
+      <div className='flex w-full flex-col items-center gap-8 px-2 pt-16'>
+        <p className='text-xl font-semibold'>
+          An error occurred loading ffmpeg.
+        </p>
+      </div>
     );
   }
 
@@ -89,7 +88,7 @@ export default function FileDropzone() {
         className={clsx(
           'flex flex-col items-center gap-4 bg-secondaryDg',
           'rounded-md px-6 py-8 hover:cursor-pointer',
-          'shadow-glowSecondaryDg'
+          `shadow-glowSecondaryDg ${dragEnter && 'scale-110'}`
         )}
       >
         <input {...getInputProps()} />
@@ -100,7 +99,7 @@ export default function FileDropzone() {
             {acceptedImageTypes.join(', ')}, {acceptedVideoTypes.join(', ')}
           </span>
         </p>
-        <p className='text-sm'>You can select upto {MAX_FILES} files.</p>
+        <p className='text-sm'>You can select upto {maxFiles} files.</p>
       </div>
       <button
         className={clsx(
@@ -108,7 +107,7 @@ export default function FileDropzone() {
           `${!buttonEnabled ? 'bg-secondaryDg' : 'bg-primaryDg'}`,
           `rounded-md border-2 border-orange-500`,
           `px-4 py-2 disabled:border-orange-500/60 disabled:text-foreground/60`,
-          `shadow-glowPrimaryDg`
+          `shadow-glowPrimaryDg ${!buttonEnabled && dragEnter && 'animate-pulse'}`
         )}
         onClick={(e) => convert(ffmpegRef, filesState, dispatch)}
         disabled={!buttonEnabled}
