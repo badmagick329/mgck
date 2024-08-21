@@ -88,7 +88,8 @@ export default function FileDropzone() {
         className={clsx(
           'bg-secondary-dg flex flex-col items-center gap-4',
           'rounded-md px-6 py-8 hover:cursor-pointer',
-          `shadow-glow-secondary-dg ${dragEnter && 'scale-110'}`
+          `shadow-glow-secondary-dg ${dragEnter && 'scale-110'}`,
+          `transition-all`
         )}
       >
         <input {...getInputProps()} />
@@ -99,7 +100,7 @@ export default function FileDropzone() {
             {acceptedImageTypes.join(', ')}, {acceptedVideoTypes.join(', ')}
           </span>
         </p>
-        <p className='text-sm'>You can select upto {maxFiles} files.</p>
+        <p className='text-xs'>You can select upto {maxFiles} files.</p>
       </div>
       <button
         className={clsx(
