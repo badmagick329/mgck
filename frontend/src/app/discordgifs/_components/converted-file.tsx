@@ -15,11 +15,13 @@ type SizeInfoKey = keyof typeof sizeInfo;
 type ConvertedFileProps = {
   fileData: FFmpegFileData;
   setOutputTypes: (targets: Array<SizeInfoKey>) => void;
+  buttonsEnabled: boolean;
 };
 
 export default function ConvertedFile({
   fileData,
   setOutputTypes,
+  buttonsEnabled,
 }: ConvertedFileProps) {
   const {
     file,
@@ -54,10 +56,11 @@ export default function ConvertedFile({
           return (
             <ChoiceCheckbox
               key={key}
+              checkboxId={key}
               choice={choice}
               outputTypes={outputTypes}
               setOutputTypes={setOutputTypes}
-              conversionState={conversionState}
+              buttonsEnabled={buttonsEnabled}
             />
           );
         })}

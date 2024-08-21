@@ -121,6 +121,7 @@ export default function FileDropzone() {
             <ConvertedFile
               key={name}
               fileData={data}
+              buttonsEnabled={buttonEnabled}
               setOutputTypes={(targets) => {
                 dispatch({
                   type: 'updateOutputTypes',

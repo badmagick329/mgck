@@ -1,26 +1,25 @@
 import { Checkbox } from '@/components/ui/checkbox-dg';
 import { sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
-import { FFmpegConversionState } from '@/lib/types';
 import { capitaliseWords } from '@/lib/utils';
 
 type SizeInfoKey = keyof typeof sizeInfo;
 export default function ChoiceCheckbox({
-  key,
+  checkboxId,
   choice,
   outputTypes,
   setOutputTypes,
-  conversionState,
+  buttonsEnabled,
 }: {
-  key: string;
+  checkboxId: string;
   choice: SizeInfoKey;
   outputTypes: Array<SizeInfoKey>;
   setOutputTypes: (targets: Array<SizeInfoKey>) => void;
-  conversionState: FFmpegConversionState;
+  buttonsEnabled: boolean;
 }) {
   return (
     <div className='flex items-center gap-2'>
       <Checkbox
-        id={key}
+        id={checkboxId}
         checked={outputTypes.includes(choice)}
         onCheckedChange={(checked) => {
           if (checked) {
@@ -29,10 +28,10 @@ export default function ChoiceCheckbox({
             setOutputTypes(outputTypes.filter((t) => t !== choice));
           }
         }}
-        disabled={conversionState !== 'idle'}
+        disabled={!buttonsEnabled}
       />
       <label
-        htmlFor={key}
+        htmlFor={checkboxId}
         className='text-sm font-medium leading-none hover:cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
       >
         {capitaliseWords(choice)}
