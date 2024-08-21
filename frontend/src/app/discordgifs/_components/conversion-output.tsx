@@ -7,6 +7,15 @@ export default function ConversionOutput({
   output: FFmpegFileDataOutput;
 }) {
   const { url, name, finalSize, type } = output;
+  if (url === '') {
+    return (
+      <div className='flex h-full w-full flex-col items-center justify-center'>
+        <p className='break-words font-semibold text-red-600'>
+          Conversion Failed
+        </p>
+      </div>
+    );
+  }
   const sizeText = finalSize ? `${(finalSize / 1024).toFixed(1)}KiB` : '';
   return (
     <div className='flex h-full w-full flex-col items-center justify-center'>

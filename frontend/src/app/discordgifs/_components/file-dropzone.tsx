@@ -5,8 +5,8 @@ import {
   FilesState,
   filesStateReducer,
 } from '@/app/discordgifs/_utils/files-state';
+import { FFmpegManager } from '@/lib/ffmpeg-utils/ffmpeg-manager';
 import { SizeInfo, sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
-import { FFmpegManager } from '@/lib/ffmpeg-utils/manager';
 import { FFmpegConversionState, FFmpegProgressEvent } from '@/lib/types';
 import clsx from 'clsx';
 import { Dispatch, useEffect, useReducer, useRef, useState } from 'react';
@@ -170,19 +170,25 @@ async function convert(
       });
       targetCallback(sizeInfo[outputType]);
       sizeCallback(0);
-      const start = performance.now();
-      await ffmpeg.optimizeInput();
-      console.log(
-        `Optimize input took: ${((performance.now() - start) / 1000).toFixed(2)}s`
-      );
-      const { url, outputName, finalSize } = await ffmpeg.convert();
-      dispatch({
-        type: 'addOutput',
-        payload: {
-          name,
-          output: { name: outputName, url, type: outputType, finalSize },
-        },
-      });
+      const result = await ffmpeg.convert();
+      if (result) {
+        const { url, outputName, finalSize } = result;
+        dispatch({
+          type: 'addOutput',
+          payload: {
+            name,
+            output: { name: outputName, url, type: outputType, finalSize },
+          },
+        });
+      } else {
+        dispatch({
+          type: 'addOutput',
+          payload: {
+            name,
+            output: { name: '', url: '', type: '' },
+          },
+        });
+      }
     }
 
     await ffmpeg.deleteFile(data.file.name);

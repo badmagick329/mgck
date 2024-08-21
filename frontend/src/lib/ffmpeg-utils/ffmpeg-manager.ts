@@ -122,7 +122,7 @@ export class FFmpegManager {
     }
     const { file } = this.fileConfig;
     if (file.size < 0.6 * 1024 * 1024) {
-      console.log('optimization not needed');
+      console.log(`optimization not needed. ${file.size}bytes`);
       return;
     }
     console.log('optimizing input');
@@ -131,7 +131,10 @@ export class FFmpegManager {
     await this.ffmpeg.writeFile(file.name, await fetchFile(file));
     const newName = this.newInputName();
     const cmd = this.optimizedInputCommand();
-    await this.ffmpeg.exec(cmd);
+    const ret = await this.ffmpeg.exec(cmd);
+    if (ret === 1) {
+      throw new Error('Error optimizing input');
+    }
     this.updateConversionStateCallback &&
       this.updateConversionStateCallback('busy');
     const data = await this.ffmpeg.readFile(newName);
@@ -172,8 +175,11 @@ export class FFmpegManager {
     const outputName = this.fullOutputName();
     const blob = await this.run(calculator, outputName);
 
-    // TODO: Handle fail case
-    const url = URL.createObjectURL(blob!);
+    if (!blob) {
+      return null;
+    }
+
+    const url = URL.createObjectURL(blob);
     return {
       url,
       outputName,
@@ -189,7 +195,11 @@ export class FFmpegManager {
       throw new Error('FFmpegContrller config not set');
     }
 
-    await this.optimizeInput();
+    try {
+      await this.optimizeInput();
+    } catch {
+      return null;
+    }
 
     const { info } = this.fileConfig;
     let size: FrameSize | null = {
@@ -210,6 +220,9 @@ export class FFmpegManager {
       }
       const ffmpegCmd = this.outputCommand(size.width);
       const ret = await this.ffmpeg.exec(ffmpegCmd);
+      if (ret === 1) {
+        return null;
+      }
       // console.log('executed', ret);
       const data = await this.ffmpeg.readFile(outputName);
       blob = new Blob([data], { type: this.ext().slice(1) });
@@ -244,7 +257,6 @@ export class FFmpegManager {
     }
     if (this.outputType === 'sticker') {
       return [
-        '-y',
         '-i',
         this.fileConfig.file.name,
         '-f',
@@ -257,7 +269,6 @@ export class FFmpegManager {
       ];
     }
     return [
-      '-y',
       '-i',
       this.fileConfig.file.name,
       '-filter_complex',
@@ -272,28 +283,26 @@ export class FFmpegManager {
     }
     if (this.outputType === 'sticker') {
       return [
-        '-y',
         '-i',
         this.fileConfig.file.name,
         '-b:v',
         '0.5M',
         '-an',
         '-vf',
-        'scale=140:-1',
+        'scale=140:-2',
         '-preset',
         'veryfast',
         `${this.newInputName()}`,
       ];
     }
     return [
-      '-y',
       '-i',
       this.fileConfig.file.name,
       '-b:v',
       '0.5M',
       '-an',
       '-vf',
-      'scale=80:-1',
+      'scale=80:-2',
       '-preset',
       'veryfast',
       `${this.newInputName()}`,
