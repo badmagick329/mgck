@@ -23,7 +23,6 @@ export default function OutputPlaceholder() {
           decay={0}
           intensity={Math.PI}
         />
-        <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
         <LoadingBox position={[0, 0, 0]} />
       </Canvas>
     </div>
