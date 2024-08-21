@@ -12,7 +12,7 @@ export default function OutputPlaceholder() {
         width: '100%',
         height: '100%',
       }}
-      className='bg-secondaryDg'
+      className='bg-secondary-dg'
     >
       <Canvas camera={{ fov: 45, near: 0.1, far: 100, position: [0, 0, 9] }}>
         <ambientLight intensity={Math.PI / 4} />
