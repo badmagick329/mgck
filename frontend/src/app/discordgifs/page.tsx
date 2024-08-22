@@ -13,16 +13,16 @@ export default function DiscordGifsPage() {
           <p className='text-center text-lg'>📝 Tips</p>
           <div className='text-sm'>
             <p>
-              🎬 Videos should ideally by{' '}
-              <span className='font-semibold'>7 seconds</span> or shorter
+              🎬 Video for an emote should ideally be{' '}
+              <span className='font-semibold'>7 seconds or less</span>
             </p>
             <p>
-              🎞️ Videos should be <span className='font-semibold'>50fps</span>{' '}
-              or less
+              🫣 Video for a sticker <span className='font-bold'>has</span> to
+              be <span className='font-semibold'>7 seconds or less</span>
             </p>
             <p>
-              🫣 Discord stickers cannot be longer than{' '}
-              <span className='font-semibold'>7 seconds</span>
+              🎞️ Video should be{' '}
+              <span className='font-semibold'>under 50 FPS</span>
             </p>
           </div>
         </div>
