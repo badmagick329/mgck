@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     metadataBase: new URL('https://mgck.ink'),
     title: `${gfyDetail.title}`,
+    keywords: gfyDetail.tags.concat(['gfy', 'gfycat', 'kpop']),
     openGraph: {
       title: `${gfyDetail.title}`,
       url: gfyDetail.video_url,
