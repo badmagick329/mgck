@@ -4,13 +4,13 @@ import FileDropzone from './_components/file-dropzone';
 
 export default function DiscordGifsPage() {
   return (
-    <main className='bg-background-dg flex min-h-screen w-full flex-col px-4 pt-6'>
+    <main className='flex min-h-screen w-full flex-col bg-background-dg px-4 pt-6'>
       <div className='flex flex-col items-center px-4 py-6'>
-        <h1 className='bg-secondary-dg shadow-glow-primary-dg border-primary-dg rounded-md border-2 px-4 py-2 text-xl'>
+        <h1 className='rounded-md border-2 border-primary-dg bg-secondary-dg px-4 py-2 text-xl shadow-glow-primary-dg'>
           Create discord emotes and stickers from video clips
         </h1>
         <div className='grid grid-cols-1 gap-2 py-8'>
-          <p className='text-lg'>Tips 📝</p>
+          <p className='text-center text-lg'>📝 Tips</p>
           <div className='text-sm'>
             <p>
               🎬 Videos should ideally by{' '}
