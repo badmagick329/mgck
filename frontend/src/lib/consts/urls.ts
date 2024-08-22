@@ -2,6 +2,7 @@ export const GFYS_BASE = '/gfys';
 export const KPOP_BASE = '/kpop';
 export const URL_SHORTENER_BASE = '/shorten';
 export const EMOJIFY_BASE = '/emojify';
+export const DISCORD_GIFS = '/discordgifs';
 
 export const API_GFYS = '/api/gfys';
 export const API_GFY_ACCOUNTS = '/api/accounts';

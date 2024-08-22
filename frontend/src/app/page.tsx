@@ -1,12 +1,18 @@
 import { ThemeToggler } from '@/components/theme-toggler';
 import { Button } from '@/components/ui/button';
-import { EMOJIFY_BASE, GFYS_BASE, KPOP_BASE } from '@/lib/consts/urls';
+import {
+  DISCORD_GIFS,
+  EMOJIFY_BASE,
+  GFYS_BASE,
+  KPOP_BASE,
+} from '@/lib/consts/urls';
 import Link from 'next/link';
 
 const pageLinks = [
-  [GFYS_BASE, 'Gfys'],
+  [GFYS_BASE, 'Red Velvet Gfys'],
   [KPOP_BASE, 'Kpop Comebacks'],
   [EMOJIFY_BASE, 'Emojify your message 😀'],
+  [DISCORD_GIFS, 'Create discord emotes and stickers'],
 ];
 
 export default function Index() {
