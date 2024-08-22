@@ -35,6 +35,7 @@ export default function FileDropzone() {
       setDropError('');
     },
     onDropRejected: (fileRejections) => {
+      setDragEnter(false);
       for (const rejection of fileRejections) {
         for (const err of rejection.errors) {
           if (err.code === 'too-many-files') {
