@@ -122,10 +122,10 @@ export class FFmpegManager {
     }
     const { file } = this.fileConfig;
     if (file.size < 0.6 * 1024 * 1024) {
-      console.log(`optimization not needed. ${file.size}bytes`);
+      // console.log(`optimization not needed. ${file.size}bytes`);
       return;
     }
-    console.log('optimizing input');
+    // console.log('optimizing input');
     this.updateConversionStateCallback &&
       this.updateConversionStateCallback('optimizing');
     await this.ffmpeg.writeFile(file.name, await fetchFile(file));
@@ -233,9 +233,9 @@ export class FFmpegManager {
     }
     this.updateConversionStateCallback &&
       this.updateConversionStateCallback('busy');
-    console.log(
-      `iteration: ${iteration}. time taken ${((performance.now() - startTime) / 1000).toFixed(2)}s`
-    );
+    // console.log(
+    //   `iteration: ${iteration}. time taken ${((performance.now() - startTime) / 1000).toFixed(2)}s`
+    // );
     this.logMessageCallback && this.ffmpeg.off('log', this.logMessageCallback);
     this.progressCallback && this.ffmpeg.off('progress', this.progressCallback);
     this.cleanupOptimizedFile();
