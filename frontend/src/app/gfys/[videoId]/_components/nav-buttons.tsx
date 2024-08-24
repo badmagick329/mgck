@@ -1,5 +1,11 @@
 import { useGlobalContext } from '@/app/gfys/context/store';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { IoIosUndo } from 'react-icons/io';
@@ -17,6 +23,8 @@ export default function NavButtons() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || e.key === 'j') {
         backRef.current?.click();
+      } else if (e.key === 'p') {
+        loopAllRef.current?.click();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -30,23 +38,42 @@ export default function NavButtons() {
       <NavButton direction='previous' />
       <NavButton direction='next' />
       {gfyViewData.videoIds.length > 1 && (
-        <Button
-          variant={loopAll ? 'default' : 'secondary'}
-          size={'icon'}
-          onClick={() => setLoopAll(!loopAll)}
-        >
-          <TfiLoop />
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={loopAll ? 'default' : 'secondary'}
+                ref={loopAllRef}
+                size={'icon'}
+                onClick={() => setLoopAll(!loopAll)}
+              >
+                <TfiLoop />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span>Loop all [p]</span>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
       {gfyViewData?.listUrl && (
-        <Button
-          variant='secondary'
-          size={'icon'}
-          ref={backRef}
-          onClick={() => router.replace(gfyViewData.listUrl)}
-        >
-          <IoIosUndo />
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='secondary'
+                size={'icon'}
+                ref={backRef}
+                onClick={() => router.replace(gfyViewData.listUrl)}
+              >
+                <IoIosUndo />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span>Back [Down Arrow] [j]</span>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </div>
   );
