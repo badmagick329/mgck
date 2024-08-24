@@ -23,7 +23,7 @@ export default function GfyPreview({
   width: number | null;
   height: number | null;
 }) {
-  const { gfyViewData, setGfyViewData } = useGlobalContext();
+  const { goToGfyAtIndex } = useGlobalContext();
 
   return (
     <TooltipProvider>
@@ -35,10 +35,7 @@ export default function GfyPreview({
                 pathname: `${GFYS_BASE}/${imgurId}`,
               }}
               onClick={() => {
-                setGfyViewData({
-                  ...gfyViewData,
-                  index,
-                });
+                goToGfyAtIndex(index);
               }}
             >
               <Image
@@ -58,7 +55,7 @@ export default function GfyPreview({
           <div className='flex flex-col gap-2'>
             <p className='max-w-[250px] break-words'>{title}</p>
             <div className='flex justify-center rounded-md p-2'>
-              <VideoComponent imgurId={imgurId} width={width} height={height} />
+              <VideoPreview imgurId={imgurId} width={width} height={height} />
             </div>
           </div>
         </TooltipContent>
@@ -67,7 +64,7 @@ export default function GfyPreview({
   );
 }
 
-function VideoComponent({
+function VideoPreview({
   imgurId,
   width,
   height,

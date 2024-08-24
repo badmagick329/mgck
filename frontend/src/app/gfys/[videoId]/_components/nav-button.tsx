@@ -1,6 +1,5 @@
 import { useGlobalContext } from '@/app/gfys/context/store';
 import { Button } from '@/components/ui/button';
-import { GFYS_BASE } from '@/lib/consts/urls';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ImArrowLeft, ImArrowRight } from 'react-icons/im';
@@ -11,7 +10,7 @@ export default function NavButton({
   direction: 'previous' | 'next';
 }) {
   const Icon = direction === 'previous' ? ImArrowLeft : ImArrowRight;
-  const { data, gfyViewData, setGfyViewData, updateDataFromURL } =
+  const { data, gfyViewData, goToGfyAtIndex, updateDataFromURL } =
     useGlobalContext();
   const leftRef = useRef<HTMLButtonElement>(null);
   const rightRef = useRef<HTMLButtonElement>(null);
@@ -52,24 +51,17 @@ export default function NavButton({
     return null;
   }
 
-  const getNextURL = () => {
-    return direction === 'next' && data.next ? data.next : null;
-  };
-  const getPrevURL = () => {
-    return direction === 'previous' && data.previous ? data.previous : null;
-  };
-
   const tryNewURL = () => {
     if (gfyViewData.index >= gfyViewData.videoIds.length - 1) {
-      return getNextURL();
-    } else if (gfyViewData.index <= 0) {
-      return getPrevURL();
+      return direction === 'next' && data.next ? data.next : null;
     }
+
+    if (gfyViewData.index <= 0) {
+      return direction === 'previous' && data.previous ? data.previous : null;
+    }
+
     return null;
   };
-
-  const navigationURL = () =>
-    `${GFYS_BASE}/${gfyViewData.videoIds[gfyViewData.index + offset]}`;
 
   return (
     <Button
@@ -80,35 +72,19 @@ export default function NavButton({
       onClick={(e) => {
         const newURL = tryNewURL();
         if (!newURL) {
-          setGfyViewData((old) => {
-            return {
-              ...old,
-              index: old.index + offset,
-            };
-          });
-          router.replace(navigationURL());
+          const newGfyURL = goToGfyAtIndex(gfyViewData.index + offset);
+          router.replace(newGfyURL);
           return;
         }
 
         (async () => {
           setDisabledButton(true);
-          const newData = await updateDataFromURL(newURL);
-          if (newData === null) {
-            // NOTE: This would only happen if the passed url had no params.
-            // This url would be coming from the server and should always have all params
-            console.error('No URL params found in passed URL');
-            setDisabledButton(false);
-            return;
-          }
+          const startIndex = direction === 'next' ? 0 : -1;
           try {
-            const videoIds = newData.gfys.map((gfy) => gfy.imgurId);
-            let newIndex = direction === 'next' ? 0 : videoIds.length - 1;
-            setGfyViewData((old) => ({
-              ...old,
-              index: newIndex,
-              videoIds,
-            }));
-            router.replace(`${GFYS_BASE}/${videoIds[newIndex]}`);
+            const newGfyURL = await updateDataFromURL(newURL, startIndex);
+            if (newGfyURL) {
+              router.replace(newGfyURL);
+            }
           } finally {
             setDisabledButton(false);
           }
