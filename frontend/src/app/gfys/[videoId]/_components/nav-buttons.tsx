@@ -3,12 +3,13 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { IoIosUndo } from 'react-icons/io';
+import { PiVideoCamera } from 'react-icons/pi';
 
 import NavButton from './nav-button';
 
 export default function NavButtons() {
   const backRef = useRef<HTMLButtonElement>(null);
-  const { gfyViewData } = useGlobalContext();
+  const { gfyViewData, slideshow, setSlideShow } = useGlobalContext();
   const router = useRouter();
 
   useEffect(() => {
@@ -27,11 +28,15 @@ export default function NavButtons() {
     <div className='flex justify-center gap-2'>
       <NavButton direction='previous' />
       <NavButton direction='next' />
-      {/* {gfyViewData.videoIds.length > 1 && (
-        <Button variant='secondary' size={'icon'}>
-          <BiSolidCamera />
+      {gfyViewData.videoIds.length > 1 && (
+        <Button
+          variant={slideshow ? 'default' : 'secondary'}
+          size={'icon'}
+          onClick={() => setSlideShow(!slideshow)}
+        >
+          <PiVideoCamera />
         </Button>
-      )} */}
+      )}
       {gfyViewData?.listUrl && (
         <Button
           variant='secondary'
