@@ -21,13 +21,13 @@ interface ContextProps {
   data: GfyParsedResponse;
   gfyViewData: GfyViewData;
   goToGfyAtIndex: (index: number) => string;
+  goToNextGfy: () => Promise<string | null>;
+  goToPreviousGfy: () => Promise<string | null>;
+  nextGfyExists: () => boolean;
+  previousGfyExists: () => boolean;
   videoVolume: number;
   setVideoVolume: Dispatch<SetStateAction<number>>;
   updateDataFromParams: (params: ReadonlyURLSearchParams) => Promise<void>;
-  updateDataFromURL: (
-    url: string,
-    startIndex: number
-  ) => Promise<string | null>;
   slideshow: boolean;
   setSlideShow: (value: boolean) => void;
 }
@@ -36,12 +36,13 @@ const GlobalContext = createContext<ContextProps>({
   data: {} as GfyParsedResponse,
   gfyViewData: {} as GfyViewData,
   goToGfyAtIndex: () => '',
+  goToNextGfy: async () => '',
+  goToPreviousGfy: async () => '',
+  nextGfyExists: () => false,
+  previousGfyExists: () => false,
   videoVolume: 0,
   setVideoVolume: () => {},
   updateDataFromParams: async (params) => {},
-  updateDataFromURL: async (url, startIndex) => {
-    return null;
-  },
   slideshow: false,
   setSlideShow: () => {},
 });
@@ -65,12 +66,13 @@ export const GlobalContextProvider = ({
   });
   const [volume, setVolume] = useState<number>(0);
   const [slideshow, setSlideShow] = useState<boolean>(false);
-  const goToGfyAtIndex = (index: number): string => {
-    setGfyViewData({
-      ...gfyViewData,
-      index,
-    });
-    return `${GFYS_BASE}/${gfyViewData.videoIds[index]}`;
+
+  const nextGfyExists = () => {
+    return !!(gfyViewData.index < gfyViewData.videoIds.length - 1 || data.next);
+  };
+
+  const previousGfyExists = () => {
+    return !!(gfyViewData.index > 0 || data.previous);
   };
 
   return (
@@ -78,14 +80,26 @@ export const GlobalContextProvider = ({
       value={{
         data,
         gfyViewData,
-        goToGfyAtIndex,
+        goToGfyAtIndex: (index) => {
+          return goToGfyAtIndex(index, gfyViewData, setGfyViewData);
+        },
+        goToNextGfy: async () => {
+          return await goToNextGfy(data, setData, gfyViewData, setGfyViewData);
+        },
+        goToPreviousGfy: async () => {
+          return await goToPreviousGfy(
+            data,
+            setData,
+            gfyViewData,
+            setGfyViewData
+          );
+        },
+        nextGfyExists,
+        previousGfyExists,
         videoVolume: volume,
         setVideoVolume: setVolume,
         updateDataFromParams: async (params) => {
           await setDataFromParams(params, setData, setGfyViewData);
-        },
-        updateDataFromURL: async (url, startIndex = 0) => {
-          return await setDataFromURL(url, setData, setGfyViewData, startIndex);
         },
         slideshow,
         setSlideShow,
@@ -139,4 +153,50 @@ const setDataFromURL = async (
   const newIndex = startIndex === 0 ? 0 : newData.gfys.length - 1;
   const newGfyURL = `${GFYS_BASE}/${newData.gfys[newIndex].imgurId}`;
   return newGfyURL;
+};
+
+const goToGfyAtIndex = (
+  index: number,
+  gfyViewData: GfyViewData,
+  setGfyViewData: Dispatch<SetStateAction<GfyViewData>>
+): string => {
+  setGfyViewData({
+    ...gfyViewData,
+    index,
+  });
+  return `${GFYS_BASE}/${gfyViewData.videoIds[index]}`;
+};
+
+const goToNextGfy = async (
+  data: GfyParsedResponse,
+  setData: Dispatch<SetStateAction<GfyParsedResponse>>,
+  gfyViewData: GfyViewData,
+  setGfyViewData: Dispatch<SetStateAction<GfyViewData>>
+) => {
+  if (gfyViewData.index < gfyViewData.videoIds.length - 1) {
+    return goToGfyAtIndex(gfyViewData.index + 1, gfyViewData, setGfyViewData);
+  }
+
+  if (data.next === null) {
+    return null;
+  }
+
+  return await setDataFromURL(data.next, setData, setGfyViewData, 0);
+};
+
+const goToPreviousGfy = async (
+  data: GfyParsedResponse,
+  setData: Dispatch<SetStateAction<GfyParsedResponse>>,
+  gfyViewData: GfyViewData,
+  setGfyViewData: Dispatch<SetStateAction<GfyViewData>>
+) => {
+  if (gfyViewData.index > 0) {
+    return goToGfyAtIndex(gfyViewData.index - 1, gfyViewData, setGfyViewData);
+  }
+
+  if (data.previous === null) {
+    return null;
+  }
+
+  return await setDataFromURL(data.previous, setData, setGfyViewData, -1);
 };
