@@ -76,18 +76,19 @@ export function formDataFromSearchParams(
   searchParams: ReadonlyURLSearchParams | URLSearchParams
 ) {
   const formData = new FormData();
-  const titleParam = (searchParams.get('title') || '') as string;
-  const tagsParam = (searchParams.get('tags') || '') as string;
+  const someOrEmptyStringParams = [
+    'title',
+    'tags',
+    'account',
+    'start_date',
+    'end_date',
+  ];
+  for (const param of someOrEmptyStringParams) {
+    const value = searchParams.get(param) || '';
+    formData.append(param, value);
+  }
   const pageParam = (searchParams.get('page') || '1') as string;
-  const accountParam = (searchParams.get('account') || '') as string;
-  const startDateParam = (searchParams.get('start_date') || '') as string;
-  const endDateParam = (searchParams.get('end_date') || '') as string;
-  formData.append('title', titleParam);
-  formData.append('tags', tagsParam);
   formData.append('page', pageParam);
-  formData.append('account', accountParam);
-  formData.append('start_date', startDateParam);
-  formData.append('end_date', endDateParam);
   return formData;
 }
 
