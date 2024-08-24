@@ -1,29 +1,21 @@
-"use client";
-import { useGlobalContext } from "@/app/gfys/context/store";
-import { searchGfys } from "@/actions/gfys";
-import { parseGfyResponse } from "@/lib/utils/gfys";
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import {
-  cleanedSearchParams,
-  createURL,
-  formDataFromSearchParams,
-} from "@/lib/utils/gfys";
-import GfyPreview from "./gfy-preview";
-import { GFYS_BASE } from "@/lib/consts/urls";
+'use client';
+
+import { useGlobalContext } from '@/app/gfys/context/store';
+import { GFYS_BASE } from '@/lib/consts/urls';
+import { cleanedSearchParams, createURL } from '@/lib/utils/gfys';
+import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+
+import GfyPreview from './gfy-preview';
 
 export default function GfyList() {
-  const { data, setData, setGfyViewData } = useGlobalContext();
+  const { data, setGfyViewData, updateDataFromParams } = useGlobalContext();
   const searchParams = useSearchParams();
 
-  const fetchData = async () => {
-    const resp = await searchGfys(formDataFromSearchParams(searchParams));
-    const d = parseGfyResponse(resp);
-    setData(d);
-  };
-
   useEffect(() => {
-    fetchData();
+    (async () => {
+      await updateDataFromParams(searchParams);
+    })();
   }, [searchParams]);
 
   useEffect(() => {
@@ -37,9 +29,16 @@ export default function GfyList() {
   }, [data]);
 
   return (
-    <div className="flex w-full flex-wrap justify-center gap-2 overflow-hidden py-2 lg:w-2/3">
+    <div className='flex w-full flex-wrap justify-center gap-2 overflow-hidden py-2 lg:w-2/3'>
       {data.gfys.map((d, key) => (
-        <GfyPreview key={key} title={d.title} imgurId={d.imgurId} index={key} width={d.width} height={d.height} />
+        <GfyPreview
+          key={key}
+          title={d.title}
+          imgurId={d.imgurId}
+          index={key}
+          width={d.width}
+          height={d.height}
+        />
       ))}
     </div>
   );

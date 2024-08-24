@@ -1,12 +1,12 @@
-import { createURL } from "@/lib/utils/gfys";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+import { createURL } from '@/lib/utils/gfys';
+import Link from 'next/link';
 import {
   ImArrowLeft,
   ImArrowRight,
   ImBackward2,
   ImForward3,
-} from "react-icons/im";
+} from 'react-icons/im';
 
 type IconType =
   | typeof ImArrowLeft
@@ -25,7 +25,7 @@ type NavButtonProps = {
   pathname: string;
 };
 
-type NavType = "first" | "previous" | "next" | "last";
+type NavType = 'first' | 'previous' | 'next' | 'last';
 export default function NavButton({
   url,
   nextURL,
@@ -43,21 +43,21 @@ export default function NavButton({
 
   let Icon: IconType = ImBackward2;
   let ref: React.RefObject<HTMLAnchorElement> | null = null;
-  let asPage = "";
+  let asPage = null;
   switch (navType) {
-    case "first":
+    case 'first':
       Icon = ImBackward2;
-      asPage = "1";
+      asPage = '1';
       break;
-    case "previous":
+    case 'previous':
       Icon = ImArrowLeft;
       ref = leftRef;
       break;
-    case "next":
+    case 'next':
       Icon = ImArrowRight;
       ref = rightRef;
       break;
-    case "last":
+    case 'last':
       Icon = ImForward3;
       asPage = totalPages.toString();
       break;
@@ -65,15 +65,15 @@ export default function NavButton({
 
   if (url) {
     return (
-      <Link ref={ref} href={createURL(pathname, url.split("?")[1], asPage)}>
-        <Button variant="secondary">
+      <Link ref={ref} href={createURL(pathname, url.split('?')[1], asPage)}>
+        <Button variant='secondary'>
           <Icon />
         </Button>
       </Link>
     );
   }
   return (
-    <Button variant="secondary" disabled>
+    <Button variant='secondary' disabled>
       <Icon />
     </Button>
   );
