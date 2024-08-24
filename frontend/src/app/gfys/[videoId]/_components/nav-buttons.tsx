@@ -51,7 +51,7 @@ export default function NavButtons() {
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <span>Loop all [p]</span>
+              <span>Loo[p] all</span>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

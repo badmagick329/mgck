@@ -51,7 +51,7 @@ function ShareButton({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isImgur && e.key === 'i') {
         ref.current?.click();
-      } else if (!isImgur && e.key === 'h') {
+      } else if (!isImgur && e.key === 'q') {
         ref.current?.click();
       }
     };
@@ -78,7 +78,13 @@ function ShareButton({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <span>Copy HQ Link [h]</span>
+          (isImgur ? (
+          <span>Copy [i]mgur Link</span>
+
+          ):(
+
+          <span>Copy H[q] Link</span>
+          ))
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
