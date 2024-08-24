@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
-  const { videoVolume, setVideoVolume, goToNextGfy, nextGfyExists, slideshow } =
+  const { videoVolume, setVideoVolume, goToNextGfy, data, loopAll } =
     useGlobalContext();
   const [videoLoading, setVideoLoading] = useState<boolean>(true);
   const [videoDuration, setVideoDuration] = useState<number>(0);
@@ -40,9 +40,9 @@ export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
         setVideoDuration(e.currentTarget.duration);
       }}
       onEnded={(e) => {
-        if (slideshow && nextGfyExists()) {
+        if (loopAll && data.gfys.length > 1) {
           (async () => {
-            const newGfyURL = await goToNextGfy();
+            const newGfyURL = await goToNextGfy(true);
             if (newGfyURL) {
               router.replace(newGfyURL);
             }
@@ -51,7 +51,7 @@ export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
       }}
       controls
       autoPlay
-      loop={!slideshow}
+      loop={!loopAll}
       {...(videoVolume === 0 ? { muted: true } : {})}
     >
       <source src={videoUrl} type='video/mp4' />

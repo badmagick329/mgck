@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { IoIosUndo } from 'react-icons/io';
-import { PiVideoCamera } from 'react-icons/pi';
+import { TfiLoop } from 'react-icons/tfi';
 
 import NavButton from './nav-button';
 
 export default function NavButtons() {
   const backRef = useRef<HTMLButtonElement>(null);
-  const { gfyViewData, slideshow, setSlideShow } = useGlobalContext();
+  const loopAllRef = useRef<HTMLButtonElement>(null);
+  const { gfyViewData, loopAll, setLoopAll } = useGlobalContext();
   const router = useRouter();
 
   useEffect(() => {
@@ -30,11 +31,11 @@ export default function NavButtons() {
       <NavButton direction='next' />
       {gfyViewData.videoIds.length > 1 && (
         <Button
-          variant={slideshow ? 'default' : 'secondary'}
+          variant={loopAll ? 'default' : 'secondary'}
           size={'icon'}
-          onClick={() => setSlideShow(!slideshow)}
+          onClick={() => setLoopAll(!loopAll)}
         >
-          <PiVideoCamera />
+          <TfiLoop />
         </Button>
       )}
       {gfyViewData?.listUrl && (
