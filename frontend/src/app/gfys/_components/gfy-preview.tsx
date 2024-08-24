@@ -34,9 +34,7 @@ export default function GfyPreview({
               href={{
                 pathname: `${GFYS_BASE}/${imgurId}`,
               }}
-              onClick={() => {
-                goToGfyAtIndex(index);
-              }}
+              onClick={() => goToGfyAtIndex(index)}
             >
               <Image
                 className='rounded-md object-cover hover:cursor-pointer hover:ring-2

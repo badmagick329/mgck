@@ -1,5 +1,11 @@
 import { useGlobalContext } from '@/app/gfys/context/store';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ImArrowLeft, ImArrowRight } from 'react-icons/im';
@@ -42,32 +48,48 @@ export default function NavButton({
     return null;
   }
 
+  let tooltipText = '';
+  if (direction === 'next') {
+    tooltipText = 'Next [Right Arrow] [l]';
+  } else {
+    tooltipText = 'Previous [Left Arrow] [h]';
+  }
+
   return (
-    <Button
-      disabled={disabledButton}
-      variant='secondary'
-      size={'icon'}
-      ref={direction === 'previous' ? leftRef : rightRef}
-      onClick={(e) => {
-        (async () => {
-          try {
-            setDisabledButton(true);
-            let newGfyURL;
-            if (direction === 'next') {
-              newGfyURL = await goToNextGfy();
-            } else {
-              newGfyURL = await goToPreviousGfy();
-            }
-            if (newGfyURL) {
-              router.replace(newGfyURL);
-            }
-          } finally {
-            setDisabledButton(false);
-          }
-        })();
-      }}
-    >
-      <Icon />
-    </Button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            disabled={disabledButton}
+            variant='secondary'
+            size={'icon'}
+            ref={direction === 'previous' ? leftRef : rightRef}
+            onClick={(e) => {
+              (async () => {
+                try {
+                  setDisabledButton(true);
+                  let newGfyURL;
+                  if (direction === 'next') {
+                    newGfyURL = await goToNextGfy();
+                  } else {
+                    newGfyURL = await goToPreviousGfy();
+                  }
+                  if (newGfyURL) {
+                    router.replace(newGfyURL);
+                  }
+                } finally {
+                  setDisabledButton(false);
+                }
+              })();
+            }}
+          >
+            <Icon />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <span>{tooltipText}</span>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
