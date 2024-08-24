@@ -21,30 +21,30 @@ interface ContextProps {
   data: GfyParsedResponse;
   gfyViewData: GfyViewData;
   goToGfyAtIndex: (index: number) => string;
-  goToNextGfy: () => Promise<string | null>;
-  goToPreviousGfy: () => Promise<string | null>;
+  goToNextGfy: (loop?: boolean) => Promise<string | null>;
+  goToPreviousGfy: (loop?: boolean) => Promise<string | null>;
   nextGfyExists: () => boolean;
   previousGfyExists: () => boolean;
   videoVolume: number;
   setVideoVolume: Dispatch<SetStateAction<number>>;
   updateDataFromParams: (params: ReadonlyURLSearchParams) => Promise<void>;
-  slideshow: boolean;
-  setSlideShow: (value: boolean) => void;
+  loopAll: boolean;
+  setLoopAll: (value: boolean) => void;
 }
 
 const GlobalContext = createContext<ContextProps>({
   data: {} as GfyParsedResponse,
   gfyViewData: {} as GfyViewData,
   goToGfyAtIndex: () => '',
-  goToNextGfy: async () => '',
-  goToPreviousGfy: async () => '',
+  goToNextGfy: async (loop = false) => '',
+  goToPreviousGfy: async (loop = false) => '',
   nextGfyExists: () => false,
   previousGfyExists: () => false,
   videoVolume: 0,
   setVideoVolume: () => {},
   updateDataFromParams: async (params) => {},
-  slideshow: false,
-  setSlideShow: () => {},
+  loopAll: false,
+  setLoopAll: () => {},
 });
 
 export const GlobalContextProvider = ({
@@ -65,7 +65,7 @@ export const GlobalContextProvider = ({
     listUrl: '',
   });
   const [volume, setVolume] = useState<number>(0);
-  const [slideshow, setSlideShow] = useState<boolean>(false);
+  const [loopAll, setLoopAll] = useState<boolean>(false);
 
   const nextGfyExists = () => {
     return !!(gfyViewData.index < gfyViewData.videoIds.length - 1 || data.next);
@@ -83,15 +83,22 @@ export const GlobalContextProvider = ({
         goToGfyAtIndex: (index) => {
           return goToGfyAtIndex(index, gfyViewData, setGfyViewData);
         },
-        goToNextGfy: async () => {
-          return await goToNextGfy(data, setData, gfyViewData, setGfyViewData);
+        goToNextGfy: async (loop = false) => {
+          return await goToNextGfy(
+            data,
+            setData,
+            gfyViewData,
+            setGfyViewData,
+            loop
+          );
         },
-        goToPreviousGfy: async () => {
+        goToPreviousGfy: async (loop = false) => {
           return await goToPreviousGfy(
             data,
             setData,
             gfyViewData,
-            setGfyViewData
+            setGfyViewData,
+            loop
           );
         },
         nextGfyExists,
@@ -101,8 +108,8 @@ export const GlobalContextProvider = ({
         updateDataFromParams: async (params) => {
           await setDataFromParams(params, setData, setGfyViewData);
         },
-        slideshow,
-        setSlideShow,
+        loopAll,
+        setLoopAll,
       }}
     >
       {children}
@@ -171,13 +178,24 @@ const goToNextGfy = async (
   data: GfyParsedResponse,
   setData: Dispatch<SetStateAction<GfyParsedResponse>>,
   gfyViewData: GfyViewData,
-  setGfyViewData: Dispatch<SetStateAction<GfyViewData>>
+  setGfyViewData: Dispatch<SetStateAction<GfyViewData>>,
+  loop = false
 ) => {
   if (gfyViewData.index < gfyViewData.videoIds.length - 1) {
     return goToGfyAtIndex(gfyViewData.index + 1, gfyViewData, setGfyViewData);
   }
 
   if (data.next === null) {
+    if (data.previous && loop) {
+      const params = new URLSearchParams(data.previous.split('?')[1]);
+      params.set('page', '1');
+      const newData = await setDataFromParams(
+        new ReadonlyURLSearchParams(params),
+        setData,
+        setGfyViewData
+      );
+      return `${GFYS_BASE}/${newData.gfys[0].imgurId}`;
+    }
     return null;
   }
 
@@ -188,13 +206,24 @@ const goToPreviousGfy = async (
   data: GfyParsedResponse,
   setData: Dispatch<SetStateAction<GfyParsedResponse>>,
   gfyViewData: GfyViewData,
-  setGfyViewData: Dispatch<SetStateAction<GfyViewData>>
+  setGfyViewData: Dispatch<SetStateAction<GfyViewData>>,
+  loop = false
 ) => {
   if (gfyViewData.index > 0) {
     return goToGfyAtIndex(gfyViewData.index - 1, gfyViewData, setGfyViewData);
   }
 
   if (data.previous === null) {
+    if (data.next && loop) {
+      const params = new URLSearchParams(data.next.split('?')[1]);
+      params.set('page', data.totalPages.toString());
+      const newData = await setDataFromParams(
+        new ReadonlyURLSearchParams(params),
+        setData,
+        setGfyViewData
+      );
+      return `${GFYS_BASE}/${newData.gfys[newData.gfys.length - 1].imgurId}`;
+    }
     return null;
   }
 
