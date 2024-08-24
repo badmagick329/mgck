@@ -17,7 +17,7 @@ export default function MobileView({
       <div className='flex h-4/5 w-full flex-col justify-center'>
         <GfyPlayer videoUrl={gfyDetail.video_url} />
       </div>
-      <div className='h-1/7 flex w-full flex-col justify-center'>
+      <div className='flex h-1/5 w-full flex-col justify-center pb-4'>
         <div className='flex justify-center gap-2'>
           <ShareButtons
             imgurId={gfyDetail.imgur_id}
