@@ -185,21 +185,22 @@ const goToNextGfy = async (
     return goToGfyAtIndex(gfyViewData.index + 1, gfyViewData, setGfyViewData);
   }
 
-  if (data.next === null) {
-    if (data.previous && loop) {
-      const params = new URLSearchParams(data.previous.split('?')[1]);
-      params.set('page', '1');
-      const newData = await setDataFromParams(
-        new ReadonlyURLSearchParams(params),
-        setData,
-        setGfyViewData
-      );
-      return `${GFYS_BASE}/${newData.gfys[0].imgurId}`;
-    }
-    return null;
+  if (data.next !== null) {
+    return await setDataFromURL(data.next, setData, setGfyViewData, 0);
   }
 
-  return await setDataFromURL(data.next, setData, setGfyViewData, 0);
+  if (data.previous && loop) {
+    const params = new URLSearchParams(data.previous.split('?')[1]);
+    params.set('page', '1');
+    const newData = await setDataFromParams(
+      new ReadonlyURLSearchParams(params),
+      setData,
+      setGfyViewData
+    );
+    return `${GFYS_BASE}/${newData.gfys[0].imgurId}`;
+  }
+
+  return null;
 };
 
 const goToPreviousGfy = async (
