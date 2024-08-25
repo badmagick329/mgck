@@ -78,13 +78,11 @@ function ShareButton({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          (isImgur ? (
-          <span>Copy [i]mgur Link</span>
-
-          ):(
-
-          <span>Copy H[q] Link</span>
-          ))
+          {isImgur ? (
+            <span>Copy [i]mgur Link</span>
+          ) : (
+            <span>Copy H[q] Link</span>
+          )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
