@@ -38,15 +38,15 @@ export default function AdditionalGfyDetails({
             );
           })}
         </div>
-      </div>
-      {gfyDetail.date && (
+        {gfyDetail.date && (
+          <span className='text-sm lg:text-base xl:text-xl'>
+            <strong>Date:</strong> {gfyDetail.date}
+          </span>
+        )}
         <span className='text-sm lg:text-base xl:text-xl'>
-          <strong>Date:</strong> {gfyDetail.date}
+          <strong>Account:</strong> {gfyDetail.account}
         </span>
-      )}
-      <span className='text-sm lg:text-base xl:text-xl'>
-        <strong>Account:</strong> {gfyDetail.account}
-      </span>
+      </div>
     </>
   );
 }
