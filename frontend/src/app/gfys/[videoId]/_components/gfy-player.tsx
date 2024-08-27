@@ -1,6 +1,5 @@
 import { addGfyView } from '@/actions/gfys';
 import { useGlobalContext } from '@/app/gfys/context/store';
-import useWindowSize from '@/hooks/use-window-resize';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -12,14 +11,12 @@ export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [viewed, setViewed] = useState<boolean>(false);
   const router = useRouter();
-  const { isDesktopOrLandscape } = useWindowSize();
 
   return (
     <video
       className={cn(
         videoLoading ? 'hidden' : 'block',
-        isDesktopOrLandscape ? 'h-full' : 'max-h-[90%]',
-        'my-auto'
+        'mdp:h-full my-auto max-h-[90%]'
       )}
       onLoadedData={(e) => {
         setVideoLoading(false);

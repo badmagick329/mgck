@@ -4,7 +4,6 @@ const MOBILE_BREAKPOINT = 950;
 
 export default function useWindowSize() {
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [isDesktopOrLandscape, setIsDesktopOrLandscape] = useState(false);
 
   useEffect(() => {
     function handleResize() {
@@ -15,11 +14,5 @@ export default function useWindowSize() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    setIsDesktopOrLandscape(
-      size.width > MOBILE_BREAKPOINT && size.height < size.width
-    );
-  }, [size]);
-
-  return { size, isDesktopOrLandscape };
+  return { size };
 }
