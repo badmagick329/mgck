@@ -6,7 +6,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
-RUN CIRCLE_NODE_TOTAL=8 corepack enable pnpm && pnpm i --frozen-lockfile
+RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 
 # Rebuild the source code only when needed
@@ -17,7 +17,7 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN CIRCLE_NODE_TOTAL=8 corepack enable pnpm && pnpm run build
+RUN corepack enable pnpm && pnpm run build
 
 # Production image, copy all the files and run next
 FROM base AS deploy
