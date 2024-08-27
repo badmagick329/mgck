@@ -18,7 +18,7 @@ export default function DiscordGifsPage() {
             </p>
             <p>
               🫣 Video for a sticker <span className='font-bold'>has</span> to
-              be <span className='font-semibold'>7 seconds or less</span>
+              be <span className='font-semibold'>5 seconds or less</span>
             </p>
             <p>
               🎞️ Video should be{' '}
