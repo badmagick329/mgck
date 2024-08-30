@@ -16,7 +16,7 @@ export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
     <video
       className={cn(
         videoLoading ? 'hidden' : 'block',
-        'my-auto max-h-[90%] sm:max-h-full'
+        'my-auto max-h-[90%] w-full sm:max-h-full'
       )}
       onLoadedData={(e) => {
         setVideoLoading(false);
