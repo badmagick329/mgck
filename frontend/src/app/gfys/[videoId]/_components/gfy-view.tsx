@@ -31,8 +31,8 @@ export default function GfyView(props: Props) {
       <div className='flex h-4/5 w-full items-center justify-center sm:h-full sm:w-4/5'>
         <GfyPlayer videoUrl={gfyDetail.video_url} />
       </div>
-      <div className='mdp:justify-between flex justify-center p-2 sm:flex-col sm:justify-end'>
-        <div className='mdp:block hidden'>
+      <div className='flex justify-center p-2 sm:w-1/5 sm:flex-col sm:justify-end mdp:justify-between'>
+        <div className='hidden mdp:block'>
           <AdditionalGfyDetails gfyDetail={gfyDetail} />
         </div>
         <div className='flex flex-col gap-2'>
