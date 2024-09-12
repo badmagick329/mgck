@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { KPOP_BASE } from '@/lib/consts/urls';
 import Image from 'next/image';
-import Link from 'next/link';
 
 import HamsterImage from '../../../public/images/hamster.png';
 
