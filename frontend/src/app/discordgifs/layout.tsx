@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Create emotes and stickers',
   description:
-    'Use your video clips to make discord emotes and stickers that fit the size limits.',
+    "Create emotes and stickers for Discord from your video clips, complying with Discord's size limits.",
   keywords: [
     'discord',
     'emotes',

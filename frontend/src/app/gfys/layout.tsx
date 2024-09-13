@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Red Velvet Gfy Archive',
-  description: 'Browse Red Velvet Gfys now moved to Imgur.',
+  description: 'Browse Gfys of the famous Kpop girl group Red Velvet from Imgur.',
 };
 
 export default function RootLayout({
