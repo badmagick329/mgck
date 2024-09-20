@@ -24,13 +24,24 @@ export default function EmojifyButtons({
 
   return (
     <>
-      <Button onClick={() => setOutput(emojifyText(messageInput, emojisInput))}>
+      <Button
+        className='bg-primary-em/70 hover:bg-primary-em'
+        onClick={() => setOutput(emojifyText(messageInput, emojisInput))}
+      >
         Regenerate
       </Button>
-      <Button onClick={() => setEmojisInput(DEFAULT_EMOJIS.join(' '))}>
+      <Button
+        className='bg-primary-em/70 hover:bg-primary-em'
+        onClick={() => setEmojisInput(DEFAULT_EMOJIS.join(' '))}
+      >
         Reset
       </Button>
-      <Button onClick={() => handleCopy(output, toast)}>Copy</Button>
+      <Button
+        className='bg-primary-em/70 hover:bg-primary-em'
+        onClick={() => handleCopy(output, toast)}
+      >
+        Copy
+      </Button>
     </>
   );
 }

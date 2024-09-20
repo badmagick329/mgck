@@ -7,6 +7,7 @@
     --background: 0 0% 95%;
     --background-dg: 0 0% 85%;
     --background-em: 140 100% 95%;
+    --background-em-dark: 190 100% 2.5%;
     --background-kp: 220 100% 95.5%;
     --background-gf: 10 100% 90.5%;
     --foreground: 224 71.4% 4.1%;
@@ -51,6 +52,7 @@
     --background: 224 71.4% 4.1%;
     --background-dg: 0 0% 3%;
     --background-em: 190 100% 5.5%;
+    --background-em-dark: 190 100% 2.5%;
     --background-kp: 220 100% 5.5%;
     --background-gf: 10 100% 5.5%;
     --foreground: 210 20% 98%;
