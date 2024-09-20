@@ -1,4 +1,4 @@
-import { Input } from "@/components/ui/input";
+import { Input } from '@/components/ui/input';
 
 type EmojisFieldProps = {
   emojisInput: string;
@@ -12,10 +12,10 @@ export default function EmojisField({
   return (
     <>
       <Input
-        className="rounded-md bg-gray-300 p-2 dark:bg-gray-800"
+        className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md'
         onChange={(e) => setEmojisInput(e.target.value.slice(0, 1000))}
         value={emojisInput}
-        placeholder="Enter emojis (or words) separated by spaces"
+        placeholder='Enter emojis (or words) separated by spaces'
       />
       <span>
         Emojis will be picked from the above list at random. You can edit it and

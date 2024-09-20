@@ -1,6 +1,7 @@
-import { emojifyText } from "@/lib/utils";
-import { useState, useMemo } from "react";
-import EmojifyButtons from "./emojify-buttons";
+import { emojifyText } from '@/lib/utils';
+import { useMemo, useState } from 'react';
+
+import EmojifyButtons from './emojify-buttons';
 
 type OutputFieldProps = {
   messageInput: string;
@@ -13,7 +14,7 @@ export default function OutputField({
   emojisInput,
   setEmojisInput,
 }: OutputFieldProps) {
-  const [output, setOutput] = useState<string>("");
+  const [output, setOutput] = useState<string>('');
 
   useMemo(() => {
     setOutput(emojifyText(messageInput, emojisInput));
@@ -21,7 +22,7 @@ export default function OutputField({
 
   return (
     <>
-      <div className="flex justify-between">
+      <div className='flex justify-between'>
         <EmojifyButtons
           messageInput={messageInput}
           emojisInput={emojisInput}
@@ -30,7 +31,9 @@ export default function OutputField({
           output={output}
         />
       </div>
-      <span className="rounded-md border-2 p-2">{output}</span>
+      <span className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md border-2 p-2'>
+        {output}
+      </span>
     </>
   );
 }

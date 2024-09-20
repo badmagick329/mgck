@@ -1,4 +1,4 @@
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from '@/components/ui/textarea';
 
 type MessageFieldProps = {
   messageInput: string;
@@ -11,9 +11,9 @@ export default function MessageField({
 }: MessageFieldProps) {
   return (
     <Textarea
-      className="rounded-md bg-gray-300 p-2 dark:bg-gray-800"
+      className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md p-2'
       onChange={(e) => setMessageInput(e.target.value)}
-      placeholder="Enter your message here"
+      placeholder='Enter your message here'
       value={messageInput}
     />
   );

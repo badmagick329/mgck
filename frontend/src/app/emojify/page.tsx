@@ -29,9 +29,9 @@ export default function EmojifyPage() {
   }, []);
 
   return (
-    <main className='flex min-h-screen w-full flex-col px-2'>
+    <main className='bg-background-em flex min-h-dvh flex-col'>
       <Navbar />
-      <div className='flex flex-grow flex-col items-center justify-center'>
+      <div className='grid grow place-content-center place-items-center px-2'>
         <div className='flex w-full max-w-[800px] flex-col gap-4'>
           <span className='flex justify-center text-2xl'>{headerMessage}</span>
           <MessageField
