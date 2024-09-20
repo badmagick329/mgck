@@ -46,7 +46,7 @@ export default function AccountSelector({
           variant='outline'
           role='combobox'
           aria-expanded={open}
-          className={`${FIELD_WIDTH} bg-background-gf-dark/15 dark:bg-background-gf-dark justify-between`}
+          className={`${FIELD_WIDTH} bg-background-gf-dark/15 hover:bg-background-gf-dark/15 dark:bg-background-gf-dark justify-between border-2 border-black/60 dark:border-white/60`}
         >
           {selectedAccount
             ? accounts.find((s) => s === selectedAccount)
