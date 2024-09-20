@@ -1,6 +1,6 @@
 'use client';
 
-import { ThemeToggler } from '@/components/theme-toggler';
+import Navbar from '@/components/navbar';
 import useChoicesState from '@/hooks/use-choices-state';
 
 import ChartOutput from './_components/chart-output';
@@ -27,9 +27,7 @@ export default function ChoosePage() {
 
   return (
     <main className='flex min-h-screen w-full flex-col'>
-      <div className='self-end p-2'>
-        <ThemeToggler />
-      </div>
+      <Navbar />
       <div className='flex w-full justify-center px-2'>
         <div className='flex w-full max-w-[800px] flex-col items-center'>
           <Criteria

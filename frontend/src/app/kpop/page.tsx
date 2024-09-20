@@ -1,8 +1,8 @@
 'use client';
 
 import { fetchComebacks } from '@/actions/kpop';
+import Navbar from '@/components/navbar';
 import ScrollIndicator from '@/components/scroll-indicator';
-import { ThemeToggler } from '@/components/theme-toggler';
 import { ComebackResponse, ComebacksResult, ServerError } from '@/lib/types';
 import { searchParamsToFormData } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
@@ -45,9 +45,7 @@ export default function KpopPage() {
   return (
     <main className='flex min-h-screen flex-col items-center gap-4'>
       <ScrollIndicator colorValue='hsl(224,80%,50%)' />
-      <div className='flex w-full justify-end px-2 pt-2'>
-        <ThemeToggler />
-      </div>
+      <Navbar />
       <h2 className='text-2xl font-semibold'>Upcoming Comebacks</h2>
       <ComebacksForm totalPages={comebacksResult.total_pages} />
       <div className='flex flex-col items-center gap-4 pt-4'>
