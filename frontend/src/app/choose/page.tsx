@@ -26,7 +26,7 @@ export default function ChoosePage() {
   } = useChoicesState();
 
   return (
-    <main className='flex min-h-screen w-full flex-col'>
+    <main className='flex min-h-dvh w-full flex-col'>
       <Navbar />
       <div className='flex w-full justify-center px-2'>
         <div className='flex w-full max-w-[800px] flex-col items-center'>
