@@ -5,13 +5,14 @@
 @layer base {
   :root {
     --background: 0 0% 95%;
-    --background-dg: 0 0% 85%;
-    --background-em: 140 100% 95%;
+    --background-dg: 250 50% 85%;
+    --background-em: 280 100% 95%;
     --background-em-dark: 190 100% 2.5%;
     --background-kp: 220 100% 95.5%;
     --background-gf: 10 100% 90.5%;
     --background-gf-dark: 10 100% 2.5%;
     --foreground: 224 71.4% 4.1%;
+    --foreground-dg: 224 71.4% 4.1%;
     --background-light: 0 0% 80%;
 
     --card: 0 0% 100%;
@@ -30,7 +31,7 @@
     --primary-gf-foreground: 220.9 39.3% 5%;
 
     --secondary: 220 14.3% 95.9%;
-    --secondary-dg: 0 0% 10%;
+    --secondary-dg: 250 50% 95%;
     --secondary-foreground: 220.9 39.3% 11%;
     --secondary-dg-foreground: 210 20% 98%;
 
