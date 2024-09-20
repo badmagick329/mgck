@@ -1,6 +1,6 @@
 'use client';
 
-import { ThemeToggler } from '@/components/theme-toggler';
+import Navbar from '@/components/navbar';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { DEFAULT_EMOJIS } from '@/lib/consts';
 import { emojifyText } from '@/lib/utils';
@@ -30,9 +30,7 @@ export default function EmojifyPage() {
 
   return (
     <main className='flex min-h-screen w-full flex-col px-2'>
-      <div className='self-end p-2'>
-        <ThemeToggler />
-      </div>
+      <Navbar />
       <div className='flex flex-grow flex-col items-center justify-center'>
         <div className='flex w-full max-w-[800px] flex-col gap-4'>
           <span className='flex justify-center text-2xl'>{headerMessage}</span>

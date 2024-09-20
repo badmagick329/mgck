@@ -1,4 +1,4 @@
-import { ThemeToggler } from '@/components/theme-toggler';
+import Navbar from '@/components/navbar';
 import { GFYS_BASE } from '@/lib/consts/urls';
 import { GfyDetailResponse } from '@/lib/types';
 import Link from 'next/link';
@@ -11,9 +11,7 @@ export default function AdditionalGfyDetails({
   return (
     <>
       <div className='flex justify-end'>
-        <div className='px-4'>
-          <ThemeToggler />
-        </div>
+        <Navbar />
       </div>
       <span className='break-words text-sm lg:text-base xl:text-xl'>
         {gfyDetail.title}
