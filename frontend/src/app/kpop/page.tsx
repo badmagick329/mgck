@@ -43,7 +43,7 @@ export default function KpopPage() {
   }
 
   return (
-    <main className='flex min-h-screen flex-col items-center gap-4'>
+    <main className='bg-background-kp flex min-h-screen flex-col items-center gap-4'>
       <ScrollIndicator colorValue='hsl(224,80%,50%)' />
       <Navbar />
       <h2 className='text-2xl font-semibold'>Upcoming Comebacks</h2>
