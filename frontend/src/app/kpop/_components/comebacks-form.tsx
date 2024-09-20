@@ -90,7 +90,7 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
           <Input
             type='checkbox'
             name='exact'
-            className='h-5 w-5'
+            className='h-5 w-5 border-2'
             defaultChecked={defaultFormData.get('exact') === 'on'}
             onChange={toggleExactSearch(
               debounce,
@@ -101,13 +101,24 @@ export default function ComebacksForm({ totalPages }: { totalPages: number }) {
           <label className='pl-2'>Exact Match</label>
         </div>
         <div className='flex justify-between gap-2'>
-          <Button onClick={onRecentClick(formDataToURLState, searchParams)}>
+          <Button
+            className='bg-primary-kp/80 hover:bg-primary-kp'
+            onClick={onRecentClick(formDataToURLState, searchParams)}
+          >
             Recent
           </Button>
-          <Button onClick={onTodayClick(formDataToURLState, searchParams)}>
+          <Button
+            className='bg-primary-kp/80 hover:bg-primary-kp'
+            onClick={onTodayClick(formDataToURLState, searchParams)}
+          >
             Today
           </Button>
-          <Button onClick={onClearClick(clearURLState)}>Clear</Button>
+          <Button
+            className='bg-primary-kp/80 hover:bg-primary-kp'
+            onClick={onClearClick(clearURLState)}
+          >
+            Clear
+          </Button>
         </div>
       </div>
     </form>

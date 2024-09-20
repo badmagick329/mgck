@@ -13,6 +13,7 @@ export default function ComebackFormInput({
 }) {
   return (
     <Input
+      className='border-primary-kp/50 border-2'
       name={name}
       placeholder={placeholder}
       autoComplete='off'
