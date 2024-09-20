@@ -6,6 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ImArrowLeft, ImArrowRight } from 'react-icons/im';
@@ -61,6 +62,9 @@ export default function NavButton({
         <TooltipTrigger asChild>
           <Button
             disabled={disabledButton}
+            className={cn(
+              'text-bold bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+            )}
             variant='secondary'
             size={'icon'}
             ref={direction === 'previous' ? leftRef : rightRef}

@@ -1,14 +1,17 @@
 import Navbar from '@/components/navbar';
 
-import Gfys from './_components/gfys-comp';
+import GfyList from './_components/gfy-list';
+import SearchForm from './_components/search-form';
+import SearchNavigation from './_components/search-navigation';
 
 export default function Home() {
   return (
-    <main className='flex min-h-screen flex-col items-center'>
+    <main className='bg-background-gf dark:bg-background-gf-dark flex min-h-dvh flex-col items-center'>
       <Navbar />
-      <div className='py-4'></div>
-      <div className='h-full w-full'>
-        <Gfys />
+      <div className='flex w-full grow flex-col items-center px-10 py-4'>
+        <SearchForm />
+        <GfyList />
+        <SearchNavigation onClient={false} />
       </div>
     </main>
   );

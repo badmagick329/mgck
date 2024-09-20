@@ -28,7 +28,7 @@ export default function AdditionalGfyDetails({
                 }}
               >
                 <div className='my-2'>
-                  <span className='hover:cursor rounded-lg border-2 bg-gray-400 py-1 text-sm text-black dark:bg-gray-800 dark:text-white sm:px-1 sm:py-2'>
+                  <span className='hover:cursor rounded-lg bg-gray-300/80 py-1 text-sm text-black hover:bg-gray-300 dark:bg-gray-800/80 dark:text-white dark:hover:bg-gray-800 sm:px-1 sm:py-2'>
                     {tag}
                   </span>
                 </div>

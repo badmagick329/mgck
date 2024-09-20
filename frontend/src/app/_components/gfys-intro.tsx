@@ -6,7 +6,7 @@ export default function GfysIntro() {
   return (
     <div className='bg-background-gf border-primary-gf grid place-content-center place-items-center gap-8 border-t-2 px-8 py-4 sm:px-12 sm:py-6'>
       <span className='text-lg'>
-        Browse Red Velvet Gfys now moved to Imgur.
+        Browse through an archive of high quality Red Velvet Gfys.
       </span>
       <Link href={GFYS_BASE}>
         <Button className='bg-primary-gf/70 hover:bg-primary-gf shadow-glow-primary-gf w-72 font-semibold text-primary-foreground md:w-96 md:text-lg'>

@@ -6,6 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { IoIosUndo } from 'react-icons/io';
@@ -42,6 +43,10 @@ export default function NavButtons() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                className={cn(
+                  loopAll ? 'shadow-glow-primary-gf' : '',
+                  'text-bold bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+                )}
                 variant={loopAll ? 'default' : 'secondary'}
                 ref={loopAllRef}
                 size={'icon'}
@@ -61,6 +66,9 @@ export default function NavButtons() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                className={cn(
+                  'text-bold bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+                )}
                 variant='secondary'
                 size={'icon'}
                 ref={backRef}
