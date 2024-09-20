@@ -19,7 +19,7 @@ export default function EmojisField({
       />
       <span>
         Emojis will be picked from the above list at random. You can edit it and
-        it will be saved in your browser. Use reset to bring back default list
+        it will be saved in your browser. Use reset to bring back default list.
       </span>
     </>
   );
