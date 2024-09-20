@@ -10,6 +10,7 @@
     --background-em-dark: 190 100% 2.5%;
     --background-kp: 220 100% 95.5%;
     --background-gf: 10 100% 90.5%;
+    --background-gf-dark: 10 100% 2.5%;
     --foreground: 224 71.4% 4.1%;
     --background-light: 0 0% 80%;
 
@@ -26,6 +27,7 @@
     --primary-gf: 10 100% 80%;
     --primary-foreground: 210 20% 98%;
     --primary-dg-foreground: 220.9 39.3% 95%;
+    --primary-gf-foreground: 220.9 39.3% 5%;
 
     --secondary: 220 14.3% 95.9%;
     --secondary-dg: 0 0% 10%;
@@ -53,8 +55,9 @@
     --background-dg: 0 0% 3%;
     --background-em: 190 100% 8.5%;
     --background-em-dark: 190 100% 2.5%;
-    --background-kp: 220 100% 8.5%;
-    --background-gf: 10 100% 8.5%;
+    --background-kp: 220 100% 5.5%;
+    --background-gf: 10 100% 5.5%;
+    --background-gf-dark: 10 100% 2.5%;
     --foreground: 210 20% 98%;
     --foreground-dg: 210 20% 98%;
     --background-light: 224 71.4% 15%;
@@ -72,6 +75,7 @@
     --primary-gf: 10 100% 80%;
     --primary-foreground: 220.9 39.3% 95%;
     --primary-dg-foreground: 220.9 39.3% 95%;
+    --primary-gf-foreground: 220.9 39.3% 5%;
 
     --secondary: 215 27.9% 16.9%;
     --secondary-dg: 0 0% 10%;

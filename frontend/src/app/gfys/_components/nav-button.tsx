@@ -66,14 +66,21 @@ export default function NavButton({
   if (url) {
     return (
       <Link ref={ref} href={createURL(pathname, url.split('?')[1], asPage)}>
-        <Button variant='secondary'>
+        <Button
+          className='bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+          variant='secondary'
+        >
           <Icon />
         </Button>
       </Link>
     );
   }
   return (
-    <Button variant='secondary' disabled>
+    <Button
+      className='bg-primary-gf/90 text-primary-gf-foreground'
+      variant='secondary'
+      disabled
+    >
       <Icon />
     </Button>
   );

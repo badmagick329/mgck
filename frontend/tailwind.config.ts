@@ -49,6 +49,7 @@ module.exports = {
         'background-em-dark': 'hsl(var(--background-em-dark))',
         'background-kp': 'hsl(var(--background-kp))',
         'background-gf': 'hsl(var(--background-gf))',
+        'background-gf-dark': 'hsl(var(--background-gf-dark))',
         'background-light': 'hsl(var(--background-light))',
         foreground: 'hsl(var(--foreground))',
         'foreground-dg': 'hsl(var(--foreground-dg))',
@@ -68,6 +69,7 @@ module.exports = {
         },
         'primary-gf': {
           DEFAULT: 'hsl(var(--primary-gf))',
+          foreground: 'hsl(var(--primary-gf-foreground))',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',

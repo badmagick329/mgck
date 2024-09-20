@@ -37,8 +37,8 @@ export default function GfyPreview({
               onClick={() => goToGfyAtIndex(index)}
             >
               <Image
-                className='rounded-md object-cover hover:cursor-pointer hover:ring-2
-                  hover:ring-indigo-500 hover:ring-offset-2'
+                className='hover:ring-bg-primary-gf rounded-md object-cover hover:cursor-pointer
+                  hover:ring-2 hover:ring-offset-2'
                 src={imgurIdToJpg(imgurId)}
                 alt='imgur'
                 width={150}
@@ -49,7 +49,7 @@ export default function GfyPreview({
             </Link>
           </div>
         </TooltipTrigger>
-        <TooltipContent>
+        <TooltipContent className='bg-background-gf dark:bg-background-gf-dark'>
           <div className='flex flex-col gap-2'>
             <p className='max-w-[250px] break-words'>{title}</p>
             <div className='flex justify-center rounded-md p-2'>

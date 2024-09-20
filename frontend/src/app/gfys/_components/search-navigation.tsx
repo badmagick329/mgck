@@ -1,8 +1,10 @@
-"use client";
-import { useGlobalContext } from "@/app/gfys/context/store";
-import { usePathname } from "next/navigation";
-import { useRef, useEffect, useState } from "react";
-import NavButton from "./nav-button";
+'use client';
+
+import { useGlobalContext } from '@/app/gfys/context/store';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+
+import NavButton from './nav-button';
 
 export default function SearchNavigation({ onClient }: { onClient: boolean }) {
   const { data } = useGlobalContext();
@@ -16,34 +18,34 @@ export default function SearchNavigation({ onClient }: { onClient: boolean }) {
       return;
     }
     const handleKeyDown = (e: KeyboardEvent) => {
-      const inputs = document.querySelectorAll("input");
+      const inputs = document.querySelectorAll('input');
       for (let i = 0; i < inputs.length; i++) {
         if (inputs[i] === document.activeElement) {
           return;
         }
       }
-      if (e.key === "ArrowLeft" || e.key === "h") {
+      if (e.key === 'ArrowLeft' || e.key === 'h') {
         leftRef.current?.click();
-      } else if (e.key === "ArrowRight" || e.key === "l") {
+      } else if (e.key === 'ArrowRight' || e.key === 'l') {
         rightRef.current?.click();
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
   useEffect(() => {
     if (data.next) {
       const url = new URL(data.next);
-      const page = url.searchParams.get("page");
+      const page = url.searchParams.get('page');
       if (page) {
         setCurrentPage(parseInt(page) - 1);
       }
     } else if (data.previous) {
       const url = new URL(data.previous);
-      const page = url.searchParams.get("page");
+      const page = url.searchParams.get('page');
       if (page) {
         setCurrentPage(parseInt(page) + 1);
       }
@@ -51,14 +53,14 @@ export default function SearchNavigation({ onClient }: { onClient: boolean }) {
   }, [data]);
 
   return (
-    <div className="mt-4 flex flex-col items-center space-y-2">
-      <div className="flex justify-center space-x-2">
+    <div className='mt-4 flex flex-col items-center space-y-2'>
+      <div className='flex justify-center space-x-2'>
         <NavButton
           url={data.previous}
           prevURL={data.previous}
           nextURL={data.next}
           totalPages={data.totalPages}
-          navType="first"
+          navType='first'
           leftRef={leftRef}
           rightRef={rightRef}
           pathname={pathname}
@@ -68,7 +70,7 @@ export default function SearchNavigation({ onClient }: { onClient: boolean }) {
           prevURL={data.previous}
           nextURL={data.next}
           totalPages={data.totalPages}
-          navType="previous"
+          navType='previous'
           leftRef={leftRef}
           rightRef={rightRef}
           pathname={pathname}
@@ -78,7 +80,7 @@ export default function SearchNavigation({ onClient }: { onClient: boolean }) {
           prevURL={data.previous}
           nextURL={data.next}
           totalPages={data.totalPages}
-          navType="next"
+          navType='next'
           leftRef={leftRef}
           rightRef={rightRef}
           pathname={pathname}
@@ -88,7 +90,7 @@ export default function SearchNavigation({ onClient }: { onClient: boolean }) {
           prevURL={data.previous}
           nextURL={data.next}
           totalPages={data.totalPages}
-          navType="last"
+          navType='last'
           leftRef={leftRef}
           rightRef={rightRef}
           pathname={pathname}
@@ -110,7 +112,7 @@ function PaginationText({
     return null;
   }
   return (
-    <div className="text-gray-800 dark:text-gray-500">
+    <div className='text-gray-800 dark:text-gray-500'>
       Page {currentPage} of {totalPages}
     </div>
   );

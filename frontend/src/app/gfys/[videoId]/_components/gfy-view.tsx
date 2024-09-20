@@ -27,7 +27,7 @@ export default function GfyView(props: Props) {
   }
 
   return (
-    <div className='max-w-screen m-0 flex h-dvh flex-col sm:flex-row sm:content-between sm:justify-center'>
+    <div className='max-w-screen bg-background-gf dark:bg-background-dark m-0 flex h-dvh flex-col sm:flex-row sm:content-between sm:justify-center'>
       <div className='flex h-4/5 w-full items-center justify-center sm:h-full sm:w-4/5'>
         <GfyPlayer videoUrl={gfyDetail.video_url} />
       </div>

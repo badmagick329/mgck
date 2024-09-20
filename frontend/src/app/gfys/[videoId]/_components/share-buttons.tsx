@@ -67,7 +67,9 @@ function ShareButton({
         <TooltipTrigger asChild>
           <Button
             variant='secondary'
-            className={cn('text-bold')}
+            className={cn(
+              'text-bold bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+            )}
             onClick={() => handleCopy(url, toast)}
             ref={ref}
           >
