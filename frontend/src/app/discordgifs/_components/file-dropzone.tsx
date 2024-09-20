@@ -108,7 +108,7 @@ export default function FileDropzone() {
           `${buttonEnabled && 'hover:bg-primary-dg/80'}`,
           `${!buttonEnabled ? 'bg-secondary-dg' : 'bg-primary-dg'}`,
           `rounded-md border-2 border-orange-500`,
-          `px-4 py-2 disabled:border-orange-500/60 disabled:text-white/60`,
+          `disabled:foreground-dg/60 px-4 py-2 disabled:border-orange-500/60`,
           `shadow-glow-primary-dg ${!buttonEnabled && dragEnter && 'animate-pulse'}`
         )}
         onClick={(e) => convert(ffmpegRef, filesState, dispatch)}

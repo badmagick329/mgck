@@ -30,6 +30,12 @@ module.exports = {
       boxShadow: {
         'glow-primary-dg':
           '0 0 10px hsla(25, 95%, 53%, 1), 0 0 2px hsla(25, 95%, 53%, 1) inset',
+        'glow-primary-em':
+          '0 0 10px hsla(190, 100%, 15.5%, 1), 0 0 2px hsla(190, 100%, 15.5%, 1) inset',
+        'glow-primary-kp':
+          '0 0 10px hsla(220 ,100% ,15.5%, 1), 0 0 2px hsla(220 ,100% ,15.5%, 1) inset',
+        'glow-primary-gf':
+          '0 0 10px hsla(10 ,100% ,80%, 1), 0 0 2px hsla(10 ,100% ,80%, 1) inset',
         'glow-secondary-dg':
           '0 0 10px hsla(0, 0%, 10%, 1), 0 0 2px hsla(0, 0%, 10%, 1) inset',
       },
@@ -39,8 +45,12 @@ module.exports = {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         'background-dg': 'hsl(var(--background-dg))',
+        'background-em': 'hsl(var(--background-em))',
+        'background-kp': 'hsl(var(--background-kp))',
+        'background-gf': 'hsl(var(--background-gf))',
         'background-light': 'hsl(var(--background-light))',
         foreground: 'hsl(var(--foreground))',
+        'foreground-dg': 'hsl(var(--foreground-dg))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
@@ -48,6 +58,15 @@ module.exports = {
         'primary-dg': {
           DEFAULT: 'hsl(var(--primary-dg))',
           foreground: 'hsl(var(--primary-dg-foreground))',
+        },
+        'primary-em': {
+          DEFAULT: 'hsl(var(--primary-em))',
+        },
+        'primary-kp': {
+          DEFAULT: 'hsl(var(--primary-kp))',
+        },
+        'primary-gf': {
+          DEFAULT: 'hsl(var(--primary-gf))',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',

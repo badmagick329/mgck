@@ -1,4 +1,4 @@
-import { ThemeToggler } from '@/components/theme-toggler';
+import Navbar from '@/components/navbar';
 
 import DiscordGifsIntro from './_components/discord-gifs-intro';
 import EmojifyIntro from './_components/emojify-intro';
@@ -7,11 +7,9 @@ import KpopComebacksIntro from './_components/kpop-comebacks-intro';
 
 export default function Index() {
   return (
-    <main className='flex min-h-screen flex-col'>
-      <div className='flex w-full justify-end px-2 pt-2'>
-        <ThemeToggler />
-      </div>
-      <div className='flex grow flex-col items-center justify-center space-y-12 pt-12'>
+    <main className='flex min-h-dvh flex-col justify-center'>
+      <Navbar />
+      <div className='grid grow grid-cols-1 grid-rows-4 place-content-center'>
         <GfysIntro />
         <KpopComebacksIntro />
         <EmojifyIntro />
