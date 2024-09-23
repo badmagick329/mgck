@@ -2,53 +2,65 @@ upstream backend {
   server djangobackend:8002;
 }
 
-# -------------
-# Optional settings for cache and rate limit
-# Adjust as needed
-proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=my_cache:10m
-  max_size=5g inactive=60m use_temp_path=off;
-limit_req_zone $binary_remote_addr zone=addrlimit:10m rate=1r/s;
-limit_req_status 429;
-# -------------
+upstream frontend {
+  server nextapp:3000;
+}
 
 server {
     listen 80;
-    location / {
+    server_tokens off;
+    
+    proxy_set_header  Host              $http_host;
+    proxy_set_header  X-Real-IP         $remote_addr;
+    proxy_set_header  X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header  X-Forwarded-Referrer $http_referer;
+    proxy_set_header  X-Forwarded-Proto https;
+    proxy_set_header  Referer $http_referer;
+
+    access_log /var/logs/access.log;
+    error_log /var/logs/error.log;
+
+    gzip on;
+    gzip_proxied any
+    gzip_comp_level 4;
+    gzip_types text/css application/javascript image/svg+xml;
+
+    location /admin {
+      # add your own ip here
+      allow 127.0.0.1;
+      deny all;
       proxy_pass http://backend;
       proxy_http_version 1.1;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Real-IP $remote_addr;
-      # -------------
-      # Optional settings for rate limit
-      limit_req zone=addrlimit burst=10 delay=5;
-      # -------------
-      # file upload limit
-      client_max_body_size 100M;
     }
+    # old gfys endpoint
+    location /v0gfys {
+      proxy_pass http://backend;
+      proxy_http_version 1.1;
+    }
+    location /api {
+      proxy_pass http://backend;
+      proxy_http_version 1.1;
+    }
+
+    # static routes
     location /static/ {
-      sendfile on;
-      sendfile_max_chunk 10m;
-      # -------------
-      # Optional settings for cache and rate limit
-      proxy_cache my_cache;
-      limit_req zone=addrlimit burst=100 delay=50;
-      proxy_cache_valid  200 302  60m;
-      proxy_cache_valid  404      1m;
-      proxy_cache_use_stale error timeout invalid_header updating http_500 http_502 http_503 http_504;
-      add_header X-Proxy-Cache $upstream_cache_status;
-      # -------------
-      alias /usr/src/app/staticfiles/;
+      alias /static/;
     }
-    # reddit videos route
+    location /irene/ {
+      alias /irene/;
+    }
     location /videos/ {
-      sendfile on;
-      sendfile_max_chunk 10m;
-      alias /redditvideos/;
+      alias /videos/;
     }
-    # file uploads route
     location /uploads/ {
-      sendfile on;
-      sendfile_max_chunk 10m;
       alias /uploads/;
+    }
+    location /gfy-videos/ {
+      alias /gfy-videos/;
+    }
+
+    location / {
+      proxy_pass http://frontend;
+      proxy_http_version 1.1;
     }
 }

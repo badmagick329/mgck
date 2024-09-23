@@ -4,8 +4,10 @@ services:
     volumes:
       - ./db:/var/lib/postgresql/data/
     restart: "always"
-    ports:
-      - "${DB_PORT}:5432"
+    environment:
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 10s
@@ -16,9 +18,10 @@ services:
       context: .
       dockerfile: ./djangobackend/Dockerfile
     restart: "always"
-    command: sh -c "python3 manage.py makemigrations &&
-      python3 manage.py migrate &&
+    command: sh -c "python3 manage.py migrate &&
       python3 manage.py collectstatic --no-input &&
+      printenv > /etc/environment &&
+      cron &&
       gunicorn djangobackend.wsgi:application --bind 0.0.0.0:8002"
     volumes:
       - ./djangobackend:/usr/src/app
@@ -32,15 +35,31 @@ services:
     depends_on:
       db:
         condition: service_healthy
+  
+  nextapp:
+    image: nextjs
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: deploy
+    restart: "always"
+    depends_on:
+      - djangobackend
+    volumes:
+      - ./public:/app/public
+
   nginx:
     build:
       context: ./nginx
     restart: "always"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - staticfiles:/usr/src/app/staticfiles
-      - ${REDDIT_VIDEOS}:${REDDIT_VIDEOS_STATIC}
-      - ${UPLOADS}:${UPLOADS_STATIC}
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - staticfiles:/usr/src/app/staticfiles:ro
+      - ./irene:/usr/src/app/irene:ro
+      - ${REDDIT_VIDEOS}:${REDDIT_VIDEOS_STATIC}:ro
+      - ${UPLOADS}:${UPLOADS_STATIC}:ro
+      - ${GFYS}:${GFYS_STATIC}:ro
+      - ./nginx/logs/:/var/logs:rw
     ports:
       - ${NGINX_PORT}:80
     depends_on:
