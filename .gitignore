@@ -11,5 +11,4 @@ djangobackend/scripts/data/*
 logs/
 certbot/
 irene/*
-crontab
 deploy.sh
