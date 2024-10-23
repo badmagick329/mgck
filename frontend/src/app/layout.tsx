@@ -24,7 +24,8 @@ export default function RootLayout({
       <head>
         <Script
           src='https://analytics.mgck.ink/js/script.js'
-          data-domain='kristalomu.com'
+          data-domain='mgck.ink'
+          data-api='https://analytics.mgck.ink/api/event'
           strategy='afterInteractive'
         />
       </head>
