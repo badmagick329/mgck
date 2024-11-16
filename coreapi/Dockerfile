@@ -4,12 +4,12 @@ WORKDIR /source
 
 # copy csproj and restore as distinct layers
 COPY *.sln .
-COPY UserAuth/*.csproj ./UserAuth/
+COPY CoreApi.WebApi/*.csproj ./CoreApi.WebApi/
 RUN dotnet restore
 
 # copy everything else and build app
-COPY UserAuth/. ./UserAuth/
-WORKDIR /source/UserAuth
+COPY CoreApi.WebApi/. ./CoreApi.WebApi/
+WORKDIR /source/CoreApi.WebApi
 RUN dotnet publish -c release -o /app
 
 # final stage/image
@@ -18,4 +18,4 @@ WORKDIR /app
 COPY --from=build /app ./
 ENV ASPNETCORE_URLS http://*:5010
 ENV ASPNETCORE_ENVIRONMENT Production
-ENTRYPOINT ["dotnet", "UserAuth.dll"]
+ENTRYPOINT ["dotnet", "CoreApi.WebApi.dll"]
