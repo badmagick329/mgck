@@ -3,8 +3,8 @@
 const BASE_URL = process.env.USER_AUTH_BASE_URL;
 
 export async function testEndpoint() {
-  console.log(`BASE_URL is ${BASE_URL}`);
-  const result = await fetch(`${BASE_URL}/weatherforecast`, {
+  const url = new URL(`${BASE_URL}/weatherforecast`);
+  const result = await fetch(url.toString(), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -12,8 +12,7 @@ export async function testEndpoint() {
   });
   console.log(`Result is ${result}. code: ${result.status}`);
   try {
-    const json = await result.json();
-    return json;
+    return await result.json();
   } catch (error) {
     console.error(error);
   }
