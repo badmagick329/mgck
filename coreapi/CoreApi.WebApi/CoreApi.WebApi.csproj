@@ -24,7 +24,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Dtos\"/>
         <Folder Include="Interfaces\"/>
         <Folder Include="Mappers\"/>
         <Folder Include="Repository\"/>

@@ -4,6 +4,7 @@ using CoreApi.WebApi.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoreApi.WebApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250203181001_RefreshTokenField")]
+    partial class RefreshTokenField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,9 +70,6 @@ namespace CoreApi.WebApi.Migrations
                     b.Property<string>("RefreshToken")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("RefreshTokenExpiryTime")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -122,13 +122,13 @@ namespace CoreApi.WebApi.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "0e2fd968-ff2b-4a22-82c8-918d591e79ac",
+                            Id = "be1db444-6232-45e8-8b58-76042daff157",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "1a75de1c-387d-4da6-a15c-a6e51a058e7b",
+                            Id = "4a0c7b99-154f-4eb0-810e-e000c7bbf774",
                             Name = "NewUser",
                             NormalizedName = "NEWUSER"
                         });
