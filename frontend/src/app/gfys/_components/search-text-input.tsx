@@ -4,7 +4,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { SearchFormParams, SearchParams } from '@/lib/types';
+import { SearchFormParams, SearchParams } from '@/lib/types/gfys';
 import { Dispatch, SetStateAction, useEffect } from 'react';
 
 export default function SearchTextInput({

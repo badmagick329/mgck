@@ -1,11 +1,11 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
-
 import {
   FFmpegConversionState,
   FFmpegLogEvent,
   FFmpegProgressEvent,
-} from '../types';
+} from '@/lib/types/ffmpeg';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
+
 import {
   FrameSize,
   FrameSizeCalculator,
@@ -143,20 +143,6 @@ export class FFmpegManager {
     this.fileConfig.optimizedInput = true;
   }
 
-  private async cleanupOptimizedFile() {
-    if (!this.fileConfig) {
-      throw new Error('FFmpegManager config not set');
-    }
-    if (!this.fileConfig.optimizedInput) {
-      return;
-    }
-    try {
-      await this.deleteFile(this.fileConfig.file.name);
-    } catch (e) {
-      console.error('Error deleting optimized file', e);
-    }
-  }
-
   public async convert() {
     if (!this.ffmpeg) {
       throw new Error('FFmpeg not loaded');
@@ -185,6 +171,20 @@ export class FFmpegManager {
       outputName,
       finalSize: blob!.size,
     };
+  }
+
+  private async cleanupOptimizedFile() {
+    if (!this.fileConfig) {
+      throw new Error('FFmpegManager config not set');
+    }
+    if (!this.fileConfig.optimizedInput) {
+      return;
+    }
+    try {
+      await this.deleteFile(this.fileConfig.file.name);
+    } catch (e) {
+      console.error('Error deleting optimized file', e);
+    }
   }
 
   private async run(calculator: FrameSizeCalculator, outputName: string) {

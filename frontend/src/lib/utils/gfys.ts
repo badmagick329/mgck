@@ -3,7 +3,7 @@ import {
   GfyParsedResponse,
   GfyResponse,
   GfyResult,
-} from '@/lib/types';
+} from '@/lib/types/gfys';
 import { ReadonlyURLSearchParams } from 'next/navigation';
 
 export function parseGfyResponse(resp: GfyResponse): GfyParsedResponse {

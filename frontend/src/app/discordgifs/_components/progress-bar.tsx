@@ -1,5 +1,5 @@
 import { SizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
-import { FFmpegConversionState } from '@/lib/types';
+import { FFmpegConversionState } from '@/lib/types/ffmpeg';
 
 const ballSize = 16;
 const barWidth = 200;

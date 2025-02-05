@@ -1,6 +1,6 @@
 import { fetchAccounts } from '@/actions/gfys';
 import { Button } from '@/components/ui/button';
-import { SearchFormParams, SearchParams } from '@/lib/types';
+import { SearchFormParams, SearchParams } from '@/lib/types/gfys';
 import { validDateStringOrNull } from '@/lib/utils';
 import { createURL } from '@/lib/utils/gfys';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -103,14 +103,14 @@ export default function SearchFormContent() {
       </div>
       <div className='flex justify-center gap-2'>
         <Button
-          className='bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+          className='bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
           type='submit'
           variant='secondary'
         >
           Search
         </Button>
         <Button
-          className='bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+          className='bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
           variant='secondary'
           onClick={clearForm}
         >
