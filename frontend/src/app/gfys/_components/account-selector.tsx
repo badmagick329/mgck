@@ -11,7 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { SearchParams } from '@/lib/types';
+import { SearchParams } from '@/lib/types/gfys';
 import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -46,7 +46,7 @@ export default function AccountSelector({
           variant='outline'
           role='combobox'
           aria-expanded={open}
-          className={`${FIELD_WIDTH} bg-background-gf-dark/15 hover:bg-background-gf-dark/15 dark:bg-background-gf-dark justify-between border-2 border-black/60 dark:border-white/60`}
+          className={`${FIELD_WIDTH} justify-between border-2 border-black/60 bg-background-gf-dark/15 hover:bg-background-gf-dark/15 dark:border-white/60 dark:bg-background-gf-dark`}
         >
           {selectedAccount
             ? accounts.find((s) => s === selectedAccount)

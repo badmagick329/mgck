@@ -1,6 +1,6 @@
 import Navbar from '@/components/navbar';
 import { GFYS_BASE } from '@/lib/consts/urls';
-import { GfyDetailResponse } from '@/lib/types';
+import { GfyDetailResponse } from '@/lib/types/gfys';
 import Link from 'next/link';
 
 export default function AdditionalGfyDetails({

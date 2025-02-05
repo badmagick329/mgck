@@ -7,7 +7,7 @@ import {
 } from '@/app/discordgifs/_utils/files-state';
 import { FFmpegManager } from '@/lib/ffmpeg-utils/ffmpeg-manager';
 import { SizeInfo, sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
-import { FFmpegConversionState, FFmpegProgressEvent } from '@/lib/types';
+import { FFmpegConversionState, FFmpegProgressEvent } from '@/lib/types/ffmpeg';
 import clsx from 'clsx';
 import { Dispatch, useEffect, useReducer, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -108,7 +108,7 @@ export default function FileDropzone() {
           `${buttonEnabled && 'hover:bg-primary-dg/80'}`,
           `${!buttonEnabled ? 'bg-secondary-dg' : 'bg-primary-dg'}`,
           `rounded-md border-2 border-orange-500`,
-          `disabled:text-foreground-dg/60 px-4 py-2 disabled:border-orange-500/60`,
+          `px-4 py-2 disabled:border-orange-500/60 disabled:text-foreground-dg/60`,
           `shadow-glow-primary-dg ${!buttonEnabled && dragEnter && 'animate-pulse'}`
         )}
         onClick={(e) => convert(ffmpegRef, filesState, dispatch)}

@@ -2,7 +2,7 @@
 
 import { searchGfys } from '@/actions/gfys';
 import { GFYS_BASE } from '@/lib/consts/urls';
-import { GfyParsedResponse, GfyViewData } from '@/lib/types';
+import { GfyParsedResponse, GfyViewData } from '@/lib/types/gfys';
 import {
   createURL,
   formDataFromSearchParams,

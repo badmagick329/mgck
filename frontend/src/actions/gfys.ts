@@ -1,7 +1,11 @@
 'use server';
 
 import { API_GFYS, API_GFY_ACCOUNTS, API_GFY_VIEWS } from '@/lib/consts/urls';
-import { AccountsResponse, GfyDetailResponse, GfyResponse } from '@/lib/types';
+import {
+  AccountsResponse,
+  GfyDetailResponse,
+  GfyResponse,
+} from '@/lib/types/gfys';
 import { validDateStringOrNull } from '@/lib/utils';
 
 const BASE_URL = process.env.BASE_URL;

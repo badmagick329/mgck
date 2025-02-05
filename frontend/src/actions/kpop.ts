@@ -1,7 +1,7 @@
 'use server';
 
 import { API_KPOP } from '@/lib/consts/urls';
-import { ComebacksResult, ServerError } from '@/lib/types';
+import { ComebacksResult, ServerError } from '@/lib/types/kpop';
 import { validDateStringOrNull } from '@/lib/utils';
 
 const BASE_URL = process.env.BASE_URL;

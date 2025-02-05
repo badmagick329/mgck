@@ -3,7 +3,7 @@ import {
   FFmpegConversionState,
   FFmpegFileData,
   FFmpegFileDataOutput,
-} from '@/lib/types';
+} from '@/lib/types/ffmpeg';
 
 export type FileAction =
   | {

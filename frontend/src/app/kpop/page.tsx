@@ -3,7 +3,11 @@
 import { fetchComebacks } from '@/actions/kpop';
 import Navbar from '@/components/navbar';
 import ScrollIndicator from '@/components/scroll-indicator';
-import { ComebackResponse, ComebacksResult, ServerError } from '@/lib/types';
+import {
+  ComebackResponse,
+  ComebacksResult,
+  ServerError,
+} from '@/lib/types/kpop';
 import { searchParamsToFormData } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -43,7 +47,7 @@ export default function KpopPage() {
   }
 
   return (
-    <main className='bg-background-kp flex min-h-screen flex-col items-center gap-4'>
+    <main className='flex min-h-screen flex-col items-center gap-4 bg-background-kp'>
       <ScrollIndicator colorValue='hsl(224,80%,50%)' />
       <Navbar />
       <h2 className='text-2xl font-semibold'>Upcoming Comebacks</h2>
