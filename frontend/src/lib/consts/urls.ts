@@ -14,4 +14,6 @@ export const API_KPOP = `${DJANGO_API_BASE}/kpopcomebacks`;
 
 const AUTH_BASE = '/api/auth';
 export const API_AUTH_STATUS = `${AUTH_BASE}/status`;
-export const API_LOGIN_USER = `${AUTH_BASE}/login`;
+export const API_LOGIN = `${AUTH_BASE}/login`;
+export const API_REFRESH = `${AUTH_BASE}/refresh`;
+export const API_REGISTER = `${AUTH_BASE}/register`;
