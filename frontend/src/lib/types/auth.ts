@@ -1,7 +1,6 @@
-type ServerResponse = {
-  success: boolean;
-  message?: string;
-  error?: string;
+type ApiError = {
+  code: string;
+  description: string;
 };
 
 type TokenResponse = {
@@ -9,6 +8,21 @@ type TokenResponse = {
   refreshToken: string;
 };
 
-type LoginResponse = ServerResponse & {
-  data?: TokenResponse;
+type ErrorResponse = {
+  type: 'error';
+  errors: ApiError[];
 };
+
+type ServerResponse =
+  | {
+      type: 'success';
+      message?: string;
+    }
+  | ErrorResponse;
+
+type LoginResponse =
+  | {
+      type: 'success';
+      data: TokenResponse;
+    }
+  | ErrorResponse;

@@ -20,6 +20,8 @@ public class AuthController : ControllerBase
     private readonly UserManager<AppUser> _userManager;
     private readonly SignInManager<AppUser> _signInManager;
     private readonly IConfiguration _configuration;
+    private readonly int _jwtTokenDurationInMinutes;
+    private readonly int _refreshTokenDurationInDays;
 
     public AuthController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager,
         IConfiguration configuration)
@@ -27,6 +29,8 @@ public class AuthController : ControllerBase
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
+        _jwtTokenDurationInMinutes = int.Parse(_configuration["JWT:JWTTokenDurationInMinutes"] ?? "");
+        _refreshTokenDurationInDays = int.Parse(_configuration["JWT:RefreshTokenDurationInDays"] ?? "");
     }
 
     [HttpPost("register")]
@@ -76,6 +80,7 @@ public class AuthController : ControllerBase
 
     private string GenerateJwtToken(AppUser user)
     {
+        Console.WriteLine($"Generating new token for user {user.UserName}");
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SigningKey"]));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -88,16 +93,17 @@ public class AuthController : ControllerBase
         var token = new JwtSecurityToken(_configuration["JWT:Issuer"],
             _configuration["JWT:Audience"],
             claims,
-            // TODO: Change this
-            expires: DateTime.Now.AddMinutes(3),
+            expires: DateTime.Now.AddMinutes(_jwtTokenDurationInMinutes),
             signingCredentials: credentials);
 
+        Console.WriteLine($"Expires at {token.ValidTo}");
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenDto model)
     {
+        Console.WriteLine($"Got dto with refresh token {model.RefreshToken}");
         var modelRefreshToken = model.RefreshToken;
 
         var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == modelRefreshToken);
@@ -107,6 +113,8 @@ public class AuthController : ControllerBase
         {
             return Unauthorized(new { message = "Invalid refresh token." });
         }
+
+        Console.WriteLine($"Refreshing token for user {user.UserName}");
 
         var newJwtToken = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken();
@@ -130,7 +138,7 @@ public class AuthController : ControllerBase
 
     private RefreshToken GenerateRefreshToken()
     {
-        var randomNumber = new byte[32];
+        var randomNumber = new byte[64];
         using (var rng = RandomNumberGenerator.Create())
         {
             rng.GetBytes(randomNumber);
@@ -139,8 +147,7 @@ public class AuthController : ControllerBase
         return new RefreshToken
         {
             Token = Convert.ToBase64String(randomNumber),
-            // TODO: Change this
-            ExpiryTime = DateTime.UtcNow.AddDays(7)
+            ExpiryTime = DateTime.UtcNow.AddDays(_refreshTokenDurationInDays)
         };
     }
 }

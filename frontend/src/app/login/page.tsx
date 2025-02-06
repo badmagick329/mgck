@@ -6,8 +6,14 @@ import { useState } from 'react';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { handleLogin, handleStatus, tokenResponse, serverResponse } =
-    useAuthRequest();
+  const {
+    loginUser,
+    checkUserAuthStatus,
+    renewTokens,
+    registerUser,
+    tokenResponse,
+    serverResponse,
+  } = useAuthRequest();
 
   return (
     <main className={'flex min-h-screen flex-col'}>
@@ -15,7 +21,7 @@ export default function Login() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleLogin({ username, password });
+            loginUser({ username, password });
           }}
           className={'grid grid-cols-1 gap-4'}
         >
@@ -34,15 +40,29 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value || '')}
           />
           <div className={'flex justify-center gap-4'}>
-            <button type={'submit'} className={'bg-red-800 px-4 py-2'}>
-              Ok
+            <button type={'submit'} className={'bg-blue-500 px-4 py-2'}>
+              Login
+            </button>
+            <button
+              type={'button'}
+              className={'bg-cyan-600 px-4 py-2'}
+              onClick={(e) => registerUser({ username, password })}
+            >
+              Register
             </button>
             <button
               type={'button'}
               className={'bg-green-800 px-4 py-2'}
-              onClick={handleStatus}
+              onClick={checkUserAuthStatus}
             >
               Get status
+            </button>
+            <button
+              type={'button'}
+              className={'bg-yellow-500 px-4 py-2'}
+              onClick={renewTokens}
+            >
+              Refresh
             </button>
           </div>
         </form>
