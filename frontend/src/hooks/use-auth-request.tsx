@@ -1,31 +1,28 @@
 'use client';
 
-import { fetchNewTokens, fetchUserStatus, requestLogin, requestRegistration } from '@/actions/auth';
+import {
+  loginUserAction,
+  registerUserAction,
+  renewTokensAction,
+  userAuthStatusAction,
+} from '@/actions/auth';
+import { stringifyErrors } from '@/lib/auth/utils';
+import { ServerResponse } from '@/lib/types/auth';
 import { useState } from 'react';
 import { util } from 'zod';
-
 
 import assertNever = util.assertNever;
 
 export function useAuthRequest() {
-  const [parsedToken, setParsedToken] = useState('');
-  const [parsedRefreshToken, setParsedRefreshToken] = useState('');
-  const [tokenResponse, setTokenResponse] = useState('');
   const [serverResponse, setServerResponse] = useState('');
 
   const loginUser = async (payload: { username: string; password: string }) => {
-    const response = await requestLogin(payload);
+    const response = await loginUserAction(payload);
     handleTokenResponse(response);
   };
 
-  const checkUserAuthStatus = async () => {
-    console.log('called handle status');
-    if (!parsedToken) {
-      setServerResponse('No token found');
-      return;
-    }
-
-    const response = await fetchUserStatus({ token: parsedToken });
+  const userAuthStatus = async () => {
+    const response = await userAuthStatusAction();
     switch (response.type) {
       case 'error':
         setServerResponse(stringifyErrors(response.errors) || 'Server error');
@@ -39,15 +36,7 @@ export function useAuthRequest() {
   };
 
   const renewTokens = async () => {
-    console.log('called handle refresh');
-    if (!parsedRefreshToken) {
-      setServerResponse('No refresh token found');
-      return;
-    }
-
-    const response = await fetchNewTokens({
-      refreshToken: parsedRefreshToken,
-    });
+    const response = await renewTokensAction();
     handleTokenResponse(response);
   };
 
@@ -55,7 +44,7 @@ export function useAuthRequest() {
     username: string;
     password: string;
   }) => {
-    const response = await requestRegistration(payload);
+    const response = await registerUserAction(payload);
     switch (response.type) {
       case 'error':
         setServerResponse(stringifyErrors(response.errors) || 'Server error');
@@ -68,22 +57,13 @@ export function useAuthRequest() {
     }
   };
 
-  const handleTokenResponse = (
-    response: { type: 'success'; data: TokenResponse } | ErrorResponse
-  ) => {
+  const handleTokenResponse = (response: ServerResponse) => {
     switch (response.type) {
       case 'error':
         setServerResponse(stringifyErrors(response.errors) || 'Server error');
         break;
       case 'success':
-        if (response.data) {
-          setTokenResponse(JSON.stringify(response.data, null, 2));
-          setParsedToken(response.data.token);
-          setParsedRefreshToken(response.data.refreshToken);
-          setServerResponse('token updated');
-        } else {
-          setServerResponse('No token found');
-        }
+        setServerResponse(response.message || 'Tokens renewed');
         break;
       default:
         assertNever(response);
@@ -92,16 +72,9 @@ export function useAuthRequest() {
 
   return {
     loginUser,
-    checkUserAuthStatus,
+    userAuthStatus,
     renewTokens,
     registerUser,
-    tokenResponse,
     serverResponse,
   };
-}
-
-function stringifyErrors(errors: ApiError[]) {
-  return errors
-    .map((error) => `${error.code}: ${error.description}`)
-    .join(', ');
 }

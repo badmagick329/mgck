@@ -8,10 +8,9 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const {
     loginUser,
-    checkUserAuthStatus,
+    userAuthStatus,
     renewTokens,
     registerUser,
-    tokenResponse,
     serverResponse,
   } = useAuthRequest();
 
@@ -53,7 +52,7 @@ export default function Login() {
             <button
               type={'button'}
               className={'bg-green-800 px-4 py-2'}
-              onClick={checkUserAuthStatus}
+              onClick={userAuthStatus}
             >
               Get status
             </button>
@@ -68,16 +67,6 @@ export default function Login() {
         </form>
       </div>
       <div className={'flex flex-col gap-4'}>
-        <div className={'mx-auto'}>
-          <textarea
-            readOnly
-            rows={10}
-            cols={120}
-            className={'select-none'}
-            placeholder={'token response'}
-            value={tokenResponse}
-          />
-        </div>
         <div className={'mx-auto'}>
           <textarea
             readOnly
