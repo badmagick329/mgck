@@ -53,13 +53,15 @@ public class AuthController : ControllerBase
         var user = await _userManager.FindByNameAsync(model.Username);
         if (user is null)
         {
-            return Unauthorized(new { message = "Invalid credentials" });
+            var errorResponse = new CredentialsErrorResponse("Invalid Credentials", "Credentials are invalid.");
+            return Unauthorized(new[] { errorResponse });
         }
 
         var signInResult = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
         if (!signInResult.Succeeded)
         {
-            return Unauthorized(new { message = "Invalid credentials" });
+            var errorResponse = new CredentialsErrorResponse("Invalid Credentials", "Credentials are invalid.");
+            return Unauthorized(new[] { errorResponse });
         }
 
         var token = GenerateJwtToken(user);
@@ -152,8 +154,10 @@ public class AuthController : ControllerBase
     }
 }
 
-public class RefreshToken
+class RefreshToken
 {
-    public string Token { get; set; }
-    public DateTime ExpiryTime { get; set; }
+    public required string Token { get; set; }
+    public required DateTime ExpiryTime { get; set; }
 }
+
+record CredentialsErrorResponse(string Code, string Description);

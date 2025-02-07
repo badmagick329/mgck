@@ -1,28 +1,30 @@
-type ApiError = {
+export type CredentialsErrorResponse = {
   code: string;
   description: string;
+}[];
+
+export type ProblemErrorResponse = {
+  errors: {
+    [field: string]: string[];
+  }[];
 };
 
-type TokenResponse = {
-  token: string;
-  refreshToken: string;
+export type ProblemError = {
+  [field: string]: string[];
 };
 
-type ErrorResponse = {
+export type ApiError = CredentialsErrorResponse | ProblemError[];
+
+export type ErrorResponse = {
   type: 'error';
-  errors: ApiError[];
+  status: number;
+  errors: ApiError;
 };
 
-type ServerResponse =
+export type ServerResponse =
   | {
       type: 'success';
-      message?: string;
-    }
-  | ErrorResponse;
-
-type LoginResponse =
-  | {
-      type: 'success';
-      data: TokenResponse;
+      status: number;
+      message: string;
     }
   | ErrorResponse;
