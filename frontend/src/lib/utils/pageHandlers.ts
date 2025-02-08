@@ -21,11 +21,11 @@ export function getPreviousPageURL(
   const pageInURL = searchParams.get('page');
   const pageInURLNumber = getValidPageNumber(pageInURL);
   const previousPage = getPreviousPage(pageInURLNumber);
-  if (previousPage === null || previousPage === null) {
+  if (previousPage === null) {
     return null;
   }
 
-  const newSearchParams = new URLSearchParams(searchParams);
+  const newSearchParams = new URLSearchParams(searchParams.toString());
   if (previousPage !== 1) {
     newSearchParams.set('page', previousPage.toString());
   } else {
@@ -46,7 +46,7 @@ export function getNextPageURL(
     return null;
   }
 
-  const newSearchParams = new URLSearchParams(searchParams);
+  const newSearchParams = new URLSearchParams(searchParams.toString());
   newSearchParams.set('page', nextPage.toString());
   return `${pathname}?${newSearchParams.toString()}`;
 }

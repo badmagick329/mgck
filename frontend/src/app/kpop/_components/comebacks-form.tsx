@@ -163,7 +163,7 @@ function onInputChange(
     const form = e.currentTarget.form;
     const formData = new FormData(form || undefined);
     debounce(() => {
-      const oldSearchParams = new URLSearchParams(searchParams);
+      const oldSearchParams = new URLSearchParams(searchParams.toString());
       if (oldSearchParams.has('page')) {
         oldSearchParams.delete('page');
       }
@@ -203,7 +203,7 @@ function onTodayClick(
     startDateInput.value = recentDate(0);
     endDateInput.value = recentDate(0);
     const formData = new FormData(form);
-    const oldSearchParams = new URLSearchParams(searchParams);
+    const oldSearchParams = new URLSearchParams(searchParams.toString());
     if (oldSearchParams.has('page')) {
       oldSearchParams.delete('page');
     }
@@ -235,7 +235,7 @@ function onRecentClick(
     startDateInput.value = recentDate();
     endDateInput.value = '';
     const formData = new FormData(form);
-    const oldSearchParams = new URLSearchParams(searchParams);
+    const oldSearchParams = new URLSearchParams(searchParams.toString());
     if (oldSearchParams.has('page')) {
       oldSearchParams.delete('page');
     }
@@ -260,7 +260,7 @@ function toggleExactSearch(
       formData.set('exact', '');
     }
     debounce(() => {
-      const oldSearchParams = new URLSearchParams(searchParams);
+      const oldSearchParams = new URLSearchParams(searchParams.toString());
       if (oldSearchParams.has('page')) {
         oldSearchParams.delete('page');
       }
