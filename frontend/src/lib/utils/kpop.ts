@@ -1,3 +1,5 @@
+import { ReadonlyURLSearchParams } from 'next/navigation';
+
 export function dateStringIsToday(dateString: string) {
   const today = new Date();
   const todayString = today.toISOString().split('T')[0];
@@ -35,7 +37,7 @@ export const namesAndPlaceHolders = [
 ];
 export const formKeys = namesAndPlaceHolders.map(({ name }) => name);
 
-export function searchParamsAreEmpty(searchParams: URLSearchParams) {
+export function searchParamsAreEmpty(searchParams: ReadonlyURLSearchParams) {
   for (const key of formKeys) {
     if (searchParams.has(key)) {
       return false;
@@ -44,8 +46,8 @@ export function searchParamsAreEmpty(searchParams: URLSearchParams) {
   return true;
 }
 
-export function getRecentDateParams(searchParams: URLSearchParams) {
-  const newSearchParams = new URLSearchParams(searchParams);
+export function getRecentDateParams(searchParams: ReadonlyURLSearchParams) {
+  const newSearchParams = new URLSearchParams(searchParams.toString());
   newSearchParams.set('start-date', recentDate().replaceAll('-', '').slice(2));
   return newSearchParams;
 }

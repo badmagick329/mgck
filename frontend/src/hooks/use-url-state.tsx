@@ -9,12 +9,14 @@ export default function useURLState({ formKeys }: { formKeys: string[] }) {
 
   function getNewURL(
     formData: FormData,
-    oldSearchParams: URLSearchParams = searchParams
+    oldSearchParams: URLSearchParams = new URLSearchParams(
+      searchParams.toString()
+    )
   ) {
     const newSearchParams = new URLSearchParams(oldSearchParams);
 
     for (const [key, value] of formData.entries()) {
-      if (typeof value !== 'string' || value === undefined) {
+      if (typeof value !== 'string') {
         continue;
       }
       if (value === '') {
@@ -48,7 +50,6 @@ export default function useURLState({ formKeys }: { formKeys: string[] }) {
   return {
     searchParams,
     formKeys,
-    getNewURL,
     formDataToURLState,
     router,
     pathname,
