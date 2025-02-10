@@ -96,18 +96,33 @@ builder
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Apply migrations
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        Console.WriteLine("Applying migrations...");
+        context.Database.Migrate();
+        Console.WriteLine("Migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while migrating the database\n{ex}");
+        Environment.Exit(1);
+    }
+}
+
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    Console.WriteLine($"Connection String: {connectionString}");
 }
 else if (app.Environment.IsProduction())
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    Console.WriteLine($"Connection String: {connectionString}");
+    //
 }
 
 app.UseRouting();
