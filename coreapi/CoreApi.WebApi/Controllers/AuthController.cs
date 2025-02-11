@@ -113,6 +113,7 @@ public class AuthController : ControllerBase
         if (user?.RefreshToken == null ||
             (await IsRefreshTokenExpired(user.RefreshToken)))
         {
+            Console.WriteLine($"Invalid refresh token for user {user?.UserName}");
             return Unauthorized(new { message = "Invalid refresh token." });
         }
 
