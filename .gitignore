@@ -1,5 +1,6 @@
 .env
 db
+core_db
 docker-compose*.yml
 nginx/conf.d/*
 !nginx/conf.d/main.conf.sample
