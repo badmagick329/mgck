@@ -2,7 +2,9 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using CoreApi.WebApi.Common;
 using CoreApi.WebApi.Dtos;
+using CoreApi.WebApi.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,15 +22,17 @@ public class AuthController : ControllerBase
     private readonly UserManager<AppUser> _userManager;
     private readonly SignInManager<AppUser> _signInManager;
     private readonly IConfiguration _configuration;
+    private readonly ApplicationDbContext _context;
     private readonly int _jwtTokenDurationInMinutes;
     private readonly int _refreshTokenDurationInDays;
 
     public AuthController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager,
-        IConfiguration configuration)
+        IConfiguration configuration, ApplicationDbContext context)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
+        _context = context;
         _jwtTokenDurationInMinutes = int.Parse(_configuration["JWT:JWTTokenDurationInMinutes"] ?? "");
         _refreshTokenDurationInDays = int.Parse(_configuration["JWT:RefreshTokenDurationInDays"] ?? "");
     }
@@ -36,15 +40,33 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto model)
     {
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+
         var user = new AppUser { UserName = model.Username };
         var result = await _userManager.CreateAsync(user, model.Password);
-
-        if (result.Succeeded)
+        if (!result.Succeeded)
         {
-            return Ok(new { message = "Registration successful" });
+            return BadRequest(result.Errors);
         }
 
-        return BadRequest(result.Errors);
+        try
+        {
+            var addRoleResult = await _userManager.AddToRoleAsync(user, RoleConstants.NewUser);
+            if (!addRoleResult.Succeeded)
+            {
+                await transaction.RollbackAsync();
+                return BadRequest("Could not assign new user role");
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            await transaction.RollbackAsync();
+            return BadRequest("Role not found");
+        }
+
+        await transaction.CommitAsync();
+        return Ok(new { message = "Registration successful" });
     }
 
     [HttpPost("login")]
@@ -80,9 +102,27 @@ public class AuthController : ControllerBase
         return Ok(new { message = "User is logged in." });
     }
 
+    [HttpGet("role")]
+    [Authorize]
+    public async Task<IActionResult> Role()
+    {
+        var user = _userManager.Users.FirstOrDefault(u => User.Identity != null && u.UserName == User.Identity.Name);
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+        if (role is null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new { role });
+    }
+
     private string GenerateJwtToken(AppUser user)
     {
-        Console.WriteLine($"Generating new token for user {user.UserName}");
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SigningKey"]));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -98,14 +138,12 @@ public class AuthController : ControllerBase
             expires: DateTime.Now.AddMinutes(_jwtTokenDurationInMinutes),
             signingCredentials: credentials);
 
-        Console.WriteLine($"Expires at {token.ValidTo}");
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenDto model)
     {
-        Console.WriteLine($"Got dto with refresh token {model.RefreshToken}");
         var modelRefreshToken = model.RefreshToken;
 
         var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == modelRefreshToken);
@@ -113,11 +151,9 @@ public class AuthController : ControllerBase
         if (user?.RefreshToken == null ||
             (await IsRefreshTokenExpired(user.RefreshToken)))
         {
-            Console.WriteLine($"Invalid refresh token for user {user?.UserName}");
             return Unauthorized(new { message = "Invalid refresh token." });
         }
 
-        Console.WriteLine($"Refreshing token for user {user.UserName}");
 
         var newJwtToken = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken();

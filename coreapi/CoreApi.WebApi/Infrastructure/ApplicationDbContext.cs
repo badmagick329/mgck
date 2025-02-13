@@ -1,4 +1,5 @@
-﻿using CoreApi.WebApi.Models;
+﻿using CoreApi.WebApi.Common;
+using CoreApi.WebApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -18,14 +19,20 @@ public class ApplicationDbContext : IdentityDbContext<AppUser>
         [
             new IdentityRole
             {
-                Name = "Admin",
-                NormalizedName = "ADMIN"
+                Name = RoleConstants.Admin,
+                NormalizedName = RoleConstants.Admin.ToUpper()
             },
 
             new IdentityRole
             {
-                Name = "NewUser",
-                NormalizedName = "NEWUSER"
+                Name = RoleConstants.NewUser,
+                NormalizedName = RoleConstants.NewUser.ToUpper()
+            },
+
+            new IdentityRole
+            {
+                Name = RoleConstants.AcceptedUser,
+                NormalizedName = RoleConstants.AcceptedUser.ToUpper()
             }
         ];
         builder.Entity<IdentityRole>().HasData(roles);
