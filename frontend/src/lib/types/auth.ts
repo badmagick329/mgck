@@ -3,14 +3,12 @@ export type CredentialsErrorResponse = {
   description: string;
 }[];
 
-export type ProblemErrorResponse = {
-  errors: {
-    [field: string]: string[];
-  }[];
-};
-
 export type ProblemError = {
   [field: string]: string[];
+};
+
+export type ProblemErrorResponse = {
+  errors: ProblemError[];
 };
 
 export type ApiError = CredentialsErrorResponse | ProblemError[];
@@ -21,10 +19,20 @@ export type ErrorResponse = {
   errors: ApiError;
 };
 
-export type ServerResponse =
-  | {
-      type: 'success';
-      status: number;
-      message: string;
-    }
-  | ErrorResponse;
+export type SuccessBase = {
+  type: 'success';
+  status: number;
+  data?: any;
+};
+
+export type RoleResponse = SuccessBase & {
+  data: { role: string };
+};
+
+export type MessageResponse = SuccessBase & {
+  data: { message: string };
+};
+
+export type SuccessResponse = MessageResponse | RoleResponse;
+
+export type AspAuthResponse = SuccessResponse | ErrorResponse;
