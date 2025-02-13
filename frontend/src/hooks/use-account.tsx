@@ -4,10 +4,11 @@ import {
   loginUserAction,
   registerUserAction,
   renewTokensAction,
+  setUserRolesAction,
   userAuthStatusAction,
   userRoleAction,
 } from '@/actions/account';
-import { stringifyErrors } from '@/lib/account/utils';
+import { stringifyErrors } from '@/lib/account/errors';
 import { AspAuthResponse, SuccessResponse } from '@/lib/types/auth';
 import { useState } from 'react';
 import { util } from 'zod';
@@ -24,7 +25,6 @@ export function useAccount() {
   };
 
   const userAuthStatus = async () => {
-    console.log('checking status');
     const response = await userAuthStatusAction();
     handleResponse(response);
   };
@@ -36,6 +36,11 @@ export function useAccount() {
 
   const userRole = async () => {
     const response = await userRoleAction();
+    handleResponse(response);
+  };
+
+  const setRoles = async () => {
+    const response = await setUserRolesAction();
     handleResponse(response);
   };
 
@@ -67,6 +72,7 @@ export function useAccount() {
     userAuthStatus,
     renewTokens,
     userRole,
+    setRoles,
     registerUser,
     errorResponse,
     setErrorResponse,

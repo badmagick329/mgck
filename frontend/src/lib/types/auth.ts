@@ -25,8 +25,10 @@ export type SuccessBase = {
   data?: any;
 };
 
+export type UserRoles = 'Admin' | 'NewUser' | 'AcceptedUser';
+
 export type RoleResponse = SuccessBase & {
-  data: { role: string };
+  data: { role: UserRoles };
 };
 
 export type MessageResponse = SuccessBase & {
