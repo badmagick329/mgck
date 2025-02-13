@@ -2,9 +2,12 @@ import {
   ApiError,
   CredentialsErrorResponse,
   ErrorResponse,
+  MessageResponse,
   ProblemError,
   ProblemErrorResponse,
-  ServerResponse,
+  RoleResponse,
+  SuccessBase,
+  SuccessResponse,
 } from '@/lib/types/auth';
 
 const isCredentialsErrorResponse = (x: any): x is CredentialsErrorResponse => {
@@ -48,6 +51,10 @@ const isProblemError = (x: any): x is ProblemError => {
   );
 };
 
+const isProblemErrors = (x: any): x is ProblemError[] => {
+  return Array.isArray(x) && x.every(isProblemError);
+};
+
 const isApiError = (x: any): x is ApiError => {
   return (
     isCredentialsErrorResponse(x) ||
@@ -65,27 +72,35 @@ const isErrorResponse = (x: any): x is ErrorResponse => {
   );
 };
 
-const isSuccessResponse = (
-  x: any
-): x is { type: 'success'; status: number; message: string } => {
+const isSuccessBase = (x: any): x is SuccessBase => {
   return (
     typeof x === 'object' &&
     x !== null &&
     x.type === 'success' &&
-    typeof x.status === 'number' &&
-    typeof x.message === 'string'
+    typeof x.status === 'number'
   );
 };
 
-const isServerResponse = (x: any): x is ServerResponse => {
-  return isSuccessResponse(x) || isErrorResponse(x);
+const isRoleResponse = (x: any): x is RoleResponse => {
+  return isSuccessBase(x) && x?.data && 'role' in x.data;
+};
+
+const isMessageResponse = (x: any): x is MessageResponse => {
+  return isSuccessBase(x) && x?.data && 'message' in x.data;
+};
+
+const isSuccessResponse = (x: any): x is SuccessResponse => {
+  return isRoleResponse(x) || isMessageResponse(x);
 };
 
 export {
   isCredentialsErrorResponse,
   isProblemErrorResponse,
   isProblemError,
+  isProblemErrors,
   isApiError,
   isErrorResponse,
   isSuccessResponse,
+  isRoleResponse,
+  isMessageResponse,
 };

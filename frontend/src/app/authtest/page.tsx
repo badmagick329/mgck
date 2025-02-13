@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuthRequest } from '@/hooks/use-auth-request';
+import { useAccount } from '@/hooks/use-account';
 import { useState } from 'react';
 
 export default function Login() {
@@ -10,9 +10,11 @@ export default function Login() {
     loginUser,
     userAuthStatus,
     renewTokens,
+    userRole,
     registerUser,
     serverResponse,
-  } = useAuthRequest();
+    errorResponse,
+  } = useAccount();
 
   return (
     <main className={'flex min-h-screen flex-col'}>
@@ -63,20 +65,33 @@ export default function Login() {
             >
               Refresh
             </button>
+            <button
+              type={'button'}
+              className={'bg-purple-400 px-4 py-2'}
+              onClick={userRole}
+            >
+              Get Role
+            </button>
           </div>
         </form>
       </div>
-      <div className={'flex flex-col gap-4'}>
-        <div className={'mx-auto'}>
-          <textarea
-            readOnly
-            rows={10}
-            cols={120}
-            className={'select-none'}
-            placeholder={'server response'}
-            value={serverResponse}
-          />
-        </div>
+      <div className={'flex flex-col gap-4 items-center'}>
+        <textarea
+          readOnly
+          rows={10}
+          cols={120}
+          className={'select-none'}
+          placeholder={'server response'}
+          value={serverResponse}
+        />
+        <textarea
+          readOnly
+          rows={10}
+          cols={120}
+          className={'select-none'}
+          placeholder={'error response'}
+          value={errorResponse}
+        />
       </div>
     </main>
   );

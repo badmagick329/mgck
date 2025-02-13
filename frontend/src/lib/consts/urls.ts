@@ -17,3 +17,4 @@ export const API_AUTH_STATUS = `${AUTH_BASE}/status`;
 export const API_LOGIN = `${AUTH_BASE}/login`;
 export const API_REFRESH = `${AUTH_BASE}/refresh`;
 export const API_REGISTER = `${AUTH_BASE}/register`;
+export const API_USER_ROLE = `${AUTH_BASE}/role`;
