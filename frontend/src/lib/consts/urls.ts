@@ -18,3 +18,4 @@ export const API_LOGIN = `${AUTH_BASE}/login`;
 export const API_REFRESH = `${AUTH_BASE}/refresh`;
 export const API_REGISTER = `${AUTH_BASE}/register`;
 export const API_USER_ROLE = `${AUTH_BASE}/role`;
+export const API_SET_ROLES = `${AUTH_BASE}/setroles`;

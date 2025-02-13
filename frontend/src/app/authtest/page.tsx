@@ -11,6 +11,7 @@ export default function Login() {
     userAuthStatus,
     renewTokens,
     userRole,
+    setRoles,
     registerUser,
     serverResponse,
     errorResponse,
@@ -71,6 +72,13 @@ export default function Login() {
               onClick={userRole}
             >
               Get Role
+            </button>
+            <button
+              type={'button'}
+              className={'bg-pink-600 px-4 py-2'}
+              onClick={setRoles}
+            >
+              Set Roles
             </button>
           </div>
         </form>

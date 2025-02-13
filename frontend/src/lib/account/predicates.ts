@@ -1,5 +1,6 @@
 import {
   ApiError,
+  AspAuthResponse,
   CredentialsErrorResponse,
   ErrorResponse,
   MessageResponse,
@@ -8,6 +9,7 @@ import {
   RoleResponse,
   SuccessBase,
   SuccessResponse,
+  UserRole,
 } from '@/lib/types/auth';
 
 const isCredentialsErrorResponse = (x: any): x is CredentialsErrorResponse => {
@@ -81,8 +83,18 @@ const isSuccessBase = (x: any): x is SuccessBase => {
   );
 };
 
+const isUserRole = (x: any): x is UserRole => {
+  return x === 'Admin' || x === 'NewUser' || x === 'AcceptedUser';
+};
+
 const isRoleResponse = (x: any): x is RoleResponse => {
-  return isSuccessBase(x) && x?.data && 'role' in x.data;
+  return (
+    isSuccessBase(x) &&
+    x?.data &&
+    'role' in x.data &&
+    typeof x.data.role === 'string' &&
+    isUserRole(x.data.role)
+  );
 };
 
 const isMessageResponse = (x: any): x is MessageResponse => {
@@ -91,6 +103,10 @@ const isMessageResponse = (x: any): x is MessageResponse => {
 
 const isSuccessResponse = (x: any): x is SuccessResponse => {
   return isRoleResponse(x) || isMessageResponse(x);
+};
+
+const isAspAuthResponse = (x: any): x is AspAuthResponse => {
+  return isSuccessResponse(x) || isErrorResponse(x);
 };
 
 export {
@@ -103,4 +119,5 @@ export {
   isSuccessResponse,
   isRoleResponse,
   isMessageResponse,
+  isAspAuthResponse,
 };
