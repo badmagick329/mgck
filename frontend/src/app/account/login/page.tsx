@@ -93,7 +93,6 @@ export default function Login() {
 }
 
 function ErrorMessages({ errorResponse }: { errorResponse: string[] }) {
-  console.log('inside error messages');
   if (errorResponse.length === 0) {
     return null;
   }
