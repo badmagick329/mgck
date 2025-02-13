@@ -35,7 +35,6 @@ GFY_PAGE_SIZE = os.environ.get("GFY_PAGE_SIZE", 100)
 
 ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(" ")
 
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -130,7 +129,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -141,7 +139,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
