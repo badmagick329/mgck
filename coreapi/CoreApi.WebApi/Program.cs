@@ -1,3 +1,4 @@
+using CoreApi.WebApi.Common;
 using CoreApi.WebApi.Infrastructure;
 using CoreApi.WebApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -96,7 +97,7 @@ builder
 
 var app = builder.Build();
 
-// Apply migrations
+// Apply migrations and seed roles
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -110,6 +111,49 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"An error occurred while migrating the database\n{ex}");
+        Environment.Exit(1);
+    }
+
+    try
+    {
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        Console.WriteLine("Seeding roles...");
+        var roles = new List<IdentityRole>
+        {
+            new IdentityRole
+            {
+                Name = RoleConstants.Admin,
+                NormalizedName = RoleConstants.Admin.ToUpper()
+            },
+            new IdentityRole
+            {
+                Name = RoleConstants.NewUser,
+                NormalizedName = RoleConstants.NewUser.ToUpper()
+            },
+            new IdentityRole
+            {
+                Name = RoleConstants.AcceptedUser,
+                NormalizedName = RoleConstants.AcceptedUser.ToUpper()
+            }
+        };
+        foreach (var role in roles)
+        {
+            if (role.Name is null)
+            {
+                continue;
+            }
+
+            if (roleManager.FindByNameAsync(role.Name).Result == null)
+            {
+                roleManager.CreateAsync(role).Wait();
+            }
+        }
+
+        Console.WriteLine("Roles seeded successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while seeding roles\n{ex}");
         Environment.Exit(1);
     }
 }
