@@ -1,10 +1,13 @@
 'use server';
 
 import {
-  isErrorResponse,
-  isMessageResponse,
-  isRoleResponse,
-} from '@/lib/account/predicates';
+  ErrorResponse,
+  errorResponseSchema,
+  MessageResponse,
+  messageResponseSchema,
+  RoleResponse,
+  roleResponseSchema,
+} from '@/lib/types/auth';
 import { parsedServerResponse } from '@/lib/account/parsed-server-response';
 import {
   API_AUTH_STATUS,
@@ -13,7 +16,6 @@ import {
   API_SET_ROLES,
   API_USER_ROLE,
 } from '@/lib/consts/urls';
-import { ErrorResponse, MessageResponse, RoleResponse } from '@/lib/types/auth';
 import { createErrorResponse } from '@/lib/account/errors';
 import {
   fetchWithAuthHeader,
@@ -31,25 +33,7 @@ export async function userAuthStatusAction(): Promise<
     method: 'POST',
   });
 
-  const parsedResponse = await parsedServerResponse(response);
-  if (isMessageResponse(parsedResponse) || isErrorResponse(parsedResponse)) {
-    return parsedResponse;
-  }
-
-  return createErrorResponse(response);
-}
-
-export async function userRoleAction(): Promise<RoleResponse | ErrorResponse> {
-  const parsedResponse = await fetchWithRenewIfNeeded({
-    url: `${BASE_URL}${API_USER_ROLE}`,
-    method: 'GET',
-  });
-
-  if (isRoleResponse(parsedResponse) || isErrorResponse(parsedResponse)) {
-    return parsedResponse;
-  }
-
-  return createErrorResponse();
+  return await errorAsMessageOrErrorResponse(response);
 }
 
 export async function setUserRolesAction(): Promise<
@@ -60,8 +44,14 @@ export async function setUserRolesAction(): Promise<
     method: 'GET',
   });
 
-  if (isMessageResponse(parsedResponse) || isErrorResponse(parsedResponse)) {
-    return parsedResponse;
+  const messageResponseParse = messageResponseSchema.safeParse(parsedResponse);
+  if (messageResponseParse.success) {
+    return messageResponseParse.data;
+  }
+
+  const errorResponseParse = errorResponseSchema.safeParse(parsedResponse);
+  if (errorResponseParse.success) {
+    return errorResponseParse.data;
   }
 
   return createErrorResponse();
@@ -76,25 +66,14 @@ export async function loginUserAction(payload: {
     method: 'POST',
     data: payload,
   });
-  const parsedResponse = await parsedServerResponse(response);
-  if (isMessageResponse(parsedResponse) || isErrorResponse(parsedResponse)) {
-    return parsedResponse;
-  }
-
-  return createErrorResponse(response);
+  return await errorAsMessageOrErrorResponse(response);
 }
 
 export async function renewTokensAction(): Promise<
   MessageResponse | ErrorResponse
 > {
   const response = await makeRefreshRequest();
-
-  const parsedResponse = await parsedServerResponse(response);
-  if (isMessageResponse(parsedResponse) || isErrorResponse(parsedResponse)) {
-    return parsedResponse;
-  }
-
-  return createErrorResponse(response);
+  return await errorAsMessageOrErrorResponse(response);
 }
 
 export async function registerUserAction(payload: {
@@ -110,9 +89,40 @@ export async function registerUserAction(payload: {
     body: JSON.stringify(payload),
   });
 
+  return await errorAsMessageOrErrorResponse(response);
+}
+
+export async function userRoleAction(): Promise<RoleResponse | ErrorResponse> {
+  const parsedResponse = await fetchWithRenewIfNeeded({
+    url: `${BASE_URL}${API_USER_ROLE}`,
+    method: 'GET',
+  });
+
+  const errorResponseParse = errorResponseSchema.safeParse(parsedResponse);
+  if (errorResponseParse.success) {
+    return errorResponseParse.data;
+  }
+
+  const roleResponseParse = roleResponseSchema.safeParse(parsedResponse);
+  if (roleResponseParse.success) {
+    return roleResponseParse.data;
+  }
+
+  return createErrorResponse();
+}
+
+async function errorAsMessageOrErrorResponse(
+  response: Response
+): Promise<MessageResponse | ErrorResponse> {
   const parsedResponse = await parsedServerResponse(response);
-  if (isMessageResponse(parsedResponse) || isErrorResponse(parsedResponse)) {
-    return parsedResponse;
+  const messageResponseParse = messageResponseSchema.safeParse(parsedResponse);
+  if (messageResponseParse.success) {
+    return messageResponseParse.data;
+  }
+
+  const errorResponseParse = errorResponseSchema.safeParse(parsedResponse);
+  if (errorResponseParse.success) {
+    return errorResponseParse.data;
   }
 
   return createErrorResponse(response);

@@ -1,19 +1,19 @@
 import { userRoleAction } from '@/actions/account';
 import 'server-only';
-import { isErrorResponse, isRoleResponse } from '@/lib/account/predicates';
+import { errorResponseSchema, roleResponseSchema } from '@/lib/types/auth';
 import { stringifyErrors } from '@/lib/account/errors';
-import { UserRole } from '@/lib/types/auth';
 
 export default async function AccountStatus() {
   const response = await userRoleAction();
   let content = 'Unknown server error';
-  if (isErrorResponse(response)) {
-    content = stringifyErrors(response.errors).join(', ');
+  const errorResponseParse = errorResponseSchema.safeParse(response);
+  if (errorResponseParse.success) {
+    content = stringifyErrors(errorResponseParse.data.errors).join(', ');
   }
 
-  if (isRoleResponse(response)) {
-    const role = response.data.role as UserRole;
-    console.log(`role is ${role}`);
+  const roleResponseParse = roleResponseSchema.safeParse(response);
+  if (roleResponseParse.success) {
+    const role = roleResponseParse.data.data.role;
     switch (role) {
       case 'Admin':
         content = 'You are an admin';
