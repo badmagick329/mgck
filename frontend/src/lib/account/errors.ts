@@ -1,22 +1,27 @@
 import {
-  isCredentialsErrorResponse,
-  isProblemErrors,
-} from '@/lib/account/predicates';
-import {
   ApiError,
   CredentialsErrorResponse,
+  credentialsErrorResponseSchema,
   ErrorResponse,
+  problemErrorResponseSchema,
 } from '@/lib/types/auth';
 
 const stringifyErrors = (e: ApiError): string[] => {
-  if (isProblemErrors(e)) {
-    return e.flatMap((error) => {
+  const problemErrorResponseParse = problemErrorResponseSchema.safeParse(e);
+  if (problemErrorResponseParse.success) {
+    return problemErrorResponseParse.data.errors.flatMap((error) => {
       return Object.entries(error).map(([field, messages]) => {
         return `${field}: ${messages.join(', ')}`;
       });
     });
-  } else if (isCredentialsErrorResponse(e)) {
-    return stringifyCredentialsErrorWithoutCode(e);
+  }
+
+  const credentialsErrorResponseParse =
+    credentialsErrorResponseSchema.safeParse(e);
+  if (credentialsErrorResponseParse.success) {
+    return stringifyCredentialsErrorWithoutCode(
+      credentialsErrorResponseParse.data
+    );
   }
   return ['Unknown server error'];
 };

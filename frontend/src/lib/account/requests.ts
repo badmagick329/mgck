@@ -1,6 +1,10 @@
-import { isAspAuthResponse, isErrorResponse } from '@/lib/account/predicates';
+import {
+  AspAuthResponse,
+  aspAuthResponseSchema,
+  ErrorResponse,
+  errorResponseSchema,
+} from '@/lib/types/auth';
 import { cookies } from 'next/headers';
-import { AspAuthResponse, ErrorResponse } from '@/lib/types/auth';
 import { API_REFRESH } from '@/lib/consts/urls';
 import { parsedServerResponse } from './parsed-server-response';
 import { createErrorResponse } from '@/lib/account/errors';
@@ -49,7 +53,7 @@ const fetchWithRenewIfNeeded = async ({
         data,
       });
       const parsedNewResponse = await parsedServerResponse(newResponse);
-      if (isAspAuthResponse(parsedNewResponse)) {
+      if (aspAuthResponseSchema.safeParse(parsedNewResponse).success) {
         return parsedNewResponse;
       }
       return createErrorResponse(newResponse);
@@ -62,7 +66,8 @@ const tryRefreshToken = async (
   parsedResponse: AspAuthResponse
 ): Promise<RefreshResult> => {
   const refreshNeeded =
-    isErrorResponse(parsedResponse) && parsedResponse.status === 401;
+    errorResponseSchema.safeParse(parsedResponse).success &&
+    parsedResponse.status === 401;
 
   if (!refreshNeeded) {
     return { type: 'notNeeded' };
@@ -76,8 +81,11 @@ const tryRefreshToken = async (
   });
 
   const parsedRefreshResponse = await parsedServerResponse(refreshResponse);
-  if (isErrorResponse(parsedRefreshResponse)) {
-    return { type: 'error', error: parsedRefreshResponse };
+  const errorResponseParse = errorResponseSchema.safeParse(
+    parsedRefreshResponse
+  );
+  if (errorResponseParse.success) {
+    return { type: 'error', error: errorResponseParse.data };
   }
   return { type: 'success' };
 };

@@ -9,10 +9,14 @@ import {
   userRoleAction,
 } from '@/actions/account';
 import { stringifyErrors } from '@/lib/account/errors';
-import { AspAuthResponse, SuccessResponse } from '@/lib/types/auth';
+import {
+  AspAuthResponse,
+  messageResponseSchema,
+  roleResponseSchema,
+  SuccessResponse,
+} from '@/lib/types/auth';
 import { useState } from 'react';
 import { util } from 'zod';
-import { isMessageResponse, isRoleResponse } from '@/lib/account/predicates';
 import assertNever = util.assertNever;
 
 export function useAccount() {
@@ -81,9 +85,15 @@ export function useAccount() {
 }
 
 const messageFromData = (response: SuccessResponse) => {
-  return (
-    (isMessageResponse(response) && response.data.message) ||
-    (isRoleResponse(response) && response.data.role) ||
-    'success'
-  );
+  const messageResponseParse = messageResponseSchema.safeParse(response);
+  if (messageResponseParse.success) {
+    return messageResponseParse.data.data.message;
+  }
+
+  const roleResponseParse = roleResponseSchema.safeParse(response);
+  if (roleResponseParse.success) {
+    return roleResponseParse.data.data.role;
+  }
+
+  return 'success';
 };

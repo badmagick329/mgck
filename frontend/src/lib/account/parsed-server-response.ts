@@ -1,9 +1,10 @@
-import { AspAuthResponse, ErrorResponse } from '@/lib/types/auth';
 import { cookies } from 'next/headers';
 import {
-  isCredentialsErrorResponse,
-  isProblemErrorResponse,
-} from '@/lib/account/predicates';
+  AspAuthResponse,
+  credentialsErrorResponseSchema,
+  ErrorResponse,
+  problemErrorResponseSchema,
+} from '@/lib/types/auth';
 import { createErrorResponse } from '@/lib/account/errors';
 
 export async function parsedServerResponse(
@@ -50,29 +51,29 @@ export async function parsedServerResponse(
 async function errorsFromResponse(
   response: Response
 ): Promise<ErrorResponse | null> {
-  if (response.status !== 200) {
-    try {
-      const data = await response.json();
-      if (isCredentialsErrorResponse(data)) {
-        return {
-          type: 'error',
-          status: response.status,
-          errors: data,
-        };
-      }
+  if (response.status === 200) return null;
 
-      if (isProblemErrorResponse(data)) {
-        return {
-          type: 'error',
-          status: response.status,
-          errors: data.errors,
-        };
-      }
+  try {
+    const data = await response.json();
 
-      return createErrorResponse(response);
-    } catch (error) {
-      return createErrorResponse(response);
+    if (credentialsErrorResponseSchema.safeParse(data).success) {
+      return {
+        type: 'error',
+        status: response.status,
+        errors: data,
+      };
     }
+
+    if (problemErrorResponseSchema.safeParse(data).success) {
+      return {
+        type: 'error',
+        status: response.status,
+        errors: data.errors,
+      };
+    }
+
+    return createErrorResponse(response);
+  } catch (error) {
+    return createErrorResponse(response);
   }
-  return null;
 }
