@@ -1,20 +1,18 @@
 'use client';
 import { useState } from 'react';
 import { useAccount } from '@/hooks/use-account';
+import { useRouter } from 'next/navigation';
+import { ACCOUNT_USER_HOME } from '@/lib/consts/urls';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  const router = useRouter();
 
-  const {
-    loginUser,
-    registerUser,
-    errorResponse,
-    setErrorResponse,
-    serverResponse,
-  } = useAccount();
+  const { loginUser, registerUser, errorResponse, setErrorResponse } =
+    useAccount();
 
   const handleSubmission = async () => {
     if (isRegistering && password !== password2) {
@@ -22,11 +20,17 @@ export default function Login() {
       return;
     }
     if (isRegistering && password === password2) {
-      await registerUser({ username, password });
+      const registered = await registerUser({ username, password });
+      if (!registered) {
+        return;
+      }
+      const loggedIn = await loginUser({ username, password });
+      loggedIn && router.push(ACCOUNT_USER_HOME);
       return;
     }
 
-    await loginUser({ username, password });
+    const loggedIn = await loginUser({ username, password });
+    loggedIn && router.push(ACCOUNT_USER_HOME);
   };
 
   return (
@@ -87,7 +91,6 @@ export default function Login() {
         </form>
       </div>
       <ErrorMessages errorResponse={errorResponse} />
-      <ServerMessages serverResponse={serverResponse} />
     </main>
   );
 }

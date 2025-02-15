@@ -3,6 +3,9 @@ export const KPOP_BASE = '/kpop';
 export const URL_SHORTENER_BASE = '/shorten';
 export const EMOJIFY_BASE = '/emojify';
 export const DISCORD_GIFS = '/discordgifs';
+const ACCOUNT_BASE = '/account';
+export const ACCOUNT_LOGIN = `${ACCOUNT_BASE}/login`;
+export const ACCOUNT_USER_HOME = `${ACCOUNT_BASE}/home`;
 
 const DJANGO_API_BASE = '/api';
 export const API_GFYS = `${DJANGO_API_BASE}/gfys`;
