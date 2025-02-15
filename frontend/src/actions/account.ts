@@ -10,11 +10,15 @@ import {
 } from '@/lib/types/auth';
 import { parsedServerResponse } from '@/lib/account/parsed-server-response';
 import {
+  API_APPROVE_USER,
   API_AUTH_STATUS,
+  API_DELETE_USER,
   API_LOGIN,
   API_REGISTER,
   API_SET_ROLES,
+  API_UNAPPROVE_USER,
   API_USER_ROLE,
+  API_USERS_BASE,
 } from '@/lib/consts/urls';
 import { createErrorResponse } from '@/lib/account/errors';
 import {
@@ -109,6 +113,29 @@ export async function userRoleAction(): Promise<RoleResponse | ErrorResponse> {
   }
 
   return createErrorResponse();
+}
+
+export async function deleteUnapprovedUsersAction() {
+  return await fetchWithRenewIfNeeded({
+    url: `${BASE_URL}${API_DELETE_USER}`,
+    method: 'POST',
+  });
+}
+
+export async function approveUserAction(username: string) {
+  return await fetchWithRenewIfNeeded({
+    url: `${BASE_URL}${API_APPROVE_USER}`,
+    method: 'POST',
+    data: { username },
+  });
+}
+
+export async function unapproveUserAction(username: string) {
+  return await fetchWithRenewIfNeeded({
+    url: `${BASE_URL}${API_UNAPPROVE_USER}`,
+    method: 'POST',
+    data: { username },
+  });
 }
 
 async function errorAsMessageOrErrorResponse(

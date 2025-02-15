@@ -6,7 +6,7 @@ import {
   roleResponseSchema,
 } from '@/lib/types/auth';
 import { redirect } from 'next/navigation';
-import { ACCOUNT_BASE } from '@/lib/consts/urls';
+import { ACCOUNT_LOGIN } from '@/lib/consts/urls';
 import AdminHome from '@/app/account/home/_components/AdminHome';
 import AcceptedUserHome from '@/app/account/home/_components/AcceptedUserHome';
 import NewUserHome from '@/app/account/home/_components/NewUserHome';
@@ -20,10 +20,8 @@ export default async function Home() {
   const response = await userRoleAction();
   const parsed = roleResponseSchema.safeParse(response);
   if (!parsed.success) {
-    console.log(`Error: ${JSON.stringify(parsed.error.errors)}`);
-    redirect(`${ACCOUNT_BASE}/login`);
+    redirect(ACCOUNT_LOGIN);
   }
-  console.log(`got role ${parsed.data.data.role}`);
 
   if (parsed.data.data.role === ADMIN_ROLE) {
     return (

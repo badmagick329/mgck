@@ -26,15 +26,15 @@ export const errorResponseSchema = z.object({
 });
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 
-const successBaseSchema = z.object({
-  type: z.literal('success'),
-  status: z.number(),
-});
-
 export const ADMIN_ROLE = 'Admin';
 export const NEW_USER_ROLE = 'NewUser';
 export const ACCEPTED_USER_ROLE = 'AcceptedUser';
 const userRoleSchema = z.enum([ADMIN_ROLE, NEW_USER_ROLE, ACCEPTED_USER_ROLE]);
+
+const successBaseSchema = z.object({
+  type: z.literal('success'),
+  status: z.number(),
+});
 
 export const roleResponseSchema = successBaseSchema.extend({
   data: z.object({
@@ -51,9 +51,24 @@ export const messageResponseSchema = successBaseSchema.extend({
 });
 export type MessageResponse = z.infer<typeof messageResponseSchema>;
 
+const usersResponseData = z.array(
+  z.object({
+    username: z.string(),
+    role: z.string(),
+  })
+);
+export type UsersResponseData = z.infer<typeof usersResponseData>;
+
+export const usersResponseSchema = successBaseSchema.extend({
+  data: usersResponseData,
+});
+
+export type UsersResponse = z.infer<typeof usersResponseSchema>;
+
 export const successResponseSchema = z.union([
   roleResponseSchema,
   messageResponseSchema,
+  usersResponseSchema,
 ]);
 export type SuccessResponse = z.infer<typeof successResponseSchema>;
 
