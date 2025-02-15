@@ -73,24 +73,31 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDto model)
     {
         var user = await _userManager.FindByNameAsync(model.Username);
+        Console.WriteLine($"Attempted login by {model.Username}");
         if (user is null)
         {
+            Console.WriteLine($"User {model.Username} not found");
             var errorResponse = new CredentialsErrorResponse("Invalid Credentials", "Credentials are invalid.");
             return Unauthorized(new[] { errorResponse });
         }
 
+        Console.WriteLine($"User {model.Username} found. signing in");
         var signInResult = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
         if (!signInResult.Succeeded)
         {
+            Console.WriteLine($"User {model.Username} could not sign in");
             var errorResponse = new CredentialsErrorResponse("Invalid Credentials", "Credentials are invalid.");
             return Unauthorized(new[] { errorResponse });
         }
 
+        Console.WriteLine($"User {model.Username} signed in successfully. generating token");
         var token = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken();
         user.RefreshToken = refreshToken.Token;
         user.RefreshTokenExpiryTime = refreshToken.ExpiryTime;
+        Console.WriteLine($"User {model.Username} token generated. updating user");
         await _userManager.UpdateAsync(user);
+        Console.WriteLine($"User {model.Username} updated. returning token");
 
         return Ok(new { token, refreshToken = user.RefreshToken });
     }
@@ -109,22 +116,18 @@ public class AuthController : ControllerBase
         var user = _userManager.Users.FirstOrDefault(u => User.Identity != null && u.UserName == User.Identity.Name);
         if (user is null)
         {
-            Console.WriteLine($"user not found");
             return Unauthorized();
         }
 
-        Console.WriteLine($"user {user.UserName} found");
 
         var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
         if (role is null)
         {
-            Console.WriteLine($"role not found for user {user.UserName}");
             return Unauthorized();
         }
 
-        Console.WriteLine($"found role {role} for user {user.UserName}");
 
-        return Ok(new { role });
+        return Ok(new { username = user.UserName, role });
     }
 
     [HttpGet("setroles")]

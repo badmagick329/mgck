@@ -30,9 +30,16 @@ const successBaseSchema = z.object({
   type: z.literal('success'),
   status: z.number(),
 });
+
+export const ADMIN_ROLE = 'Admin';
+export const NEW_USER_ROLE = 'NewUser';
+export const ACCEPTED_USER_ROLE = 'AcceptedUser';
+const userRoleSchema = z.enum([ADMIN_ROLE, NEW_USER_ROLE, ACCEPTED_USER_ROLE]);
+
 export const roleResponseSchema = successBaseSchema.extend({
   data: z.object({
-    role: z.enum(['Admin', 'NewUser', 'AcceptedUser']),
+    role: userRoleSchema,
+    username: z.string(),
   }),
 });
 export type RoleResponse = z.infer<typeof roleResponseSchema>;

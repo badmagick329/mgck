@@ -25,27 +25,27 @@ export function useAccount() {
 
   const loginUser = async (payload: { username: string; password: string }) => {
     const response = await loginUserAction(payload);
-    handleResponse(response);
+    return handleResponseAndReturnSuccess(response);
   };
 
   const userAuthStatus = async () => {
     const response = await userAuthStatusAction();
-    handleResponse(response);
+    return handleResponseAndReturnSuccess(response);
   };
 
   const renewTokens = async () => {
     const response = await renewTokensAction();
-    handleResponse(response);
+    return handleResponseAndReturnSuccess(response);
   };
 
   const userRole = async () => {
     const response = await userRoleAction();
-    handleResponse(response);
+    return handleResponseAndReturnSuccess(response);
   };
 
   const setRoles = async () => {
     const response = await setUserRolesAction();
-    handleResponse(response);
+    return handleResponseAndReturnSuccess(response);
   };
 
   const registerUser = async (payload: {
@@ -53,19 +53,19 @@ export function useAccount() {
     password: string;
   }) => {
     const response = await registerUserAction(payload);
-    handleResponse(response);
+    return handleResponseAndReturnSuccess(response);
   };
 
-  const handleResponse = (response: AspAuthResponse) => {
+  const handleResponseAndReturnSuccess = (response: AspAuthResponse) => {
     switch (response.type) {
       case 'error':
         setServerResponse('');
         setErrorResponse(stringifyErrors(response.errors) || ['Server error']);
-        break;
+        return false;
       case 'success':
         setServerResponse(messageFromData(response));
         setErrorResponse([]);
-        break;
+        return true;
       default:
         assertNever(response);
     }
