@@ -51,18 +51,18 @@ export const messageResponseSchema = successBaseSchema.extend({
 });
 export type MessageResponse = z.infer<typeof messageResponseSchema>;
 
-const usersResponseData = z.array(
+const usersResponseDataSchema = z.array(
   z.object({
     username: z.string(),
     role: z.string(),
   })
 );
-export type UsersResponseData = z.infer<typeof usersResponseData>;
 
 export const usersResponseSchema = successBaseSchema.extend({
-  data: usersResponseData,
+  data: usersResponseDataSchema,
 });
 
+export type UsersResponseData = z.infer<typeof usersResponseDataSchema>;
 export type UsersResponse = z.infer<typeof usersResponseSchema>;
 
 export const successResponseSchema = z.union([

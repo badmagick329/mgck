@@ -3,8 +3,6 @@
 import {
   loginUserAction,
   registerUserAction,
-  renewTokensAction,
-  setUserRolesAction,
   userAuthStatusAction,
   userRoleAction,
 } from '@/actions/account';
@@ -33,18 +31,8 @@ export function useAccount() {
     return handleResponseAndReturnSuccess(response);
   };
 
-  const renewTokens = async () => {
-    const response = await renewTokensAction();
-    return handleResponseAndReturnSuccess(response);
-  };
-
   const userRole = async () => {
     const response = await userRoleAction();
-    return handleResponseAndReturnSuccess(response);
-  };
-
-  const setRoles = async () => {
-    const response = await setUserRolesAction();
     return handleResponseAndReturnSuccess(response);
   };
 
@@ -74,9 +62,7 @@ export function useAccount() {
   return {
     loginUser,
     userAuthStatus,
-    renewTokens,
     userRole,
-    setRoles,
     registerUser,
     errorResponse,
     setErrorResponse,

@@ -11,9 +11,9 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace CoreApi.WebApi.Controllers;
 
-using Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Models;
 
 [ApiController]
 [Route("api/auth")]
@@ -26,22 +26,29 @@ public class AuthController : ControllerBase
     private readonly int _jwtTokenDurationInMinutes;
     private readonly int _refreshTokenDurationInDays;
 
-    public AuthController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager,
-        IConfiguration configuration, ApplicationDbContext context)
+    public AuthController(
+        UserManager<AppUser> userManager,
+        SignInManager<AppUser> signInManager,
+        IConfiguration configuration,
+        ApplicationDbContext context
+    )
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
         _context = context;
-        _jwtTokenDurationInMinutes = int.Parse(_configuration["JWT:JWTTokenDurationInMinutes"] ?? "");
-        _refreshTokenDurationInDays = int.Parse(_configuration["JWT:RefreshTokenDurationInDays"] ?? "");
+        _jwtTokenDurationInMinutes = int.Parse(
+            _configuration["JWT:JWTTokenDurationInMinutes"] ?? ""
+        );
+        _refreshTokenDurationInDays = int.Parse(
+            _configuration["JWT:RefreshTokenDurationInDays"] ?? ""
+        );
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto model)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync();
-
 
         var user = new AppUser { UserName = model.Username };
         var result = await _userManager.CreateAsync(user, model.Password);
@@ -75,14 +82,24 @@ public class AuthController : ControllerBase
         var user = await _userManager.FindByNameAsync(model.Username);
         if (user is null)
         {
-            var errorResponse = new CredentialsErrorResponse("Invalid Credentials", "Credentials are invalid.");
+            var errorResponse = new CredentialsErrorResponse(
+                "Invalid Credentials",
+                "Credentials are invalid."
+            );
             return Unauthorized(new[] { errorResponse });
         }
 
-        var signInResult = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+        var signInResult = await _signInManager.CheckPasswordSignInAsync(
+            user,
+            model.Password,
+            false
+        );
         if (!signInResult.Succeeded)
         {
-            var errorResponse = new CredentialsErrorResponse("Invalid Credentials", "Credentials are invalid.");
+            var errorResponse = new CredentialsErrorResponse(
+                "Invalid Credentials",
+                "Credentials are invalid."
+            );
             return Unauthorized(new[] { errorResponse });
         }
 
@@ -102,66 +119,11 @@ public class AuthController : ControllerBase
         return Ok(new { message = "User is logged in." });
     }
 
-    [HttpGet("role")]
-    [Authorize]
-    public async Task<IActionResult> Role()
-    {
-        var user = _userManager.Users.FirstOrDefault(u => User.Identity != null && u.UserName == User.Identity.Name);
-        if (user is null)
-        {
-            return Unauthorized();
-        }
-
-
-        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
-        if (role is null)
-        {
-            return Unauthorized();
-        }
-
-
-        return Ok(new { username = user.UserName, role });
-    }
-
-    [HttpGet("setroles")]
-    [Authorize]
-    public async Task<IActionResult> SetRoles()
-    {
-        var user = _userManager.Users.FirstOrDefault(u => User.Identity != null && u.UserName == User.Identity.Name);
-        if (user is null)
-        {
-            return Unauthorized();
-        }
-
-        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
-        if (role is null)
-        {
-            return Unauthorized();
-        }
-
-        if (role != RoleConstants.Admin)
-        {
-            return Forbid();
-        }
-
-        var users = _userManager.Users.ToList();
-        foreach (var u in users)
-        {
-            var userRole = (await _userManager.GetRolesAsync(u)).FirstOrDefault();
-            if (userRole != null)
-            {
-                continue;
-            }
-
-            await _userManager.AddToRoleAsync(u, RoleConstants.NewUser);
-        }
-
-        return Ok(new { message = "roles set" });
-    }
-
     private string GenerateJwtToken(AppUser user)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SigningKey"]));
+        var securityKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_configuration["JWT:SigningKey"])
+        );
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>
@@ -170,11 +132,13 @@ public class AuthController : ControllerBase
             new Claim(ClaimTypes.Name, user.UserName),
         };
 
-        var token = new JwtSecurityToken(_configuration["JWT:Issuer"],
+        var token = new JwtSecurityToken(
+            _configuration["JWT:Issuer"],
             _configuration["JWT:Audience"],
             claims,
             expires: DateTime.Now.AddMinutes(_jwtTokenDurationInMinutes),
-            signingCredentials: credentials);
+            signingCredentials: credentials
+        );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
@@ -184,14 +148,14 @@ public class AuthController : ControllerBase
     {
         var modelRefreshToken = model.RefreshToken;
 
-        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == modelRefreshToken);
+        var user = await _userManager.Users.FirstOrDefaultAsync(u =>
+            u.RefreshToken == modelRefreshToken
+        );
 
-        if (user?.RefreshToken == null ||
-            (await IsRefreshTokenExpired(user.RefreshToken)))
+        if (user?.RefreshToken == null || (await IsRefreshTokenExpired(user.RefreshToken)))
         {
             return Unauthorized(new { message = "Invalid refresh token." });
         }
-
 
         var newJwtToken = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken();
@@ -204,7 +168,9 @@ public class AuthController : ControllerBase
 
     private async Task<bool> IsRefreshTokenExpired(string refreshToken)
     {
-        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        var user = await _userManager.Users.FirstOrDefaultAsync(u =>
+            u.RefreshToken == refreshToken
+        );
         if (user?.RefreshTokenExpiryTime == null)
         {
             return true;
@@ -224,7 +190,7 @@ public class AuthController : ControllerBase
         return new RefreshToken
         {
             Token = Convert.ToBase64String(randomNumber),
-            ExpiryTime = DateTime.UtcNow.AddDays(_refreshTokenDurationInDays)
+            ExpiryTime = DateTime.UtcNow.AddDays(_refreshTokenDurationInDays),
         };
     }
 }

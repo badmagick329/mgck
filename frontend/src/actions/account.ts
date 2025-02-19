@@ -1,6 +1,7 @@
 'use server';
 
 import {
+  AspAuthResponse,
   ErrorResponse,
   errorResponseSchema,
   MessageResponse,
@@ -15,77 +16,44 @@ import {
   API_DELETE_USER,
   API_LOGIN,
   API_REGISTER,
-  API_SET_ROLES,
   API_UNAPPROVE_USER,
   API_USER_ROLE,
-  API_USERS_BASE,
 } from '@/lib/consts/urls';
 import { createErrorResponse } from '@/lib/account/errors';
-import {
-  fetchWithAuthHeader,
-  fetchWithRenewIfNeeded,
-  makeRefreshRequest,
-} from '@/lib/account/requests';
+import { fetchWithAuthHeader } from '@/lib/account/requests';
 
 const BASE_URL = process.env.USER_AUTH_BASE_URL;
 
 export async function userAuthStatusAction(): Promise<
   MessageResponse | ErrorResponse
 > {
-  const response = await fetchWithAuthHeader({
+  const aspAuthResponse = await fetchWithAuthHeader({
     url: `${BASE_URL}${API_AUTH_STATUS}`,
     method: 'POST',
   });
 
-  return await errorAsMessageOrErrorResponse(response);
-}
-
-export async function setUserRolesAction(): Promise<
-  MessageResponse | ErrorResponse
-> {
-  const parsedResponse = await fetchWithRenewIfNeeded({
-    url: `${BASE_URL}${API_SET_ROLES}`,
-    method: 'GET',
-  });
-
-  const messageResponseParse = messageResponseSchema.safeParse(parsedResponse);
-  if (messageResponseParse.success) {
-    return messageResponseParse.data;
-  }
-
-  const errorResponseParse = errorResponseSchema.safeParse(parsedResponse);
-  if (errorResponseParse.success) {
-    return errorResponseParse.data;
-  }
-
-  return createErrorResponse();
+  return await asMessageOrErrorResponse(aspAuthResponse);
 }
 
 export async function loginUserAction(payload: {
   username: string;
   password: string;
 }): Promise<MessageResponse | ErrorResponse> {
-  const response = await fetchWithAuthHeader({
-    url: `${BASE_URL}${API_LOGIN}`,
+  const response = await fetch(`${BASE_URL}${API_LOGIN}`, {
     method: 'POST',
-    data: payload,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
   });
-  return await errorAsMessageOrErrorResponse(response);
-}
-
-export async function renewTokensAction(): Promise<
-  MessageResponse | ErrorResponse
-> {
-  const response = await makeRefreshRequest();
-  return await errorAsMessageOrErrorResponse(response);
+  return await asMessageOrErrorResponse(response);
 }
 
 export async function registerUserAction(payload: {
   username: string;
   password: string;
 }): Promise<MessageResponse | ErrorResponse> {
-  const url = new URL(`${BASE_URL}${API_REGISTER}`);
-  const response = await fetch(url, {
+  const response = await fetch(`${BASE_URL}${API_REGISTER}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -93,21 +61,21 @@ export async function registerUserAction(payload: {
     body: JSON.stringify(payload),
   });
 
-  return await errorAsMessageOrErrorResponse(response);
+  return await asMessageOrErrorResponse(response);
 }
 
 export async function userRoleAction(): Promise<RoleResponse | ErrorResponse> {
-  const parsedResponse = await fetchWithRenewIfNeeded({
+  const response = await fetchWithAuthHeader({
     url: `${BASE_URL}${API_USER_ROLE}`,
     method: 'GET',
   });
 
-  const errorResponseParse = errorResponseSchema.safeParse(parsedResponse);
+  const errorResponseParse = errorResponseSchema.safeParse(response);
   if (errorResponseParse.success) {
     return errorResponseParse.data;
   }
 
-  const roleResponseParse = roleResponseSchema.safeParse(parsedResponse);
+  const roleResponseParse = roleResponseSchema.safeParse(response);
   if (roleResponseParse.success) {
     return roleResponseParse.data;
   }
@@ -116,14 +84,14 @@ export async function userRoleAction(): Promise<RoleResponse | ErrorResponse> {
 }
 
 export async function deleteUnapprovedUsersAction() {
-  return await fetchWithRenewIfNeeded({
+  return await fetchWithAuthHeader({
     url: `${BASE_URL}${API_DELETE_USER}`,
     method: 'POST',
   });
 }
 
 export async function approveUserAction(username: string) {
-  return await fetchWithRenewIfNeeded({
+  return fetchWithAuthHeader({
     url: `${BASE_URL}${API_APPROVE_USER}`,
     method: 'POST',
     data: { username },
@@ -131,14 +99,24 @@ export async function approveUserAction(username: string) {
 }
 
 export async function unapproveUserAction(username: string) {
-  return await fetchWithRenewIfNeeded({
+  return fetchWithAuthHeader({
     url: `${BASE_URL}${API_UNAPPROVE_USER}`,
     method: 'POST',
     data: { username },
   });
 }
 
-async function errorAsMessageOrErrorResponse(
+async function asMessageOrErrorResponse(
+  response: Response | AspAuthResponse
+): Promise<MessageResponse | ErrorResponse> {
+  if (response instanceof Response) {
+    return await responseAsMessageOrErrorResponse(response);
+  }
+
+  return parsedResponseAsMessageOrErrorResponse(response);
+}
+
+async function responseAsMessageOrErrorResponse(
   response: Response
 ): Promise<MessageResponse | ErrorResponse> {
   const parsedResponse = await parsedServerResponse(response);
@@ -153,4 +131,24 @@ async function errorAsMessageOrErrorResponse(
   }
 
   return createErrorResponse(response);
+}
+
+function parsedResponseAsMessageOrErrorResponse(
+  response: AspAuthResponse
+): MessageResponse | ErrorResponse {
+  const messageResponseParse = messageResponseSchema.safeParse(response);
+  if (messageResponseParse.success) {
+    return messageResponseParse.data;
+  }
+
+  const errorResponseParse = errorResponseSchema.safeParse(response);
+  if (errorResponseParse.success) {
+    return errorResponseParse.data;
+  }
+
+  return {
+    type: 'error',
+    status: 500,
+    errors: [{ code: '500', description: 'Unexpected server response' }],
+  };
 }
