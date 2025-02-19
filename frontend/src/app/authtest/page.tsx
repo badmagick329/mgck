@@ -9,9 +9,7 @@ export default function Login() {
   const {
     loginUser,
     userAuthStatus,
-    renewTokens,
     userRole,
-    setRoles,
     registerUser,
     serverResponse,
     errorResponse,
@@ -61,24 +59,10 @@ export default function Login() {
             </button>
             <button
               type={'button'}
-              className={'bg-yellow-500 px-4 py-2'}
-              onClick={renewTokens}
-            >
-              Refresh
-            </button>
-            <button
-              type={'button'}
               className={'bg-purple-400 px-4 py-2'}
               onClick={userRole}
             >
               Get Role
-            </button>
-            <button
-              type={'button'}
-              className={'bg-pink-600 px-4 py-2'}
-              onClick={setRoles}
-            >
-              Set Roles
             </button>
           </div>
         </form>

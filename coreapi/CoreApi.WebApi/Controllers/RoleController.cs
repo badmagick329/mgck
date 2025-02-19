@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace CoreApi.WebApi.Controllers;
 
-using Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Models;
 
 [ApiController]
 [Route("api/role")]
@@ -22,19 +22,19 @@ public class RoleController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Role()
     {
-        var user = _userManager.Users.FirstOrDefault(u => User.Identity != null && u.UserName == User.Identity.Name);
+        var user = _userManager.Users.FirstOrDefault(u =>
+            User.Identity != null && u.UserName == User.Identity.Name
+        );
         if (user is null)
         {
             return Unauthorized();
         }
-
 
         var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
         if (role is null)
         {
             return Unauthorized();
         }
-
 
         return Ok(new { username = user.UserName, role });
     }
@@ -50,7 +50,7 @@ public class RoleController : ControllerBase
             {
                 PermissionResult.Unauthorized => Unauthorized(),
                 PermissionResult.Forbidden => Forbid(),
-                _ => BadRequest()
+                _ => BadRequest(),
             };
         }
 

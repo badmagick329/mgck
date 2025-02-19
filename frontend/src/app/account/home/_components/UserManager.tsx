@@ -2,8 +2,6 @@
 
 import {
   ACCEPTED_USER_ROLE,
-  ADMIN_ROLE,
-  AspAuthResponse,
   NEW_USER_ROLE,
   UsersResponseData,
 } from '@/lib/types/auth';

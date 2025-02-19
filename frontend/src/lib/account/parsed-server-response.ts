@@ -44,6 +44,13 @@ export async function parsedServerResponse(
       data: cleanedData,
     };
   } catch (error) {
+    if (response.status < 400) {
+      return {
+        status: response.status,
+        type: 'success',
+        data: { message: response.statusText },
+      };
+    }
     return createErrorResponse(response);
   }
 }
