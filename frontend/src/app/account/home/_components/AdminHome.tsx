@@ -3,6 +3,7 @@ import { fetchWithAuthHeader } from '@/lib/account/requests';
 import { UsersResponseData, usersResponseSchema } from '@/lib/types/auth';
 import UserManager from '@/app/account/home/_components/UserManager';
 import { API_USERS_BASE } from '@/lib/consts/urls';
+import LogoutButton from './LogoutButton';
 
 const BASE_URL = process.env.USER_AUTH_BASE_URL;
 
@@ -22,6 +23,7 @@ export default async function AdminHome({ username }: UserHomeProps) {
       <h1 className={'text-4xl font-bold pt-6'}>
         Account Status for {username}
       </h1>
+      <LogoutButton />
       <UserManager users={usersAndRoles} />
     </main>
   );

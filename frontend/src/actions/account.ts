@@ -15,12 +15,14 @@ import {
   API_AUTH_STATUS,
   API_DELETE_USER,
   API_LOGIN,
+  API_LOGOUT,
   API_REGISTER,
   API_UNAPPROVE_USER,
   API_USER_ROLE,
 } from '@/lib/consts/urls';
 import { createErrorResponse } from '@/lib/account/errors';
 import { fetchWithAuthHeader } from '@/lib/account/requests';
+import { cookies } from 'next/headers';
 
 const BASE_URL = process.env.USER_AUTH_BASE_URL;
 
@@ -46,6 +48,19 @@ export async function loginUserAction(payload: {
     },
     body: JSON.stringify(payload),
   });
+  return await asMessageOrErrorResponse(response);
+}
+
+export async function logoutUserAction() {
+  const response = await fetchWithAuthHeader({
+    url: `${BASE_URL}${API_LOGOUT}`,
+    method: 'POST',
+  });
+
+  const cookieStore = cookies();
+  cookieStore.delete('token');
+  cookieStore.delete('refreshToken');
+
   return await asMessageOrErrorResponse(response);
 }
 
