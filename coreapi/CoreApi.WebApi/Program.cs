@@ -1,8 +1,11 @@
+using System.Globalization;
+using System.Threading.RateLimiting;
 using CoreApi.WebApi.Common;
 using CoreApi.WebApi.Infrastructure;
 using CoreApi.WebApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -12,7 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder
     .Services.AddControllers()
-    .AddNewtonsoftJson(options => { options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore; });
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -72,11 +78,11 @@ builder
     {
         options.DefaultAuthenticateScheme =
             options.DefaultChallengeScheme =
-                options.DefaultForbidScheme =
-                    options.DefaultScheme =
-                        options.DefaultSignInScheme =
-                            options.DefaultSignOutScheme =
-                                JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultForbidScheme =
+            options.DefaultScheme =
+            options.DefaultSignInScheme =
+            options.DefaultSignOutScheme =
+                JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
@@ -94,6 +100,46 @@ builder
             ClockSkew = TimeSpan.Zero,
         };
     });
+
+// Rate limiter
+builder.Services.AddRateLimiter(limiterOptions =>
+{
+    limiterOptions.OnRejected = async (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter = (
+                (int)retryAfter.TotalSeconds
+            ).ToString(NumberFormatInfo.InvariantInfo);
+        }
+
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync("Too many requests", cancellationToken);
+    };
+    limiterOptions.AddPolicy(
+        "login-limiter",
+        context =>
+        {
+            Console.WriteLine("Headers are: ");
+            var headers = context.Request.Headers;
+            for (var i = 0; i < headers.Count; i++)
+            {
+                Console.WriteLine($"{headers.Keys.ElementAt(i)}: {headers.Values.ElementAt(i)}");
+            }
+
+            return RateLimitPartition.GetSlidingWindowLimiter(
+                "username",
+                _ => new SlidingWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromSeconds(60),
+                    SegmentsPerWindow = 6,
+                }
+            );
+        }
+    );
+});
 
 var app = builder.Build();
 
@@ -123,18 +169,18 @@ using (var scope = app.Services.CreateScope())
             new IdentityRole
             {
                 Name = RoleConstants.Admin,
-                NormalizedName = RoleConstants.Admin.ToUpper()
+                NormalizedName = RoleConstants.Admin.ToUpper(),
             },
             new IdentityRole
             {
                 Name = RoleConstants.NewUser,
-                NormalizedName = RoleConstants.NewUser.ToUpper()
+                NormalizedName = RoleConstants.NewUser.ToUpper(),
             },
             new IdentityRole
             {
                 Name = RoleConstants.AcceptedUser,
-                NormalizedName = RoleConstants.AcceptedUser.ToUpper()
-            }
+                NormalizedName = RoleConstants.AcceptedUser.ToUpper(),
+            },
         };
         foreach (var role in roles)
         {
@@ -158,7 +204,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -170,6 +215,7 @@ else if (app.Environment.IsProduction())
 }
 
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
