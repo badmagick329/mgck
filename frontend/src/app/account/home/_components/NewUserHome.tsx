@@ -1,4 +1,5 @@
 import { UserHomeProps } from '@/app/account/home/page';
+import LogoutButton from './LogoutButton';
 
 export default async function NewUserHome({ username }: UserHomeProps) {
   const content = 'You have registered. Please wait for approval';
@@ -7,6 +8,7 @@ export default async function NewUserHome({ username }: UserHomeProps) {
       <h1 className={'text-4xl font-bold pt-6'}>
         Account Status for {username}
       </h1>
+      <LogoutButton />
       <p className={'text-lg text-yellow-400'}>{content}</p>
     </main>
   );

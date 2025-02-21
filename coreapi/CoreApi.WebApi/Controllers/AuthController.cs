@@ -112,6 +112,25 @@ public class AuthController : ControllerBase
         return Ok(new { token, refreshToken = user.RefreshToken });
     }
 
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return BadRequest("User not found");
+        }
+
+        Console.WriteLine("Logging out user: " + user.UserName);
+        user.RefreshToken = null;
+        user.RefreshTokenExpiryTime = null;
+        await _userManager.UpdateAsync(user);
+        Console.WriteLine("User logged out: " + user.UserName);
+
+        return Ok(new { message = "User logged out" });
+    }
+
     [HttpPost("status")]
     [Authorize]
     public IActionResult Status()
