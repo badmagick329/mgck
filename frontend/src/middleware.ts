@@ -73,15 +73,10 @@ export async function middleware(request: NextRequest) {
         -10
       )} refreshToken ${newTokens.refreshToken.slice(-10)}`
     );
-    console.log('[Middleware] setting Authorization header');
-    const response = NextResponse.next({
-      request: {
-        headers: new Headers({
-          ...Object.fromEntries(request.headers.entries()),
-          Authorization: `Bearer ${newTokens.token}`,
-        }),
-      },
-    });
+    console.log('[Middleware] changing response to a redirect');
+    const response = NextResponse.redirect(
+      new URL(request.nextUrl.pathname, request.url)
+    );
     console.log('[Middleware] setting new tokens in cookies');
     response.cookies.set('token', newTokens.token, {
       httpOnly: true,
