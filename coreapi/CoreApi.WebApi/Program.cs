@@ -120,15 +120,18 @@ builder.Services.AddRateLimiter(limiterOptions =>
         "login-limiter",
         context =>
         {
-            Console.WriteLine("Headers are: ");
-            var headers = context.Request.Headers;
-            for (var i = 0; i < headers.Count; i++)
-            {
-                Console.WriteLine($"{headers.Keys.ElementAt(i)}: {headers.Values.ElementAt(i)}");
-            }
+            var clientIp =
+                context.Connection.RemoteIpAddress?.ToString()
+                ?? context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                ?? context.Request.Headers["X-Real-IP"].FirstOrDefault()
+                ?? "unknown";
+
+            var clientId =
+                $"{clientIp}_{context.Request.Headers["X-Forwarded-Host"].FirstOrDefault() ?? "unknown"}";
+            Console.WriteLine($"Client ID: {clientId}");
 
             return RateLimitPartition.GetSlidingWindowLimiter(
-                "username",
+                clientId,
                 _ => new SlidingWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
@@ -215,6 +218,15 @@ else if (app.Environment.IsProduction())
 }
 
 app.UseRouting();
+
+app.Use(
+    async (context, next) =>
+    {
+        context.Request.Headers["X-Real-IP"] = context.Connection.RemoteIpAddress?.ToString();
+        await next();
+    }
+);
+
 app.UseRateLimiter();
 
 app.UseAuthentication();
