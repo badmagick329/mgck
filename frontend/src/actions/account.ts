@@ -22,16 +22,18 @@ import {
 } from '@/lib/consts/urls';
 import { createErrorResponse } from '@/lib/account/errors';
 import { fetchWithAuthHeader } from '@/lib/account/requests';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 const BASE_URL = process.env.USER_AUTH_BASE_URL;
 
 export async function userAuthStatusAction(): Promise<
   MessageResponse | ErrorResponse
 > {
+  const headersList = headers();
   const aspAuthResponse = await fetchWithAuthHeader({
     url: `${BASE_URL}${API_AUTH_STATUS}`,
     method: 'POST',
+    headersList,
   });
 
   return await asMessageOrErrorResponse(aspAuthResponse);
@@ -41,11 +43,17 @@ export async function loginUserAction(payload: {
   username: string;
   password: string;
 }): Promise<MessageResponse | ErrorResponse> {
+  const headersList = headers();
+  const headersData = {
+    'X-Forwarded-For': headersList.get('x-forwarded-for') || '',
+    'X-Real-IP': headersList.get('x-real-ip') || '',
+    'X-Forwarded-Proto': headersList.get('x-forwarded-proto') || '',
+    'X-Forwarded-Host': headersList.get('x-forwarded-host') || '',
+    'Content-Type': 'application/json',
+  };
   const response = await fetch(`${BASE_URL}${API_LOGIN}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: headersData,
     body: JSON.stringify(payload),
   });
   return await asMessageOrErrorResponse(response);
