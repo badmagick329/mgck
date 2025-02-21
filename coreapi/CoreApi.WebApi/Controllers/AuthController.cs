@@ -13,6 +13,7 @@ namespace CoreApi.WebApi.Controllers;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Models;
 
 [ApiController]
@@ -46,6 +47,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [EnableRateLimiting("login-limiter")]
     public async Task<IActionResult> Register([FromBody] RegisterDto model)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync();
@@ -77,6 +79,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("login-limiter")]
     public async Task<IActionResult> Login([FromBody] LoginDto model)
     {
         var user = await _userManager.FindByNameAsync(model.Username);
@@ -133,6 +136,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("status")]
     [Authorize]
+    [EnableRateLimiting("login-limiter")]
     public IActionResult Status()
     {
         return Ok(new { message = "User is logged in." });
