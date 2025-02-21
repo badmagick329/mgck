@@ -6,12 +6,15 @@ using CoreApi.WebApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
 
 builder
     .Services.AddControllers()
@@ -120,18 +123,36 @@ builder.Services.AddRateLimiter(limiterOptions =>
         "login-limiter",
         context =>
         {
-            var clientIp =
-                context.Connection.RemoteIpAddress?.ToString()
-                ?? context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
-                ?? context.Request.Headers["X-Real-IP"].FirstOrDefault()
-                ?? "unknown";
+            string partitionKey = "default";
 
-            var clientId =
-                $"{clientIp}_{context.Request.Headers["X-Forwarded-Host"].FirstOrDefault() ?? "unknown"}";
-            Console.WriteLine($"Client ID: {clientId}");
+            if (context.Request.HasJsonContentType())
+            {
+                context.Request.EnableBuffering();
 
+                using var reader = new StreamReader(
+                    context.Request.Body,
+                    encoding: System.Text.Encoding.UTF8,
+                    detectEncodingFromByteOrderMarks: false,
+                    bufferSize: -1,
+                    leaveOpen: true
+                );
+                var body = reader.ReadToEnd();
+                context.Request.Body.Position = 0;
+
+                try
+                {
+                    var jsonDoc = System.Text.Json.JsonDocument.Parse(body);
+                    if (jsonDoc.RootElement.TryGetProperty("username", out var usernameElement))
+                    {
+                        partitionKey = usernameElement.GetString() ?? "default";
+                    }
+                }
+                catch (JsonException) { }
+            }
+
+            Console.WriteLine($"Partition key is {partitionKey}");
             return RateLimitPartition.GetSlidingWindowLimiter(
-                clientId,
+                partitionKey,
                 _ => new SlidingWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
@@ -218,15 +239,6 @@ else if (app.Environment.IsProduction())
 }
 
 app.UseRouting();
-
-app.Use(
-    async (context, next) =>
-    {
-        context.Request.Headers["X-Real-IP"] = context.Connection.RemoteIpAddress?.ToString();
-        await next();
-    }
-);
-
 app.UseRateLimiter();
 
 app.UseAuthentication();
