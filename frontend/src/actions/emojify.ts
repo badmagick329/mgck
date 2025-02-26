@@ -7,6 +7,9 @@ export async function emojifyWithAi(username: string, text: string) {
   if (text.length > 1500) {
     return 'Text is too long. Please provide text with less than 1500 characters.';
   }
+  if (!text.trim()) {
+    text = 'You have to give me some text to emojify';
+  }
 
   const limit = 20;
   const windowSeconds = 60;
