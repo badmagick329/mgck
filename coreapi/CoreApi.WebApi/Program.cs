@@ -1,11 +1,11 @@
 using System.Globalization;
+using System.IdentityModel.Tokens.Jwt;
 using System.Threading.RateLimiting;
 using CoreApi.WebApi.Common;
 using CoreApi.WebApi.Infrastructure;
 using CoreApi.WebApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,7 +15,6 @@ using Newtonsoft.Json;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
-
 builder
     .Services.AddControllers()
     .AddNewtonsoftJson(options =>
@@ -72,8 +71,7 @@ builder
         options.Password.RequireLowercase = false;
         options.Password.RequireUppercase = false;
         options.Password.RequireNonAlphanumeric = false;
-        // TODO: Change this
-        options.Password.RequiredLength = 3;
+        options.Password.RequiredLength = 8;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder
