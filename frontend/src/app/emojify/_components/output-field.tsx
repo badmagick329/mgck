@@ -7,12 +7,16 @@ type OutputFieldProps = {
   messageInput: string;
   emojisInput: string;
   setEmojisInput: (emojisInput: string) => void;
+  username: string;
+  showAi: boolean;
 };
 
 export default function OutputField({
   messageInput,
   emojisInput,
   setEmojisInput,
+  username,
+  showAi,
 }: OutputFieldProps) {
   const [output, setOutput] = useState<string>('');
 
@@ -29,6 +33,8 @@ export default function OutputField({
           setEmojisInput={setEmojisInput}
           setOutput={setOutput}
           output={output}
+          username={username}
+          showAi={showAi}
         />
       </div>
       <span className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md border-2 p-2'>
