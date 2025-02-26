@@ -34,7 +34,7 @@ export default async function Home() {
   }
 
   {
-    // TODO: Improve this
+    // TODO: Improve this. This might show briefly while the user is being redirected after logout
   }
-  return <p>It appears you have not been assigned a role. Contact the admin</p>;
+  return <p>...</p>;
 }
