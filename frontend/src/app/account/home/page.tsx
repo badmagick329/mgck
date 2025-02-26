@@ -1,15 +1,14 @@
-import { userRoleAction } from '@/actions/account';
 import {
   ACCEPTED_USER_ROLE,
   ADMIN_ROLE,
   NEW_USER_ROLE,
-  roleResponseSchema,
 } from '@/lib/types/auth';
 import { redirect } from 'next/navigation';
 import { ACCOUNT_LOGIN } from '@/lib/consts/urls';
 import AdminHome from '@/app/account/home/_components/AdminHome';
 import AcceptedUserHome from '@/app/account/home/_components/AcceptedUserHome';
 import NewUserHome from '@/app/account/home/_components/NewUserHome';
+import { ParsedToken } from '@/lib/account/parsed-token';
 
 export type UserHomeProps = {
   username: string;
@@ -17,37 +16,21 @@ export type UserHomeProps = {
 };
 
 export default async function Home() {
-  const response = await userRoleAction();
-  const parsed = roleResponseSchema.safeParse(response);
-  if (!parsed.success) {
+  const parsed = ParsedToken.createFromCookie();
+  if (!parsed) {
     redirect(ACCOUNT_LOGIN);
   }
 
-  if (parsed.data.data.role === ADMIN_ROLE) {
-    return (
-      <AdminHome
-        username={parsed.data.data.username}
-        role={parsed.data.data.role}
-      />
-    );
+  if (parsed.role() === ADMIN_ROLE) {
+    return <AdminHome username={parsed.name()} role={parsed.role()} />;
   }
 
-  if (parsed.data.data.role === ACCEPTED_USER_ROLE) {
-    return (
-      <AcceptedUserHome
-        username={parsed.data.data.username}
-        role={parsed.data.data.role}
-      />
-    );
+  if (parsed.role() === ACCEPTED_USER_ROLE) {
+    return <AcceptedUserHome username={parsed.name()} role={parsed.role()} />;
   }
 
-  if (parsed.data.data.role === NEW_USER_ROLE) {
-    return (
-      <NewUserHome
-        username={parsed.data.data.username}
-        role={parsed.data.data.role}
-      />
-    );
+  if (parsed.role() === NEW_USER_ROLE) {
+    return <NewUserHome username={parsed.name()} role={parsed.role()} />;
   }
 
   {

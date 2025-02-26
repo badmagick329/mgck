@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.IdentityModel.Tokens.Jwt;
 using System.Threading.RateLimiting;
 using CoreApi.WebApi.Common;
 using CoreApi.WebApi.Infrastructure;

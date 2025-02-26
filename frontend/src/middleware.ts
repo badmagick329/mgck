@@ -1,25 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { jwtDecode } from 'jwt-decode';
 import { API_REFRESH } from '@/lib/consts/urls';
-
-type JWTPayload = {
-  exp: number;
-};
+import { ParsedToken } from '@/lib/account/parsed-token';
 
 const BASE_URL = process.env.USER_AUTH_BASE_URL;
-
-async function tokenNeedsRefresh(token: string): Promise<boolean> {
-  try {
-    const payload = jwtDecode<JWTPayload>(token);
-    const currentTime = Math.floor(Date.now() / 1000);
-    const needsRefresh = payload.exp < currentTime + 10;
-    console.log(`token needs refresh: ${needsRefresh}`);
-    return payload.exp < currentTime + 10;
-  } catch (error) {
-    return true;
-  }
-}
 
 async function refreshTokens(refreshToken: string): Promise<{
   token: string;
@@ -53,10 +37,13 @@ export async function middleware(request: NextRequest) {
   console.log(`[Middleware] current route is: ${request.url}`);
   const token = request.cookies.get('token')?.value;
   const currentRefreshToken = request.cookies.get('refreshToken')?.value;
+  const parsedToken = new ParsedToken(token);
 
-  if (!token || (await tokenNeedsRefresh(token))) {
+  if (parsedToken.isExpiring()) {
     if (!currentRefreshToken) {
-      console.log('[Middleware] No tokens found. Redirecting to login page.');
+      console.log(
+        '[Middleware] No refresh token found. Redirecting to login page.'
+      );
       return NextResponse.redirect(new URL('/account/login', request.url));
     }
 
