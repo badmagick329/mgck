@@ -106,7 +106,8 @@ public class AuthController : ControllerBase
             return Unauthorized(new[] { errorResponse });
         }
 
-        var token = GenerateJwtToken(user);
+        var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "";
+        var token = GenerateJwtToken(user, userRole);
         var refreshToken = GenerateRefreshToken();
         user.RefreshToken = refreshToken.Token;
         user.RefreshTokenExpiryTime = refreshToken.ExpiryTime;
@@ -142,7 +143,7 @@ public class AuthController : ControllerBase
         return Ok(new { message = "User is logged in." });
     }
 
-    private string GenerateJwtToken(AppUser user)
+    private string GenerateJwtToken(AppUser user, string userRole)
     {
         var securityKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["JWT:SigningKey"])
@@ -153,6 +154,7 @@ public class AuthController : ControllerBase
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Name, user.UserName),
+            new Claim("role", userRole),
         };
 
         var token = new JwtSecurityToken(
@@ -180,7 +182,8 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid refresh token." });
         }
 
-        var newJwtToken = GenerateJwtToken(user);
+        var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "";
+        var newJwtToken = GenerateJwtToken(user, userRole);
         var refreshToken = GenerateRefreshToken();
         user.RefreshToken = refreshToken.Token;
         user.RefreshTokenExpiryTime = refreshToken.ExpiryTime;
