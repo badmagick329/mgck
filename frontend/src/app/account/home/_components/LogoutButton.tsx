@@ -6,9 +6,7 @@ export default function LogoutButton() {
   return (
     <Button
       onClick={async () => {
-        const result = await logoutUserAction();
-        console.log('logout result');
-        console.log(result);
+        await logoutUserAction();
       }}
       variant={'destructive'}
     >
