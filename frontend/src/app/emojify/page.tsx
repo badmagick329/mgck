@@ -3,5 +3,5 @@ import EmojifyMain from '@/app/emojify/_components/EmojifyMain';
 
 export default function EmojifyPage() {
   const parsed = ParsedToken.createFromCookie();
-  return <EmojifyMain name={parsed.name()} role={parsed.role()} />;
+  return <EmojifyMain username={parsed.name()} role={parsed.role()} />;
 }

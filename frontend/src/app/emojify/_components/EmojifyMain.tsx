@@ -9,26 +9,29 @@ import { useEffect, useState } from 'react';
 import EmojisField from '@/app/emojify/_components/emojis-field';
 import MessageField from '@/app/emojify/_components/message-field';
 import OutputField from '@/app/emojify/_components/output-field';
+import { NEW_USER_ROLE } from '@/lib/types/auth';
 
 const plainHeaderMessage = (username: string) =>
   username ? `Hello ${username} !` : 'Emojify Your Message';
 
 export default function EmojifyMain({
-  name,
+  username,
   role,
 }: {
-  name: string;
+  username: string;
   role: string;
 }) {
   const [messageInput, setMessageInput] = useState('');
-  const [headerMessage, setHeaderMessage] = useState(plainHeaderMessage(name));
+  const [headerMessage, setHeaderMessage] = useState(
+    plainHeaderMessage(username)
+  );
   const [emojisInput, setEmojisInput] = useLocalStorage(
     'defaultEmojis',
     DEFAULT_EMOJIS.join(' ')
   );
 
   useEffect(() => {
-    const plainMessage = plainHeaderMessage(name);
+    const plainMessage = plainHeaderMessage(username);
     setHeaderMessage(emojifyText(plainMessage, DEFAULT_EMOJIS.join(' ')));
 
     const cancelTimer = setInterval(() => {
@@ -55,6 +58,8 @@ export default function EmojifyMain({
             messageInput={messageInput}
             emojisInput={emojisInput}
             setEmojisInput={setEmojisInput}
+            username={username}
+            showAi={role !== '' && role !== NEW_USER_ROLE}
           />
         </div>
       </div>
