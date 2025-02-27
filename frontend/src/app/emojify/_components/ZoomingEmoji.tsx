@@ -44,7 +44,6 @@ export default function ZoomingEmoji({
       setCurrentEmoji(randomEmoji());
       setShowComponent(Math.random() < probability);
       setDuration(Math.floor(Math.random() * 5000) + 5000);
-      // Notice: We no longer update reverseAnimate here so each emoji keeps its initial rotation direction.
     }, duration);
 
     return () => clearInterval(moveInterval);
@@ -58,7 +57,7 @@ export default function ZoomingEmoji({
 
   return (
     <div
-      className='absolute inset-0 z-0'
+      className='absolute inset-0 z-0 select-none'
       style={{
         top: `${top}%`,
         left: `${left}%`,
