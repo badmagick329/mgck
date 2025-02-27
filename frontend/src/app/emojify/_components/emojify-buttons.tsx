@@ -29,15 +29,15 @@ export default function EmojifyButtons({
   const { toast } = useToast();
 
   return (
-    <>
+    <section className='grid grid-cols-2 md:grid-cols-4 gap-6 p-2 shadow-glow-primary-em md:shadow-none'>
       <Button
-        className='bg-primary-em/70 hover:bg-primary-em'
+        className='bg-primary-em/70 hover:bg-primary-em w-40 justify-self-start'
         onClick={() => setOutput(emojifyText(messageInput, emojisInput))}
       >
         Regenerate
       </Button>
       <Button
-        className='bg-primary-em/70 hover:bg-primary-em'
+        className='bg-primary-em/70 hover:bg-primary-em w-40 justify-self-end'
         onClick={() => setEmojisInput(DEFAULT_EMOJIS.join(' '))}
       >
         Reset
@@ -49,12 +49,12 @@ export default function EmojifyButtons({
         showAi={showAi}
       />
       <Button
-        className='bg-primary-em/70 hover:bg-primary-em'
+        className='bg-primary-em/70 hover:bg-primary-em w-40 justify-self-end'
         onClick={() => handleCopy(output, toast)}
       >
         Copy
       </Button>
-    </>
+    </section>
   );
 }
 
@@ -79,7 +79,7 @@ function GenerateButton({
 
   return (
     <Button
-      className='bg-primary-em/70 hover:bg-primary-em'
+      className='bg-primary-em/70 hover:bg-primary-em w-40 justify-self-start'
       disabled={generating}
       onClick={async () => {
         try {

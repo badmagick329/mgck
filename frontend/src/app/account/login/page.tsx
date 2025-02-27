@@ -109,15 +109,3 @@ function ErrorMessages({ errorResponse }: { errorResponse: string[] }) {
     </ul>
   );
 }
-
-function ServerMessages({ serverResponse }: { serverResponse: string }) {
-  if (!serverResponse) {
-    return null;
-  }
-
-  return (
-    <div className={'mx-auto'}>
-      <p className={'text-green-400'}>{serverResponse}</p>
-    </div>
-  );
-}

@@ -9,17 +9,17 @@ import { useEffect, useState } from 'react';
 import EmojisField from '@/app/emojify/_components/emojis-field';
 import MessageField from '@/app/emojify/_components/message-field';
 import OutputField from '@/app/emojify/_components/output-field';
-import { NEW_USER_ROLE } from '@/lib/types/auth';
+import ZoomingEmoji from './ZoomingEmoji';
 
 const plainHeaderMessage = (username: string) =>
   username ? `Hello ${username} !` : 'Emojify Your Message';
 
 export default function EmojifyMain({
   username,
-  role,
+  showAi,
 }: {
   username: string;
-  role: string;
+  showAi: boolean;
 }) {
   const [messageInput, setMessageInput] = useState('');
   const [headerMessage, setHeaderMessage] = useState(
@@ -43,8 +43,16 @@ export default function EmojifyMain({
   return (
     <main className='bg-background-em flex min-h-dvh flex-col'>
       <Navbar />
-      <div className='grid grow place-content-center place-items-center px-2'>
-        <div className='flex w-full max-w-[800px] flex-col gap-4'>
+      <div className='relative mx-auto my-auto'>
+        <ZoomingEmoji probability={1} />
+        <ZoomingEmoji probability={1} />
+        <ZoomingEmoji probability={0.5} />
+        <ZoomingEmoji probability={0.3} />
+        <ZoomingEmoji probability={0.2} />
+        <ZoomingEmoji probability={0.05} />
+        <ZoomingEmoji probability={0.05} />
+        <ZoomingEmoji probability={0.05} />
+        <div className='flex w-full max-w-[800px] flex-col gap-4 z-10'>
           <span className='flex justify-center text-2xl'>{headerMessage}</span>
           <MessageField
             messageInput={messageInput}
@@ -53,13 +61,14 @@ export default function EmojifyMain({
           <EmojisField
             emojisInput={emojisInput}
             setEmojisInput={setEmojisInput}
+            aiEnabled={showAi}
           />
           <OutputField
             messageInput={messageInput}
             emojisInput={emojisInput}
             setEmojisInput={setEmojisInput}
             username={username}
-            showAi={role !== '' && role !== NEW_USER_ROLE}
+            showAi={showAi}
           />
         </div>
       </div>
