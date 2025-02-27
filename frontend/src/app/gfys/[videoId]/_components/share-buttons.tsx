@@ -91,6 +91,7 @@ function ShareButton({
   );
 }
 
+// TODO: Refactor. use utility function
 async function handleCopy(url: string, toast: ToastType) {
   try {
     await copyToClipboard(url);

@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
 import EmojifyHelpButton from './EmojifyHelpButton';
 import { useEffect, useState } from 'react';
-import { emojifyText, topRightDefaultToast } from '@/lib/utils';
-import { defaultEmojis } from '@/lib/emojify';
+import { topRightDefaultToast } from '@/lib/utils';
+import { defaultEmojis, emojifyText } from '@/lib/emojify';
 import { useEmojifyContext } from '@/app/emojify/_context/store';
 import { useToast } from '@/components/ui/use-toast';
 
