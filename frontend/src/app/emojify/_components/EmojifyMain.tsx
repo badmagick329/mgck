@@ -10,6 +10,8 @@ import EmojisField from '@/app/emojify/_components/emojis-field';
 import MessageField from '@/app/emojify/_components/message-field';
 import OutputField from '@/app/emojify/_components/output-field';
 import ZoomingEmoji from './ZoomingEmoji';
+import EmojifyHelpButton from './EmojifyHelpButton';
+import { EmojifyContextProvider } from '@/app/emojify/_context/store';
 
 const plainHeaderMessage = (username: string) =>
   username ? `Hello ${username} !` : 'Emojify Your Message';
@@ -25,7 +27,7 @@ export default function EmojifyMain({
   const [headerMessage, setHeaderMessage] = useState(
     plainHeaderMessage(username)
   );
-  const [emojisInput, setEmojisInput] = useLocalStorage(
+  const { value: emojisInput, updateValue: setEmojisInput } = useLocalStorage(
     'defaultEmojis',
     DEFAULT_EMOJIS.join(' ')
   );
@@ -41,37 +43,39 @@ export default function EmojifyMain({
   }, []);
 
   return (
-    <main className='bg-background-em flex min-h-dvh flex-col'>
-      <Navbar />
-      <div className='relative mx-auto my-auto'>
-        <ZoomingEmoji probability={1} />
-        <ZoomingEmoji probability={1} />
-        <ZoomingEmoji probability={0.5} />
-        <ZoomingEmoji probability={0.3} />
-        <ZoomingEmoji probability={0.2} />
-        <ZoomingEmoji probability={0.05} />
-        <ZoomingEmoji probability={0.05} />
-        <ZoomingEmoji probability={0.05} />
-        <div className='flex w-full max-w-[800px] flex-col gap-4 z-10'>
-          <span className='flex justify-center text-2xl'>{headerMessage}</span>
-          <MessageField
-            messageInput={messageInput}
-            setMessageInput={setMessageInput}
-          />
-          <EmojisField
-            emojisInput={emojisInput}
-            setEmojisInput={setEmojisInput}
-            aiEnabled={showAi}
-          />
-          <OutputField
-            messageInput={messageInput}
-            emojisInput={emojisInput}
-            setEmojisInput={setEmojisInput}
-            username={username}
-            showAi={showAi}
-          />
+    <EmojifyContextProvider>
+      <main className='bg-background-em flex min-h-dvh flex-col'>
+        <Navbar />
+        <div className='relative mx-auto my-auto'>
+          <ZoomingEmoji probability={0.5} />
+          <ZoomingEmoji probability={0.1} />
+          <ZoomingEmoji probability={0.1} />
+          <div className='flex w-full max-w-[800px] flex-col gap-4 z-10'>
+            <section className='flex justify-between'>
+              <span className='flex justify-center text-2xl'>
+                {headerMessage}
+              </span>
+              <EmojifyHelpButton />
+            </section>
+            <MessageField
+              messageInput={messageInput}
+              setMessageInput={setMessageInput}
+            />
+            <EmojisField
+              emojisInput={emojisInput}
+              setEmojisInput={setEmojisInput}
+              aiEnabled={showAi}
+            />
+            <OutputField
+              messageInput={messageInput}
+              emojisInput={emojisInput}
+              setEmojisInput={setEmojisInput}
+              username={username}
+              showAi={showAi}
+            />
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </EmojifyContextProvider>
   );
 }
