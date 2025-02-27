@@ -26,17 +26,15 @@ export default function OutputField({
 
   return (
     <>
-      <div className='flex justify-between'>
-        <EmojifyButtons
-          messageInput={messageInput}
-          emojisInput={emojisInput}
-          setEmojisInput={setEmojisInput}
-          setOutput={setOutput}
-          output={output}
-          username={username}
-          showAi={showAi}
-        />
-      </div>
+      <EmojifyButtons
+        messageInput={messageInput}
+        emojisInput={emojisInput}
+        setEmojisInput={setEmojisInput}
+        setOutput={setOutput}
+        output={output}
+        username={username}
+        showAi={showAi}
+      />
       <span className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md border-2 p-2'>
         {output}
       </span>

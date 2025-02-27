@@ -123,3 +123,25 @@
     --chart-5: 340 75% 55%;
   }
 }
+@keyframes rotateFade {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg);
+  }
+  20% {
+    opacity: 0.2;
+    transform: rotate(72deg);
+  }
+  80% {
+    opacity: 0.2;
+    transform: rotate(288deg);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(360deg);
+  }
+}
+
+.animate-rotate-fade {
+  animation: rotateFade 5s linear infinite;
+}
