@@ -57,37 +57,12 @@ export function randomChoice<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function emojifyText(message: string, emojisInput: string) {
-  if (!message) return 'Emojified message will appear here';
-  if (!emojisInput) return message;
-  const words = message.split(' ').filter((word) => word.length > 0);
-  const emojis = emojisInput.split(' ').filter((emoji) => emoji.length > 1);
-  const wordsWithEmojis = words.map(
-    (word) => `${word} ${randomChoice(emojis)}`
-  );
-  return wordsWithEmojis.join(' ');
-}
-
 export async function handleCopyToClipboard(text: string, toast: ToastType) {
   try {
     await copyToClipboard(text);
-    toast({
-      className: cn(
-        'fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]'
-      ),
-      variant: 'default',
-      description: `Copied to clipboard`,
-      duration: 1000,
-    });
+    topRightDefaultToast('Copied to clipboard', toast);
   } catch (error) {
-    toast({
-      className: cn(
-        'fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]'
-      ),
-      variant: 'default',
-      description: `Failed to copy to clipboard`,
-      duration: 1000,
-    });
+    topRightDefaultToast('Failed to copy to clipboard', toast);
   }
 }
 

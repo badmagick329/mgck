@@ -1,17 +1,11 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  cn,
-  copyToClipboard,
-  emojifyText,
-  topRightDefaultToast,
-} from '@/lib/utils';
+import { handleCopyToClipboard } from '@/lib/utils';
 import { useEffect } from 'react';
 import { useEmojifyContext } from '@/app/emojify/_context/store';
 import GenerateButton from './GenerateButton';
-
-type ToastType = ReturnType<typeof useToast>['toast'];
+import { emojifyText } from '@/lib/emojify';
 
 type EmojifyButtonsProps = {
   setOutput: (output: string) => void;
@@ -37,7 +31,7 @@ export default function EmojifyButtons({
     <section className='grid grid-cols-2 gap-6 p-2 shadow-glow-primary-em md:shadow-none z-10'>
       <Button
         className='bg-primary-em/70 hover:bg-primary-em w-40 justify-self-start'
-        onClick={() => handleCopy(output, toast)}
+        onClick={() => handleCopyToClipboard(output, toast)}
       >
         Copy 📋
       </Button>
@@ -49,13 +43,4 @@ export default function EmojifyButtons({
       />
     </section>
   );
-}
-
-async function handleCopy(text: string, toast: ToastType) {
-  try {
-    await copyToClipboard(text);
-    topRightDefaultToast('Copied to clipboard', toast);
-  } catch (error) {
-    topRightDefaultToast('Failed to copy to clipboard', toast);
-  }
 }
