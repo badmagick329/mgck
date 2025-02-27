@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useEmojifyContext } from '@/app/emojify/_context/store';
 
-export default function EmojifyHelp({ aiEnabled }: { aiEnabled: boolean }) {
+export default function EmojifyHelpText({ aiEnabled }: { aiEnabled: boolean }) {
   const [mounted, setMounted] = useState(false);
   const { showHelp } = useEmojifyContext();
 

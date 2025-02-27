@@ -124,3 +124,18 @@ export function capitaliseWords(text: string) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
+
+export function topRightDefaultToast(
+  text: string,
+  toast: ToastType,
+  duration = 1000
+) {
+  toast({
+    className: cn(
+      'fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]'
+    ),
+    variant: 'default',
+    description: text,
+    duration,
+  });
+}
