@@ -1,4 +1,4 @@
-import { useGlobalContext } from '@/app/gfys/context/store';
+import { useGfyContext } from '@/app/gfys/_context/store';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -17,7 +17,7 @@ import NavButton from './nav-button';
 export default function NavButtons() {
   const backRef = useRef<HTMLButtonElement>(null);
   const loopAllRef = useRef<HTMLButtonElement>(null);
-  const { gfyViewData, loopAll, setLoopAll } = useGlobalContext();
+  const { gfyViewData, loopAll, setLoopAll } = useGfyContext();
   const router = useRouter();
 
   useEffect(() => {

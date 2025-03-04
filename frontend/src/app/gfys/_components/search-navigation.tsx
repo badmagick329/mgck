@@ -1,13 +1,13 @@
 'use client';
 
-import { useGlobalContext } from '@/app/gfys/context/store';
+import { useGfyContext } from '@/app/gfys/_context/store';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import NavButton from './nav-button';
 
 export default function SearchNavigation({ onClient }: { onClient: boolean }) {
-  const { data } = useGlobalContext();
+  const { data } = useGfyContext();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pathname = usePathname();
   const leftRef = useRef<HTMLAnchorElement>(null);
