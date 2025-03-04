@@ -4,7 +4,7 @@ import { useGfyContext } from '@/app/gfys/_context/store';
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
-import GfyPreview from './gfy-preview';
+import GfyPreview from './GfyPreview';
 
 export default function GfyList() {
   const { data, updateDataFromParams } = useGfyContext();

@@ -3,10 +3,10 @@
 import { GfyDetailResponse } from '@/lib/types/gfys';
 import { useEffect, useState } from 'react';
 
-import AdditionalGfyDetails from './additional-gfy-details';
-import GfyPlayer from './gfy-player';
-import NavButtons from './nav-buttons';
-import ShareButtons from './share-buttons';
+import AdditionalGfyDetails from './AdditionalGfyDetails';
+import GfyPlayer from './GfyPlayer';
+import NavButtons from './NavButtons';
+import ShareButtons from './ShareButtons';
 
 type Props = {
   params: {

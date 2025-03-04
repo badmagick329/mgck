@@ -1,7 +1,7 @@
 'use client';
 
-import SearchFormContent from './search-form-content';
-import SearchNavigation from './search-navigation';
+import SearchFormContent from './SearchFormContent';
+import SearchNavigation from './SearchNavigation';
 
 export default function SearchForm() {
   return (
