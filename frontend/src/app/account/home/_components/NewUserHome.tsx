@@ -1,6 +1,6 @@
 import { UserHomeProps } from '@/app/account/home/page';
 import LogoutButton from './LogoutButton';
-import { NEW_USER_ROLE } from '@/lib/types/auth';
+import { NEW_USER_ROLE } from '@/lib/consts/auth';
 
 export default async function NewUserHome({ username }: UserHomeProps) {
   const content =

@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import useDebounce from '@/hooks/use-debounce';
 import useURLState from '@/hooks/use-url-state';
-import { MEDIUM_ICON } from '@/lib/consts';
+import { MEDIUM_ICON } from '@/lib/consts/kpop';
 import { clearFormInputs, searchParamsToFormData } from '@/lib/utils';
 import {
   formKeys,

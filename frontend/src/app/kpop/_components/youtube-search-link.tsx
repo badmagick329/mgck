@@ -1,4 +1,4 @@
-import { SMALLER_ICON } from '@/lib/consts';
+import { SMALLER_ICON } from '@/lib/consts/kpop';
 import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { DEFAULT_EMOJIS } from '@/lib/consts';
+import { DEFAULT_EMOJIS } from '@/lib/consts/emojify';
 import { useEffect, useState } from 'react';
 
 const randomCorner = (index: number) => {

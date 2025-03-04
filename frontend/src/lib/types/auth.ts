@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import {
+  ADMIN_ROLE,
+  NEW_USER_ROLE,
+  ACCEPTED_USER_ROLE,
+} from '@/lib/consts/auth';
 
 const credentialsErrorSchema = z.object({
   code: z.string(),
@@ -13,6 +18,7 @@ const problemErrorSchema = z.record(z.array(z.string()));
 export const problemErrorResponseSchema = z.object({
   errors: z.array(problemErrorSchema),
 });
+
 export const apiErrorSchema = z.union([
   credentialsErrorResponseSchema,
   z.array(problemErrorSchema),
@@ -26,9 +32,6 @@ export const errorResponseSchema = z.object({
 });
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 
-export const ADMIN_ROLE = 'Admin';
-export const NEW_USER_ROLE = 'NewUser';
-export const ACCEPTED_USER_ROLE = 'AcceptedUser';
 const userRoleSchema = z.enum([ADMIN_ROLE, NEW_USER_ROLE, ACCEPTED_USER_ROLE]);
 
 const successBaseSchema = z.object({

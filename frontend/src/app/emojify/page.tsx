@@ -1,6 +1,6 @@
 import { ParsedToken } from '@/lib/account/parsed-token';
 import EmojifyMain from '@/app/emojify/_components/EmojifyMain';
-import { NEW_USER_ROLE } from '@/lib/types/auth';
+import { NEW_USER_ROLE } from '@/lib/consts/auth';
 
 export default function EmojifyPage() {
   const parsed = ParsedToken.createFromCookie();
