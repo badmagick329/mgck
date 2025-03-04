@@ -21,7 +21,7 @@ import {
 } from '@/hooks/use-choices-state';
 import { truncateText } from '@/lib/utils';
 
-import Instruction from './instruction';
+import Instruction from './Instruction';
 
 type ChoicesTableProps = {
   getChoices: GetChoices;
