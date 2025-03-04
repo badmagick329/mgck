@@ -1,5 +1,5 @@
-import YoutubeLinks from './youtube-links';
-import YoutubeSearchLink from './youtube-search-link';
+import YoutubeLinks from './YoutubeLinks';
+import YoutubeSearchLink from './YoutubeSearchLink';
 
 const DAY = 1000 * 60 * 60 * 24;
 

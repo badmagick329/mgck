@@ -22,7 +22,7 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { ReadonlyURLSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
-import ComebackFormInput from './comeback-form-input';
+import ComebackFormInput from './ComebackFormInput';
 
 type Debounce = ReturnType<typeof useDebounce>;
 type FormDataToURLState = (
