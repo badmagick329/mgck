@@ -30,8 +30,7 @@ class AccountsList(APIView):
         return Response(
             {
                 "accounts": [
-                    account.name
-                    for account in Account.objects.all().order_by("name")
+                    account.name for account in Account.objects.all().order_by("name")
                 ]
             }
         )
@@ -119,11 +118,7 @@ class GfyDetails(APIView):
                 "imgur_id": gfy.imgur_id,
                 "width": gfy.width,
                 "height": gfy.height,
-                "video_url": (
-                    gfy.video_url
-                    if gfy.video_id and USE_HOSTED_URL
-                    else gfy.imgur_mp4_url
-                ),
+                "video_url": (gfy.video_url if gfy.video_id else gfy.imgur_mp4_url),
             }
         )
 
