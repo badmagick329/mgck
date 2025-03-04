@@ -1,13 +1,13 @@
 'use client';
 
-import { useGlobalContext } from '@/app/gfys/context/store';
+import { useGfyContext } from '@/app/gfys/_context/store';
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 import GfyPreview from './gfy-preview';
 
 export default function GfyList() {
-  const { data, updateDataFromParams } = useGlobalContext();
+  const { data, updateDataFromParams } = useGfyContext();
   const searchParams = useSearchParams();
 
   useEffect(() => {

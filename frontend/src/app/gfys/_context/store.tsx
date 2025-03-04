@@ -32,7 +32,7 @@ interface ContextProps {
   setLoopAll: (value: boolean) => void;
 }
 
-const GlobalContext = createContext<ContextProps>({
+const GfyContext = createContext<ContextProps>({
   data: {} as GfyParsedResponse,
   gfyViewData: {} as GfyViewData,
   goToGfyAtIndex: () => '',
@@ -47,7 +47,7 @@ const GlobalContext = createContext<ContextProps>({
   setLoopAll: () => {},
 });
 
-export const GlobalContextProvider = ({
+export const GfyContextProvider = ({
   children,
 }: {
   children: React.ReactNode;
@@ -76,7 +76,7 @@ export const GlobalContextProvider = ({
   };
 
   return (
-    <GlobalContext.Provider
+    <GfyContext.Provider
       value={{
         data,
         gfyViewData,
@@ -113,11 +113,17 @@ export const GlobalContextProvider = ({
       }}
     >
       {children}
-    </GlobalContext.Provider>
+    </GfyContext.Provider>
   );
 };
 
-export const useGlobalContext = () => useContext(GlobalContext);
+export const useGfyContext = () => {
+  const context = useContext(GfyContext);
+  if (context === undefined) {
+    throw new Error('useGfyContext must be used within a GfyContextProvider');
+  }
+  return context;
+};
 
 const setDataFromParams = async (
   params: ReadonlyURLSearchParams,
