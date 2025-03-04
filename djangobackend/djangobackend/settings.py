@@ -19,7 +19,6 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 VIDEO_URL = os.environ["VIDEO_URL"]
-USE_HOSTED_URL = int(os.environ.get("USE_HOSTED_URL", 0))
 REDDIT_VIDEOS = os.environ.get("REDDIT_VIDEOS", "")
 REDDIT_VIDEOS_STATIC = os.environ.get("REDDIT_VIDEOS_STATIC", "")
 REDDIT_SECRET = os.environ.get("REDDIT_SECRET", "")
@@ -147,9 +146,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/uploads/"
-MEDIA_ROOT = (
-    os.environ["UPLOADS_STATIC"] if CONTAINERED else os.environ["UPLOADS"]
-)
+MEDIA_ROOT = os.environ["UPLOADS_STATIC"] if CONTAINERED else os.environ["UPLOADS"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
