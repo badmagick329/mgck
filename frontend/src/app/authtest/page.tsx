@@ -1,6 +1,6 @@
 'use client';
 
-import { useAccount } from '@/hooks/use-account';
+import { useAccount } from '@/hooks/useAccount';
 import { useState } from 'react';
 
 export default function Login() {

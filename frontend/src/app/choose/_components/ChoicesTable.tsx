@@ -18,7 +18,7 @@ import {
   GetCriteriaValues,
   GetCriterionValue,
   SetValue,
-} from '@/hooks/use-choices-state';
+} from '@/hooks/useChoicesState';
 import { truncateText } from '@/lib/utils';
 
 import Instruction from './Instruction';

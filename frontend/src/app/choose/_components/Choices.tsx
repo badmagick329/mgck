@@ -10,7 +10,7 @@ import {
   GetCriterionValue,
   RemoveChoice,
   SetValue,
-} from '@/hooks/use-choices-state';
+} from '@/hooks/useChoicesState';
 import { useState } from 'react';
 
 import ChoicesTable from './ChoicesTable';

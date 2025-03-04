@@ -7,7 +7,7 @@ import {
   GetWeight,
   RemoveCriterion,
   SetCriterion,
-} from '@/hooks/use-choices-state';
+} from '@/hooks/useChoicesState';
 import { useState } from 'react';
 
 import CriteriaTable from './CriteriaTable';
