@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useState } from 'react';
-import useLocalStorage from '@/hooks/use-local-storage';
+import useLocalStorage from '@/hooks/useLocalStorage';
 import { defaultEmojis } from '@/lib/emojify';
 
 type EmojifyContextType = {

@@ -13,11 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  GetCriteria,
-  GetWeight,
-  SetCriterion,
-} from '@/hooks/use-choices-state';
+import { GetCriteria, GetWeight, SetCriterion } from '@/hooks/useChoicesState';
 import { truncateText } from '@/lib/utils';
 
 import Instruction from './Instruction';

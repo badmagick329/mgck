@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useAccount } from '@/hooks/use-account';
+import { useAccount } from '@/hooks/useAccount';
 import { useRouter } from 'next/navigation';
 import { ACCOUNT_USER_HOME } from '@/lib/consts/urls';
 

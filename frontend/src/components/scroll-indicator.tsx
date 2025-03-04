@@ -1,4 +1,4 @@
-import useScrollIndicator from '@/hooks/use-scroll-indicator';
+import useScrollIndicator from '@/hooks/useScrollIndicator';
 
 export default function ScrollIndicator({
   colorValue,
