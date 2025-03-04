@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 
-import ResponseOutput from './_components/response-output';
+import ResponseOutput from './_components/ResponseOutput';
 
 export default function UrlShortenerPage() {
   const [url, setUrl] = useState('');
