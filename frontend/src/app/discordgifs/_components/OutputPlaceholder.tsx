@@ -2,7 +2,7 @@
 
 import { Canvas } from '@react-three/fiber';
 
-import LoadingBox from './loading-box';
+import LoadingBox from './LoadingBox';
 
 export default function OutputPlaceholder() {
   return (
