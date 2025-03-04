@@ -12,7 +12,7 @@ import clsx from 'clsx';
 import { Dispatch, useEffect, useReducer, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import ConvertedFile from './converted-file';
+import ConvertedFile from './ConvertedFile';
 
 const maxFiles = 5;
 
@@ -109,7 +109,9 @@ export default function FileDropzone() {
           `${!buttonEnabled ? 'bg-secondary-dg' : 'bg-primary-dg'}`,
           `rounded-md border-2 border-orange-500`,
           `px-4 py-2 disabled:border-orange-500/60 disabled:text-foreground-dg/60`,
-          `shadow-glow-primary-dg ${!buttonEnabled && dragEnter && 'animate-pulse'}`
+          `shadow-glow-primary-dg ${
+            !buttonEnabled && dragEnter && 'animate-pulse'
+          }`
         )}
         onClick={(e) => convert(ffmpegRef, filesState, dispatch)}
         disabled={!buttonEnabled}

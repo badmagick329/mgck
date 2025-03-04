@@ -3,10 +3,10 @@ import { FFmpegFileData } from '@/lib/types/ffmpeg';
 import { truncateText } from '@/lib/utils';
 import clsx from 'clsx';
 
-import ChoiceCheckbox from './choice-checkbox';
-import ConversionOutput from './conversion-output';
-import OutputPlaceholder from './output-placeholder';
-import ProgressBar from './progress-bar';
+import ChoiceCheckbox from './ChoiceCheckbox';
+import ConversionOutput from './ConversionOutput';
+import OutputPlaceholder from './OutputPlaceholder';
+import ProgressBar from './ProgressBar';
 
 const targetChoices = Object.keys(sizeInfo) as Array<keyof typeof sizeInfo>;
 
