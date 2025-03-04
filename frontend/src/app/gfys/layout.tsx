@@ -1,4 +1,4 @@
-import { GlobalContextProvider } from '@/app/gfys/context/store';
+import { GfyContextProvider } from '@/app/gfys/_context/store';
 import { Toaster } from '@/components/ui/toaster';
 import type { Metadata } from 'next';
 
@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <>
-      <GlobalContextProvider>{children}</GlobalContextProvider>
+      <GfyContextProvider>{children}</GfyContextProvider>
       <Toaster />
     </>
   );
