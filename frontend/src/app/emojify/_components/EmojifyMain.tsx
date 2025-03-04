@@ -1,6 +1,6 @@
 'use client';
 
-import Navbar from '@/components/navbar';
+import Navbar from '@/app/_components/Navbar';
 
 import EmojisField from '@/app/emojify/_components/EmojisField';
 import MessageField from '@/app/emojify/_components/MessageField';

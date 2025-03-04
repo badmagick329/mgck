@@ -1,11 +1,11 @@
 'use client';
 
-import { ThemeToggler } from '@/components/theme-toggler';
+import { ThemeToggler } from '@/app/_components/ThemeToggler';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { IoHome } from 'react-icons/io5';
 
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 
 export default function Navbar() {
   const path = usePathname();

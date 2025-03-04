@@ -1,4 +1,4 @@
-import Navbar from '@/components/navbar';
+import Navbar from '@/app/_components/Navbar';
 
 import DiscordGifsIntro from './_components/DiscordGifsIntro';
 import EmojifyIntro from './_components/EmojifyIntro';

@@ -1,4 +1,4 @@
-import Navbar from '@/components/navbar';
+import Navbar from '@/app/_components/Navbar';
 import { GFYS_BASE } from '@/lib/consts/urls';
 import { GfyDetailResponse } from '@/lib/types/gfys';
 import Link from 'next/link';

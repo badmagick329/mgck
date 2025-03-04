@@ -1,7 +1,7 @@
 'use client';
 import { Input } from '@/components/ui/input';
 import EmojifyHelpText from './EmojifyHelpText';
-import { useEmojifyContext } from '../_context/store';
+import { useEmojifyContext } from '@/app/emojify/_context/store';
 
 type EmojisFieldProps = {
   aiEnabled: boolean;

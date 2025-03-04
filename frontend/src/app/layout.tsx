@@ -1,4 +1,4 @@
-import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider } from '@/app/_components/ThemeProvider';
 import type { Metadata } from 'next';
 import { Quicksand } from 'next/font/google';
 import Script from 'next/script';
