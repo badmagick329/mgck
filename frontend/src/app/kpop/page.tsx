@@ -12,9 +12,9 @@ import { searchParamsToFormData } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import ComebackCard from './_components/comeback-card';
-import ComebacksForm from './_components/comebacks-form';
-import ErrorResponse from './_components/error-response';
+import ComebackCard from './_components/ComebackCard';
+import ComebacksForm from './_components/ComebacksForm';
+import ErrorResponse from './_components/ErrorResponse';
 import Loading from './loading';
 
 export default function KpopPage() {

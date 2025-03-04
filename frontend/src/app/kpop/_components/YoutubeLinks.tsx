@@ -14,8 +14,8 @@ import {
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
-import CarouselButtons from './carousel-buttons';
-import YoutubePlayer from './youtube-player';
+import CarouselButtons from './CarouselButtons';
+import YoutubePlayer from './YoutubePlayer';
 
 export default function YoutubeLinks({ videoIds }: { videoIds: string[] }) {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
