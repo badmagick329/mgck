@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-import EmojifyButtons from './emojify-buttons';
+import EmojifyButtons from './EmojifyButtons';
 
 type OutputFieldProps = {
   username: string;
