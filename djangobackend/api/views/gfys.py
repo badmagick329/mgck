@@ -15,7 +15,6 @@ from rest_framework.views import APIView
 
 app_name = ApiConfig.name
 CACHE_TTL = settings.API_CACHE_TTL
-USE_HOSTED_URL = settings.USE_HOSTED_URL
 
 
 class GfyDetailsThrottle(UserRateThrottle):
