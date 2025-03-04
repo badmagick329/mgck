@@ -10,9 +10,9 @@ import {
 } from '@/hooks/use-choices-state';
 import { useState } from 'react';
 
-import CriteriaTable from './criteria-table';
-import Instruction from './instruction';
-import Spacer from './spacer';
+import CriteriaTable from './CriteriaTable';
+import Instruction from './Instruction';
+import Spacer from './Spacer';
 
 type CriteriaProps = {
   setCriterion: SetCriterion;

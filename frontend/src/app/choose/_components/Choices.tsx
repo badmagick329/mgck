@@ -13,9 +13,9 @@ import {
 } from '@/hooks/use-choices-state';
 import { useState } from 'react';
 
-import ChoicesTable from './choices-table';
-import Instruction from './instruction';
-import Spacer from './spacer';
+import ChoicesTable from './ChoicesTable';
+import Instruction from './Instruction';
+import Spacer from './Spacer';
 
 type ChoicesProps = {
   addChoice: AddChoice;

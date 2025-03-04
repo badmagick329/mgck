@@ -3,10 +3,10 @@
 import Navbar from '@/components/navbar';
 import useChoicesState from '@/hooks/use-choices-state';
 
-import ChartOutput from './_components/chart-output';
-import Choices from './_components/choices';
-import Criteria from './_components/criteria';
-import Spacer from './_components/spacer';
+import ChartOutput from './_components/ChartOutput';
+import Choices from './_components/Choices';
+import Criteria from './_components/Criteria';
+import Spacer from './_components/Spacer';
 
 export default function ChoosePage() {
   const {
