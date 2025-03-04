@@ -1,6 +1,6 @@
 'use client';
 
-import Navbar from '@/components/navbar';
+import Navbar from '@/app/_components/Navbar';
 import useChoicesState from '@/hooks/useChoicesState';
 
 import ChartOutput from './_components/ChartOutput';

@@ -1,8 +1,8 @@
 'use client';
 
 import { fetchComebacks } from '@/actions/kpop';
-import Navbar from '@/components/navbar';
-import ScrollIndicator from '@/components/scroll-indicator';
+import Navbar from '@/app/_components/Navbar';
+import ScrollIndicator from '@/app/kpop/_components/ScrollIndicator';
 import {
   ComebackResponse,
   ComebacksResult,

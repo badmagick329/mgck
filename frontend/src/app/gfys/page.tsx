@@ -1,4 +1,4 @@
-import Navbar from '@/components/navbar';
+import Navbar from '@/app/_components/Navbar';
 
 import GfyList from './_components/GfyList';
 import SearchForm from './_components/SearchForm';
