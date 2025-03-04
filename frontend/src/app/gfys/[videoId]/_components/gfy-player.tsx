@@ -1,12 +1,12 @@
 import { addGfyView } from '@/actions/gfys';
-import { useGlobalContext } from '@/app/gfys/context/store';
+import { useGfyContext } from '@/app/gfys/_context/store';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
   const { videoVolume, setVideoVolume, goToNextGfy, data, loopAll } =
-    useGlobalContext();
+    useGfyContext();
   const [videoLoading, setVideoLoading] = useState<boolean>(true);
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [viewed, setViewed] = useState<boolean>(false);

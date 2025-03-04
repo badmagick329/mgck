@@ -1,4 +1,4 @@
-import { useGlobalContext } from '@/app/gfys/context/store';
+import { useGfyContext } from '@/app/gfys/_context/store';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -18,7 +18,7 @@ export default function NavButton({
 }) {
   const Icon = direction === 'previous' ? ImArrowLeft : ImArrowRight;
   const { nextGfyExists, previousGfyExists, goToNextGfy, goToPreviousGfy } =
-    useGlobalContext();
+    useGfyContext();
   const leftRef = useRef<HTMLButtonElement>(null);
   const rightRef = useRef<HTMLButtonElement>(null);
   const [disabledButton, setDisabledButton] = useState(false);

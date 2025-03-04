@@ -1,4 +1,4 @@
-import { useGlobalContext } from '@/app/gfys/context/store';
+import { useGfyContext } from '@/app/gfys/_context/store';
 import {
   Tooltip,
   TooltipContent,
@@ -23,7 +23,7 @@ export default function GfyPreview({
   width: number | null;
   height: number | null;
 }) {
-  const { goToGfyAtIndex } = useGlobalContext();
+  const { goToGfyAtIndex } = useGfyContext();
 
   return (
     <TooltipProvider>
