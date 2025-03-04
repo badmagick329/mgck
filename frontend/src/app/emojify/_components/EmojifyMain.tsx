@@ -2,9 +2,9 @@
 
 import Navbar from '@/components/navbar';
 
-import EmojisField from '@/app/emojify/_components/emojis-field';
-import MessageField from '@/app/emojify/_components/message-field';
-import OutputField from '@/app/emojify/_components/output-field';
+import EmojisField from '@/app/emojify/_components/EmojisField';
+import MessageField from '@/app/emojify/_components/MessageField';
+import OutputField from '@/app/emojify/_components/OutputField';
 import { EmojifyContextProvider } from '@/app/emojify/_context/store';
 import EmojifyHeader from '@/app/emojify/_components/EmojifyHeader';
 
