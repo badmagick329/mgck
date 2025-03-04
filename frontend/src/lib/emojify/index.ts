@@ -1,4 +1,4 @@
-import { DEFAULT_EMOJIS } from '@/lib/consts';
+import { DEFAULT_EMOJIS } from '@/lib/consts/emojify';
 import { randomChoice } from '@/lib/utils';
 
 export const defaultEmojis = () => DEFAULT_EMOJIS.join(' ');
