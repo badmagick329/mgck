@@ -4,7 +4,7 @@ import { useGfyContext } from '@/app/gfys/_context/store';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import NavButton from './nav-button';
+import NavButton from './NavButton';
 
 export default function SearchNavigation({ onClient }: { onClient: boolean }) {
   const { data } = useGfyContext();

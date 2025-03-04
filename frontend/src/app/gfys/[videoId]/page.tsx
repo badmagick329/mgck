@@ -2,7 +2,7 @@ import { fetchGfy } from '@/actions/gfys';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import GfyView from './_components/gfy-view';
+import GfyView from './_components/GfyView';
 
 type Props = {
   params: { videoId: string };

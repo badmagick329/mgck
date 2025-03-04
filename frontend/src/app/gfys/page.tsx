@@ -1,8 +1,8 @@
 import Navbar from '@/components/navbar';
 
-import GfyList from './_components/gfy-list';
-import SearchForm from './_components/search-form';
-import SearchNavigation from './_components/search-navigation';
+import GfyList from './_components/GfyList';
+import SearchForm from './_components/SearchForm';
+import SearchNavigation from './_components/SearchNavigation';
 
 export default function GfysHome() {
   return (

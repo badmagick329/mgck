@@ -12,7 +12,7 @@ import { useEffect, useRef } from 'react';
 import { IoIosUndo } from 'react-icons/io';
 import { TfiLoop } from 'react-icons/tfi';
 
-import NavButton from './nav-button';
+import NavButton from './NavButton';
 
 export default function NavButtons() {
   const backRef = useRef<HTMLButtonElement>(null);

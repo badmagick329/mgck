@@ -6,8 +6,8 @@ import { createURL } from '@/lib/utils/gfys';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
-import AccountSelector from './account-selector';
-import SearchTextInput from './search-text-input';
+import AccountSelector from './AccountSelector';
+import SearchTextInput from './SearchTextInput';
 
 export default function SearchFormContent() {
   const searchParams = useSearchParams();
