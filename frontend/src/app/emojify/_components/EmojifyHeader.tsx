@@ -1,33 +1,27 @@
 import { Button } from '@/components/ui/button';
 import EmojifyHelpButton from './EmojifyHelpButton';
-import { useEffect, useState } from 'react';
 import { topRightDefaultToast } from '@/lib/utils';
-import { defaultEmojis, emojifyText } from '@/lib/emojify';
+import { defaultEmojis } from '@/lib/emojify';
 import { useEmojifyContext } from '@/app/emojify/_context/store';
 import { useToast } from '@/components/ui/use-toast';
+import { TypeAnimation } from 'react-type-animation';
 
-export default function EmojifyHeader({ username }: { username: string }) {
-  const plainHeaderMessage = (username: string) =>
-    username ? `Hello ${username} !` : 'Emojify Your Message';
-  const [headerMessage, setHeaderMessage] = useState(
-    plainHeaderMessage(username)
-  );
+export default function EmojifyHeader({
+  headerTypingSequence,
+}: {
+  headerTypingSequence: (string | number)[];
+}) {
   const { emojisInput, setEmojisInput } = useEmojifyContext();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const plainMessage = plainHeaderMessage(username);
-    setHeaderMessage(emojifyText(plainMessage, defaultEmojis()));
-
-    const cancelTimer = setInterval(() => {
-      setHeaderMessage(emojifyText(plainMessage, defaultEmojis()));
-    }, 1500);
-    return () => clearInterval(cancelTimer);
-  }, []);
-
   return (
     <section>
-      <span className='flex justify-center text-2xl'>{headerMessage}</span>
+      <TypeAnimation
+        className='flex justify-center text-xl p-2'
+        sequence={[...headerTypingSequence]}
+        wrapper='span'
+        cursor={true}
+      />
       <div className='flex justify-between p-0'>
         <Button
           variant={'plain'}

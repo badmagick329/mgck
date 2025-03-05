@@ -8,9 +8,11 @@ import { useEmojifyContext } from '../_context/store';
 export default function EmojifyMain({
   username,
   showAi,
+  headerTypingSequence,
 }: {
   username: string;
   showAi: boolean;
+  headerTypingSequence: (string | number)[];
 }) {
   const { isLoaded } = useEmojifyContext();
 
@@ -26,7 +28,7 @@ export default function EmojifyMain({
           y: { type: 'spring', stiffness: 500, damping: 15 },
         }}
       >
-        <EmojifyHeader username={username} />
+        <EmojifyHeader headerTypingSequence={headerTypingSequence} />
         <MessageField />
         <EmojisField aiEnabled={showAi} />
         <OutputField username={username} showAi={showAi} />
