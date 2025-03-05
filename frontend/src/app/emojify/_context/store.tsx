@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { defaultEmojis } from '@/lib/emojify';
 
@@ -12,6 +12,7 @@ type EmojifyContextType = {
   setMessageInput: (newMessage: string) => void;
   messageInputTextAreaRows: number;
   setMessageInputTextAreaRows: (newRows: number) => void;
+  isLoaded: boolean;
 };
 
 const EmojifyContext = createContext<EmojifyContextType | undefined>(undefined);
@@ -31,12 +32,17 @@ export const EmojifyContextProvider = ({
   );
   const setEmojisInput = (newInput: string) => _setEmojisInput(newInput);
 
-  const [messageInput, setMessageInput] = useState('');
-
   const {
     value: messageInputTextAreaRows,
     updateValue: setMessageInputTextAreaRows,
   } = useLocalStorage<number>('emojifyMessageInputTextAreaRows', 5);
+
+  const [messageInput, setMessageInput] = useState('');
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   return (
     <EmojifyContext.Provider
@@ -49,6 +55,7 @@ export const EmojifyContextProvider = ({
         setMessageInput,
         messageInputTextAreaRows,
         setMessageInputTextAreaRows,
+        isLoaded,
       }}
     >
       {children}
