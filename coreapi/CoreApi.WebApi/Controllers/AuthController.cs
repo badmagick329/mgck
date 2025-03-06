@@ -50,6 +50,11 @@ public class AuthController : ControllerBase
     [EnableRateLimiting("login-limiter")]
     public async Task<IActionResult> Register([FromBody] RegisterDto model)
     {
+        if (model.Username.Length < 3)
+        {
+            return BadRequest("Username must be at least 3 characters long.");
+        }
+
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
         var user = new AppUser { UserName = model.Username };
