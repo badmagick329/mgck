@@ -24,7 +24,7 @@ export default function EmojifyMain({
         animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 40 }}
         transition={{
           delay: 0.3,
-          opacity: { duration: 0.8, ease: 'easeOut' },
+          opacity: { duration: 0.5, ease: 'easeOut' },
           y: { type: 'spring', stiffness: 500, damping: 15 },
         }}
       >

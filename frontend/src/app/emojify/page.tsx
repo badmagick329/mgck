@@ -9,7 +9,7 @@ export default function EmojifyPage() {
   const message = parsed.name()
     ? randomUserMessage(parsed.name())
     : randomMessage();
-  const numberOfCorruptions = randomBetween(2, 4);
+  const numberOfCorruptions = randomBetween(0, 3);
   const corruptText = CorruptText.createFrom(message, numberOfCorruptions);
   const segments = new CorruptTextSegments(corruptText);
   const headerTypingSequence = segments.createTypingSequence(100);
