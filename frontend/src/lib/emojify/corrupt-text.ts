@@ -3,7 +3,7 @@ import { randomBetween, randomChoice } from '@/lib/utils';
 export class CorruptText {
   _original: string;
   _alphaIndices: number[];
-  _corruptedText: string;
+  _text: string;
   _corruptionIndices: number[];
   _numberOfCorruptions: number;
 
@@ -11,24 +11,12 @@ export class CorruptText {
     return this._original;
   }
 
-  get corruptedText(): string {
-    return this._corruptedText;
+  get text(): string {
+    return this._text;
   }
 
   get corruptionIndices(): number[] {
     return this._corruptionIndices;
-  }
-
-  constructor(
-    original: string,
-    alphaIndices: number[],
-    numberOfCorruptions: number
-  ) {
-    this._original = original;
-    this._alphaIndices = alphaIndices;
-    this._numberOfCorruptions = numberOfCorruptions;
-    this._corruptedText = '';
-    this._corruptionIndices = [];
   }
 
   public static createFrom(
@@ -40,6 +28,18 @@ export class CorruptText {
     created._initCorruptedText();
 
     return created;
+  }
+
+  private constructor(
+    original: string,
+    alphaIndices: number[],
+    numberOfCorruptions: number
+  ) {
+    this._original = original;
+    this._alphaIndices = alphaIndices;
+    this._numberOfCorruptions = numberOfCorruptions;
+    this._text = '';
+    this._corruptionIndices = [];
   }
 
   private static _calcAlphaIndices(text: string): number[] {
@@ -58,7 +58,7 @@ export class CorruptText {
     );
 
     if (this._numberOfCorruptions === 0) {
-      this._corruptedText = this._original;
+      this._text = this._original;
       return;
     }
 
@@ -73,7 +73,7 @@ export class CorruptText {
       return char;
     });
 
-    this._corruptedText = corrupted.join('');
+    this._text = corrupted.join('');
   }
 
   private _calculateCorruptionIndices(): number[] {
@@ -108,20 +108,38 @@ export class CorruptText {
 
 export class CorruptTextSegments {
   _corruptText: CorruptText;
+  _segments: string[];
 
   constructor(corruptText: CorruptText) {
     this._corruptText = corruptText;
+    this._segments = this._extract();
   }
 
-  public extract(): string[] {
-    const segments: string[] = [];
+  public createTypingSequence(
+    correctionDelayMin = 100,
+    correctionDelayMax = 500
+  ): Array<string | number> {
+    const sequence = [] as (string | number)[];
+
+    for (let i = 0; i < this._segments.length; i++) {
+      sequence.push(this._segments[i]);
+      if (i < this._segments.length - 1) {
+        sequence.push(randomBetween(correctionDelayMin, correctionDelayMax));
+      }
+    }
+
+    return sequence;
+  }
+
+  private _extract(): string[] {
+    const segments = [] as string[];
 
     if (this._corruptText.corruptionIndices.length === 0) {
       return [this._corruptText.original];
     }
 
     const original = this._corruptText.original;
-    const corrupted = this._corruptText.corruptedText;
+    const corrupted = this._corruptText.text;
     const corruptIndices = [...this._corruptText.corruptionIndices];
 
     for (let i = 0; i < corruptIndices.length + 1; i++) {
@@ -148,22 +166,5 @@ export class CorruptTextSegments {
       segments.push(segment);
     }
     return segments;
-  }
-
-  public createTypingSequence(
-    correctionDelayMin = 100,
-    correctionDelayMax = 500
-  ): Array<string | number> {
-    const segments = this.extract();
-    const sequence = [] as (string | number)[];
-
-    for (let i = 0; i < segments.length; i++) {
-      sequence.push(segments[i]);
-      if (i < segments.length - 1) {
-        sequence.push(randomBetween(correctionDelayMin, correctionDelayMax));
-      }
-    }
-
-    return sequence;
   }
 }
