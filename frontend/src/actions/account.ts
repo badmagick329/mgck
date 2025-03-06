@@ -22,7 +22,7 @@ import {
 } from '@/lib/consts/urls';
 import { createErrorResponse } from '@/lib/account/errors';
 import { fetchWithAuthHeader } from '@/lib/account/requests';
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 
 const BASE_URL = process.env.USER_AUTH_BASE_URL;
 
@@ -52,12 +52,16 @@ export async function loginUserAction(payload: {
 }
 
 export async function logoutUserAction() {
+  const cookieStore = cookies();
+  if (!cookieStore.get('token') && !cookieStore.get('refreshToken')) {
+    return;
+  }
+
   const response = await fetchWithAuthHeader({
     url: `${BASE_URL}${API_LOGOUT}`,
     method: 'POST',
   });
 
-  const cookieStore = cookies();
   cookieStore.delete('token');
   cookieStore.delete('refreshToken');
 

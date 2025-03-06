@@ -1,111 +1,273 @@
 'use client';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useAccount } from '@/hooks/useAccount';
 import { useRouter } from 'next/navigation';
 import { ACCOUNT_USER_HOME } from '@/lib/consts/urls';
+import { useForm } from 'react-hook-form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { AnimatePresence, motion } from 'motion/react';
+import { IoIosCloseCircle } from 'react-icons/io';
+
+const FormSchema = z
+  .object({
+    username: z.string().min(3, {
+      message: 'Username must be at least 3 characters.',
+    }),
+    password: z.string().min(8, {
+      message: 'Password must be at least 8 characters.',
+    }),
+    password2: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.password2 && data.password2 !== data.password) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passwords don't match",
+        path: ['password2'],
+      });
+    }
+  });
 
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-
   const { loginUser, registerUser, errorResponse, setErrorResponse } =
     useAccount();
 
-  const handleSubmission = async () => {
-    if (isRegistering && password !== password2) {
-      setErrorResponse(['Passwords do not match']);
-      return;
-    }
-    if (isRegistering && password === password2) {
-      const registered = await registerUser({ username, password });
-      if (!registered) {
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      username: '',
+      password: '',
+      password2: '',
+    },
+    mode: 'onSubmit',
+  });
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    setIsSubmitting(true);
+    try {
+      console.log('Form submitted successfully with:', data);
+
+      const { username, password } = data;
+
+      if (isRegistering) {
+        const registered = await registerUser({ username, password });
+
+        if (!registered) {
+          return;
+        }
+
+        const loggedIn = await loginUser({ username, password });
+        if (loggedIn) {
+          router.push(ACCOUNT_USER_HOME);
+        }
         return;
       }
-      const loggedIn = await loginUser({ username, password });
-      loggedIn && router.push(ACCOUNT_USER_HOME);
-      return;
-    }
 
-    const loggedIn = await loginUser({ username, password });
-    loggedIn && router.push(ACCOUNT_USER_HOME);
-  };
+      const loggedIn = await loginUser({ username, password });
+      if (loggedIn) {
+        router.push(ACCOUNT_USER_HOME);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+  const headerText = isRegistering ? 'Register' : 'Login';
+  const descriptionText = isRegistering
+    ? 'Register for an account'
+    : 'Login to your account';
 
   return (
-    <main className={'flex min-h-screen flex-col items-center'}>
-      <div className={'flex justify-center py-6 bg-slate-800 h-[14rem] w-full'}>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmission();
-          }}
-          className={'flex flex-col gap-4 max-w-[16rem] w-full'}
-        >
-          <input
-            type={'text'}
-            autoComplete='off'
-            name={'username'}
-            placeholder={'Enter username'}
-            value={username}
-            onChange={(e) => setUsername(e.target.value || '')}
-          />
-          <input
-            type={'password'}
-            autoComplete='off'
-            name={'password'}
-            placeholder={'Enter password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value || '')}
-          />
-          {isRegistering ? (
-            <input
-              type={'password'}
-              autoComplete='off'
-              name={'password2'}
-              placeholder={'Confirm Password'}
-              value={password2}
-              onChange={(e) => setPassword2(e.target.value || '')}
-            />
-          ) : (
-            <div className={'h-6 '}></div>
-          )}
-
-          <div className={'flex justify-center gap-4'}>
-            <button type={'submit'} className={'bg-blue-500 px-4 py-2'}>
-              {isRegistering ? 'Register' : 'Login'}
-            </button>
-            <button
-              type={'button'}
-              className={'bg-green-500 px-4 py-2'}
-              onClick={() => {
-                setPassword('');
-                setPassword2('');
-                setIsRegistering(!isRegistering);
-              }}
-            >
-              {isRegistering ? 'Back' : 'Sign Up'}
-            </button>
-          </div>
-        </form>
-      </div>
-      <ErrorMessages errorResponse={errorResponse} />
-    </main>
+    <article className='grow py-4'>
+      <Card className='border-foreground/40 min-w-[360px] bg-background/80'>
+        <Form {...form}>
+          <form
+            className='grid grid-cols-1 gap-4'
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
+            <CardHeader>
+              <CardTitle>{headerText}</CardTitle>
+              <CardDescription>{descriptionText}</CardDescription>
+            </CardHeader>
+            <CardContent className='grid grid-cols-1 gap-2'>
+              <FormField
+                control={form.control}
+                name='username'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input
+                        autoComplete={'off'}
+                        placeholder='username'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='password'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='password'
+                        autoComplete={'off'}
+                        placeholder='password'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className='min-h-[75px]'>
+                <AnimatePresence>
+                  {isRegistering && (
+                    <motion.div
+                      key='password2'
+                      initial={{ opacity: 0, y: -40 }}
+                      animate={{
+                        opacity: isRegistering ? 1 : 0,
+                        y: isRegistering ? 0 : -40,
+                      }}
+                      exit={{ opacity: 0, y: -40 }}
+                      transition={{
+                        opacity: { duration: 0.1, ease: 'easeOut' },
+                        y: {
+                          type: 'spring',
+                          stiffness: 400,
+                          damping: 15,
+                          duration: 0.2,
+                        },
+                      }}
+                    >
+                      <FormField
+                        control={form.control}
+                        name='password2'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                type='password'
+                                autoComplete={'off'}
+                                placeholder='Confirm password'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </CardContent>
+            <CardFooter className='grid grid-cols-1 gap-2'>
+              <div className='flex justify-between'>
+                <Button color='zinc-950' type='submit' disabled={isSubmitting}>
+                  {isRegistering ? 'Register' : 'Login'}
+                </Button>
+                <Button
+                  type='button'
+                  variant='outline'
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    form.reset({
+                      username: '',
+                      password: '',
+                      password2: '',
+                    });
+                    setIsRegistering(!isRegistering);
+                    setErrorResponse([]);
+                  }}
+                >
+                  {isRegistering ? 'Back to Login' : 'Sign Up'}
+                </Button>
+              </div>
+              <ErrorMessages
+                errorResponse={errorResponse}
+                resetErrorResponse={() => setErrorResponse([])}
+              />
+            </CardFooter>
+          </form>
+        </Form>
+      </Card>
+    </article>
   );
 }
 
-function ErrorMessages({ errorResponse }: { errorResponse: string[] }) {
+function ErrorMessages({
+  errorResponse,
+  resetErrorResponse,
+}: {
+  errorResponse: string[];
+  resetErrorResponse: () => void;
+}) {
   if (errorResponse.length === 0) {
     return null;
   }
+
   return (
-    <ul>
-      {errorResponse.map((err) => (
-        <li key={err} className={'text-red-400'}>
-          {err}
-        </li>
-      ))}
-    </ul>
+    <motion.div
+      className='relative py-2 px-4 bg-red-100 rounded-sm'
+      key='errors'
+      initial={{ opacity: 0, y: 40 }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      transition={{
+        opacity: { duration: 0.1, ease: 'easeOut' },
+        y: {
+          type: 'spring',
+          stiffness: 400,
+          damping: 15,
+          duration: 0.2,
+        },
+      }}
+    >
+      <button
+        className='absolute top-1 right-1 rounded-full flex items-center justify-center text-black/50 hover:text-black/80'
+        onClick={resetErrorResponse}
+      >
+        <IoIosCloseCircle />
+      </button>
+
+      <ul className='mt-1'>
+        {errorResponse.map((err) => (
+          <li key={err} className='text-red-700'>
+            {err}
+          </li>
+        ))}
+      </ul>
+    </motion.div>
   );
 }
