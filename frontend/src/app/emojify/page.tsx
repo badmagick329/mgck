@@ -6,10 +6,6 @@ import { randomBetween, randomChoice } from '@/lib/utils';
 
 export default function EmojifyPage() {
   const parsed = ParsedToken.createFromCookie();
-  const plainMessage = parsed.name()
-    ? `Hello ${parsed.name()} !`
-    : 'Emojify Your Message';
-
   const message = parsed.name()
     ? randomUserMessage(parsed.name())
     : randomMessage();
