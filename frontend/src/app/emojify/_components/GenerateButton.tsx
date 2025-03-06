@@ -22,21 +22,26 @@ export default function GenerateButton({
   }
 
   return (
-    <Button
-      className='bg-primary-em/70 hover:bg-primary-em w-40 justify-self-end'
-      disabled={generating}
-      onClick={async () => {
-        try {
-          setGenerating(true);
-          const generatedText = await emojifyWithAi(username, messageInput);
-          setOutput(generatedText);
-          setGenerating(false);
-        } catch (error) {
-          setGenerating(false);
-        }
-      }}
+    <abbr
+      className='no-underline justify-self-end'
+      title='Use AI to generate emojis for your message'
     >
-      Generate with AI ✨
-    </Button>
+      <Button
+        className='bg-primary-em/70 hover:bg-primary-em w-40'
+        disabled={generating}
+        onClick={async () => {
+          try {
+            setGenerating(true);
+            const generatedText = await emojifyWithAi(username, messageInput);
+            setOutput(generatedText);
+            setGenerating(false);
+          } catch (error) {
+            setGenerating(false);
+          }
+        }}
+      >
+        Generate with AI ✨
+      </Button>
+    </abbr>
   );
 }

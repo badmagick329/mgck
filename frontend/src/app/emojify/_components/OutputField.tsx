@@ -20,7 +20,12 @@ export default function OutputField({ username, showAi }: OutputFieldProps) {
         showAi={showAi}
       />
       <section className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md border-2 p-2'>
-        <span className='flex flex-wrap break-all'>{output}</span>
+        <abbr
+          className='no-underline justify-self-start'
+          title='Emojified message will appear here'
+        >
+          <span className='flex flex-wrap break-all'>{output}</span>
+        </abbr>
       </section>
     </section>
   );

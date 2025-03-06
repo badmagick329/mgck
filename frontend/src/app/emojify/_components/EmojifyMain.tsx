@@ -1,5 +1,5 @@
 import EmojisField from '@/app/emojify/_components/EmojisField';
-import MessageField from '@/app/emojify/_components/MessageField';
+import InputMessageField from '@/app/emojify/_components/InputMessageField';
 import OutputField from '@/app/emojify/_components/OutputField';
 import EmojifyHeader from '@/app/emojify/_components/EmojifyHeader';
 import { motion } from 'motion/react';
@@ -29,7 +29,7 @@ export default function EmojifyMain({
         }}
       >
         <EmojifyHeader headerTypingSequence={headerTypingSequence} />
-        <MessageField />
+        <InputMessageField />
         <EmojisField aiEnabled={showAi} />
         <OutputField username={username} showAi={showAi} />
       </motion.div>
