@@ -31,6 +31,12 @@ export function useAccount() {
     return handleResponseAndReturnSuccess(response);
   };
 
+  const userIsLoggedIn = async () => {
+    const response = await userAuthStatusAction();
+    const parsed = messageResponseSchema.safeParse(response);
+    return parsed.success;
+  };
+
   const userRole = async () => {
     const response = await userRoleAction();
     return handleResponseAndReturnSuccess(response);
@@ -61,6 +67,7 @@ export function useAccount() {
 
   return {
     loginUser,
+    userIsLoggedIn,
     userAuthStatus,
     userRole,
     registerUser,
