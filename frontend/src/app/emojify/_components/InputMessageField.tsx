@@ -3,7 +3,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useEmojifyContext } from '@/app/emojify/_context/store';
 import { useEffect, useRef, useState } from 'react';
 
-export default function MessageField() {
+export default function InputMessageField() {
   const {
     messageInput,
     setMessageInput,
@@ -43,15 +43,20 @@ export default function MessageField() {
   }
 
   return (
-    <section className='pb-2'>
-      <Textarea
-        ref={textAreaRef}
-        className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md p-2 z-10'
-        onChange={(e) => setMessageInput(e.target.value)}
-        placeholder='Enter your message here'
-        value={messageInput}
-        rows={messageInputTextAreaRows}
-      />
+    <section className='pt-1 pb-2'>
+      <abbr
+        className='no-underline w-full h-full'
+        title='The message that will be emojified'
+      >
+        <Textarea
+          ref={textAreaRef}
+          className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md p-2'
+          onChange={(e) => setMessageInput(e.target.value)}
+          placeholder='Enter your message here'
+          value={messageInput}
+          rows={messageInputTextAreaRows}
+        />
+      </abbr>
     </section>
   );
 }

@@ -29,12 +29,14 @@ export default function EmojifyButtons({
 
   return (
     <section className='grid grid-cols-2 gap-6 p-2 shadow-glow-primary-em md:shadow-none z-10'>
-      <Button
-        className='bg-primary-em/70 hover:bg-primary-em w-40 justify-self-start'
-        onClick={() => handleCopyToClipboard(output, toast)}
-      >
-        Copy 📋
-      </Button>
+      <abbr className='no-underline' title='Copy the output to clipboard'>
+        <Button
+          className='bg-primary-em/70 hover:bg-primary-em w-40'
+          onClick={() => handleCopyToClipboard(output, toast)}
+        >
+          Copy 📋
+        </Button>
+      </abbr>
       <GenerateButton
         messageInput={messageInput}
         setOutput={setOutput}

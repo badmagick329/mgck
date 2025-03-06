@@ -16,8 +16,13 @@ export default function EmojifyHelpButton() {
   const buttonText = showHelp ? 'Hide Help' : 'Show Help';
 
   return (
-    <Button variant={'plain'} className='py-0 px-2 h-6' onClick={toggleHelp}>
-      {buttonText}
-    </Button>
+    <abbr
+      className='no-underline justify-self-start'
+      title={`${buttonText} section`}
+    >
+      <Button variant={'plain'} className='py-0 px-2 h-6' onClick={toggleHelp}>
+        {buttonText}
+      </Button>
+    </abbr>
   );
 }
