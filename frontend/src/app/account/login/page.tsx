@@ -120,7 +120,7 @@ export default function Login() {
                     <FormControl>
                       <Input
                         autoComplete={'off'}
-                        placeholder='username'
+                        placeholder='Username'
                         {...field}
                       />
                     </FormControl>
@@ -138,7 +138,7 @@ export default function Login() {
                       <Input
                         type='password'
                         autoComplete={'off'}
-                        placeholder='password'
+                        placeholder='Password'
                         {...field}
                       />
                     </FormControl>
@@ -177,7 +177,7 @@ export default function Login() {
                               <Input
                                 type='password'
                                 autoComplete={'off'}
-                                placeholder='Confirm password'
+                                placeholder='Confirm Password'
                                 {...field}
                               />
                             </FormControl>
