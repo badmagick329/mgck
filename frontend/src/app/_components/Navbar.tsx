@@ -16,32 +16,33 @@ export default function Navbar() {
   return (
     <div className='flex w-full justify-between p-2'>
       <div className='flex gap-2'>
-        <Link
-          className={`${isHome ? 'cursor-default' : 'cursor-pointer'}`}
-          href='/'
-        >
-          <Button
-            className='text-xl'
-            size='icon'
-            variant='outline'
-            disabled={isHome}
-          >
-            <IoHome />
-          </Button>
-        </Link>
-        <Link
-          className={`${isUserHome ? 'cursor-default' : 'cursor-pointer'}`}
-          href='/account'
-        >
-          <Button
-            className='text-xl'
-            size='icon'
-            variant='outline'
-            disabled={isUserHome}
-          >
-            <FaUser />
-          </Button>
-        </Link>
+        {isHome ? (
+          <span className='cursor-default'>
+            <Button className='text-xl' size='icon' variant='outline' disabled>
+              <IoHome />
+            </Button>
+          </span>
+        ) : (
+          <Link href='/'>
+            <Button className='text-xl' size='icon' variant='outline'>
+              <IoHome />
+            </Button>
+          </Link>
+        )}
+
+        {isUserHome ? (
+          <span className='cursor-default'>
+            <Button className='text-xl' size='icon' variant='outline' disabled>
+              <FaUser />
+            </Button>
+          </span>
+        ) : (
+          <Link href='/account'>
+            <Button className='text-xl' size='icon' variant='outline'>
+              <FaUser />
+            </Button>
+          </Link>
+        )}
       </div>
       <ThemeToggler />
     </div>
