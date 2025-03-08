@@ -145,3 +145,13 @@
 .animate-rotate-fade {
   animation: rotateFade 5s linear infinite;
 }
+
+.grid-auto-fill {
+  --grid-min-col-size: 175px;
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--grid-min-col-size), 100%), 1fr)
+  );
+  gap: 1rem;
+}

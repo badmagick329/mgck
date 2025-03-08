@@ -7,7 +7,7 @@ import LogoutButton from './LogoutButton';
 
 const BASE_URL = process.env.USER_AUTH_BASE_URL;
 
-export default async function AdminHome({ username }: UserHomeProps) {
+export default async function AdminHome({ username }: { username: string }) {
   const response = await fetchWithAuthHeader({
     url: `${BASE_URL}${API_USERS_BASE}`,
     method: 'GET',
