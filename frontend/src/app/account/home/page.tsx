@@ -6,9 +6,25 @@ import {
 import { redirect } from 'next/navigation';
 import { ACCOUNT_LOGIN } from '@/lib/consts/urls';
 import AdminHome from '@/app/account/home/_components/AdminHome';
-import AcceptedUserHome from '@/app/account/home/_components/AcceptedUserHome';
-import NewUserHome from '@/app/account/home/_components/NewUserHome';
+import UserHome from '@/app/account/home/_components/AcceptedUserHome';
 import { ParsedToken } from '@/lib/account/parsed-token';
+
+const EMOJIS = [
+  '😃',
+  '🥰',
+  '😍',
+  '🤓',
+  '🤯',
+  '😯',
+  '🫣',
+  '😳',
+  '👀',
+  '🔥',
+  '🤪',
+  '😎',
+  '😏',
+  '🤠',
+];
 
 export type UserHomeProps = {
   username: string;
@@ -17,20 +33,31 @@ export type UserHomeProps = {
 
 export default async function Home() {
   const parsed = ParsedToken.createFromCookie();
+  const role = parsed.role();
+  const username = parsed.name();
   if (!parsed) {
     redirect(ACCOUNT_LOGIN);
   }
 
-  if (parsed.role() === ADMIN_ROLE) {
-    return <AdminHome username={parsed.name()} role={parsed.role()} />;
+  if (role === ADMIN_ROLE) {
+    return <AdminHome username={username} />;
   }
 
-  if (parsed.role() === ACCEPTED_USER_ROLE) {
-    return <AcceptedUserHome username={parsed.name()} role={parsed.role()} />;
-  }
-
-  if (parsed.role() === NEW_USER_ROLE) {
-    return <NewUserHome username={parsed.name()} role={parsed.role()} />;
+  if (role === ACCEPTED_USER_ROLE || role === NEW_USER_ROLE) {
+    return (
+      <UserHome
+        username={username}
+        status={role === NEW_USER_ROLE ? 'pending' : 'approved'}
+        emojis={EMOJIS}
+        features={[
+          {
+            name: 'Emojifier',
+            href: '/emojify',
+            description: 'Use AI to empower your text with emojis',
+          },
+        ]}
+      />
+    );
   }
 
   {
