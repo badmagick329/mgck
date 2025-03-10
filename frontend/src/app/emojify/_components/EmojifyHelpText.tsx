@@ -16,7 +16,7 @@ export default function EmojifyHelpText({ aiEnabled }: { aiEnabled: boolean }) {
   }
 
   return (
-    <ul className='bg-background-em-dark/60 grid grid-cols-1 gap-1 p-4 rounded-md list-disc list-inside content-start'>
+    <ul className='bg-background-em-dark/20 dark:bg-background-em-dark/60 grid grid-cols-1 gap-1 p-4 rounded-md list-disc list-inside content-start'>
       <abbr className='no-underline' title='Help Section'>
         <li>Emojis will be picked from the above list at random.</li>
         <li>You can edit it and it will be saved in your browser.</li>
