@@ -8,6 +8,7 @@ import { ACCOUNT_LOGIN } from '@/lib/consts/urls';
 import AdminHome from '@/app/account/home/_components/AdminHome';
 import UserHome from '@/app/account/home/_components/UserHome';
 import { ParsedToken } from '@/lib/account/parsed-token';
+import { CgSpinnerTwo } from 'react-icons/cg';
 
 const EMOJIS = [
   '😃',
@@ -47,7 +48,7 @@ export default async function Home() {
     return (
       <UserHome
         username={username}
-        status={role === NEW_USER_ROLE ? 'pending' : 'approved'}
+        isApproved={role === ACCEPTED_USER_ROLE}
         emojis={EMOJIS}
         features={[
           {
@@ -60,8 +61,9 @@ export default async function Home() {
     );
   }
 
-  {
-    // TODO: Improve this. This might show briefly while the user is being redirected after logout
-  }
-  return <p>...</p>;
+  return (
+    <div className='flex w-full grow justify-center bg-background-kp pt-8'>
+      <CgSpinnerTwo className='animate-spin text-6xl' />
+    </div>
+  );
 }

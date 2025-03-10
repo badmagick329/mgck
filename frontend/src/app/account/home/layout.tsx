@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className='min-h-screen flex flex-col items-center'>
+    <div className='flex min-h-screen flex-col items-center bg-background-kp'>
       <Navbar />
       {children}
       <Toaster />
