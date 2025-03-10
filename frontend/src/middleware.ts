@@ -4,6 +4,7 @@ import { API_REFRESH } from '@/lib/consts/urls';
 import { ParsedToken } from '@/lib/account/parsed-token';
 
 const BASE_URL = process.env.USER_AUTH_BASE_URL;
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 async function refreshTokens(refreshToken: string): Promise<{
   token: string;
@@ -69,11 +70,13 @@ export async function middleware(request: NextRequest) {
       httpOnly: true,
       path: '/',
       maxAge: 60 * 60 * 24,
+      secure: IS_PROD,
     });
     response.cookies.set('refreshToken', newTokens.refreshToken, {
       httpOnly: true,
       path: '/',
       maxAge: 60 * 60 * 24 * 7,
+      secure: IS_PROD,
     });
     console.log('[Middleware] returning response');
     return response;
