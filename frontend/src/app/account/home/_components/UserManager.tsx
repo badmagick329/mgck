@@ -10,6 +10,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -24,14 +25,14 @@ import { useRouter } from 'next/navigation';
 
 export default function UserManager({ users }: { users: UsersResponseData }) {
   return (
-    <div className={'flex flex-col items-center gap-4'}>
+    <main className='flex flex-col items-center gap-4 pt-8'>
       <DeleteButton />
       <ul className={'flex flex-wrap justify-center gap-4 md:px-4 lg:px-8'}>
         {users.map(({ username, role }) => (
           <Card
             key={`${username}-${role}`}
             className={
-              'border-white border-2 rounded-md p-2 bg-slate-800 w-[14rem] flex flex-col gap-2 items-center'
+              'flex w-[14rem] flex-col items-center gap-2 rounded-md border-2 border-white bg-slate-800 p-2'
             }
           >
             <CardHeader>
@@ -44,7 +45,7 @@ export default function UserManager({ users }: { users: UsersResponseData }) {
           </Card>
         ))}
       </ul>
-    </div>
+    </main>
   );
 }
 
@@ -54,7 +55,7 @@ function ApproveButton({ role, username }: { role: string; username: string }) {
     return (
       <Button
         variant={'outline'}
-        className={' border-green-600 border-2'}
+        className={'border-2 border-green-600'}
         onClick={async () => {
           await approveUserAction(username);
           router.refresh();
@@ -67,7 +68,7 @@ function ApproveButton({ role, username }: { role: string; username: string }) {
     return (
       <Button
         variant={'outline'}
-        className={'border-yellow-500 border-2'}
+        className={'border-2 border-yellow-500'}
         onClick={async () => {
           await unapproveUserAction(username);
           router.refresh();
@@ -84,12 +85,15 @@ function DeleteButton() {
   const router = useRouter();
   return (
     <AlertDialog>
-      <AlertDialogTrigger>
-        <Button variant={'outline'} className={'border-red-700 border-2'}>
+      <AlertDialogTrigger className='focus:outline-none focus:ring-0 focus:ring-offset-0'>
+        <span className='rounded-md border-2 border-red-700/60 px-4 py-2 hover:border-red-700'>
           Delete All Unapproved Users
-        </Button>
+        </span>
       </AlertDialogTrigger>
       <AlertDialogContent>
+        <AlertDialogDescription>
+          Delete all unapproved users
+        </AlertDialogDescription>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
         </AlertDialogHeader>
@@ -97,7 +101,7 @@ function DeleteButton() {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             className={
-              'destructive bg-red-700/80 border-red-700 border-2 hover:bg-red-700'
+              'destructive border-2 border-red-700 bg-red-700/80 hover:bg-red-700'
             }
             onClick={async () => {
               await deleteUnapprovedUsersAction();
