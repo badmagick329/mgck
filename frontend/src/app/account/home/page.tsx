@@ -6,7 +6,7 @@ import {
 import { redirect } from 'next/navigation';
 import { ACCOUNT_LOGIN } from '@/lib/consts/urls';
 import AdminHome from '@/app/account/home/_components/AdminHome';
-import UserHome from '@/app/account/home/_components/AcceptedUserHome';
+import UserHome from '@/app/account/home/_components/UserHome';
 import { ParsedToken } from '@/lib/account/parsed-token';
 
 const EMOJIS = [
