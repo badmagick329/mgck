@@ -43,14 +43,14 @@ export default function InputMessageField() {
   }
 
   return (
-    <section className='pt-1 pb-2'>
+    <section className='pb-2 pt-1'>
       <abbr
-        className='no-underline w-full h-full'
+        className='h-full w-full no-underline'
         title='The message that will be emojified'
       >
         <Textarea
           ref={textAreaRef}
-          className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md p-2'
+          className='rounded-md bg-background-em-dark/10 p-2 focus:outline-none focus:ring-1 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 dark:bg-background-em-dark'
           onChange={(e) => setMessageInput(e.target.value)}
           placeholder='Enter your message here'
           value={messageInput}
