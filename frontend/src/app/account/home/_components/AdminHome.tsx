@@ -19,12 +19,20 @@ export default async function AdminHome({ username }: { username: string }) {
   }
 
   return (
-    <main className={'flex flex-col min-h-screen items-center gap-2'}>
-      <h1 className={'text-4xl font-bold pt-6'}>
-        Account Status for {username}
-      </h1>
-      <LogoutButton />
+    <div className='w-full grow bg-background-kp'>
+      <UserWelcomeHeader username={username} />
       <UserManager users={usersAndRoles} />
-    </main>
+    </div>
+  );
+}
+
+function UserWelcomeHeader({ username }: { username: string }) {
+  return (
+    <header className='bg-gradient-to-r from-purple-600 to-purple-900 py-8'>
+      <div className='container mx-auto flex items-center justify-between px-4 text-gray-50'>
+        <h1 className='text-3xl font-bold'>Welcome, {username}</h1>
+        <LogoutButton />
+      </div>
+    </header>
   );
 }
