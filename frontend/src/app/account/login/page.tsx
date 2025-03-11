@@ -100,7 +100,7 @@ export default function Login() {
 
   return (
     <article className='grow py-4'>
-      <Card className='border-foreground/40 min-w-[360px] bg-background/80'>
+      <Card className='min-w-[360px] border-foreground/40 bg-secondary/60'>
         <Form {...form}>
           <form
             className='grid grid-cols-1 gap-4'
@@ -237,7 +237,7 @@ function ErrorMessages({
 
   return (
     <motion.div
-      className='relative py-2 px-4 bg-red-100 rounded-sm'
+      className='relative rounded-sm bg-red-100 px-4 py-2'
       key='errors'
       initial={{ opacity: 0, y: 40 }}
       animate={{
@@ -255,7 +255,7 @@ function ErrorMessages({
       }}
     >
       <button
-        className='absolute top-1 right-1 rounded-full flex items-center justify-center text-black/50 hover:text-black/80'
+        className='absolute right-1 top-1 flex items-center justify-center rounded-full text-black/50 hover:text-black/80'
         onClick={resetErrorResponse}
       >
         <IoIosCloseCircle />
