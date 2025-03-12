@@ -1,9 +1,17 @@
 'use server';
+import { ParsedToken } from '@/lib/account/parsed-token';
+import { canUseAiEmojis } from '@/lib/account/permissions';
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 import Redis from 'ioredis';
+import { cookies } from 'next/headers';
 const redis = new Redis(process.env.REDIS_URL || '');
 
 export async function emojifyWithAi(username: string, text: string) {
+  const token = ParsedToken.createFromCookie();
+  if (!canUseAiEmojis(token)) {
+    return 'You need to be logged in to use this feature.';
+  }
+
   if (text.length > 1500) {
     return 'Text is too long. Please provide text with less than 1500 characters.';
   }
