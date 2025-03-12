@@ -7,6 +7,7 @@ import ChoiceCheckbox from './ChoiceCheckbox';
 import ConversionOutput from './ConversionOutput';
 import OutputPlaceholder from './OutputPlaceholder';
 import ProgressBar from './ProgressBar';
+import { IoIosCloseCircle } from 'react-icons/io';
 
 const targetChoices = Object.keys(sizeInfo) as Array<keyof typeof sizeInfo>;
 
@@ -15,12 +16,14 @@ type SizeInfoKey = keyof typeof sizeInfo;
 type ConvertedFileProps = {
   fileData: FFmpegFileData;
   setOutputTypes: (targets: Array<SizeInfoKey>) => void;
+  removeFile: () => void;
   buttonsEnabled: boolean;
 };
 
 export default function ConvertedFile({
   fileData,
   setOutputTypes,
+  removeFile,
   buttonsEnabled,
 }: ConvertedFileProps) {
   const {
@@ -39,11 +42,19 @@ export default function ConvertedFile({
   return (
     <div
       className={clsx(
-        'flex min-h-80 w-72 flex-col items-center gap-4 rounded-md px-2 py-4',
+        'flex min-h-80 w-72 flex-col items-center gap-4 rounded-md px-2 pb-4 pt-2',
         'bg-secondary-dg shadow-glow-secondary-dg'
       )}
     >
-      <p>{truncateText(file.name, 28)}</p>
+      <div className='flex w-full flex-col'>
+        <button
+          className='self-end text-foreground/80 hover:text-foreground'
+          onClick={removeFile}
+        >
+          <IoIosCloseCircle />
+        </button>
+        <p>{truncateText(file.name, 28)}</p>
+      </div>
       <ProgressBar
         target={currentTarget}
         current={size}
