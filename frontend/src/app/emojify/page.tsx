@@ -3,6 +3,7 @@ import EmojifyClientPage from '@/app/emojify/_components/EmojifyClientPage';
 import { NEW_USER_ROLE } from '@/lib/consts/auth';
 import { CorruptText, CorruptTextSegments } from '@/lib/emojify/corrupt-text';
 import { randomBetween, randomChoice } from '@/lib/utils';
+import { canUseAiEmojis } from '@/lib/account/permissions';
 
 export default function EmojifyPage() {
   const parsed = ParsedToken.createFromCookie();
@@ -17,7 +18,7 @@ export default function EmojifyPage() {
   return (
     <EmojifyClientPage
       username={parsed.name()}
-      showAi={parsed.role() !== '' && parsed.role() !== NEW_USER_ROLE}
+      showAi={canUseAiEmojis(parsed)}
       headerTypingSequence={headerTypingSequence}
     />
   );
