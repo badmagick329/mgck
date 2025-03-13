@@ -21,6 +21,7 @@ export default function FileDropzone() {
   const [filesState, dispatch] = useReducer(filesStateReducer, {});
   const [dropError, setDropError] = useState<string | null>(null);
   const [dragEnter, setDragEnter] = useState<boolean>(false);
+
   const ffmpegRef = useRef<FFmpegManager>(new FFmpegManager());
   const { acceptedFiles, getRootProps, getInputProps, fileRejections } =
     useDropzone({
@@ -49,7 +50,9 @@ export default function FileDropzone() {
       maxFiles,
     });
 
-  const totalFiles = Object.keys(filesState).length;
+  const totalFiles = Object.keys(filesState).filter(
+    (d) => filesState[d].conversionState === 'idle'
+  ).length;
 
   useEffect(() => {
     (async () => {
@@ -75,7 +78,7 @@ export default function FileDropzone() {
       });
     });
     setDropError(null);
-    console.log('total files now', totalFiles + acceptedFiles.length);
+    // console.log('total files now', totalFiles + acceptedFiles.length);
   }, [acceptedFiles]);
 
   useEffect(() => {
@@ -132,7 +135,7 @@ export default function FileDropzone() {
   }, [totalFiles]);
 
   const buttonEnabled =
-    Object.values(filesState).every((d) => d.conversionState === 'idle') &&
+    Object.values(filesState).some((d) => d.conversionState === 'idle') &&
     totalFiles > 0;
 
   if (isLoaded === false) {
@@ -228,6 +231,10 @@ async function convert(
   }
   const ffmpeg = ffmpegRef.current;
   for (const [name, data] of Object.entries(filesState)) {
+    if (data.conversionState !== 'idle') {
+      continue;
+    }
+
     const {
       progressCallback,
       updateConversionStateCallback,
