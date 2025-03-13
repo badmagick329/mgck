@@ -21,9 +21,6 @@ export default function FileDropzone() {
   const [filesState, dispatch] = useReducer(filesStateReducer, {});
   const [dropError, setDropError] = useState<string | null>(null);
   const [dragEnter, setDragEnter] = useState<boolean>(false);
-  const [pastedItems, setPastedItems] = useState<
-    DataTransferItemList | undefined
-  >(undefined);
 
   const ffmpegRef = useRef<FFmpegManager>(new FFmpegManager());
   const { acceptedFiles, getRootProps, getInputProps, fileRejections } =
@@ -86,67 +83,63 @@ export default function FileDropzone() {
       });
     }
     setDropError(null);
-    // console.log('total files now', totalFiles + acceptedFiles.length);
   }, [acceptedFiles]);
 
   useEffect(() => {
-    if (!pastedItems) return;
+    const handlePaste = (event: ClipboardEvent) => {
+      const pastedItems = event.clipboardData?.items;
+      if (!pastedItems) return;
 
-    const fileItems = [];
+      const fileItems = [];
 
-    for (let i = 0; i < pastedItems.length; i++) {
-      const item = pastedItems[i];
+      for (let i = 0; i < pastedItems.length; i++) {
+        const item = pastedItems[i];
 
-      if (item.kind === 'file') {
-        const file = item.getAsFile();
-        if (file) {
-          const fileExtension = `.${file.name.split('.').pop()}`;
-          const isAcceptedType = [
-            ...acceptedImageTypes,
-            ...acceptedVideoTypes,
-          ].includes(fileExtension);
+        if (item.kind === 'file') {
+          const file = item.getAsFile();
+          if (file) {
+            const fileExtension = `.${file.name.split('.').pop()}`;
+            const isAcceptedType = [
+              ...acceptedImageTypes,
+              ...acceptedVideoTypes,
+            ].includes(fileExtension);
 
-          if (
-            isAcceptedType &&
-            (file.type.startsWith('image/') || file.type.startsWith('video/'))
-          ) {
-            fileItems.push(file);
+            if (
+              isAcceptedType &&
+              (file.type.startsWith('image/') || file.type.startsWith('video/'))
+            ) {
+              fileItems.push(file);
+            }
           }
         }
       }
-    }
 
-    if (fileItems.length > 0) {
-      if (totalFiles + 1 > maxFiles) {
-        setDropError(`You can only upload up to ${maxFiles} files.`);
-        return;
-      }
-      for (let i = 0; i < fileItems.length; i++) {
-        if (totalFiles + i + 1 > maxFiles) {
-          break;
+      if (fileItems.length > 0) {
+        if (totalFiles + 1 > maxFiles) {
+          setDropError(`You can only upload up to ${maxFiles} files.`);
+          return;
         }
-        const file = fileItems[i];
-        dispatch({
-          type: 'addFile',
-          payload: { file },
-        });
+        for (let i = 0; i < fileItems.length; i++) {
+          if (totalFiles + i + 1 > maxFiles) {
+            break;
+          }
+          const file = fileItems[i];
+          dispatch({
+            type: 'addFile',
+            payload: { file },
+          });
+        }
+
+        setDropError(null);
+        console.log('total files now', totalFiles + fileItems.length);
       }
-
-      setDropError(null);
-      console.log('total files now', totalFiles + fileItems.length);
-    }
-  }, [pastedItems, totalFiles]);
-
-  useEffect(() => {
-    const handlePaste = (event: ClipboardEvent) => {
-      setPastedItems(event.clipboardData?.items);
     };
 
     window.addEventListener('paste', handlePaste);
     return () => {
       window.removeEventListener('paste', handlePaste);
     };
-  }, []);
+  }, [totalFiles]);
 
   const buttonEnabled =
     Object.values(filesState).some((d) => d.conversionState === 'idle') &&
