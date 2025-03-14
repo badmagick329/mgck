@@ -1,5 +1,5 @@
 import { Checkbox } from '@/components/ui/checkbox-dg';
-import { sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
+import { sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
 import { capitaliseWords } from '@/lib/utils';
 
 type SizeInfoKey = keyof typeof sizeInfo;

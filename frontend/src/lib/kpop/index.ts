@@ -51,3 +51,15 @@ export function getRecentDateParams(searchParams: ReadonlyURLSearchParams) {
   newSearchParams.set('start-date', recentDate().replaceAll('-', '').slice(2));
   return newSearchParams;
 }
+export function clearFormInputs(form: HTMLFormElement | null) {
+  if (!form) return;
+  for (const input of form) {
+    if (input instanceof HTMLInputElement) {
+      if (input.type === 'checkbox') {
+        input.checked = false;
+        continue;
+      }
+      input.value = '';
+    }
+  }
+}

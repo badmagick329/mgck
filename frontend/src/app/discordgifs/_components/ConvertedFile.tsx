@@ -1,4 +1,4 @@
-import { sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
+import { sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
 import { FFmpegFileData } from '@/lib/types/ffmpeg';
 import { truncateText } from '@/lib/utils';
 import clsx from 'clsx';

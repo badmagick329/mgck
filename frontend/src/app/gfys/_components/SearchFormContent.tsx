@@ -2,7 +2,7 @@ import { fetchAccounts } from '@/actions/gfys';
 import { Button } from '@/components/ui/button';
 import { SearchFormParams, SearchParams } from '@/lib/types/gfys';
 import { validDateStringOrNull } from '@/lib/utils';
-import { createURL } from '@/lib/utils/gfys';
+import { createURL } from '@/lib/gfys';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
