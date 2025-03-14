@@ -1,4 +1,4 @@
-import { AspAuthResponse } from '@/lib/types/auth';
+import { AspAuthResponse } from '@/lib/types/account';
 import { cookies } from 'next/headers';
 import { parsedServerResponse } from './parsed-server-response';
 

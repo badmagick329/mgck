@@ -3,7 +3,7 @@ import {
   FFmpegConversionState,
   FFmpegFileData,
   FFmpegFileDataOutput,
-} from '@/lib/types/ffmpeg';
+} from '@/lib/types/discordgifs';
 
 export type FileAction =
   | {

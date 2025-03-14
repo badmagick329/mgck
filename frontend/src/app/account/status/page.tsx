@@ -1,6 +1,6 @@
 import { userRoleAction } from '@/actions/account';
 import 'server-only';
-import { errorResponseSchema, roleResponseSchema } from '@/lib/types/auth';
+import { errorResponseSchema, roleResponseSchema } from '@/lib/types/account';
 import { stringifyErrors } from '@/lib/account/errors';
 
 export default async function AccountStatus() {
@@ -28,8 +28,8 @@ export default async function AccountStatus() {
   }
 
   return (
-    <main className={'flex flex-col min-h-screen items-center gap-2'}>
-      <h1 className={'text-4xl font-bold pt-6'}>Account Status</h1>
+    <main className={'flex min-h-screen flex-col items-center gap-2'}>
+      <h1 className={'pt-6 text-4xl font-bold'}>Account Status</h1>
       <p className={'text-lg'}>{content}</p>
     </main>
   );

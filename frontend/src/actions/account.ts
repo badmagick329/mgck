@@ -8,7 +8,7 @@ import {
   messageResponseSchema,
   RoleResponse,
   roleResponseSchema,
-} from '@/lib/types/auth';
+} from '@/lib/types/account';
 import { parsedServerResponse } from '@/lib/account/parsed-server-response';
 import {
   API_APPROVE_USER,

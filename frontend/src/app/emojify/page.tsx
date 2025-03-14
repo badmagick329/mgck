@@ -1,6 +1,6 @@
 import { ParsedToken } from '@/lib/account/parsed-token';
 import EmojifyClientPage from '@/app/emojify/_components/EmojifyClientPage';
-import { NEW_USER_ROLE } from '@/lib/consts/auth';
+import { NEW_USER_ROLE } from '@/lib/consts/account';
 import { CorruptText, CorruptTextSegments } from '@/lib/emojify/corrupt-text';
 import { randomBetween, randomChoice } from '@/lib/utils';
 import { canUseAiEmojis } from '@/lib/account/permissions';

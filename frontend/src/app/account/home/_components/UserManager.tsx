@@ -1,7 +1,7 @@
 'use client';
 
-import { UsersResponseData } from '@/lib/types/auth';
-import { ACCEPTED_USER_ROLE, NEW_USER_ROLE } from '@/lib/consts/auth';
+import { UsersResponseData } from '@/lib/types/account';
+import { ACCEPTED_USER_ROLE, NEW_USER_ROLE } from '@/lib/consts/account';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 

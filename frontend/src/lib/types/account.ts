@@ -3,7 +3,7 @@ import {
   ADMIN_ROLE,
   NEW_USER_ROLE,
   ACCEPTED_USER_ROLE,
-} from '@/lib/consts/auth';
+} from '@/lib/consts/account';
 
 const credentialsErrorSchema = z.object({
   code: z.string(),
