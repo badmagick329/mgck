@@ -7,7 +7,7 @@ import {
   createURL,
   formDataFromSearchParams,
   parseGfyResponse,
-} from '@/lib/utils/gfys';
+} from '@/lib/gfys';
 import { ReadonlyURLSearchParams } from 'next/navigation';
 import {
   Dispatch,

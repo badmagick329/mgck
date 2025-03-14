@@ -3,20 +3,21 @@ import { Input } from '@/components/ui/input';
 import useDebounce from '@/hooks/useDebounce';
 import useURLState from '@/hooks/useUrlState';
 import { MEDIUM_ICON } from '@/lib/consts/kpop';
-import { clearFormInputs, searchParamsToFormData } from '@/lib/utils';
+import { searchParamsToFormData } from '@/lib/utils';
+import { clearFormInputs } from '@/lib/kpop';
 import {
   formKeys,
   getRecentDateParams,
   namesAndPlaceHolders,
   recentDate,
   searchParamsAreEmpty,
-} from '@/lib/utils/kpop';
+} from '@/lib/kpop';
 import {
   getNextPageURL,
   getPreviousPageURL,
   hasNextPage,
   hasPreviousPage,
-} from '@/lib/utils/pageHandlers';
+} from '@/lib/kpop/page-handlers';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { ReadonlyURLSearchParams } from 'next/navigation';

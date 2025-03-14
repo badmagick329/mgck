@@ -1,4 +1,4 @@
-import { SizeInfo, sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
+import { SizeInfo, sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
 
 export type FFmpegLogEvent = {
   type: string;

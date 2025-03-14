@@ -5,8 +5,8 @@ import {
   FilesState,
   filesStateReducer,
 } from '@/lib/discordgifs/files-state';
-import { FFmpegManager } from '@/lib/ffmpeg-utils/ffmpeg-manager';
-import { SizeInfo, sizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
+import { FFmpegManager } from '@/lib/discordgifs/ffmpeg-manager';
+import { SizeInfo, sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
 import { FFmpegConversionState, FFmpegProgressEvent } from '@/lib/types/ffmpeg';
 import clsx from 'clsx';
 import { Dispatch, useEffect, useReducer, useRef, useState } from 'react';

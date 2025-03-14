@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import ComebackCardAlbum from './ComebackCardAlbum';
 import ComebackCardYoutube from './ComebackCardYoutube';
-import { dateStringIsToday } from '@/lib/utils/kpop';
+import { dateStringIsToday } from '@/lib/kpop';
 
 type ComebackProps = {
   title: string;
@@ -37,7 +37,7 @@ export default function ComebackCard({
   );
 
   return (
-    <div className='bg-primary-kp/30 flex max-w-[400px] flex-col items-center gap-4 rounded-md border-2 p-4'>
+    <div className='flex max-w-[400px] flex-col items-center gap-4 rounded-md border-2 bg-primary-kp/30 p-4'>
       <div className='flex h-full w-full flex-col items-center justify-between gap-6'>
         <div className='flex w-full flex-col gap-2'>
           <div className='flex w-full flex-col items-center gap-4'>

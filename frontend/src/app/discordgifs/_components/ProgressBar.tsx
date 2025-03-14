@@ -1,4 +1,4 @@
-import { SizeInfo } from '@/lib/ffmpeg-utils/frame-size-calculator';
+import { SizeInfo } from '@/lib/discordgifs/frame-size-calculator';
 import { FFmpegConversionState } from '@/lib/types/ffmpeg';
 
 const ballSize = 16;

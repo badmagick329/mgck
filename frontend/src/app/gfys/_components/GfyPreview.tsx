@@ -6,7 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { GFYS_BASE } from '@/lib/consts/urls';
-import { imgurIdToJpg, imgurIdToMp4 } from '@/lib/utils/gfys';
+import { imgurIdToJpg, imgurIdToMp4 } from '@/lib/gfys';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -37,8 +37,7 @@ export default function GfyPreview({
               onClick={() => goToGfyAtIndex(index)}
             >
               <Image
-                className='hover:ring-bg-primary-gf rounded-md object-cover hover:cursor-pointer
-                  hover:ring-2 hover:ring-offset-2'
+                className='hover:ring-bg-primary-gf rounded-md object-cover hover:cursor-pointer hover:ring-2 hover:ring-offset-2'
                 src={imgurIdToJpg(imgurId)}
                 alt='imgur'
                 width={150}

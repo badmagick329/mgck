@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { createURL } from '@/lib/utils/gfys';
+import { createURL } from '@/lib/gfys';
 import Link from 'next/link';
 import {
   ImArrowLeft,
@@ -67,7 +67,7 @@ export default function NavButton({
     return (
       <Link ref={ref} href={createURL(pathname, url.split('?')[1], asPage)}>
         <Button
-          className='bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+          className='bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
           variant='secondary'
         >
           <Icon />

@@ -40,21 +40,6 @@ export function imgurIdToUrl(imgurId: string) {
   return `https://i.imgur.com/${imgurId}`;
 }
 
-export function cleanedSearchParams(urlSearchParams: URLSearchParams) {
-  const params = ['title', 'tags', 'account', 'start_date', 'end_date', 'page'];
-  for (const param of params) {
-    if (urlSearchParams.get(param)?.trim() === '') {
-      urlSearchParams.delete(param);
-    }
-  }
-  const pageParam = urlSearchParams.get('page')?.trim() || '';
-  const page = parseInt(pageParam);
-  if (page < 1 || isNaN(page)) {
-    urlSearchParams.delete('page');
-  }
-  return urlSearchParams;
-}
-
 export function createURL(
   pathname: string,
   paramsString: string,
@@ -70,6 +55,21 @@ export function createURL(
     return `${pathname}?${newParams}`;
   }
   return pathname;
+}
+
+function cleanedSearchParams(urlSearchParams: URLSearchParams) {
+  const params = ['title', 'tags', 'account', 'start_date', 'end_date', 'page'];
+  for (const param of params) {
+    if (urlSearchParams.get(param)?.trim() === '') {
+      urlSearchParams.delete(param);
+    }
+  }
+  const pageParam = urlSearchParams.get('page')?.trim() || '';
+  const page = parseInt(pageParam);
+  if (page < 1 || isNaN(page)) {
+    urlSearchParams.delete('page');
+  }
+  return urlSearchParams;
 }
 
 export function formDataFromSearchParams(
@@ -90,13 +90,4 @@ export function formDataFromSearchParams(
   const pageParam = (searchParams.get('page') || '1') as string;
   formData.append('page', pageParam);
   return formData;
-}
-
-export function formDataFromSearchParamsString(searchParamsString: string) {
-  let cleanedParams = searchParamsString;
-  if (cleanedParams[0] == '/') {
-    cleanedParams = cleanedParams.slice(1);
-  }
-  const urlSearchParams = new URLSearchParams(cleanedParams);
-  return formDataFromSearchParams(urlSearchParams);
 }
