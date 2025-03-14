@@ -23,7 +23,7 @@ export default function Navbar() {
             </Button>
           </span>
         ) : (
-          <Link href='/'>
+          <Link href='/' tabIndex={-1}>
             <Button className='text-xl' size='icon' variant='outline'>
               <IoHome />
             </Button>
@@ -37,7 +37,7 @@ export default function Navbar() {
             </Button>
           </span>
         ) : (
-          <Link href='/account'>
+          <Link href='/account' tabIndex={-1}>
             <Button className='text-xl' size='icon' variant='outline'>
               <FaUser />
             </Button>
