@@ -1,23 +1,30 @@
 'use client';
 
-import {
-  FileAction,
-  FilesState,
-  filesStateReducer,
-} from '@/lib/discordgifs/files-state';
+import { filesStateReducer } from '@/lib/discordgifs/files-state';
 import { FFmpegManager } from '@/lib/discordgifs/ffmpeg-manager';
-import { SizeInfo, sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
-import {
-  FFmpegConversionState,
-  FFmpegProgressEvent,
-} from '@/lib/types/discordgifs';
 import clsx from 'clsx';
-import { Dispatch, useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import ConvertedFile from './ConvertedFile';
+import { convert } from '@/lib/discordgifs';
 
 const maxFiles = 6;
+const acceptedImageTypes = ['.gif'];
+const acceptedVideoTypes = [
+  '.mp4',
+  '.mkv',
+  '.webm',
+  '.mov',
+  '.avi',
+  '.flv',
+  '.ts',
+  '.m4v',
+];
+const acceptedTypes = {
+  'image/*': acceptedImageTypes,
+  'video/*': acceptedVideoTypes,
+};
 
 export default function FileDropzone() {
   const [isLoaded, setIsLoaded] = useState<boolean | null>(null);
@@ -53,9 +60,10 @@ export default function FileDropzone() {
       maxFiles,
     });
 
-  const totalFiles = Object.keys(filesState).filter(
-    (d) => filesState[d].conversionState === 'idle'
-  ).length;
+  const totalFiles = Object.values(filesState).reduce(
+    (count, file) => count + (file.conversionState === 'idle' ? 1 : 0),
+    0
+  );
 
   useEffect(() => {
     (async () => {
@@ -224,13 +232,6 @@ export default function FileDropzone() {
   );
 }
 
-const acceptedImageTypes = ['.gif'];
-const acceptedVideoTypes = ['.mp4', '.mkv', '.webm'];
-const acceptedTypes = {
-  'image/*': acceptedImageTypes,
-  'video/*': acceptedVideoTypes,
-};
-
 function MoreFilesText({
   totalFiles,
   maxFiles,
@@ -251,97 +252,4 @@ function MoreFilesText({
   return (
     <p className='text-xs'>You can add {maxFiles - totalFiles} more file(s).</p>
   );
-}
-
-async function convert(
-  ffmpegRef: React.MutableRefObject<FFmpegManager>,
-  filesState: FilesState,
-  dispatch: Dispatch<FileAction>
-) {
-  if (!ffmpegRef.current.loaded()) {
-    return;
-  }
-  const ffmpeg = ffmpegRef.current;
-  for (const [name, data] of Object.entries(filesState)) {
-    if (data.conversionState !== 'idle') {
-      continue;
-    }
-
-    const {
-      progressCallback,
-      updateConversionStateCallback,
-      targetCallback,
-      sizeCallback,
-    } = createCallbacks(name, dispatch);
-    ffmpeg
-      .setProgressCallback(progressCallback)
-      .setNewSizeCallback(sizeCallback)
-      .setUpdateConversionStateCallback(updateConversionStateCallback);
-
-    for (const outputType of data.outputTypes) {
-      ffmpeg.setFileConfig({
-        file: data.file,
-        info: sizeInfo[outputType],
-      });
-      targetCallback(sizeInfo[outputType]);
-      sizeCallback(0);
-      const result = await ffmpeg.convert();
-      if (result) {
-        const { url, outputName, finalSize } = result;
-        dispatch({
-          type: 'addOutput',
-          payload: {
-            name,
-            output: { name: outputName, url, type: outputType, finalSize },
-          },
-        });
-      } else {
-        dispatch({
-          type: 'addOutput',
-          payload: {
-            name,
-            output: { name: '', url: '', type: '' },
-          },
-        });
-      }
-    }
-
-    await ffmpeg.deleteFile(data.file.name);
-  }
-}
-
-function createCallbacks(name: string, dispatch: Dispatch<FileAction>) {
-  const progressCallback = ({ progress }: FFmpegProgressEvent) => {
-    dispatch({
-      type: 'updateProgress',
-      payload: { name, progress },
-    });
-  };
-  const targetCallback = (target: SizeInfo) => {
-    dispatch({
-      type: 'updateTarget',
-      payload: { name, target },
-    });
-  };
-  const sizeCallback = (size: number) => {
-    dispatch({
-      type: 'updateSize',
-      payload: { name, size },
-    });
-  };
-  const updateConversionStateCallback = (
-    conversionState: FFmpegConversionState
-  ) => {
-    dispatch({
-      type: 'updateConversionState',
-      payload: { name, conversionState },
-    });
-  };
-
-  return {
-    progressCallback,
-    targetCallback,
-    sizeCallback,
-    updateConversionStateCallback,
-  };
 }
