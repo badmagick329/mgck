@@ -4,7 +4,7 @@ import {
   credentialsErrorResponseSchema,
   ErrorResponse,
   problemErrorResponseSchema,
-} from '@/lib/types/auth';
+} from '@/lib/types/account';
 
 const stringifyErrors = (e: ApiError): string[] => {
   const problemErrorResponseParse = problemErrorResponseSchema.safeParse(e);

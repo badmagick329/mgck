@@ -2,7 +2,7 @@ import {
   FFmpegConversionState,
   FFmpegLogEvent,
   FFmpegProgressEvent,
-} from '@/lib/types/ffmpeg';
+} from '@/lib/types/discordgifs';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 

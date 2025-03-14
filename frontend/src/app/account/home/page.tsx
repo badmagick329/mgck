@@ -2,7 +2,7 @@ import {
   ACCEPTED_USER_ROLE,
   ADMIN_ROLE,
   NEW_USER_ROLE,
-} from '@/lib/consts/auth';
+} from '@/lib/consts/account';
 import { redirect } from 'next/navigation';
 import { ACCOUNT_LOGIN } from '@/lib/consts/urls';
 import AdminHome from '@/app/account/home/_components/AdminHome';

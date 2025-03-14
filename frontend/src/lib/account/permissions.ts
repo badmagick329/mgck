@@ -1,4 +1,4 @@
-import { NEW_USER_ROLE } from '../consts/auth';
+import { NEW_USER_ROLE } from '../consts/account';
 import { ParsedToken } from './parsed-token';
 
 export const canUseAiEmojis = (token: ParsedToken) => {

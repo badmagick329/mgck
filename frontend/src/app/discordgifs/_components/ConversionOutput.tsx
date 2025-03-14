@@ -1,4 +1,4 @@
-import { FFmpegFileDataOutput } from '@/lib/types/ffmpeg';
+import { FFmpegFileDataOutput } from '@/lib/types/discordgifs';
 import Image from 'next/image';
 
 export default function ConversionOutput({

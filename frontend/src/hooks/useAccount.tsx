@@ -12,7 +12,7 @@ import {
   messageResponseSchema,
   roleResponseSchema,
   SuccessResponse,
-} from '@/lib/types/auth';
+} from '@/lib/types/account';
 import { useState } from 'react';
 import { util } from 'zod';
 import assertNever = util.assertNever;

@@ -4,7 +4,7 @@ import {
   credentialsErrorResponseSchema,
   ErrorResponse,
   problemErrorResponseSchema,
-} from '@/lib/types/auth';
+} from '@/lib/types/account';
 import { createErrorResponse } from '@/lib/account/errors';
 
 export async function parsedServerResponse(

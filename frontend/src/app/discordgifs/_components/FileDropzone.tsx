@@ -7,7 +7,10 @@ import {
 } from '@/lib/discordgifs/files-state';
 import { FFmpegManager } from '@/lib/discordgifs/ffmpeg-manager';
 import { SizeInfo, sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
-import { FFmpegConversionState, FFmpegProgressEvent } from '@/lib/types/ffmpeg';
+import {
+  FFmpegConversionState,
+  FFmpegProgressEvent,
+} from '@/lib/types/discordgifs';
 import clsx from 'clsx';
 import { Dispatch, useEffect, useReducer, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';

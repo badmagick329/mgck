@@ -1,6 +1,6 @@
 import { UserHomeProps } from '@/app/account/home/page';
 import { fetchWithAuthHeader } from '@/lib/account/requests';
-import { UsersResponseData, usersResponseSchema } from '@/lib/types/auth';
+import { UsersResponseData, usersResponseSchema } from '@/lib/types/account';
 import UserManager from '@/app/account/home/_components/UserManager';
 import { API_USERS_BASE } from '@/lib/consts/urls';
 import LogoutButton from './LogoutButton';

@@ -1,5 +1,5 @@
 import { SizeInfo } from '@/lib/discordgifs/frame-size-calculator';
-import { FFmpegConversionState } from '@/lib/types/ffmpeg';
+import { FFmpegConversionState } from '@/lib/types/discordgifs';
 
 const ballSize = 16;
 const barWidth = 200;

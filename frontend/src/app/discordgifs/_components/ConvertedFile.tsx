@@ -1,5 +1,5 @@
 import { sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
-import { FFmpegFileData } from '@/lib/types/ffmpeg';
+import { FFmpegFileData } from '@/lib/types/discordgifs';
 import { truncateText } from '@/lib/utils';
 import clsx from 'clsx';
 
