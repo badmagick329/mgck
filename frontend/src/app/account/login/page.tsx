@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'motion/react';
-import { IoIosCloseCircle } from 'react-icons/io';
+import { IoIosCloseCircle, IoIosEye, IoIosEyeOff } from 'react-icons/io';
 
 const FormSchema = z
   .object({
@@ -49,7 +49,9 @@ const FormSchema = z
 
 export default function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const router = useRouter();
   const { loginUser, registerUser, errorResponse, setErrorResponse } =
     useAccount();
@@ -135,12 +137,25 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type='password'
-                        autoComplete={'off'}
-                        placeholder='Password'
-                        {...field}
-                      />
+                      <div className='relative'>
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete={'off'}
+                          placeholder='Password'
+                          {...field}
+                        />
+                        <button
+                          type='button'
+                          onClick={() => setShowPassword(!showPassword)}
+                          className='absolute inset-y-0 right-0 flex items-center pr-3'
+                        >
+                          {showPassword ? (
+                            <IoIosEyeOff size={20} />
+                          ) : (
+                            <IoIosEye size={20} />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -175,7 +190,7 @@ export default function Login() {
                             <FormLabel>Confirm Password</FormLabel>
                             <FormControl>
                               <Input
-                                type='password'
+                                type={showPassword ? 'text' : 'password'}
                                 autoComplete={'off'}
                                 placeholder='Confirm Password'
                                 {...field}
