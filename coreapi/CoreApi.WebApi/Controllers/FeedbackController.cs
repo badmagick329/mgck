@@ -1,0 +1,106 @@
+using CoreApi.WebApi.Common;
+using CoreApi.WebApi.Dtos;
+using CoreApi.WebApi.Infrastructure;
+using CoreApi.WebApi.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace CoreApi.WebApi.Controllers;
+
+[ApiController]
+[Route("api/feedback")]
+public class FeedbackController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+
+    public FeedbackController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    [HttpGet("")]
+    public async Task<IActionResult> GetFeedbacks()
+    {
+        var feedbacks = await _context
+            .FeedbackComments.OrderByDescending(f => f.CreatedAt)
+            .Select(f => new FeedbackCommentResponseDto
+            {
+                Id = f.Id,
+                Comment = f.Comment,
+                CreatedBy = f.CreatedBy,
+                CreatedAt = f.CreatedAt,
+            })
+            .ToListAsync();
+
+        return Ok(feedbacks);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetFeedback(int id)
+    {
+        var feedback = await _context.FeedbackComments.FindAsync(id);
+
+        if (feedback == null)
+        {
+            return NotFound();
+        }
+
+        var response = new FeedbackCommentResponseDto
+        {
+            Id = feedback.Id,
+            Comment = feedback.Comment,
+            CreatedBy = feedback.CreatedBy,
+            CreatedAt = feedback.CreatedAt,
+        };
+
+        return Ok(response);
+    }
+
+    [HttpPost("")]
+    public async Task<IActionResult> CreateFeedback([FromBody] FeedbackCommentDto feedbackDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var feedback = new FeedbackComment
+        {
+            Comment = feedbackDto.Comment,
+            CreatedBy = string.IsNullOrWhiteSpace(feedbackDto.CreatedBy)
+                ? "Anonymous"
+                : feedbackDto.CreatedBy,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        _context.FeedbackComments.Add(feedback);
+        await _context.SaveChangesAsync();
+
+        var response = new FeedbackCommentResponseDto
+        {
+            Id = feedback.Id,
+            Comment = feedback.Comment,
+            CreatedBy = feedback.CreatedBy,
+            CreatedAt = feedback.CreatedAt,
+        };
+
+        return CreatedAtAction(nameof(GetFeedback), new { id = feedback.Id }, response);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteFeedback(int id)
+    {
+        var feedback = await _context.FeedbackComments.FindAsync(id);
+
+        if (feedback == null)
+        {
+            return NotFound();
+        }
+
+        _context.FeedbackComments.Remove(feedback);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+}
