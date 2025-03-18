@@ -18,7 +18,7 @@ export default function GithubSvg({
       xmlSpace='preserve'
     >
       <title>{title}</title>
-      <g id='Page-1' stroke='none' stroke-width='1' fill-rule='evenodd'>
+      <g id='Page-1' stroke='none' strokeWidth='1' fillRule='evenodd'>
         <g
           id='Dribbble-Light-Preview'
           transform='translate(-140.000000, -7559.000000)'
