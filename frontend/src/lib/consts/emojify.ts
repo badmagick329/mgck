@@ -26,3 +26,5 @@ export const DEFAULT_EMOJIS = [
   '💀',
   '😇',
 ];
+
+export const MAX_AI_INPUT = 1500;
