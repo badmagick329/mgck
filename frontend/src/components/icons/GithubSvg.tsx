@@ -9,10 +9,7 @@ export default function GithubSvg({
 }) {
   return (
     <svg
-      className={cn(
-        'fill-current transition-colors duration-100 hover:scale-110',
-        className
-      )}
+      className={cn('fill-current transition-colors duration-100', className)}
       viewBox='0 0 20 20'
       xmlns='http://www.w3.org/2000/svg'
       xmlSpace='preserve'

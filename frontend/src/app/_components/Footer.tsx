@@ -7,27 +7,22 @@ export default function Navbar() {
   return (
     <footer className='flex w-full justify-between gap-2 px-4 py-2'>
       <section className='flex items-center gap-2'>
-        <span className='text-xl font-semibold text-foreground/80'>
-          Contact
-        </span>
-        <Link
-          href='https://discord.com/users/221379755830804480'
-          target='_blank'
-        >
-          <DiscordSvg
-            title='Contact me on discord'
-            className='h-8 w-8 text-foreground/80 hover:text-blue-800'
-          />
-        </Link>
+        <div className='flex items-center gap-1 p-1 text-foreground/80'>
+          <DiscordSvg title='Discord' className='h-6 w-6' />
+          <span className='text-sm'>badmagick</span>
+        </div>
         <Link href='https://github.com/badmagick329' target='_blank'>
-          <GithubSvg
-            title='Contact me on github'
-            className='h-8 w-8 p-1 text-foreground/80 hover:text-blue-800'
-          />
+          <div className='flex items-center gap-1 p-1 text-foreground/80 hover:scale-110 hover:text-blue-600'>
+            <GithubSvg title='Github' className='h-6 w-6 p-1' />
+            <span className='text-sm'>badmagick329</span>
+          </div>
         </Link>
       </section>
       <section className='flex items-center gap-2'>
-        <MessageSquare className='text-foreground/80' />
+        <MessageSquare
+          className='text-foreground/80 hover:scale-110 hover:text-foreground'
+          size={18}
+        />
       </section>
     </footer>
   );
