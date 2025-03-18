@@ -3,6 +3,7 @@
 import Navbar from '@/app/_components/Navbar';
 
 import FileDropzone from './_components/FileDropzone';
+import Footer from '@/app/_components/Footer';
 
 export default function DiscordGifsPage() {
   return (
@@ -20,8 +21,8 @@ export default function DiscordGifsPage() {
               <span className='font-semibold'>7 seconds or less</span>
             </p>
             <p>
-              🫣 Video for a sticker <span className='font-bold'>has</span> to be{' '}
-              <span className='font-semibold'>5 seconds or less</span>
+              🫣 Video for a sticker <span className='font-bold'>has</span> to
+              be <span className='font-semibold'>5 seconds or less</span>
             </p>
             <p>
               🎞️ Video should be{' '}
@@ -31,6 +32,7 @@ export default function DiscordGifsPage() {
         </div>
       </div>
       <FileDropzone />
+      <Footer />
     </main>
   );
 }

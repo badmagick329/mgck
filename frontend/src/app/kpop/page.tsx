@@ -16,6 +16,7 @@ import ComebackCard from './_components/ComebackCard';
 import ComebacksForm from './_components/ComebacksForm';
 import ErrorResponse from './_components/ErrorResponse';
 import Loading from './loading';
+import Footer from '@/app/_components/Footer';
 
 export default function KpopPage() {
   const [comebacksResult, setComebacksResult] =
@@ -67,6 +68,7 @@ export default function KpopPage() {
           ))}
         </div>
       </div>
+      <Footer />
     </main>
   );
 }
