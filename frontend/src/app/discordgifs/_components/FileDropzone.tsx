@@ -167,7 +167,7 @@ export default function FileDropzone() {
   }
 
   return (
-    <div className='flex w-full flex-col items-center gap-8 px-2'>
+    <div className='flex w-full grow flex-col items-center gap-8 px-2'>
       <div
         {...getRootProps({ className: 'dropzone' })}
         className={clsx(

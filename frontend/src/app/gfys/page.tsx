@@ -3,6 +3,7 @@ import Navbar from '@/app/_components/Navbar';
 import GfyList from './_components/GfyList';
 import SearchForm from './_components/SearchForm';
 import SearchNavigation from './_components/SearchNavigation';
+import Footer from '@/app/_components/Footer';
 
 export default function GfysHome() {
   return (
@@ -13,6 +14,7 @@ export default function GfysHome() {
         <GfyList />
         <SearchNavigation onClient={false} />
       </div>
+      <Footer />
     </main>
   );
 }

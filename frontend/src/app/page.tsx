@@ -4,6 +4,7 @@ import DiscordGifsIntro from './_components/DiscordGifsIntro';
 import EmojifyIntro from './_components/EmojifyIntro';
 import GfysIntro from './_components/GfysIntro';
 import KpopComebacksIntro from './_components/KpopComebacksIntro';
+import Footer from './_components/Footer';
 
 export default function Index() {
   return (
@@ -15,6 +16,7 @@ export default function Index() {
         <EmojifyIntro />
         <DiscordGifsIntro />
       </div>
+      <Footer />
     </main>
   );
 }
