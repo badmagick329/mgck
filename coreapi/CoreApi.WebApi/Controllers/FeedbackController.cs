@@ -64,6 +64,10 @@ public class FeedbackController : ControllerBase
         {
             return BadRequest(ModelState);
         }
+        if (string.IsNullOrWhiteSpace(feedbackDto.Comment))
+        {
+            return BadRequest(new { errors = new[] { "Comment is required" } });
+        }
 
         var feedback = new FeedbackComment
         {
@@ -88,10 +92,18 @@ public class FeedbackController : ControllerBase
         return CreatedAtAction(nameof(GetFeedback), new { id = feedback.Id }, response);
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteFeedback(int id)
+    // Can't do a delete request from nextjs server action
+    [HttpPost("delete")]
+    public async Task<IActionResult> DeleteFeedback(
+        [FromBody] FeedbackCommentIdDto feedbackCommentIdDto
+    )
     {
-        var feedback = await _context.FeedbackComments.FindAsync(id);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var feedback = await _context.FeedbackComments.FindAsync(feedbackCommentIdDto.Id);
 
         if (feedback == null)
         {
