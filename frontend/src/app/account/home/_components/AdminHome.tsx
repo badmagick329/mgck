@@ -1,11 +1,11 @@
-import { UserHomeProps } from '@/app/account/home/page';
 import { fetchWithAuthHeader } from '@/lib/account/requests';
 import { UsersResponseData, usersResponseSchema } from '@/lib/types/account';
 import UserManager from '@/app/account/home/_components/UserManager';
 import { API_USERS_BASE } from '@/lib/consts/urls';
 import LogoutButton from './LogoutButton';
+import FeedbackTesting from './FeedbackTesting';
 
-const BASE_URL = process.env.USER_AUTH_BASE_URL;
+const BASE_URL = process.env.CORE_API_BASE_URL;
 
 export default async function AdminHome({ username }: { username: string }) {
   const response = await fetchWithAuthHeader({
