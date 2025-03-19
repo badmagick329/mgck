@@ -3,7 +3,7 @@ namespace CoreApi.WebApi.Dtos;
 public class FeedbackCommentDto
 {
     public required string Comment { get; set; }
-    public string? CreatedBy { get; set; } // Optional, can be anonymous
+    public string? CreatedBy { get; set; }
 }
 
 public class FeedbackCommentResponseDto
