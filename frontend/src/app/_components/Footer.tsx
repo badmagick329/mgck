@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import DiscordSvg from '@/components/icons/DiscordSvg';
 import GithubSvg from '@/components/icons/GithubSvg';
-import { MessageSquare } from 'lucide-react';
+import FeedbackForm from './FeedbackForm';
 
 export default function Navbar() {
   return (
@@ -19,10 +19,7 @@ export default function Navbar() {
         </Link>
       </section>
       <section className='flex items-center gap-2'>
-        <MessageSquare
-          className='text-foreground/80 hover:scale-110 hover:text-foreground'
-          size={18}
-        />
+        <FeedbackForm />
       </section>
     </footer>
   );
