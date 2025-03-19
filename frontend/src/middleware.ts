@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { API_REFRESH } from '@/lib/consts/urls';
 import { ParsedToken } from '@/lib/account/parsed-token';
 
-const BASE_URL = process.env.USER_AUTH_BASE_URL;
+const BASE_URL = process.env.CORE_API_BASE_URL;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 async function refreshTokens(refreshToken: string): Promise<{

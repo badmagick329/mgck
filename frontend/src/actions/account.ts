@@ -24,7 +24,7 @@ import { createErrorResponse } from '@/lib/account/errors';
 import { fetchWithAuthHeader } from '@/lib/account/requests';
 import { cookies } from 'next/headers';
 
-const BASE_URL = process.env.USER_AUTH_BASE_URL;
+const BASE_URL = process.env.CORE_API_BASE_URL;
 
 export async function userAuthStatusAction(): Promise<
   MessageResponse | ErrorResponse
