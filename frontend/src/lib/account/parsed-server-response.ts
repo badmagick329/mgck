@@ -58,7 +58,7 @@ export async function parsedServerResponse(
 async function errorsFromResponse(
   response: Response
 ): Promise<ErrorResponse | null> {
-  if ([200, 201, 204].includes(response.status)) return null;
+  if (response.ok) return null;
 
   try {
     const data = await response.json();
