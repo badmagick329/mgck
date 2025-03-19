@@ -13,3 +13,8 @@ public class FeedbackCommentResponseDto
     public string CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+
+public class FeedbackCommentIdDto
+{
+    public int Id { get; set; }
+}

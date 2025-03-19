@@ -22,6 +22,7 @@ export default async function AdminHome({ username }: { username: string }) {
     <div className='w-full grow bg-background-kp'>
       <UserWelcomeHeader username={username} />
       <UserManager users={usersAndRoles} />
+      <FeedbackTesting />
     </div>
   );
 }

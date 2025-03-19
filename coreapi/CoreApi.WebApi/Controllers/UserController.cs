@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CoreApi.WebApi.Controllers;
 
-using Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Models;
 
 [ApiController]
 [Route("api/users")]
@@ -43,7 +43,6 @@ public class UserController : ControllerBase
             usersAndRoles.Add(new UserAndRole(u.UserName, r));
         }
 
-
         return Ok(usersAndRoles);
     }
 
@@ -70,7 +69,6 @@ public class UserController : ControllerBase
         {
             return BadRequest(addResult.Errors);
         }
-
 
         return Ok(new { message = "User approved" });
     }
@@ -101,6 +99,7 @@ public class UserController : ControllerBase
         return Ok(new { message = "User unapproved" });
     }
 
+    // Can't do a delete request from nextjs server action
     [HttpPost("manage/delete")]
     [Authorize]
     public async Task<IActionResult> DeleteUser()
@@ -130,7 +129,7 @@ public class UserController : ControllerBase
             {
                 PermissionResult.Unauthorized => Unauthorized(),
                 PermissionResult.Forbidden => Forbid(),
-                _ => BadRequest()
+                _ => BadRequest(),
             };
         }
 

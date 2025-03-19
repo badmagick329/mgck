@@ -27,3 +27,6 @@ const API_MANAGE_USERS = `${API_USERS_BASE}/manage`;
 export const API_APPROVE_USER = `${API_MANAGE_USERS}/approve`;
 export const API_UNAPPROVE_USER = `${API_MANAGE_USERS}/unapprove`;
 export const API_DELETE_USER = `${API_MANAGE_USERS}/delete`;
+
+export const API_FEEDBACK = '/api/feedback';
+export const API_DELETE_FEEDBACK = '/api/feedback/delete';
