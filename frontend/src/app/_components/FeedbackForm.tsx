@@ -103,7 +103,7 @@ export default function FeedbackForm() {
       <DialogTrigger asChild>
         <Button
           variant='outline'
-          className='h-10 w-10 border-none p-1 hover:scale-110'
+          className='h-10 w-10 border-none bg-background/0 p-1 hover:scale-110'
         >
           <MessageSquare />
         </Button>
