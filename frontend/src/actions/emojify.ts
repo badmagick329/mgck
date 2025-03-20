@@ -21,9 +21,9 @@ export async function emojifyWithAi(username: string, text: string) {
     text = 'You have to give me some text to emojify';
   }
 
-  const count = await rateLimit.incrementAndGetCount(username);
+  const { success } = await rateLimit.tryIncrementAndGetCount(username);
 
-  if (count > rateLimit.limit) {
+  if (!success) {
     return 'Rate limit exceeded. Please try again later.';
   }
 
