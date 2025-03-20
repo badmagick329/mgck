@@ -145,6 +145,7 @@ export default function FeedbackForm() {
                     <Textarea
                       placeholder='Comment'
                       rows={4}
+                      autoFocus
                       {...field}
                       onChange={(e) => {
                         field.onChange(e);
