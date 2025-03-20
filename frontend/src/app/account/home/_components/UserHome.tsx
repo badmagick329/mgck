@@ -46,7 +46,7 @@ function AccountStatus({ isApproved }: { isApproved: boolean }) {
   return (
     <section>
       {isApproved ? (
-        <span className='bg-success/60 rounded-sm px-4 py-2 font-semibold'>
+        <span className='rounded-sm bg-success/60 px-4 py-2 font-semibold'>
           <span>Account Status: Active</span>
         </span>
       ) : (
@@ -79,7 +79,7 @@ function FeaturesShowcase({
     return (
       <section>
         <h2 className='mb-4 text-2xl font-bold'>Available Features</h2>
-        <div className='grid-auto-fill'>
+        <div className='grid-auto-fill-sm'>
           <p className='text-muted-foreground'>
             No features available at this time.
           </p>
@@ -91,7 +91,7 @@ function FeaturesShowcase({
   return (
     <section>
       <h2 className='mb-4 text-2xl font-bold'>Available Features</h2>
-      <div className='grid-auto-fill'>
+      <div className='grid-auto-fill-sm'>
         {features.map((feature) => (
           <Link key={feature.href} href={feature.href}>
             <Card className='max-w-[400px] rounded-sm border-foreground/40 bg-primary-kp/20 hover:bg-primary-kp/40'>
