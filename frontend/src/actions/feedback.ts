@@ -107,8 +107,9 @@ async function limitExceededCheck(): Promise<FeedbackError | undefined> {
   const ip = IP();
   console.log(`ip: ${ip}`);
   if (ip) {
-    const count = await rateLimit.incrementAndGetCount(ip);
-    if (count > rateLimit.limit) {
+    const { count, success } = await rateLimit.tryIncrementAndGetCount(ip);
+    console.log(`count for ${ip}: ${count}`);
+    if (!success) {
       return createError({
         status: 429,
         error: 'You have made too many requests. Please try again later.',
