@@ -1,3 +1,4 @@
+import Footer from '@/app/_components/Footer';
 import Navbar from '@/app/_components/Navbar';
 import { Toaster } from '@/components/ui/toaster';
 import type { Metadata } from 'next';
@@ -13,6 +14,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Navbar />
       {children}
       <Toaster />
+      <Footer />
     </div>
   );
 }
