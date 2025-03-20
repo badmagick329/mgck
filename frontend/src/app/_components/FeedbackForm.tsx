@@ -32,6 +32,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { topRightDefaultToast } from '@/lib/utils';
 import { MessageSquare } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 const FormSchema = z.object({
   name: z.string(),
@@ -53,6 +54,7 @@ export default function FeedbackForm() {
     reValidateMode: 'onSubmit',
     shouldFocusError: true,
   });
+  const path = usePathname();
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -71,6 +73,7 @@ export default function FeedbackForm() {
     const result = await createFeedback({
       comment: data.comment,
       createdBy: data.name,
+      originPath: path,
     });
     const parsed = feedbackCreationSuccessSchema.safeParse(result);
     if (parsed.success) {

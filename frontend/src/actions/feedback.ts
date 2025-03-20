@@ -16,7 +16,7 @@ import { RateLimit } from '@/lib/utils/rate-limit';
 import { headers } from 'next/headers';
 
 const BASE_URL = process.env.CORE_API_BASE_URL;
-const rateLimit = new RateLimit(3, 60);
+const rateLimit = new RateLimit(3, 60 * 30);
 
 export async function getFeedbacksAction(): Promise<
   FeedbacksSuccess | FeedbackError
@@ -36,9 +36,11 @@ export async function getFeedbacksAction(): Promise<
 export async function createFeedbackAction({
   comment,
   createdBy,
+  originPath,
 }: {
   comment: string;
   createdBy: string;
+  originPath: string;
 }): Promise<FeedbackCreationSuccess | FeedbackError> {
   const rateLimitError = await limitExceededCheck();
   if (rateLimitError) {
@@ -50,7 +52,7 @@ export async function createFeedbackAction({
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ comment, createdBy: createdBy.trim() }),
+    body: JSON.stringify({ comment, createdBy: createdBy.trim(), originPath }),
   });
 
   return await asCreationSuccessOrError(resp);

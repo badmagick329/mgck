@@ -31,6 +31,7 @@ export async function asFeedbacksSuccessOrError(
               id: parsed.data.id,
               comment: parsed.data.comment,
               createdBy: parsed.data.createdBy,
+              originPath: parsed.data.originPath,
               createdAt: parsed.data.createdAt,
             };
           }
@@ -70,6 +71,7 @@ export async function asCreationSuccessOrError(
           id: data.id,
           comment: data.comment,
           createdBy: data.createdBy,
+          originPath: data.originPath,
           createdAt: data.createdAt,
         },
       },

@@ -14,6 +14,7 @@ export const feedbackSchema = z.object({
   id: z.number(),
   comment: z.string(),
   createdBy: z.string(),
+  originPath: z.string(),
   createdAt: z.string(),
 });
 
