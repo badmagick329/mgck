@@ -131,6 +131,7 @@ function FeedbackCards({
               <CardContent>
                 <p className='break-words'>{f.comment}</p>
               </CardContent>
+              <CardFooter>Path: {f.originPath}</CardFooter>
             </Card>
           </div>
         );

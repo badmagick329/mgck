@@ -19,11 +19,13 @@ export function useFeedback() {
   const createFeedback = async ({
     comment,
     createdBy,
+    originPath,
   }: {
     comment: string;
     createdBy: string;
+    originPath: string;
   }): Promise<FeedbackError | FeedbackCreationSuccess> => {
-    return await createFeedbackAction({ comment, createdBy });
+    return await createFeedbackAction({ comment, createdBy, originPath });
   };
 
   const deleteFeedback = async ({

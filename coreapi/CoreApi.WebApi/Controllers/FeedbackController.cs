@@ -1,8 +1,6 @@
-using CoreApi.WebApi.Common;
 using CoreApi.WebApi.Dtos;
 using CoreApi.WebApi.Infrastructure;
 using CoreApi.WebApi.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +27,7 @@ public class FeedbackController : ControllerBase
                 Id = f.Id,
                 Comment = f.Comment,
                 CreatedBy = f.CreatedBy,
+                OriginPath = f.OriginPath,
                 CreatedAt = f.CreatedAt,
             })
             .ToListAsync();
@@ -51,6 +50,7 @@ public class FeedbackController : ControllerBase
             Id = feedback.Id,
             Comment = feedback.Comment,
             CreatedBy = feedback.CreatedBy,
+            OriginPath = feedback.OriginPath,
             CreatedAt = feedback.CreatedAt,
         };
 
@@ -75,6 +75,7 @@ public class FeedbackController : ControllerBase
             CreatedBy = string.IsNullOrWhiteSpace(feedbackDto.CreatedBy)
                 ? "Anonymous"
                 : feedbackDto.CreatedBy,
+            OriginPath = feedbackDto.OriginPath,
             CreatedAt = DateTime.UtcNow,
         };
 
@@ -85,6 +86,7 @@ public class FeedbackController : ControllerBase
         {
             Id = feedback.Id,
             Comment = feedback.Comment,
+            OriginPath = feedback.OriginPath,
             CreatedBy = feedback.CreatedBy,
             CreatedAt = feedback.CreatedAt,
         };
