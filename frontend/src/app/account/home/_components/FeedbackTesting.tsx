@@ -43,7 +43,10 @@ export default function FeedbackTesting() {
         <button
           className='bg-yellow-500 px-4 py-2'
           onClick={async () => {
-            const result = await createFeedback({ comment: input });
+            const result = await createFeedback({
+              comment: input,
+              createdBy: '',
+            });
             const parsed = feedbackCreationSuccessSchema.safeParse(result);
             setInput('');
             if (parsed.success) {
