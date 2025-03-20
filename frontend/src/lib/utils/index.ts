@@ -90,13 +90,14 @@ export function capitaliseWords(text: string) {
 export function topRightDefaultToast(
   text: string,
   toast: ToastType,
-  duration = 1000
+  duration = 1000,
+  variant: 'default' | 'destructive' | null | undefined = 'default'
 ) {
   toast({
     className: cn(
       'fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]'
     ),
-    variant: 'default',
+    variant,
     description: text,
     duration,
   });

@@ -17,6 +17,8 @@ export const feedbackSchema = z.object({
   createdAt: z.string(),
 });
 
+export type Feedback = z.infer<typeof feedbackSchema>;
+
 export const feedbacksSuccessSchema = successBaseSchema.extend({
   data: z.object({ feedbacks: z.array(feedbackSchema) }),
 });

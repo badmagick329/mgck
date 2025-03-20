@@ -68,9 +68,19 @@ export default function FeedbackForm() {
 
     const errorParsed = feedbackErrorSchema.safeParse(result);
     if (errorParsed.success) {
-      topRightDefaultToast(errorParsed.data.data.errors[0], toast, 3000);
+      topRightDefaultToast(
+        errorParsed.data.data.errors[0],
+        toast,
+        5000,
+        'destructive'
+      );
     } else {
-      topRightDefaultToast('An unexpected error occurred.', toast, 3000);
+      topRightDefaultToast(
+        'An unexpected error occurred.',
+        toast,
+        5000,
+        'destructive'
+      );
     }
   }
 

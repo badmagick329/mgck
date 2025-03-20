@@ -4,6 +4,7 @@ import UserManager from '@/app/account/home/_components/UserManager';
 import { API_USERS_BASE } from '@/lib/consts/urls';
 import LogoutButton from './LogoutButton';
 import FeedbackTesting from './FeedbackTesting';
+import FeedbackList from './FeedbackList';
 
 const BASE_URL = process.env.CORE_API_BASE_URL;
 
@@ -22,7 +23,7 @@ export default async function AdminHome({ username }: { username: string }) {
     <div className='w-full grow bg-background-kp'>
       <UserWelcomeHeader username={username} />
       <UserManager users={usersAndRoles} />
-      <FeedbackTesting />
+      <FeedbackList />
     </div>
   );
 }

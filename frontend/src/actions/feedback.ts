@@ -12,8 +12,11 @@ import {
   FeedbackCreationSuccess,
   FeedbacksSuccess,
 } from '@/lib/types/feedback';
+import { RateLimit } from '@/lib/utils/rate-limit';
+import { headers } from 'next/headers';
 
 const BASE_URL = process.env.CORE_API_BASE_URL;
+const rateLimit = new RateLimit(3, 60);
 
 export async function getFeedbacksAction(): Promise<
   FeedbacksSuccess | FeedbackError
@@ -37,6 +40,11 @@ export async function createFeedbackAction({
   comment: string;
   createdBy: string;
 }): Promise<FeedbackCreationSuccess | FeedbackError> {
+  const rateLimitError = await limitExceededCheck();
+  if (rateLimitError) {
+    return rateLimitError;
+  }
+
   const resp = await fetch(`${BASE_URL}${API_FEEDBACK}`, {
     method: 'POST',
     headers: {
@@ -44,6 +52,7 @@ export async function createFeedbackAction({
     },
     body: JSON.stringify({ comment, createdBy: createdBy.trim() }),
   });
+
   return await asCreationSuccessOrError(resp);
 }
 
@@ -59,6 +68,7 @@ export async function deleteFeedbackAction({
       error: 'Unauthorized',
     });
   }
+
   const resp = await fetch(`${BASE_URL}${API_DELETE_FEEDBACK}`, {
     method: 'POST',
     headers: {
@@ -66,6 +76,7 @@ export async function deleteFeedbackAction({
     },
     body: JSON.stringify({ id: feedbackId }),
   });
+
   if (resp.status === 204) {
     return { success: true };
   } else {
@@ -90,4 +101,31 @@ function createError({
       errors: [error],
     },
   };
+}
+
+async function limitExceededCheck(): Promise<FeedbackError | undefined> {
+  const ip = IP();
+  console.log(`ip: ${ip}`);
+  if (ip) {
+    const count = await rateLimit.incrementAndGetCount(ip);
+    if (count > rateLimit.limit) {
+      return createError({
+        status: 429,
+        error: 'You have made too many requests. Please try again later.',
+      });
+    }
+  } else {
+    console.error('Error getting IP address');
+  }
+}
+
+function IP(): string | undefined {
+  const FALLBACK_IP_ADDRESS = undefined;
+  const forwardedFor = headers().get('x-forwarded-for');
+
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0] ?? FALLBACK_IP_ADDRESS;
+  }
+
+  return headers().get('x-real-ip') ?? FALLBACK_IP_ADDRESS;
 }
