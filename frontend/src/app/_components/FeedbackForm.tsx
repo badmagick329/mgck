@@ -21,7 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { useFeedback } from '@/hooks/useFeedback';
 import {
@@ -41,6 +41,7 @@ const FormSchema = z.object({
 export default function FeedbackForm() {
   const [open, setOpen] = useState(false);
   const { createFeedback } = useFeedback();
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const { toast } = useToast();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -52,6 +53,19 @@ export default function FeedbackForm() {
     reValidateMode: 'onSubmit',
     shouldFocusError: true,
   });
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const handleResize = () => {
+      const offset = (window.innerHeight - viewport.height) / 2;
+      setKeyboardOffset(offset);
+    };
+
+    viewport.addEventListener('resize', handleResize);
+    return () => viewport.removeEventListener('resize', handleResize);
+  }, []);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     const result = await createFeedback({
@@ -94,7 +108,12 @@ export default function FeedbackForm() {
           <MessageSquare />
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-[425px]'>
+      <DialogContent
+        className='sm:max-w-[425px]'
+        style={{
+          transform: `translate(-50%, calc(-50% - ${keyboardOffset}px))`,
+        }}
+      >
         <Form {...form}>
           <form className='grid gap-2' onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
@@ -140,9 +159,11 @@ export default function FeedbackForm() {
               )}
             />
             <DialogFooter>
-              <Button type='submit' disabled={form.formState.isSubmitting}>
-                Submit
-              </Button>
+              <div className='flex justify-end'>
+                <Button type='submit' disabled={form.formState.isSubmitting}>
+                  Submit
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
