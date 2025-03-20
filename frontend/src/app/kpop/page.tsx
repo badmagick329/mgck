@@ -53,7 +53,7 @@ export default function KpopPage() {
       <Navbar />
       <h2 className='text-2xl font-semibold'>Upcoming Comebacks</h2>
       <ComebacksForm totalPages={comebacksResult.total_pages} />
-      <div className='flex flex-col items-center gap-4 pt-4'>
+      <div className='flex grow flex-col items-center gap-4 pt-4'>
         <div className='grid grid-cols-1 gap-12 px-4 lg:grid-cols-2 xl:grid-cols-3'>
           {comebacks.map((comeback) => (
             <ComebackCard
