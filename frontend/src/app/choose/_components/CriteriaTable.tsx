@@ -1,4 +1,4 @@
-import { Slider } from '@/components/ui/slider';
+import { Slider } from '@/components/ui/ChoiceSlider';
 import {
   Table,
   TableBody,
