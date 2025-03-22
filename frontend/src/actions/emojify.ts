@@ -8,7 +8,11 @@ import { MAX_AI_INPUT } from '@/lib/consts/emojify';
 const rateLimit = new RateLimit(20, 60);
 const model = generativeModel();
 
-export async function emojifyWithAi(username: string, text: string) {
+export async function emojifyWithAi(
+  username: string,
+  text: string,
+  frequent: boolean
+) {
   const token = ParsedToken.createFromCookie();
   if (!canUseAiEmojis(token)) {
     return 'You need to be logged in to use this feature.';
@@ -32,7 +36,7 @@ export async function emojifyWithAi(username: string, text: string) {
   }
 
   try {
-    const prompt = emojifyPrompt(text);
+    const prompt = emojifyPrompt(text, frequent);
     const result = await model.generateContent(prompt);
     return result.response.text();
   } catch (error) {
