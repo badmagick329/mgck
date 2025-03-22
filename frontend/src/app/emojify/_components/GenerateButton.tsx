@@ -31,7 +31,7 @@ export default function GenerateButton({
     <section className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
       <abbr
         className='order-2 flex w-full flex-col items-center justify-between no-underline sm:order-1'
-        title='Control the frequency of emojis inserts by AI'
+        title='Control the frequency of emojis inserted by AI'
       >
         <div className='flex h-10 flex-wrap items-center space-x-2 rounded-md'>
           <Label htmlFor='emoji-frequency'>
