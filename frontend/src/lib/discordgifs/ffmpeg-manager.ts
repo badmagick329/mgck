@@ -37,16 +37,29 @@ export class FFmpegManager {
     this.outputType = 'emote';
   }
 
-  public async load(): Promise<void> {
-    this.ffmpeg = new FFmpeg();
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/umd';
-    await this.ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.wasm`,
-        'application/wasm'
-      ),
-    });
+  public async load(retries = 3): Promise<void> {
+    try {
+      this.ffmpeg = new FFmpeg();
+      const baseURL =
+        'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/umd';
+      await this.ffmpeg.load({
+        coreURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.js`,
+          'text/javascript'
+        ),
+        wasmURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.wasm`,
+          'application/wasm'
+        ),
+      });
+    } catch (error) {
+      if (retries > 0) {
+        console.log(`Retrying... Attempts left: ${retries - 1}`);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        return this.load(retries - 1);
+      }
+      throw error;
+    }
   }
 
   public setFileConfig({
