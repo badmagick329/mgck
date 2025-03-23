@@ -13,7 +13,7 @@ export async function convert(
   dispatch: Dispatch<FileAction>
 ) {
   if (!ffmpegRef.current.loaded()) {
-    return;
+    await ffmpegRef.current.load();
   }
   const ffmpeg = ffmpegRef.current;
   for (const [name, data] of Object.entries(filesState)) {
