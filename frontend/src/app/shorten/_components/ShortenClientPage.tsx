@@ -3,62 +3,112 @@
 import { shortenUrl } from '@/actions/urlshortener';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import ResponseOutput from './ResponseOutput';
+import Navbar from '@/app/_components/Navbar';
+import Footer from '@/app/_components/Footer';
 
-export default function UrlShortenerPage() {
+const MAX_CODE_CHARS = 255;
+
+export default function UrlShortenerPage({ username }: { username: string }) {
   const [url, setUrl] = useState('');
   const [customCode, setCustomCode] = useState('');
   const [error, setError] = useState('');
   const [output, setOutput] = useState('');
+  const [codeCountText, setCodeCountText] = useState('');
+
+  useEffect(() => {
+    if (customCode.trim() === '') {
+      setCodeCountText(`Max custom code length: ${MAX_CODE_CHARS}`);
+      return;
+    }
+    const remainingChars = MAX_CODE_CHARS - customCode.length;
+    setCodeCountText(`${remainingChars}/${MAX_CODE_CHARS}`);
+  }, [customCode]);
 
   return (
-    <main className='flex min-h-screen flex-col items-center pt-16'>
-      <div className='flex flex-col flex-wrap items-center gap-4 px-4'>
-        <span className='text-xl font-semibold md:text-2xl'>URL Shortener</span>
+    <main className='flex min-h-screen flex-col'>
+      <header>
+        <Navbar />
+      </header>
+      <article className='flex grow flex-col flex-wrap items-center gap-4 px-4 pt-6'>
+        <h1 className='text-xl font-semibold md:text-2xl'>URL Shortener</h1>
         <span className='text-red-500'>{error}</span>
         <form
-          className='flex flex-col flex-wrap items-center gap-4 md:w-96'
+          className='grid w-full grid-cols-1 gap-4 px-2 md:px-32 lg:px-64 xl:px-96'
           action={() =>
-            submitForm(url, customCode, setUrl, setError, setOutput)
+            submitForm({
+              url,
+              customCode,
+              username,
+              setUrl,
+              setError,
+              setOutput,
+            })
           }
         >
-          <Input
-            placeholder='https://example.com'
-            type='url'
-            value={url}
-            onChange={(e) => {
-              setUrl(e.target.value);
-              setError('');
-            }}
-          />
-          <Input
-            placeholder='Optional: Custom short code (max 20 chars)'
-            type='text'
-            value={customCode}
-            onChange={(e) => {
-              setCustomCode(e.target.value);
-              setError('');
-            }}
-          />
+          <abbr
+            className='w-full no-underline'
+            title='The URL you want to shorten.'
+          >
+            <Input
+              placeholder='https://example.com'
+              type='url'
+              value={url}
+              onChange={(e) => {
+                setUrl(e.target.value.trim());
+                setError('');
+              }}
+            />
+          </abbr>
+          <div className='flex w-full flex-col items-center gap-1'>
+            <abbr
+              className='w-full no-underline'
+              title='Valid characters are alphanumeric, underscores, and hyphens.'
+            >
+              <Input
+                placeholder="Custom short code (Optional) e.g 'very-important-page'"
+                type='text'
+                value={customCode}
+                onChange={(e) => {
+                  setCustomCode(e.target.value.trim());
+                  setError('');
+                }}
+              />
+            </abbr>
+            <span className='self-end text-xs text-foreground/60 md:text-sm'>
+              {codeCountText}
+            </span>
+          </div>
 
-          <Button type='submit'>Shorten</Button>
+          <div className='mx-auto'>
+            <Button type='submit'>Shorten</Button>
+          </div>
         </form>
         {output && <ResponseOutput output={output} />}
-      </div>
+      </article>
+      <Footer />
     </main>
   );
 }
 
-async function submitForm(
-  url: string,
-  customCode: string,
-  setUrl: (url: string) => void,
-  setError: (error: string) => void,
-  setOutput: (output: string) => void
-) {
-  const result = await shortenUrl(url, customCode);
+async function submitForm({
+  url,
+  customCode,
+  username,
+  setUrl,
+  setError,
+  setOutput,
+}: {
+  url: string;
+  customCode: string;
+  username: string;
+  setUrl: (url: string) => void;
+  setError: (error: string) => void;
+  setOutput: (output: string) => void;
+}) {
+  const result = await shortenUrl({ url, customCode, username });
 
   if (result.error) {
     setError(result.error);

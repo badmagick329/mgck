@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 export default function UrlShortenerPage() {
   const token = ParsedToken.createFromCookie();
   if (canUseShortener(token)) {
-    return <ShortenClientPage />;
+    return <ShortenClientPage username={token.name()} />;
   }
   redirect('/account');
 }
