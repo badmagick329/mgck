@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 
-import ResponseOutput from './_components/ResponseOutput';
+import ResponseOutput from './ResponseOutput';
 
 export default function UrlShortenerPage() {
   const [url, setUrl] = useState('');
@@ -34,7 +34,7 @@ export default function UrlShortenerPage() {
             }}
           />
           <Input
-            placeholder='Optional: Custom short code'
+            placeholder='Optional: Custom short code (max 20 chars)'
             type='text'
             value={customCode}
             onChange={(e) => {
