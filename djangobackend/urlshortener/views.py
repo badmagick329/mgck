@@ -39,7 +39,7 @@ def shorten_api(request):
         return Response({"error": str(url_id)}, status=400)
 
     short_url = ShortURL.objects.create(
-        url=source_url, short_id=url_id, created_by=username
+        url=source_url, short_id=url_id, created_by=username, accessed=None
     )
     return Response(
         {
@@ -64,3 +64,25 @@ def target_url_api(request, short_id: str):
             "url": url,
         }
     )
+
+
+@api_view(["POST"])
+def get_urls(request):
+    if request.method != "POST":
+        return Response({"error": "Method not allowed"}, status=405)
+
+    username = request.data.get("username", "").strip()
+    if not username:
+        return Response({"error": "Username is required"}, status=400)
+    short_urls = ShortURL.objects.filter(created_by=username).order_by("-created")
+    urls = [
+        {
+            "url": url.url,
+            "short_id": url.short_id,
+            "created": url.created,
+            "accessed": url.accessed,
+            "number_of_uses": url.number_of_uses,
+        }
+        for url in short_urls
+    ]
+    return Response(urls)
