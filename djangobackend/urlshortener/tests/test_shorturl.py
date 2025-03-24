@@ -1,19 +1,19 @@
 import pytest
+
 from urlshortener.models import BASE_URL, MAX_ID, ShortCode, ShortURL
 
 
-def test_space_in_custom_id():
-    result = ShortURL.generate_custom_id("a b")
-    assert isinstance(result, ValueError)
+@pytest.mark.parametrize("custom_id", ["a_b", "a-b", "a0", "aA"])
+@pytest.mark.django_db
+def test_valid_custom_ids(custom_id):
+    result = ShortURL.generate_custom_id(custom_id)
+    assert result == custom_id
 
 
-def test_too_long_custom_id():
-    result = ShortURL.generate_custom_id("a" * (MAX_ID + 1))
-    assert isinstance(result, ValueError)
-
-
-def test_non_alphanumeric_custom_id():
-    result = ShortURL.generate_custom_id("a!")
+@pytest.mark.parametrize("custom_id", ["a!", "a b", "a" * (MAX_ID + 1)])
+@pytest.mark.django_db
+def test_invalid_custom_ids(custom_id):
+    result = ShortURL.generate_custom_id(custom_id)
     assert isinstance(result, ValueError)
 
 
@@ -32,9 +32,7 @@ def test_request_custom_id():
 
 @pytest.mark.django_db
 def test_redirect_url():
-    short_url = ShortURL.objects.create(
-        url="https://example.com", short_id="taken"
-    )
+    short_url = ShortURL.objects.create(url="https://example.com", short_id="taken")
     assert short_url.redirect_url == f"{BASE_URL}/{short_url.short_id}"
 
 
