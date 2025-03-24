@@ -2,6 +2,7 @@ import re
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
 from urlshortener.apps import UrlshortenerConfig
 from urlshortener.models import ShortURL
 
@@ -14,6 +15,10 @@ def shorten_api(request):
         return Response({"error": "Method not allowed"}, status=405)
     source_url = request.data.get("source_url", "").strip()
     custom_id = request.data.get("custom_id", "").strip()
+    username = request.data.get("username", "").strip()
+
+    if not username:
+        return Response({"error": "Username is required"}, status=400)
 
     invalid_message = ShortURL.validate_url(source_url)
     if invalid_message:
@@ -33,7 +38,9 @@ def shorten_api(request):
     if isinstance(url_id, Exception):
         return Response({"error": str(url_id)}, status=400)
 
-    short_url = ShortURL.objects.create(url=source_url, short_id=url_id)
+    short_url = ShortURL.objects.create(
+        url=source_url, short_id=url_id, created_by=username
+    )
     return Response(
         {
             "url": short_url.redirect_url,
@@ -44,14 +51,10 @@ def shorten_api(request):
 @api_view(["GET"])
 def target_url_api(request, short_id: str):
     if not short_id:
-        return Response(
-            {"error": f"{short_id} is not a valid short URL"}, status=400
-        )
+        return Response({"error": f"{short_id} is not a valid short URL"}, status=400)
     short_url = ShortURL.objects.filter(short_id=short_id).first()
     if not short_url:
-        return Response(
-            {"error": f"Shortened ID '{short_id}' not found"}, status=404
-        )
+        return Response({"error": f"Shortened ID '{short_id}' not found"}, status=404)
     url = short_url.url
     short_url.visit()
     if not re.match(r"^https?://", url):

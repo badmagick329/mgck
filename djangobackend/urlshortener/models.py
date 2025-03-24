@@ -1,4 +1,5 @@
 import random
+import re
 import string
 from datetime import datetime
 
@@ -7,7 +8,7 @@ from dotenv import load_dotenv
 
 from djangobackend.settings import BASE_URL
 
-MAX_ID = 20
+MAX_ID = 255
 load_dotenv()
 
 
@@ -15,6 +16,7 @@ class ShortURL(models.Model):
     url = models.URLField()
     short_id = models.CharField(max_length=MAX_ID, unique=True)
     created = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=255, null=True, blank=True)
     accessed = models.DateTimeField(auto_now=True)
     number_of_uses = models.PositiveIntegerField(default=0)
 
@@ -23,6 +25,7 @@ class ShortURL(models.Model):
             f"<ShortURL url={self.url}, "
             f"short_id={self.short_id}, "
             f"created={self.created}, "
+            f"created_by={self.created_by}, "
             f"accessed={self.accessed}, "
             f"number_of_uses={self.number_of_uses}, "
             f"redirect_url={self.redirect_url}>"
@@ -41,9 +44,11 @@ class ShortURL(models.Model):
         if " " in custom_id:
             return ValueError("Custom ID cannot contain spaces")
         if len(custom_id) > MAX_ID:
-            return ValueError(f"{custom_id} is longer than {MAX_ID} chars")
-        if not custom_id.isalnum():
-            return ValueError(f"{custom_id} is not alphanumeric")
+            return ValueError(f"{custom_id} is longer than {MAX_ID} characters")
+        if not cls.is_valid_code(custom_id):
+            return ValueError(
+                f"{custom_id} is not valid. Valid characters are alphanumeric, underscores, and hyphens."
+            )
         if cls.objects.filter(short_id=custom_id).exists():
             return ValueError(f"{custom_id} is already taken")
 
@@ -75,6 +80,10 @@ class ShortURL(models.Model):
             return False
 
         return cls.objects.filter(short_id=split[-1]).exists()
+
+    @classmethod
+    def is_valid_code(cls, s: str) -> bool:
+        return bool(re.fullmatch(r"(?=.*[A-Za-z0-9])[A-Za-z0-9_-]+", s))
 
 
 class ShortCode:
