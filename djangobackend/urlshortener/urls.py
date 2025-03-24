@@ -1,4 +1,5 @@
 from django.urls import path
+
 from urlshortener import views
 from urlshortener.apps import UrlshortenerConfig
 
@@ -11,4 +12,5 @@ urlpatterns = [
         views.target_url_api,
         name="target_url_api",
     ),
+    path("api/urlshortener/urls", views.get_urls, name="get_urls"),
 ]

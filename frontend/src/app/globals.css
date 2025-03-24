@@ -30,7 +30,7 @@
     --primary-dg-foreground: 220.9 39.3% 95%;
     --primary-gf-foreground: 220.9 39.3% 5%;
 
-    --secondary: 220 14.3% 95.9%;
+    --secondary: 220 14.3% 92.9%;
     --secondary-dg: 250 50% 95%;
     --secondary-foreground: 220.9 39.3% 11%;
     --secondary-dg-foreground: 210 20% 98%;
@@ -173,5 +173,4 @@
     auto-fit,
     minmax(min(var(--grid-min-col-size), 100%), 1fr)
   );
-  gap: 1rem;
 }

@@ -17,7 +17,7 @@ class ShortURL(models.Model):
     short_id = models.CharField(max_length=MAX_ID, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=255, null=True, blank=True)
-    accessed = models.DateTimeField(auto_now=True)
+    accessed = models.DateTimeField(null=True, blank=True)
     number_of_uses = models.PositiveIntegerField(default=0)
 
     def __str__(self):

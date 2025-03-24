@@ -85,7 +85,7 @@ export default function FeedbackList() {
           Delete Selected
         </Button>
       </div>
-      <section className='grid-auto-fill-md'>
+      <section className='grid-auto-fill-md gap-1'>
         <FeedbackCards
           feedbacks={feedbacks}
           selectedFeedbacks={selectedFeedbacks}
