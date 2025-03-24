@@ -69,8 +69,6 @@ export default function Login() {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSubmitting(true);
     try {
-      console.log('Form submitted successfully with:', data);
-
       const { username, password } = data;
 
       if (isRegistering) {
