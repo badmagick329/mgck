@@ -33,7 +33,7 @@ class ShortURL(models.Model):
         saved_ids = cls.objects.values_list("short_id", flat=True)
         code = ShortCode().available_code(list(saved_ids))
         if code is None:
-            return ValueError(f"All IDs in use")
+            return ValueError("All IDs in use")
         return code
 
     @classmethod
@@ -41,7 +41,7 @@ class ShortURL(models.Model):
         if " " in custom_id:
             return ValueError("Custom ID cannot contain spaces")
         if len(custom_id) > MAX_ID:
-            return ValueError(f"{custom_id} is too long")
+            return ValueError(f"{custom_id} is longer than {MAX_ID} chars")
         if not custom_id.isalnum():
             return ValueError(f"{custom_id} is not alphanumeric")
         if cls.objects.filter(short_id=custom_id).exists():
