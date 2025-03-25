@@ -20,6 +20,7 @@ export default function UrlShortenerPage({ username }: { username: string }) {
   const [error, setError] = useState('');
   const [output, setOutput] = useState('');
   const [codeCountText, setCodeCountText] = useState('');
+  const [urlsResponseLoaded, setUrlsResponseLoaded] = useState(false);
 
   useEffect(() => {
     if (customCode.trim() === '') {
@@ -31,8 +32,27 @@ export default function UrlShortenerPage({ username }: { username: string }) {
   }, [customCode]);
 
   useEffect(() => {
-    fetchUrlsResponse(username, setUrlsResponse);
+    (async () => {
+      await fetchUrlsResponse(username, setUrlsResponse, setUrlsResponseLoaded);
+    })();
   }, []);
+
+  async function submitForm() {
+    const result = await shortenUrl({ url, customCode, username });
+
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    if (!result.url) {
+      setError('Failed to shorten URL');
+      return;
+    }
+    setError('');
+    setUrl('');
+    setOutput(result.url);
+    await fetchUrlsResponse(username, setUrlsResponse, setUrlsResponseLoaded);
+  }
 
   return (
     <main className='flex min-h-screen flex-col'>
@@ -44,17 +64,7 @@ export default function UrlShortenerPage({ username }: { username: string }) {
         <span className='text-red-500'>{error}</span>
         <form
           className='grid w-full grid-cols-1 gap-4 px-2 md:px-32 lg:px-64 xl:px-96'
-          action={() =>
-            submitForm({
-              url,
-              customCode,
-              username,
-              setUrl,
-              setError,
-              setOutput,
-              setUrlsResponse,
-            })
-          }
+          action={submitForm}
         >
           <abbr
             className='w-full no-underline'
@@ -99,50 +109,22 @@ export default function UrlShortenerPage({ username }: { username: string }) {
           </div>
         </form>
         {output && <ResponseOutput output={output} />}
-        <ShortenedUrlsDisplay urlsResponse={urlsResponse} />
+        <ShortenedUrlsDisplay
+          urlsResponse={urlsResponse}
+          urlsResponseLoaded={urlsResponseLoaded}
+        />
       </article>
       <Footer />
     </main>
   );
 }
 
-async function submitForm({
-  url,
-  customCode,
-  username,
-  setUrl,
-  setError,
-  setOutput,
-  setUrlsResponse,
-}: {
-  url: string;
-  customCode: string;
-  username: string;
-  setUrl: (url: string) => void;
-  setError: (error: string) => void;
-  setOutput: (output: string) => void;
-  setUrlsResponse: React.Dispatch<React.SetStateAction<ShortenedUrl[] | null>>;
-}) {
-  const result = await shortenUrl({ url, customCode, username });
-
-  if (result.error) {
-    setError(result.error);
-    return;
-  }
-  if (!result.url) {
-    setError('Failed to shorten URL');
-    return;
-  }
-  setError('');
-  setUrl('');
-  setOutput(result.url);
-  await fetchUrlsResponse(username, setUrlsResponse);
-}
-
 async function fetchUrlsResponse(
   username: string,
-  setUrlsResponse: React.Dispatch<React.SetStateAction<ShortenedUrl[] | null>>
+  setUrlsResponse: React.Dispatch<React.SetStateAction<ShortenedUrl[] | null>>,
+  setUrlsResponseLoaded: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   const result = await fetchAllUrls(username);
   result.urls ? setUrlsResponse(result.urls) : setUrlsResponse(null);
+  setUrlsResponseLoaded(true);
 }
