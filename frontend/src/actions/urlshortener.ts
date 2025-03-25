@@ -35,6 +35,7 @@ export async function shortenUrl({
     },
     body,
   });
+  // TODO handle error
   const data = await res.json();
   return data;
 }
