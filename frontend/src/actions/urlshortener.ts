@@ -42,9 +42,15 @@ export async function shortenUrl({
     },
     body,
   });
-  // TODO handle error
-  const data = await res.json();
-  return data;
+  try {
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    console.error(e);
+    return {
+      error: 'Failed to shorten url',
+    };
+  }
 }
 
 export async function fetchShortenedUrl(
@@ -57,8 +63,15 @@ export async function fetchShortenedUrl(
       'Content-Type': 'application/json',
     },
   });
-  const data = await res.json();
-  return data;
+  try {
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    console.error(e);
+    return {
+      error: 'Failed to fetch shortened url',
+    };
+  }
 }
 
 export async function fetchAllUrls(
