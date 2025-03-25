@@ -90,7 +90,12 @@ export default function UrlShortenerPage({ username }: { username: string }) {
             </span>
           </div>
           <div className='mx-auto'>
-            <Button type='submit'>Shorten</Button>
+            <Button
+              className='bg-primary-kp/70 px-8 font-semibold text-primary-foreground shadow-glow-primary-kp hover:bg-primary-kp md:text-lg'
+              type='submit'
+            >
+              Shorten
+            </Button>
           </div>
         </form>
         {output && <ResponseOutput output={output} />}

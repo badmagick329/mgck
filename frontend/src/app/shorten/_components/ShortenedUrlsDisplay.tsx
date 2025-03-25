@@ -16,9 +16,11 @@ export default function ShortenedUrlsDisplay({
   }
 
   return (
-    <article className='flex w-full flex-col items-center gap-2 px-2 pt-12'>
-      <h2 className='text-xl font-bold'>Your Shortened URLs</h2>
-      <section className='grid-auto-fill-md w-full gap-2 text-foreground/80 dark:text-foreground'>
+    <article className='mt-8 flex w-full flex-col items-center gap-2 rounded-md border-2'>
+      <h2 className='w-full bg-secondary/60 py-2 text-center text-xl font-bold'>
+        Your Shortened URLs
+      </h2>
+      <section className='grid-auto-fill-md w-full gap-2 px-2 py-4 text-foreground/80 dark:text-foreground'>
         {urlsResponse.length === 0 ? (
           <span className='text-foreground/60'>
             It appears that you have not created any shortened URLs yet 🧐

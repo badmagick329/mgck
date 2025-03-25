@@ -56,6 +56,11 @@ export default async function Home() {
             href: '/emojify',
             description: 'Use AI to empower your text with emojis',
           },
+          {
+            name: 'URL Shortener',
+            href: '/shorten',
+            description: 'Shorten your URLs and track their usage',
+          },
         ]}
       />
     );
