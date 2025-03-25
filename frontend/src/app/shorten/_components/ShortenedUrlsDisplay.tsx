@@ -26,10 +26,13 @@ export default function ShortenedUrlsDisplay({
   }
 
   return (
-    <article className='grid-auto-fill-md w-full gap-2 px-2 text-foreground/80 dark:text-foreground'>
-      {urlsResponse.map((url) => (
-        <UrlCard key={url.short_id} url={url} toast={toast} />
-      ))}
+    <article className='flex w-full flex-col items-center gap-2 px-2 pt-12'>
+      <h2 className='text-xl font-bold'>Your Shortened URLs</h2>
+      <section className='grid-auto-fill-md w-full gap-2 text-foreground/80 dark:text-foreground'>
+        {urlsResponse.map((url) => (
+          <UrlCard key={url.short_id} url={url} toast={toast} />
+        ))}
+      </section>
     </article>
   );
 }
