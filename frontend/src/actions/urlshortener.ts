@@ -1,5 +1,7 @@
 'use server';
 
+import { ParsedToken } from '@/lib/account/parsed-token';
+import { canUseShortener } from '@/lib/account/permissions';
 import {
   API_SHORTENER_SHORTEN,
   API_SHORTENER_SHORTENED,
@@ -21,7 +23,12 @@ export async function shortenUrl({
   customCode: string;
   username: string;
 }): Promise<{ url?: string; error?: string }> {
-  // TODO Add token check
+  const token = ParsedToken.createFromCookie();
+  if (!canUseShortener(token)) {
+    return {
+      error: 'You do not have permission to use the URL shortener',
+    };
+  }
   const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_SHORTEN}`);
   const body = JSON.stringify({
     source_url: url,
@@ -57,7 +64,12 @@ export async function fetchShortenedUrl(
 export async function fetchAllUrls(
   username: string
 ): Promise<{ urls?: ShortenedUrl[]; error?: string }> {
-  // TODO Add token check
+  const token = ParsedToken.createFromCookie();
+  if (!canUseShortener(token)) {
+    return {
+      error: 'You do not have permission to use the URL shortener',
+    };
+  }
   const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URLS}`);
   let res = await fetch(apiUrl.toString(), {
     method: 'POST',
@@ -68,7 +80,6 @@ export async function fetchAllUrls(
   });
   try {
     const data = await res.json();
-    console.log(data);
     const parsed = shortenedUrlsByUsernameSchema.safeParse(data);
     if (!parsed.success) {
       return {
