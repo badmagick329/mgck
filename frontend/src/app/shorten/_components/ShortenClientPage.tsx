@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import ResponseOutput from './ResponseOutput';
 import Navbar from '@/app/_components/Navbar';
 import Footer from '@/app/_components/Footer';
-import Dashboard from './Dashboard';
+import ShortenedUrlsDisplay from './ShortenedUrlsDisplay';
 
 const MAX_CODE_CHARS = 255;
 
@@ -88,7 +88,7 @@ export default function UrlShortenerPage({ username }: { username: string }) {
           </div>
         </form>
         {output && <ResponseOutput output={output} />}
-        <Dashboard username={username} />
+        <ShortenedUrlsDisplay username={username} />
       </article>
       <Footer />
     </main>
