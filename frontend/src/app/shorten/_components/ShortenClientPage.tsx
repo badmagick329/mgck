@@ -82,7 +82,6 @@ export default function UrlShortenerPage({ username }: { username: string }) {
               {codeCountText}
             </span>
           </div>
-
           <div className='mx-auto'>
             <Button type='submit'>Shorten</Button>
           </div>
