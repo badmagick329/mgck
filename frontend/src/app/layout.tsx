@@ -26,7 +26,7 @@ export default function RootLayout({
           src='https://analytics.mgck.ink/js/script.js'
           data-domain='mgck.ink'
           data-api='https://analytics.mgck.ink/api/event'
-          strategy='afterInteractive'
+          strategy='lazyOnload'
         />
       </head>
       <body className={`${font.className} tracking-wide`}>
