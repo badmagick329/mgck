@@ -11,19 +11,12 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-type ToastType = ReturnType<typeof useToast>['toast'];
-
 const MAX_URL_DISPLAY_LENGTH = 120;
 const BUTTON_SIZE = 16;
 
-export default function UrlCard({
-  url,
-  toast,
-}: {
-  url: ShortenedUrl;
-  toast: ToastType;
-}) {
+export default function UrlCard({ url }: { url: ShortenedUrl }) {
   const [truncated, setTruncated] = useState(true);
+  const { toast } = useToast();
 
   const shortUrl = `https://${window.location.hostname}/${url.short_id}`;
   let sourceUrl = truncated
@@ -51,9 +44,13 @@ export default function UrlCard({
           </div>
           <button className='rounded-md bg-background/40 p-2 hover:bg-background/60'>
             <Clipboard
-              onClick={() => {
-                copyToClipboard(shortUrl);
-                topRightDefaultToast('Short URL copied to clipboard', toast);
+              onClick={async () => {
+                try {
+                  await copyToClipboard(shortUrl);
+                  topRightDefaultToast('Short URL copied to clipboard', toast);
+                } catch (e) {
+                  console.error('Failed to copy to clipboard', e);
+                }
               }}
               size={BUTTON_SIZE}
             />
