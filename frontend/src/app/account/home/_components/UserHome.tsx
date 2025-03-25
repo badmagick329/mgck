@@ -91,7 +91,7 @@ function FeaturesShowcase({
   return (
     <section>
       <h2 className='mb-4 text-2xl font-bold'>Available Features</h2>
-      <div className='grid-auto-fill-sm'>
+      <div className='grid-auto-fill-sm gap-2'>
         {features.map((feature) => (
           <Link key={feature.href} href={feature.href}>
             <Card className='max-w-[400px] rounded-sm border-foreground/40 bg-primary-kp/20 hover:bg-primary-kp/40'>
@@ -100,7 +100,10 @@ function FeaturesShowcase({
               </CardHeader>
               <CardContent className='grid grid-cols-1 gap-2 py-6 text-lg'>
                 <span>
-                  {feature.description} <RotatingEmojis emojis={emojis} />
+                  {feature.description}{' '}
+                  {feature.name === 'Emojifier' && (
+                    <RotatingEmojis emojis={emojis} />
+                  )}
                 </span>
               </CardContent>
             </Card>

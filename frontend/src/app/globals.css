@@ -163,7 +163,6 @@
     auto-fit,
     minmax(min(var(--grid-min-col-size), 100%), 1fr)
   );
-  gap: 1rem;
 }
 
 .grid-auto-fill-md {
