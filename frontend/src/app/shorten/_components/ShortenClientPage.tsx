@@ -4,7 +4,8 @@ import { shortenUrl } from '@/actions/urlshortener';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
-
+import { fetchAllUrls } from '@/actions/urlshortener';
+import { ShortenedUrl } from '@/lib/types/shorten';
 import ResponseOutput from './ResponseOutput';
 import Navbar from '@/app/_components/Navbar';
 import Footer from '@/app/_components/Footer';
@@ -14,6 +15,7 @@ const MAX_CODE_CHARS = 255;
 
 export default function UrlShortenerPage({ username }: { username: string }) {
   const [url, setUrl] = useState('');
+  const [urlsResponse, setUrlsResponse] = useState<ShortenedUrl[] | null>([]);
   const [customCode, setCustomCode] = useState('');
   const [error, setError] = useState('');
   const [output, setOutput] = useState('');
@@ -27,6 +29,10 @@ export default function UrlShortenerPage({ username }: { username: string }) {
     const remainingChars = MAX_CODE_CHARS - customCode.length;
     setCodeCountText(`${remainingChars}/${MAX_CODE_CHARS}`);
   }, [customCode]);
+
+  useEffect(() => {
+    fetchUrlsResponse(username, setUrlsResponse);
+  }, []);
 
   return (
     <main className='flex min-h-screen flex-col'>
@@ -46,6 +52,7 @@ export default function UrlShortenerPage({ username }: { username: string }) {
               setUrl,
               setError,
               setOutput,
+              setUrlsResponse,
             })
           }
         >
@@ -87,7 +94,7 @@ export default function UrlShortenerPage({ username }: { username: string }) {
           </div>
         </form>
         {output && <ResponseOutput output={output} />}
-        <ShortenedUrlsDisplay username={username} />
+        <ShortenedUrlsDisplay urlsResponse={urlsResponse} />
       </article>
       <Footer />
     </main>
@@ -101,6 +108,7 @@ async function submitForm({
   setUrl,
   setError,
   setOutput,
+  setUrlsResponse,
 }: {
   url: string;
   customCode: string;
@@ -108,6 +116,7 @@ async function submitForm({
   setUrl: (url: string) => void;
   setError: (error: string) => void;
   setOutput: (output: string) => void;
+  setUrlsResponse: React.Dispatch<React.SetStateAction<ShortenedUrl[] | null>>;
 }) {
   const result = await shortenUrl({ url, customCode, username });
 
@@ -122,4 +131,13 @@ async function submitForm({
   setError('');
   setUrl('');
   setOutput(result.url);
+  await fetchUrlsResponse(username, setUrlsResponse);
+}
+
+async function fetchUrlsResponse(
+  username: string,
+  setUrlsResponse: React.Dispatch<React.SetStateAction<ShortenedUrl[] | null>>
+) {
+  const result = await fetchAllUrls(username);
+  result.urls ? setUrlsResponse(result.urls) : setUrlsResponse(null);
 }
