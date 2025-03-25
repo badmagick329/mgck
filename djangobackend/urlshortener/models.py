@@ -13,7 +13,7 @@ load_dotenv()
 
 
 class ShortURL(models.Model):
-    url = models.URLField()
+    url = models.TextField()
     short_id = models.CharField(max_length=MAX_ID, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=255, null=True, blank=True)
