@@ -23,7 +23,7 @@ const nextConfig = {
         headers: [
           {
             key: "Access-Control-Allow-Origin",
-            value: "https://analytics.mgck.ink/api/event",
+            value: "https://analytics.mgck.ink",
           },
           {
             key: "Access-Control-Allow-Methods",
