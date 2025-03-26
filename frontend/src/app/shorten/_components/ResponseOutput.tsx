@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { handleCopyToClipboard } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function ResponseOutput({ output }: { output: string }) {
   const { toast } = useToast();
@@ -10,17 +11,19 @@ export default function ResponseOutput({ output }: { output: string }) {
   return (
     <div className='flex flex-col items-center gap-4'>
       <div className='flex items-center justify-center gap-4'>
-        <span className='md:text-xl'>Shortened URL 👉</span>
-        <Button
-          className='font-semibold text-green-500 md:text-xl'
-          variant='link'
+        <span>Shortened URL 👉</span>
+        <Link
+          className='text-lg font-semibold text-green-500'
+          href={output}
+          target='_blank'
         >
-          <a href={output} target='_blank'>
-            {output}
-          </a>
-        </Button>
+          {output}
+        </Link>
       </div>
-      <Button onClick={() => handleCopyToClipboard(output, toast)}>
+      <Button
+        className='bg-primary-kp/70 px-8 font-semibold text-primary-foreground hover:bg-primary-kp md:text-lg'
+        onClick={() => handleCopyToClipboard(output, toast)}
+      >
         Copy to clipboard
       </Button>
     </div>
