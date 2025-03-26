@@ -11,7 +11,7 @@ const fetchWithAuthHeader = async ({
   method: string;
   data?: any | undefined;
 }): Promise<AspAuthResponse> => {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const cookieToken = cookieStore.get('token')?.value;
   if (!cookieToken) {
     return {

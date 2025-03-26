@@ -52,7 +52,7 @@ export async function loginUserAction(payload: {
 }
 
 export async function logoutUserAction() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   if (!cookieStore.get('token') && !cookieStore.get('refreshToken')) {
     return;
   }

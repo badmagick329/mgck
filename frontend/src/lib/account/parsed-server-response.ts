@@ -22,7 +22,7 @@ export async function parsedServerResponse(
     const data = await response.json();
     let cleanedData;
     if (data?.token && data?.refreshToken) {
-      const cookieStore = cookies();
+      const cookieStore = await cookies();
       cookieStore.set({
         name: 'token',
         value: data.token,
