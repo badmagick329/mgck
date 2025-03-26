@@ -13,7 +13,7 @@ export async function emojifyWithAi(
   text: string,
   frequent: boolean
 ) {
-  const token = ParsedToken.createFromCookie();
+  const token = await ParsedToken.createFromCookie();
   if (!canUseAiEmojis(token)) {
     return 'You need to be logged in to use this feature.';
   }

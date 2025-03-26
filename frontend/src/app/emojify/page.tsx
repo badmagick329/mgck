@@ -5,8 +5,8 @@ import { randomBetween } from '@/lib/utils';
 import { canUseAiEmojis } from '@/lib/account/permissions';
 import { randomMessage, randomUserMessage } from '@/lib/emojify';
 
-export default function EmojifyPage() {
-  const parsed = ParsedToken.createFromCookie();
+export default async function EmojifyPage() {
+  const parsed = await ParsedToken.createFromCookie();
   const message = parsed.name()
     ? randomUserMessage(parsed.name())
     : randomMessage();

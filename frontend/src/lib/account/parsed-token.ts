@@ -32,8 +32,8 @@ export class ParsedToken {
     this._exp = parsed.exp;
   }
 
-  public static createFromCookie = () => {
-    const cookieStore = cookies();
+  public static createFromCookie = async () => {
+    const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
     return new ParsedToken(token);
   };

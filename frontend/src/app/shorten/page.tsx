@@ -3,8 +3,8 @@ import ShortenClientPage from './_components/ShortenClientPage';
 import { canUseShortener } from '@/lib/account/permissions';
 import { redirect } from 'next/navigation';
 
-export default function UrlShortenerPage() {
-  const token = ParsedToken.createFromCookie();
+export default async function UrlShortenerPage() {
+  const token = await ParsedToken.createFromCookie();
   if (canUseShortener(token)) {
     return <ShortenClientPage username={token.name()} />;
   }
