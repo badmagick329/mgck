@@ -4,12 +4,13 @@ import { notFound } from 'next/navigation';
 
 import GfyView from './_components/GfyView';
 
-type Props = {
-  params: { videoId: string };
-};
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const gfyDetail = await fetchGfy(params.videoId);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ videoId: string }>;
+}): Promise<Metadata> {
+  const resolvedParams = await params;
+  const gfyDetail = await fetchGfy(resolvedParams.videoId);
   if (gfyDetail === null) {
     return {
       title: 'Not Found',
@@ -61,11 +62,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function GfyPage({
   params,
 }: {
-  params: { videoId: string };
+  params: Promise<{ videoId: string }>;
 }) {
-  const gfyDetail = await fetchGfy(params.videoId);
+  const resolvedParams = await params;
+  const gfyDetail = await fetchGfy(resolvedParams.videoId);
   if (gfyDetail === null) {
     return notFound();
   }
-  return <GfyView params={params} gfyDetail={gfyDetail} />;
+  return <GfyView params={resolvedParams} gfyDetail={gfyDetail} />;
 }

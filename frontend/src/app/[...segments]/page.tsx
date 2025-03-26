@@ -4,9 +4,9 @@ import { notFound, redirect } from 'next/navigation';
 export default async function ShortCodePage({
   params,
 }: {
-  params: { segments: string[] };
+  params: Promise<{ segments: string[] }>;
 }) {
-  const { segments } = params;
+  const { segments } = await params;
   if (segments.length !== 1) {
     return notFound();
   }
