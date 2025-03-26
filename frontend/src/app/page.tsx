@@ -10,8 +10,8 @@ import { ParsedToken } from '@/lib/account/parsed-token';
 import { canUseShortener } from '@/lib/account/permissions';
 import clsx from 'clsx';
 
-export default function Index() {
-  const token = ParsedToken.createFromCookie();
+export default async function Index() {
+  const token = await ParsedToken.createFromCookie();
   const shortenerAllowed = canUseShortener(token);
   return (
     <main className='flex min-h-dvh flex-col justify-center'>

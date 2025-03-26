@@ -21,7 +21,7 @@ const rateLimit = new RateLimit(3, 60 * 30);
 export async function getFeedbacksAction(): Promise<
   FeedbacksSuccess | FeedbackError
 > {
-  const token = ParsedToken.createFromCookie();
+  const token = await ParsedToken.createFromCookie();
   if (token.role() !== ADMIN_ROLE) {
     return createError({
       status: 403,
@@ -63,7 +63,7 @@ export async function deleteFeedbackAction({
 }: {
   feedbackId: number;
 }): Promise<{ success: boolean } | FeedbackError> {
-  const token = ParsedToken.createFromCookie();
+  const token = await ParsedToken.createFromCookie();
   if (token.role() !== ADMIN_ROLE) {
     return createError({
       status: 403,
@@ -106,7 +106,7 @@ function createError({
 }
 
 async function limitExceededCheck(): Promise<FeedbackError | undefined> {
-  const ip = IP();
+  const ip = await IP();
   console.log(`ip: ${ip}`);
   if (ip) {
     const { count, success } = await rateLimit.tryIncrementAndGetCount(ip);
@@ -122,13 +122,14 @@ async function limitExceededCheck(): Promise<FeedbackError | undefined> {
   }
 }
 
-function IP(): string | undefined {
+async function IP(): Promise<string | undefined> {
   const FALLBACK_IP_ADDRESS = undefined;
-  const forwardedFor = headers().get('x-forwarded-for');
+  const headersObject = await headers();
+  const forwardedFor = headersObject.get('x-forwarded-for');
 
   if (forwardedFor) {
     return forwardedFor.split(',')[0] ?? FALLBACK_IP_ADDRESS;
   }
 
-  return headers().get('x-real-ip') ?? FALLBACK_IP_ADDRESS;
+  return headersObject.get('x-real-ip') ?? FALLBACK_IP_ADDRESS;
 }

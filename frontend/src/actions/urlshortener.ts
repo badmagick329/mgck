@@ -23,7 +23,7 @@ export async function shortenUrl({
   customCode: string;
   username: string;
 }): Promise<{ url?: string; error?: string }> {
-  const token = ParsedToken.createFromCookie();
+  const token = await ParsedToken.createFromCookie();
   if (!canUseShortener(token)) {
     return {
       error: 'You do not have permission to use the URL shortener',
@@ -77,7 +77,7 @@ export async function fetchShortenedUrl(
 export async function fetchAllUrls(
   username: string
 ): Promise<{ urls?: ShortenedUrl[]; error?: string }> {
-  const token = ParsedToken.createFromCookie();
+  const token = await ParsedToken.createFromCookie();
   if (!canUseShortener(token)) {
     return {
       error: 'You do not have permission to use the URL shortener',

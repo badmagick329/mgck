@@ -33,7 +33,7 @@ export type UserHomeProps = {
 };
 
 export default async function Home() {
-  const parsed = ParsedToken.createFromCookie();
+  const parsed = await ParsedToken.createFromCookie();
   const role = parsed.role();
   const username = parsed.name();
   if (!parsed) {
