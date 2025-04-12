@@ -277,7 +277,9 @@ export class FFmpegManager {
         '-plays',
         '0',
         '-vf',
-        `scale=${width}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`,
+        `scale=${width}:-1:flags=lanczos,split [a][b];[a] palettegen [p];[b][p] paletteuse=dither=sierra2_4a`,
+        '-compression_level',
+        '9',
         `${this.fullOutputName()}`,
       ];
     }
@@ -285,7 +287,7 @@ export class FFmpegManager {
       '-i',
       this.fileConfig.file.name,
       '-filter_complex',
-      `[0:v] scale=${width}:-1 [a];[a] split [b][c];[b] palettegen [p];[c][p] paletteuse`,
+      `[0:v] scale=${width}:-1:flags=lanczos,split [a][b];[a] palettegen [p];[b][p] paletteuse=dither=sierra2_4a`,
       `${this.fullOutputName()}`,
     ];
   }
