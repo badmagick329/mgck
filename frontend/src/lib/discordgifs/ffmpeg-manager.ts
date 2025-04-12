@@ -205,7 +205,7 @@ export class FFmpegManager {
       throw new Error('FFmpeg not loaded');
     }
     if (!this.fileConfig) {
-      throw new Error('FFmpegContrller config not set');
+      throw new Error('FFmpegController config not set');
     }
 
     try {
@@ -222,7 +222,7 @@ export class FFmpegManager {
     let blob = null;
     let iteration = 0;
 
-    const startTime = performance.now();
+    // const startTime = performance.now();
     this.logMessageCallback && this.ffmpeg.on('log', this.logMessageCallback);
     this.progressCallback && this.ffmpeg.on('progress', this.progressCallback);
     this.updateConversionStateCallback &&
@@ -302,7 +302,7 @@ export class FFmpegManager {
         '0.5M',
         '-an',
         '-vf',
-        'scale=140:-2',
+        `scale=${sizeInfo.sticker.startingWidth}:-2`,
         '-preset',
         'veryfast',
         `${this.newInputName()}`,
@@ -315,7 +315,7 @@ export class FFmpegManager {
       '0.5M',
       '-an',
       '-vf',
-      'scale=80:-2',
+      `scale=${sizeInfo.emote.startingWidth}:-2`,
       '-preset',
       'veryfast',
       `${this.newInputName()}`,
