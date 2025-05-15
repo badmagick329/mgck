@@ -6,6 +6,7 @@ import Footer from '@/app/_components/Footer';
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import clsx from 'clsx';
+import NextImage from 'next/image';
 
 export default function ImageEditPage() {
   const [files, setFiles] = useState<File[]>([]);
@@ -15,6 +16,7 @@ export default function ImageEditPage() {
 
   const onDrop = useCallback((accepted: File[]) => {
     setFiles((f) => [...f, ...accepted]);
+    setCropped([]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -25,11 +27,14 @@ export default function ImageEditPage() {
 
   useEffect(() => {
     const handler = (e: ClipboardEvent) => {
+      let newFilesAdded = false;
       for (const item of Array.from(e.clipboardData?.files || [])) {
         if (item.type.startsWith('image/')) {
           setFiles((f) => [...f, item]);
+          newFilesAdded = true;
         }
       }
+      newFilesAdded && setCropped([]);
     };
     document.addEventListener('paste', handler);
     return () => document.removeEventListener('paste', handler);
@@ -68,9 +73,11 @@ export default function ImageEditPage() {
           {previews.length > 0 && (
             <div className='mt-6 flex flex-wrap justify-center gap-4'>
               {previews.map((preview, index) => (
-                <img
+                <NextImage
                   key={index}
                   src={preview}
+                  width={96}
+                  height={96}
                   className='h-24 w-24 rounded object-cover'
                   alt={`preview-${index}`}
                 />
@@ -107,12 +114,17 @@ export default function ImageEditPage() {
             <h2 className='text-center text-lg font-medium'>Cropped Results</h2>
             <div className='flex flex-wrap justify-center gap-4'>
               {cropped.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  className='max-h-48 max-w-48 rounded-lg bg-secondary-dg object-contain p-2'
-                  alt={`cropped-${i}`}
-                />
+                <div key={src} className='flex flex-col'>
+                  <div className='relative h-96 w-96'>
+                    <NextImage
+                      unoptimized
+                      src={src}
+                      fill
+                      className='object-contain'
+                      alt={`cropped-${i}`}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
           </div>
