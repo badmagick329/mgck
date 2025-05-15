@@ -97,6 +97,7 @@ export default function FileDropzone() {
   }, [acceptedFiles]);
 
   useEffect(() => {
+    // TODO: wtf? Refactor?
     const handlePaste = (event: ClipboardEvent) => {
       const pastedItems = event.clipboardData?.items;
       if (!pastedItems) return;
@@ -130,16 +131,17 @@ export default function FileDropzone() {
           setDropError(`You can only upload up to ${maxFiles} files.`);
           return;
         }
+        const newFiles = [];
         for (let i = 0; i < fileItems.length; i++) {
           if (totalFiles + i + 1 > maxFiles) {
             break;
           }
-          const file = fileItems[i];
-          dispatch({
-            type: 'addFile',
-            payload: { file },
-          });
+          newFiles.push(fileItems[i]);
         }
+        dispatch({
+          type: 'addFiles',
+          payload: { files: newFiles },
+        });
 
         setDropError(null);
         console.log('total files now', totalFiles + fileItems.length);

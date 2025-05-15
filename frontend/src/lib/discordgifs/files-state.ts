@@ -31,6 +31,10 @@ export type FileAction =
       payload: { file: File };
     }
   | {
+      type: 'addFiles';
+      payload: { files: File[] };
+    }
+  | {
       type: 'updateTarget';
       payload: { name: string; target: SizeInfo };
     }
@@ -119,6 +123,26 @@ export const filesStateReducer = (
           currentTarget: sizeInfo.emote,
           conversionState: 'idle',
         },
+      };
+    case 'addFiles':
+      const newFiles = action.payload.files.reduce(
+        (acc, file) => {
+          acc[file.name] = {
+            file,
+            outputs: [],
+            outputTypes: ['emote'],
+            progress: 0,
+            size: 0,
+            currentTarget: sizeInfo.emote,
+            conversionState: 'idle',
+          };
+          return acc;
+        },
+        {} as Record<string, FFmpegFileData>
+      );
+      return {
+        ...state,
+        ...newFiles,
       };
     case 'updateTarget':
       return {
