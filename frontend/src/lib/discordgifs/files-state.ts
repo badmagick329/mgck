@@ -39,7 +39,7 @@ export type FileAction =
       payload: { name: string; target: SizeInfo };
     }
   | {
-      type: 'updateConversionState';
+      type: 'updateFileConversionState';
       payload: { name: string; conversionState: FFmpegConversionState };
     }
   | {
@@ -153,7 +153,7 @@ export const filesStateReducer = (
         },
       };
 
-    case 'updateConversionState':
+    case 'updateFileConversionState':
       return {
         ...state,
         [action.payload.name]: {

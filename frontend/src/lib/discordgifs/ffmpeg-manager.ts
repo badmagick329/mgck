@@ -27,7 +27,7 @@ export class FFmpegManager {
   private logMessageCallback?: (e: FFmpegLogEvent) => void;
   private progressCallback?: (e: FFmpegProgressEvent) => void;
   private newSizeCallback?: (size: number) => void;
-  private updateConversionStateCallback?: (
+  private updateFileConversionStateCallback?: (
     conversionState: FFmpegConversionState
   ) => void;
 
@@ -106,7 +106,7 @@ export class FFmpegManager {
   public setUpdateConversionStateCallback(
     cb: (conversionState: FFmpegConversionState) => void
   ): FFmpegManager {
-    this.updateConversionStateCallback = cb;
+    this.updateFileConversionStateCallback = cb;
     return this;
   }
 
@@ -139,8 +139,8 @@ export class FFmpegManager {
       return;
     }
     // console.log('optimizing input');
-    this.updateConversionStateCallback &&
-      this.updateConversionStateCallback('optimizing');
+    this.updateFileConversionStateCallback &&
+      this.updateFileConversionStateCallback('optimizing');
     await this.ffmpeg.writeFile(file.name, await fetchFile(file));
     const newName = this.newInputName();
     const cmd = this.optimizedInputCommand();
@@ -148,8 +148,8 @@ export class FFmpegManager {
     if (ret === 1) {
       throw new Error('Error optimizing input');
     }
-    this.updateConversionStateCallback &&
-      this.updateConversionStateCallback('busy');
+    this.updateFileConversionStateCallback &&
+      this.updateFileConversionStateCallback('busy');
     const data = await this.ffmpeg.readFile(newName);
     const blob = new Blob([data], { type: 'video/mp4' });
     this.fileConfig.file = new File([blob], newName);
@@ -225,8 +225,8 @@ export class FFmpegManager {
     // const startTime = performance.now();
     this.logMessageCallback && this.ffmpeg.on('log', this.logMessageCallback);
     this.progressCallback && this.ffmpeg.on('progress', this.progressCallback);
-    this.updateConversionStateCallback &&
-      this.updateConversionStateCallback('converting');
+    this.updateFileConversionStateCallback &&
+      this.updateFileConversionStateCallback('converting');
     while (size !== null) {
       if (calculator.isDone) {
         break;
@@ -244,8 +244,8 @@ export class FFmpegManager {
       // console.log(`iteration: ${++iteration}. size`, size);
       ++iteration;
     }
-    this.updateConversionStateCallback &&
-      this.updateConversionStateCallback('busy');
+    this.updateFileConversionStateCallback &&
+      this.updateFileConversionStateCallback('busy');
     // console.log(
     //   `iteration: ${iteration}. time taken ${((performance.now() - startTime) / 1000).toFixed(2)}s`
     // );

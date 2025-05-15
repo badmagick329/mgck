@@ -1,6 +1,10 @@
 'use client';
 
-import { filesStateReducer } from '@/lib/discordgifs/files-state';
+import {
+  FileAction,
+  FilesState,
+  filesStateReducer,
+} from '@/lib/discordgifs/files-state';
 import { FFmpegManager } from '@/lib/discordgifs/ffmpeg-manager';
 import clsx from 'clsx';
 import { useEffect, useReducer, useRef, useState } from 'react';
@@ -31,6 +35,8 @@ export default function FileDropzone() {
   const [filesState, dispatch] = useReducer(filesStateReducer, {});
   const [dropError, setDropError] = useState<string | null>(null);
   const [dragEnter, setDragEnter] = useState<boolean>(false);
+  const [buttonEnabled, setButtonEnabled] = useState(false);
+  const conversionInProgressRef = useRef(false);
 
   const ffmpegRef = useRef<FFmpegManager>(new FFmpegManager());
   const { acceptedFiles, getRootProps, getInputProps, fileRejections } =
@@ -65,6 +71,7 @@ export default function FileDropzone() {
     0
   );
 
+  // TODO: Holy useEffects!
   useEffect(() => {
     (async () => {
       await ffmpegRef.current.load();
@@ -144,7 +151,6 @@ export default function FileDropzone() {
         });
 
         setDropError(null);
-        console.log('total files now', totalFiles + fileItems.length);
       }
     };
 
@@ -154,9 +160,23 @@ export default function FileDropzone() {
     };
   }, [totalFiles]);
 
-  const buttonEnabled =
-    Object.values(filesState).some((d) => d.conversionState === 'idle') &&
-    totalFiles > 0;
+  useEffect(() => {
+    const anyProcessing = Object.values(filesState).some((d) =>
+      ['busy', 'optimizing', 'converting'].includes(d.conversionState)
+    );
+
+    const hasIdleFiles = Object.values(filesState).some(
+      (d) => d.conversionState === 'idle'
+    );
+
+    const shouldBeEnabled =
+      !conversionInProgressRef.current &&
+      !anyProcessing &&
+      totalFiles > 0 &&
+      hasIdleFiles;
+
+    setButtonEnabled(shouldBeEnabled);
+  }, [filesState, totalFiles]);
 
   if (isLoaded === false) {
     return (
@@ -200,36 +220,28 @@ export default function FileDropzone() {
             !buttonEnabled && dragEnter && 'animate-pulse'
           }`
         )}
-        onClick={(e) => convert(ffmpegRef, filesState, dispatch)}
+        onClick={(e) => {
+          try {
+            conversionInProgressRef.current = true;
+            convert(ffmpegRef, filesState, dispatch).finally(() => {
+              conversionInProgressRef.current = false;
+            });
+          } catch (error) {
+            console.error('Conversion error:', error);
+            conversionInProgressRef.current = false;
+          }
+        }}
         disabled={!buttonEnabled}
       >
         Convert
       </button>
       {dropError && <p className='font-semibold text-red-500'>{dropError}</p>}
-      <div className='mt-8 flex flex-wrap justify-center gap-8 px-4 text-center'>
-        {Object.keys(filesState).length > 0 &&
-          Object.entries(filesState).map(([name, data], idx) => (
-            <ConvertedFile
-              key={name}
-              fileData={data}
-              buttonsEnabled={buttonEnabled}
-              removeFile={() => {
-                dispatch({
-                  type: 'removeFile',
-                  payload: { name },
-                });
-
-                setDropError(null);
-              }}
-              setOutputTypes={(targets) => {
-                dispatch({
-                  type: 'updateOutputTypes',
-                  payload: { name, outputTypes: targets },
-                });
-              }}
-            />
-          ))}
-      </div>
+      <ConvertedFiles
+        filesState={filesState}
+        dispatch={dispatch}
+        buttonEnabled={buttonEnabled}
+        setDropError={setDropError}
+      />
     </div>
   );
 }
@@ -253,5 +265,44 @@ function MoreFilesText({
 
   return (
     <p className='text-xs'>You can add {maxFiles - totalFiles} more file(s).</p>
+  );
+}
+
+function ConvertedFiles({
+  filesState,
+  dispatch,
+  buttonEnabled,
+  setDropError,
+}: {
+  filesState: FilesState;
+  dispatch: (value: FileAction) => void;
+  buttonEnabled: boolean;
+  setDropError: React.Dispatch<React.SetStateAction<string | null>>;
+}) {
+  return (
+    <div className='mt-8 flex flex-wrap justify-center gap-8 px-4 text-center'>
+      {Object.keys(filesState).length > 0 &&
+        Object.entries(filesState).map(([name, data], idx) => (
+          <ConvertedFile
+            key={name}
+            fileData={data}
+            buttonsEnabled={buttonEnabled}
+            removeFile={() => {
+              dispatch({
+                type: 'removeFile',
+                payload: { name },
+              });
+
+              setDropError(null);
+            }}
+            setOutputTypes={(targets) => {
+              dispatch({
+                type: 'updateOutputTypes',
+                payload: { name, outputTypes: targets },
+              });
+            }}
+          />
+        ))}
+    </div>
   );
 }
