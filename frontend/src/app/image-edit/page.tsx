@@ -137,6 +137,38 @@ export default function ImageEditPage() {
                   </a>
                 </div>
               ))}
+              <div className='flex w-full flex-col justify-center gap-4'>
+                <p className='text-center text-sm text-muted-foreground'>
+                  Click any cropped image to download it individually, or use
+                  "Download all" to save all images at once.
+                </p>
+                <div className='flex w-full justify-center gap-4'>
+                  <Button
+                    className='bg-primary-dg font-semibold text-primary-foreground shadow-glow-primary-dg hover:bg-primary-dg/90'
+                    onClick={() => {
+                      cropped.forEach((item) => {
+                        const a = document.createElement('a');
+                        a.href = item.url;
+                        a.download = item.filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      });
+                    }}
+                  >
+                    Download all
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setCropped([]);
+                      setFiles([]);
+                    }}
+                    className='shadow-glow-destructive bg-destructive font-semibold text-destructive-foreground hover:bg-destructive/90'
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         )}
