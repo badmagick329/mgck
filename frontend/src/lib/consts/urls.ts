@@ -3,6 +3,7 @@ export const KPOP_BASE = '/kpop';
 export const URL_SHORTENER_BASE = '/shorten';
 export const EMOJIFY_BASE = '/emojify';
 export const DISCORD_GIFS = '/discordgifs';
+export const IMAGE_EDIT = '/image-edit';
 const ACCOUNT_BASE = '/account';
 export const ACCOUNT_LOGIN = `${ACCOUNT_BASE}/login`;
 export const ACCOUNT_USER_HOME = `${ACCOUNT_BASE}/home`;

@@ -9,6 +9,7 @@ import UrlShortenerIntro from './_components/UrlShortenerIntro';
 import { ParsedToken } from '@/lib/account/parsed-token';
 import { canUseShortener } from '@/lib/account/permissions';
 import clsx from 'clsx';
+import ImageEditIntro from '@/app/_components/ImageEditIntro';
 
 export default async function Index() {
   const token = await ParsedToken.createFromCookie();
@@ -19,12 +20,13 @@ export default async function Index() {
       <div
         className={clsx(
           `grid grow grid-cols-1 place-content-center`,
-          shortenerAllowed ? 'grid-rows-5' : 'grid-rows-4'
+          shortenerAllowed ? 'grid-rows-6' : 'grid-rows-5'
         )}
       >
         {shortenerAllowed && <UrlShortenerIntro />}
         <GfysIntro />
         <KpopComebacksIntro />
+        <ImageEditIntro />
         <EmojifyIntro />
         <DiscordGifsIntro />
       </div>
