@@ -10,8 +10,12 @@ import NextImage from 'next/image';
 
 export default function ImageEditPage() {
   const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [cropped, setCropped] = useState<string[]>([]);
+  const [previews, setPreviews] = useState<{ url: string; filename: string }[]>(
+    []
+  );
+  const [cropped, setCropped] = useState<{ url: string; filename: string }[]>(
+    []
+  );
   const [isCropping, setIsCropping] = useState(false);
 
   const onDrop = useCallback((accepted: File[]) => {
@@ -41,9 +45,12 @@ export default function ImageEditPage() {
   }, []);
 
   useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
-    return () => urls.forEach(URL.revokeObjectURL);
+    const previews = files.map((f) => ({
+      url: URL.createObjectURL(f),
+      filename: f.name,
+    }));
+    setPreviews(previews);
+    return () => previews.forEach((p) => URL.revokeObjectURL(p.url));
   }, [files]);
 
   return (
@@ -75,11 +82,11 @@ export default function ImageEditPage() {
               {previews.map((preview, index) => (
                 <NextImage
                   key={index}
-                  src={preview}
+                  src={preview.url}
                   width={96}
                   height={96}
                   className='h-24 w-24 rounded object-cover'
-                  alt={`preview-${index}`}
+                  alt={preview.filename}
                 />
               ))}
             </div>
@@ -113,17 +120,21 @@ export default function ImageEditPage() {
           <div className='flex w-full flex-col gap-4'>
             <h2 className='text-center text-lg font-medium'>Cropped Results</h2>
             <div className='flex flex-wrap justify-center gap-4'>
-              {cropped.map((src, i) => (
-                <div key={src} className='flex flex-col'>
-                  <div className='relative h-96 w-96'>
+              {cropped.map((item) => (
+                <div key={item.url} className='flex flex-col'>
+                  <a
+                    href={item.url}
+                    download={item.filename}
+                    className='relative h-96 w-96 rounded-lg bg-secondary-dg hover:bg-secondary-dg/80 hover:opacity-80'
+                  >
                     <NextImage
                       unoptimized
-                      src={src}
+                      src={item.url}
                       fill
-                      className='object-contain'
-                      alt={`cropped-${i}`}
+                      className='rounded-lg object-contain hover:opacity-80'
+                      alt={item.filename}
                     />
-                  </div>
+                  </a>
                 </div>
               ))}
             </div>
@@ -284,23 +295,27 @@ const handleCrop = async ({
   setCropped,
 }: {
   setIsCropping: (isCropping: boolean) => void;
-  previews: string[];
+  previews: { url: string; filename: string }[];
   setFiles: (files: File[]) => void;
-  setCropped: (cropped: string[]) => void;
+  setCropped: (cropped: { url: string; filename: string }[]) => void;
 }) => {
-  const results: string[] = [];
+  const results: { url: string; filename: string }[] = [];
   try {
     setIsCropping(true);
     await Promise.all(
       previews.map(
-        (url) =>
+        (preview) =>
           new Promise<void>((resolve) => {
             const img = new Image();
             img.onload = () => {
-              results.push(autoCropImage(img));
+              results.push({
+                url: autoCropImage(img),
+                filename:
+                  preview.filename.replace(/\.[^/.]+$/, '') + '_cropped.png',
+              });
               resolve();
             };
-            img.src = url;
+            img.src = preview.url;
           })
       )
     );
@@ -308,7 +323,7 @@ const handleCrop = async ({
   } catch (error) {
     console.error('Error cropping images:', error);
   } finally {
-    previews.forEach((url) => URL.revokeObjectURL(url));
+    previews.forEach((p) => URL.revokeObjectURL(p.url));
     setIsCropping(false);
   }
   setCropped(results);
