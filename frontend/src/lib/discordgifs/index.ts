@@ -23,14 +23,14 @@ export async function convert(
 
     const {
       progressCallback,
-      updateConversionStateCallback,
+      updateFileConversionStateCallback,
       targetCallback,
       sizeCallback,
     } = createCallbacks(name, dispatch);
     ffmpeg
       .setProgressCallback(progressCallback)
       .setNewSizeCallback(sizeCallback)
-      .setUpdateConversionStateCallback(updateConversionStateCallback);
+      .setUpdateConversionStateCallback(updateFileConversionStateCallback);
 
     for (const outputType of data.outputTypes) {
       ffmpeg.setFileConfig({
@@ -83,11 +83,11 @@ function createCallbacks(name: string, dispatch: Dispatch<FileAction>) {
       payload: { name, size },
     });
   };
-  const updateConversionStateCallback = (
+  const updateFileConversionStateCallback = (
     conversionState: FFmpegConversionState
   ) => {
     dispatch({
-      type: 'updateConversionState',
+      type: 'updateFileConversionState',
       payload: { name, conversionState },
     });
   };
@@ -96,6 +96,6 @@ function createCallbacks(name: string, dispatch: Dispatch<FileAction>) {
     progressCallback,
     targetCallback,
     sizeCallback,
-    updateConversionStateCallback,
+    updateFileConversionStateCallback,
   };
 }
