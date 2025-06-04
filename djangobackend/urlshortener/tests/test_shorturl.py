@@ -50,3 +50,23 @@ def test_random_id():
 
     generated_id = code_generator.available_code(short_codes)
     assert generated_id is None
+
+
+@pytest.mark.django_db
+def test_is_short_url_valid():
+    short_url = ShortURL.objects.create(url="https://example.com", short_id="val")
+    assert ShortURL.is_short_url(short_url.redirect_url) is True
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://example.com/external",
+        f"{BASE_URL}/not-real",
+        f"{BASE_URL}/extra/segment",
+    ],
+)
+@pytest.mark.django_db
+def test_is_short_url_invalid(url):
+    ShortURL.objects.create(url="https://example.com", short_id="val")
+    assert ShortURL.is_short_url(url) is False
