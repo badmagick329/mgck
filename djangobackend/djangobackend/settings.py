@@ -32,7 +32,9 @@ DEBUG = int(os.environ["DEBUG"])
 API_CACHE_TTL = 2
 GFY_PAGE_SIZE = os.environ.get("GFY_PAGE_SIZE", 100)
 
-ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(" ")
+ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(" ") or None
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(" ") or None
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -80,9 +82,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "djangobackend.wsgi.application"
-CSRF_TRUSTED_ORIGINS = [
-    BASE_URL,
-]
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
