@@ -1,42 +1,40 @@
-{% extends "urlshortener/base.html" %}
-{% load static %}
-{% block title %}
-  <title>Mgck</title>
-{% endblock %}
-{% block body %}
-  <div
-    class="flex flex-col items-center
-      w-full px-8 sm:w-4/5 md:w-3/5 lg:w-2/5 mx-auto"
-      >
-    <a
-      class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
-      py-1 px-3 rounded my-2 w-full text-center"
-      href="{% url 'urlshortener:shortener' %}">URL Shortener</a>
-    <a
-      class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
-      py-1 px-3 rounded my-2 w-full text-center"
-      href="{% url 'kpopcomebacks:index' %}">Kpop Comebacks</a>
-    <a
-      class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
-      py-1 px-3 rounded my-2 w-full text-center"
-      href="{{base_url}}/gfys">Red Velvet Gfy Archive v1</a>
-    <a
-      class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
-      py-1 px-3 rounded my-2 w-full text-center"
-      href="{{base_url}}/v0gfys/">Red Velvet Gfy Archive v0</a>
-    <a
-      class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
-      py-1 px-3 rounded my-2 w-full text-center"
-      href="https://kpopwins.info">Kpop Music Show Wins</a>
-    <a
-      class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
-      py-1 px-3 rounded my-2 w-full text-center"
-      href="{% url 'emojify:index' %}">Emojify your message 😀</a>
-    {% if can_upload %}
-      <a
-        class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer
-        py-1 px-3 rounded my-2 w-full text-center"
-        href="{% url 'fileuploader:list_files' %}">Upload files</a>
-    {% endif %}
-  </div>
+{% extends "urlshortener/base.html" %} {% load static %} {% block title %}
+<title>Mgck</title>
+{% endblock %} {% block body %}
+<div
+  class="flex flex-col items-center w-full px-8 sm:w-4/5 md:w-3/5 lg:w-2/5 mx-auto"
+>
+  <a
+    class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer py-1 px-3 rounded my-2 w-full text-center"
+    href="{% url 'urlshortener:shortener' %}"
+    >URL Shortener</a
+  >
+  <a
+    class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer py-1 px-3 rounded my-2 w-full text-center"
+    href="{% url 'kpopcomebacks:index' %}"
+    >Kpop Comebacks</a
+  >
+  <a
+    class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer py-1 px-3 rounded my-2 w-full text-center"
+    href="{{base_url}}/gfys"
+    >Red Velvet Gfy Archive v1</a
+  >
+  <a
+    class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer py-1 px-3 rounded my-2 w-full text-center"
+    href="{{base_url}}/v0gfys/"
+    >Red Velvet Gfy Archive v0</a
+  >
+  <a
+    class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer py-1 px-3 rounded my-2 w-full text-center"
+    href="{% url 'emojify:index' %}"
+    >Emojify your message 😀</a
+  >
+  {% if can_upload %}
+  <a
+    class="font-bold bg-blue-500 hover:bg-blue-700 hover:cursor-pointer py-1 px-3 rounded my-2 w-full text-center"
+    href="{% url 'fileuploader:list_files' %}"
+    >Upload files</a
+  >
+  {% endif %}
+</div>
 {% endblock %}
