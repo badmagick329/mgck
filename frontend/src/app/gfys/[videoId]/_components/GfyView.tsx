@@ -7,7 +7,6 @@ import AdditionalGfyDetails from './AdditionalGfyDetails';
 import GfyPlayer from './GfyPlayer';
 import NavButtons from './NavButtons';
 import ShareButtons from './ShareButtons';
-import Footer from '@/app/_components/Footer';
 
 type Props = {
   params: {

@@ -28,12 +28,16 @@ export function parseGfyResponse(resp: GfyResponse): GfyParsedResponse {
   };
 }
 
-export function imgurIdToMp4(imgurId: string) {
+export function imgurIdToImgurVideo(imgurId: string) {
   return `https://i.imgur.com/${imgurId}.mp4`;
 }
 
-export function imgurIdToJpg(imgurId: string) {
-  return `https://i.imgur.com/${imgurId}.jpg`;
+export function imgurIdToVideo(imgurId: string) {
+  return `https://mgck.ink/gfy-videos/${imgurId}.mp4`;
+}
+
+export function imgurIdToThumbnail(imgurId: string) {
+  return `https://mgck.ink/gfy-thumbnails/${imgurId}.webp`;
 }
 
 export function imgurIdToUrl(imgurId: string) {

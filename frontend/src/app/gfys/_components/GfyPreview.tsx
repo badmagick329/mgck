@@ -6,7 +6,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { GFYS_BASE } from '@/lib/consts/urls';
-import { imgurIdToJpg, imgurIdToMp4 } from '@/lib/gfys';
+import {
+  imgurIdToImgurVideo,
+  imgurIdToThumbnail,
+  imgurIdToVideo,
+} from '@/lib/gfys';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -38,7 +42,7 @@ export default function GfyPreview({
             >
               <Image
                 className='hover:ring-bg-primary-gf rounded-md object-cover hover:cursor-pointer hover:ring-2 hover:ring-offset-2'
-                src={imgurIdToJpg(imgurId)}
+                src={imgurIdToThumbnail(imgurId)}
                 alt='imgur'
                 width={150}
                 height={150}
@@ -80,7 +84,8 @@ function VideoPreview({
         muted
         width={(maxVideoWidth / 2).toString()}
       >
-        <source src={imgurIdToMp4(imgurId)} />
+        <source src={imgurIdToVideo(imgurId)} />
+        <source src={imgurIdToImgurVideo(imgurId)} />
       </video>
     );
   }
@@ -94,7 +99,8 @@ function VideoPreview({
         muted
         width={maxVideoWidth.toString()}
       >
-        <source src={imgurIdToMp4(imgurId)} />
+        <source src={imgurIdToVideo(imgurId)} />
+        <source src={imgurIdToImgurVideo(imgurId)} />
       </video>
     );
   }
@@ -104,7 +110,8 @@ function VideoPreview({
     const videoWidth = Math.round(width / widthDivisor);
     return (
       <video className='rounded-md' autoPlay loop muted width={videoWidth}>
-        <source src={imgurIdToMp4(imgurId)} />
+        <source src={imgurIdToVideo(imgurId)} />
+        <source src={imgurIdToImgurVideo(imgurId)} />
       </video>
     );
   }
