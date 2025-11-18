@@ -62,8 +62,6 @@ export default function GenerateButton({
               );
               setOutput(generatedText);
               setGenerating(false);
-            } catch (error) {
-              // TODO: add logging
             } finally {
               setGenerating(false);
             }
