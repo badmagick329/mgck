@@ -60,7 +60,7 @@ export function randomChoice<T>(arr: T[]): T {
 export async function handleCopyToClipboard(text: string, toast: ToastType) {
   try {
     await copyToClipboard(text);
-    topRightDefaultToast('Copied to clipboard', toast);
+    topRightDefaultToast(`Copied ${text} to clipboard`, toast);
   } catch (error) {
     topRightDefaultToast('Failed to copy to clipboard', toast);
   }
