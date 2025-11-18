@@ -6,7 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
-import { cn, copyToClipboard } from '@/lib/utils';
+import { cn, handleCopyToClipboard } from '@/lib/utils';
 import { useEffect, useRef } from 'react';
 import { MdOutlineContentCopy } from 'react-icons/md';
 
@@ -68,9 +68,9 @@ function ShareButton({
           <Button
             variant='secondary'
             className={cn(
-              'text-bold bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+              'text-bold bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
             )}
-            onClick={() => handleCopy(url, toast)}
+            onClick={() => handleCopyToClipboard(url, toast)}
             ref={ref}
           >
             <span className='flex items-center gap-2'>
@@ -89,28 +89,4 @@ function ShareButton({
       </Tooltip>
     </TooltipProvider>
   );
-}
-
-// TODO: Refactor. use utility function
-async function handleCopy(url: string, toast: ToastType) {
-  try {
-    await copyToClipboard(url);
-    toast({
-      className: cn(
-        'fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]'
-      ),
-      variant: 'default',
-      description: `Copied ${url} to clipboard!`,
-      duration: 1500,
-    });
-  } catch {
-    toast({
-      className: cn(
-        'fixed right-0 top-0 flex md:right-4 md:top-4 md:max-w-[420px]'
-      ),
-      variant: 'default',
-      description: 'Failed to copy link to clipboard',
-      duration: 1500,
-    });
-  }
 }

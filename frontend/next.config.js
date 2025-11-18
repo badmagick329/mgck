@@ -1,3 +1,5 @@
+const allowedDevOrigins = process.env.ALLOWED_DEV_ORIGINS?.split(',') ?? [];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -16,27 +18,28 @@ const nextConfig = {
     },
   },
   output: 'standalone',
+  allowedDevOrigins,
   async headers() {
-      return [
-        {
-        source: "/api/:path*",
+    return [
+      {
+        source: '/api/:path*',
         headers: [
           {
-            key: "Access-Control-Allow-Origin",
-            value: "https://analytics.mgck.ink",
+            key: 'Access-Control-Allow-Origin',
+            value: 'https://analytics.mgck.ink',
           },
           {
-            key: "Access-Control-Allow-Methods",
-            value: "GET, POST, PUT, DELETE, OPTIONS",
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
           },
           {
-            key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization",
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
           },
         ],
       },
-      ]
-  }
+    ];
+  },
 };
 
 module.exports = nextConfig;
