@@ -1,4 +1,3 @@
-import { useGfyContext } from '@/app/gfys/_context/store';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -6,54 +5,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import useNavButton from '@/hooks/gfys/useNavButton';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { ImArrowLeft, ImArrowRight } from 'react-icons/im';
 
 export default function NavButton({
   direction,
 }: {
   direction: 'previous' | 'next';
 }) {
-  const Icon = direction === 'previous' ? ImArrowLeft : ImArrowRight;
-  const { nextGfyExists, previousGfyExists, goToNextGfy, goToPreviousGfy } =
-    useGfyContext();
-  const leftRef = useRef<HTMLButtonElement>(null);
-  const rightRef = useRef<HTMLButtonElement>(null);
-  const [disabledButton, setDisabledButton] = useState(false);
-  const router = useRouter();
+  const {
+    isDisabled,
+    shouldRender,
+    buttonRef,
+    Icon,
+    handleClick,
+    tooltipText,
+  } = useNavButton(direction);
 
-  useEffect(() => {
-    if (direction === 'next' && !nextGfyExists()) {
-      setDisabledButton(true);
-    }
-    if (direction === 'previous' && !previousGfyExists()) {
-      setDisabledButton(true);
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === 'l') {
-        rightRef.current?.click();
-      } else if (e.key === 'ArrowLeft' || e.key === 'h') {
-        leftRef.current?.click();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  if (!(nextGfyExists() || previousGfyExists())) {
+  if (!shouldRender) {
     return null;
-  }
-
-  let tooltipText = '';
-  if (direction === 'next') {
-    tooltipText = 'Next [Right Arrow] [l]';
-  } else {
-    tooltipText = 'Previous [Left Arrow] [h]';
   }
 
   return (
@@ -61,31 +31,14 @@ export default function NavButton({
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            disabled={disabledButton}
+            disabled={isDisabled}
             className={cn(
-              'text-bold bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+              'text-bold bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
             )}
             variant='secondary'
             size={'icon'}
-            ref={direction === 'previous' ? leftRef : rightRef}
-            onClick={(e) => {
-              (async () => {
-                try {
-                  setDisabledButton(true);
-                  let newGfyURL;
-                  if (direction === 'next') {
-                    newGfyURL = await goToNextGfy();
-                  } else {
-                    newGfyURL = await goToPreviousGfy();
-                  }
-                  if (newGfyURL) {
-                    router.replace(newGfyURL);
-                  }
-                } finally {
-                  setDisabledButton(false);
-                }
-              })();
-            }}
+            ref={buttonRef}
+            onClick={handleClick}
           >
             <Icon />
           </Button>
