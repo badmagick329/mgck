@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import GfyView from './_components/GfyView';
+import { imgurIdToThumbnail } from '@/lib/gfys';
 
 export async function generateMetadata({
   params,
@@ -37,7 +38,7 @@ export async function generateMetadata({
       ],
       images: [
         {
-          url: `https://i.imgur.com/${gfyDetail.imgur_id}.jpg`,
+          url: imgurIdToThumbnail(gfyDetail.imgur_id),
           width,
           height,
           alt: `${gfyDetail.title}`,
