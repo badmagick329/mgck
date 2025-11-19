@@ -2,7 +2,7 @@
 
 import { ParsedToken } from '@/lib/account/parsed-token';
 import { canUseShortener } from '@/lib/account/permissions';
-import { API_SHORTENER_URL, API_SHORTENER_URLS_V2 } from '@/lib/consts/urls';
+import { API_SHORTENER_URL, API_SHORTENER_URLS } from '@/lib/consts/urls';
 import {
   ShortenedUrl,
   shortenedUrlsByUsernameSchema,
@@ -24,7 +24,7 @@ export async function createShortenedUrl({
       error: 'You do not have permission to use the URL shortener',
     };
   }
-  const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URLS_V2}`);
+  const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URLS}`);
 
   const body = JSON.stringify({
     source_url: url,
@@ -76,7 +76,7 @@ export async function getAllShortenedUrls(): Promise<{
       error: 'You do not have permission to use the URL shortener',
     };
   }
-  const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URLS_V2}`);
+  const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URLS}`);
   apiUrl.searchParams.append('username', token.name());
 
   let res = await fetch(apiUrl, { next: { tags: ['shortened-urls'] } });
