@@ -13,4 +13,7 @@ urlpatterns = [
         name="target_url_api",
     ),
     path("api/urlshortener/urls", views.get_urls, name="get_urls"),
+    path("api/urlshortener", views.get_urls, name="urlshortener"),
+    path("api/urlshortener/v2/urls", views.urls, name="urls"),
+    path("api/urlshortener/v2/url/<str:short_id>", views.url, name="url"),
 ]

@@ -1,34 +1,50 @@
 'use client';
 
+import { deleteShortenedUrl } from '@/actions/urlshortener';
 import { useToast } from '@/components/ui/use-toast';
 import { ShortenedUrl } from '@/lib/types/shorten';
-import { copyToClipboard, topRightDefaultToast } from '@/lib/utils';
+import { handleCopyToClipboard } from '@/lib/utils';
 import {
   ChevronDown,
   Clipboard,
   ChevronUp,
   CornerRightDown,
+  Trash,
 } from 'lucide-react';
 import { useState } from 'react';
 
 const MAX_URL_DISPLAY_LENGTH = 120;
 const BUTTON_SIZE = 16;
 
-export default function UrlCard({ url }: { url: ShortenedUrl }) {
+export default function UrlCard({
+  shortenedUrl,
+  createdUrlOutput,
+  setCreatedUrlOutput,
+}: {
+  shortenedUrl: ShortenedUrl;
+  createdUrlOutput: string;
+  setCreatedUrlOutput: React.Dispatch<React.SetStateAction<string>>;
+}) {
   const [truncated, setTruncated] = useState(true);
+  const [isDeleteDisabled, setIsDeleteDisabled] = useState(false);
   const { toast } = useToast();
 
-  const shortUrl = `https://${window.location.hostname}/${url.short_id}`;
+  console.log();
+  const baseUrl =
+    process.env.NEXT_PUBLIC_DEV_URL || `https://${window.location.hostname}`;
+  const shortUrl = `${baseUrl}/${shortenedUrl.short_id}`;
   let sourceUrl = truncated
-    ? url.url.slice(0, MAX_URL_DISPLAY_LENGTH)
-    : url.url;
-  truncated && url.url.length > MAX_URL_DISPLAY_LENGTH && (sourceUrl += '...');
+    ? shortenedUrl.url.slice(0, MAX_URL_DISPLAY_LENGTH)
+    : shortenedUrl.url;
+  truncated &&
+    shortenedUrl.url.length > MAX_URL_DISPLAY_LENGTH &&
+    (sourceUrl += '...');
 
   return (
     <section className='flex max-w-[800px] flex-col rounded-md bg-secondary px-4 py-2'>
       <div className='flex justify-between text-xs'>
-        <span>Created: {formatDatetime(url.created)}</span>
-        <span>Number of Uses: {url.number_of_uses}</span>
+        <span>Created: {formatDatetime(shortenedUrl.created)}</span>
+        <span>Number of Uses: {shortenedUrl.number_of_uses}</span>
       </div>
       <div className='flex grow flex-col gap-2 py-6'>
         <div className='flex items-center justify-between'>
@@ -42,28 +58,45 @@ export default function UrlCard({ url }: { url: ShortenedUrl }) {
             </a>
             <CornerRightDown size={BUTTON_SIZE} />
           </div>
-          <button className='rounded-md bg-background/40 p-2 hover:bg-background/60'>
-            <Clipboard
+          <div className='flex gap-2'>
+            <button
+              className='rounded-md bg-background/40 p-2 hover:bg-background/60'
+              onClick={async () => await handleCopyToClipboard(shortUrl, toast)}
+            >
+              <Clipboard size={BUTTON_SIZE} />
+            </button>
+            <button
+              className='rounded-md bg-background/40 p-2 hover:bg-background/60'
+              disabled={isDeleteDisabled}
               onClick={async () => {
                 try {
-                  await copyToClipboard(shortUrl);
-                  topRightDefaultToast('Short URL copied to clipboard', toast);
-                } catch (e) {
-                  console.error('Failed to copy to clipboard', e);
+                  setIsDeleteDisabled(true);
+                  await deleteShortenedUrl({ code: shortenedUrl.short_id });
+                  const match = createdUrlOutput.match(/(?:.+\/)(.+)/);
+                  if (!match) {
+                    return;
+                  }
+                  const idFromUrl = match[1];
+                  if (idFromUrl === shortenedUrl.short_id) {
+                    setCreatedUrlOutput('');
+                  }
+                } finally {
+                  setIsDeleteDisabled(false);
                 }
               }}
-              size={BUTTON_SIZE}
-            />
-          </button>
+            >
+              <Trash size={BUTTON_SIZE} />
+            </button>
+          </div>
         </div>
         <a
           className='break-words pr-2 font-semibold text-orange-600 hover:underline dark:text-orange-400'
           target='_blank'
-          href={url.url}
+          href={shortenedUrl.url}
         >
           {sourceUrl}
         </a>
-        {url.url.length > MAX_URL_DISPLAY_LENGTH && (
+        {shortenedUrl.url.length > MAX_URL_DISPLAY_LENGTH && (
           <abbr className='self-end' title={truncated ? 'Expand' : 'Collapse'}>
             <button
               className='rounded-md bg-background/40 px-2 py-1 hover:bg-background/60'
@@ -79,7 +112,10 @@ export default function UrlCard({ url }: { url: ShortenedUrl }) {
         )}
       </div>
       <span className='self-start text-xs'>
-        Last Accessed: {url.accessed ? formatDatetime(url.accessed) : 'Never'}
+        Last Accessed:{' '}
+        {shortenedUrl.accessed
+          ? formatDatetime(shortenedUrl.accessed)
+          : 'Never'}
       </span>
     </section>
   );

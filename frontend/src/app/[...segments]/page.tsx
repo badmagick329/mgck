@@ -1,4 +1,4 @@
-import { fetchShortenedUrl } from '@/actions/urlshortener';
+import { getShortenedUrl } from '@/actions/urlshortener';
 import { notFound, redirect } from 'next/navigation';
 
 export default async function ShortCodePage({
@@ -11,7 +11,7 @@ export default async function ShortCodePage({
     return notFound();
   }
   const shortcode = segments[0];
-  const result = await fetchShortenedUrl(shortcode);
+  const result = await getShortenedUrl(shortcode);
   if (!result.url) {
     return notFound();
   }
