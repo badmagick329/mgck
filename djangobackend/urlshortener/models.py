@@ -4,9 +4,8 @@ import string
 from datetime import datetime
 
 from django.db import models
-from dotenv import load_dotenv
-
 from djangobackend.settings import BASE_URL
+from dotenv import load_dotenv
 
 MAX_ID = 255
 load_dotenv()
@@ -58,7 +57,7 @@ class ShortURL(models.Model):
     def redirect_url(self) -> str:
         return f"{BASE_URL}/{self.short_id}"
 
-    def visit(self) -> None:
+    def register_visit(self) -> None:
         self.number_of_uses += 1
         self.accessed = datetime.now()
         self.save()
