@@ -2,14 +2,16 @@
 
 import { ShortenedUrl } from '@/lib/types/shorten';
 import UrlCard from './UrlCard';
-import { CgSpinner } from 'react-icons/cg';
+import React from 'react';
 
 export default function ShortenedUrlsDisplay({
   urlsResponse,
-  urlsResponseLoaded,
+  createdUrlOutput,
+  setCreatedUrlOutput,
 }: {
   urlsResponse: ShortenedUrl[] | null;
-  urlsResponseLoaded: boolean;
+  createdUrlOutput: string;
+  setCreatedUrlOutput: React.Dispatch<React.SetStateAction<string>>;
 }) {
   if (urlsResponse === null) {
     return <div>Failed to fetch URLs</div>;
@@ -20,36 +22,25 @@ export default function ShortenedUrlsDisplay({
         Your Shortened URLs
       </h2>
       <section className='grid-auto-fill-md w-full gap-2 px-2 py-4 text-foreground/80 dark:text-foreground'>
-        <Placeholder
-          urlsResponseLoaded={urlsResponseLoaded}
-          urlsResponseLength={urlsResponse.length}
-        />
-        {urlsResponse.map((url) => (
-          <UrlCard key={url.short_id} url={url} />
+        <Placeholder urlsResponseLength={urlsResponse.length} />
+        {urlsResponse.map((shortenedUrl) => (
+          <UrlCard
+            key={shortenedUrl.short_id}
+            shortenedUrl={shortenedUrl}
+            createdUrlOutput={createdUrlOutput}
+            setCreatedUrlOutput={setCreatedUrlOutput}
+          />
         ))}
       </section>
     </article>
   );
 }
 
-function Placeholder({
-  urlsResponseLoaded,
-  urlsResponseLength,
-}: {
-  urlsResponseLoaded: boolean;
-  urlsResponseLength: number;
-}) {
-  if (urlsResponseLoaded && urlsResponseLength === 0) {
+function Placeholder({ urlsResponseLength }: { urlsResponseLength: number }) {
+  if (urlsResponseLength === 0) {
     return (
       <span className='text-foreground/60'>
         It appears that you have not created any shortened URLs yet 🧐
-      </span>
-    );
-  }
-  if (!urlsResponseLoaded && urlsResponseLength === 0) {
-    return (
-      <span>
-        <CgSpinner size={16} className='animate-spin' />
       </span>
     );
   }

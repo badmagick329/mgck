@@ -1,10 +1,9 @@
 'use client';
 
-import { shortenUrl } from '@/actions/urlshortener';
+import { createShortenedUrl } from '@/actions/urlshortener';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
-import { fetchAllUrls } from '@/actions/urlshortener';
 import { ShortenedUrl } from '@/lib/types/shorten';
 import ResponseOutput from './ResponseOutput';
 import Navbar from '@/app/_components/Navbar';
@@ -13,14 +12,16 @@ import ShortenedUrlsDisplay from './ShortenedUrlsDisplay';
 
 const MAX_CODE_CHARS = 255;
 
-export default function UrlShortenerPage({ username }: { username: string }) {
+export default function UrlShortenerPage({
+  shortenedUrls,
+}: {
+  shortenedUrls: ShortenedUrl[] | null;
+}) {
   const [url, setUrl] = useState('');
-  const [urlsResponse, setUrlsResponse] = useState<ShortenedUrl[] | null>([]);
   const [customCode, setCustomCode] = useState('');
   const [error, setError] = useState('');
   const [output, setOutput] = useState('');
   const [codeCountText, setCodeCountText] = useState('');
-  const [urlsResponseLoaded, setUrlsResponseLoaded] = useState(false);
 
   useEffect(() => {
     if (customCode.trim() === '') {
@@ -31,14 +32,8 @@ export default function UrlShortenerPage({ username }: { username: string }) {
     setCodeCountText(`${remainingChars}/${MAX_CODE_CHARS}`);
   }, [customCode]);
 
-  useEffect(() => {
-    (async () => {
-      await fetchUrlsResponse(username, setUrlsResponse, setUrlsResponseLoaded);
-    })();
-  }, []);
-
   async function submitForm() {
-    const result = await shortenUrl({ url, customCode, username });
+    const result = await createShortenedUrl({ url, customCode });
 
     if (result.error) {
       setError(result.error);
@@ -51,7 +46,6 @@ export default function UrlShortenerPage({ username }: { username: string }) {
     setError('');
     setUrl('');
     setOutput(result.url);
-    await fetchUrlsResponse(username, setUrlsResponse, setUrlsResponseLoaded);
   }
 
   return (
@@ -110,21 +104,12 @@ export default function UrlShortenerPage({ username }: { username: string }) {
         </form>
         {output && <ResponseOutput output={output} />}
         <ShortenedUrlsDisplay
-          urlsResponse={urlsResponse}
-          urlsResponseLoaded={urlsResponseLoaded}
+          urlsResponse={shortenedUrls}
+          createdUrlOutput={output}
+          setCreatedUrlOutput={setOutput}
         />
       </article>
       <Footer />
     </main>
   );
-}
-
-async function fetchUrlsResponse(
-  username: string,
-  setUrlsResponse: React.Dispatch<React.SetStateAction<ShortenedUrl[] | null>>,
-  setUrlsResponseLoaded: React.Dispatch<React.SetStateAction<boolean>>
-) {
-  const result = await fetchAllUrls(username);
-  result.urls ? setUrlsResponse(result.urls) : setUrlsResponse(null);
-  setUrlsResponseLoaded(true);
 }
