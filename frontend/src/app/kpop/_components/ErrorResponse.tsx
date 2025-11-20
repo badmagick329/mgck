@@ -1,12 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { KPOP_BASE } from '@/lib/consts/urls';
-import { ServerError } from '@/lib/types/kpop';
 import { notFound } from 'next/navigation';
 
 export default function ErrorResponse({
   serverError,
 }: {
-  serverError: ServerError;
+  serverError: string;
 }) {
   if (serverError === 'Page Not Found') {
     return notFound();

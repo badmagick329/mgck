@@ -3,11 +3,7 @@
 import { fetchComebacks } from '@/actions/kpop';
 import Navbar from '@/app/_components/Navbar';
 import ScrollIndicator from '@/app/kpop/_components/ScrollIndicator';
-import {
-  ComebackResponse,
-  ComebacksResult,
-  ServerError,
-} from '@/lib/types/kpop';
+import { ComebackResponse, ComebacksResult } from '@/lib/types/kpop';
 import { searchParamsToFormData } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -23,7 +19,7 @@ export default function KpopPage() {
     useState<ComebacksResult | null>(null);
   const [comebacks, setComebacks] = useState<ComebackResponse[]>([]);
   const searchParams = useSearchParams();
-  const [serverError, setServerError] = useState<ServerError | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {

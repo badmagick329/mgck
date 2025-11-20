@@ -1,14 +1,14 @@
 'use server';
 
 import { API_KPOP } from '@/lib/consts/urls';
-import { ComebacksResult, ServerError } from '@/lib/types/kpop';
+import { ComebacksResult, ComebacksResultSchema } from '@/lib/types/kpop';
 import { validDateStringOrNull } from '@/lib/utils';
 
 const BASE_URL = process.env.BASE_URL;
 
 export async function fetchComebacks(
   formData?: FormData
-): Promise<ComebacksResult | ServerError> {
+): Promise<ComebacksResult | string> {
   if (!formData) {
     formData = new FormData();
   }
@@ -24,17 +24,13 @@ export async function fetchComebacks(
   });
   if (res.ok) {
     const data = await res.json();
-    // TODO: Validation
-    return data as ComebacksResult;
-  } else {
-    if (res.status >= 500) {
+    const parsed = ComebacksResultSchema.safeParse(data);
+    if (!parsed.success) {
       return 'Server Error';
-    } else if (res.status === 404) {
-      return 'Page Not Found';
-    } else {
-      return 'Unknown Error';
     }
+    return parsed.data;
   }
+  return res.status === 404 ? 'Page Not Found' : 'Server Error';
 }
 
 function preparedFormValues(formData: FormData) {
