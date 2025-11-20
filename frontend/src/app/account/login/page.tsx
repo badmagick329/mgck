@@ -1,10 +1,4 @@
 'use client';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { useRouter } from 'next/navigation';
-import { ACCOUNT_USER_HOME } from '@/lib/consts/urls';
-import { useForm } from 'react-hook-form';
 import {
   Form,
   FormControl,
@@ -22,77 +16,25 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'motion/react';
-import { IoIosCloseCircle, IoIosEye, IoIosEyeOff } from 'react-icons/io';
-
-const FormSchema = z
-  .object({
-    username: z.string().min(3, {
-      message: 'Username must be at least 3 characters.',
-    }),
-    password: z.string().min(8, {
-      message: 'Password must be at least 8 characters.',
-    }),
-    password2: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.password2 && data.password2 !== data.password) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Passwords don't match",
-        path: ['password2'],
-      });
-    }
-  });
+import { IoIosCloseCircle } from 'react-icons/io';
+import useLogin from '@/hooks/account/useLogin';
 
 export default function Login() {
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    isRegistering,
+    handleSubmit,
+    form,
+    handleShowPassword,
+    passwordType,
+    ShowPasswordIcon,
+    isSubmitDisabled,
+    errorResponse,
+    resetForm,
+    resetErrors,
+  } = useLogin();
 
-  const router = useRouter();
-  const { loginUser, registerUser, errorResponse, setErrorResponse } =
-    useAccount();
-
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      username: '',
-      password: '',
-      password2: '',
-    },
-    mode: 'onSubmit',
-  });
-
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
-    setIsSubmitting(true);
-    try {
-      const { username, password } = data;
-
-      if (isRegistering) {
-        const registered = await registerUser({ username, password });
-
-        if (!registered) {
-          return;
-        }
-
-        const loggedIn = await loginUser({ username, password });
-        if (loggedIn) {
-          router.push(ACCOUNT_USER_HOME);
-        }
-        return;
-      }
-
-      const loggedIn = await loginUser({ username, password });
-      if (loggedIn) {
-        router.push(ACCOUNT_USER_HOME);
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
   const headerText = isRegistering ? 'Register' : 'Login';
   const descriptionText = isRegistering
     ? 'Register for an account'
@@ -102,10 +44,7 @@ export default function Login() {
     <article className='grow py-4'>
       <Card className='min-w-[360px] border-foreground/40 bg-secondary/60'>
         <Form {...form}>
-          <form
-            className='grid grid-cols-1 gap-4'
-            onSubmit={form.handleSubmit(onSubmit)}
-          >
+          <form className='grid grid-cols-1 gap-4' onSubmit={handleSubmit}>
             <CardHeader>
               <CardTitle>{headerText}</CardTitle>
               <CardDescription>{descriptionText}</CardDescription>
@@ -137,22 +76,18 @@ export default function Login() {
                     <FormControl>
                       <div className='relative'>
                         <Input
-                          type={showPassword ? 'text' : 'password'}
+                          type={passwordType}
                           autoComplete={'off'}
                           placeholder='Password'
                           {...field}
                         />
                         <button
                           type='button'
-                          onClick={() => setShowPassword(!showPassword)}
+                          onClick={handleShowPassword}
                           className='absolute inset-y-0 right-0 flex items-center pr-3'
                           tabIndex={-1}
                         >
-                          {showPassword ? (
-                            <IoIosEyeOff size={20} />
-                          ) : (
-                            <IoIosEye size={20} />
-                          )}
+                          <ShowPasswordIcon />
                         </button>
                       </div>
                     </FormControl>
@@ -189,7 +124,7 @@ export default function Login() {
                             <FormLabel>Confirm Password</FormLabel>
                             <FormControl>
                               <Input
-                                type={showPassword ? 'text' : 'password'}
+                                type={passwordType}
                                 autoComplete={'off'}
                                 placeholder='Confirm Password'
                                 {...field}
@@ -206,29 +141,25 @@ export default function Login() {
             </CardContent>
             <CardFooter className='grid grid-cols-1 gap-2'>
               <div className='flex justify-between'>
-                <Button color='zinc-950' type='submit' disabled={isSubmitting}>
+                <Button
+                  color='zinc-950'
+                  type='submit'
+                  disabled={isSubmitDisabled}
+                >
                   {isRegistering ? 'Register' : 'Login'}
                 </Button>
                 <Button
                   type='button'
                   variant='outline'
-                  disabled={isSubmitting}
-                  onClick={() => {
-                    form.reset({
-                      username: '',
-                      password: '',
-                      password2: '',
-                    });
-                    setIsRegistering(!isRegistering);
-                    setErrorResponse([]);
-                  }}
+                  disabled={isSubmitDisabled}
+                  onClick={resetForm}
                 >
                   {isRegistering ? 'Back to Login' : 'Sign Up'}
                 </Button>
               </div>
               <ErrorMessages
                 errorResponse={errorResponse}
-                resetErrorResponse={() => setErrorResponse([])}
+                resetErrorResponse={resetErrors}
               />
             </CardFooter>
           </form>
