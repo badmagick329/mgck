@@ -3,8 +3,9 @@
 import { API_GFYS, API_GFY_ACCOUNTS, API_GFY_VIEWS } from '@/lib/consts/urls';
 import {
   AccountsResponse,
+  AccountsResponseSchema,
   GfyDetailResponse,
-  GfyResponse,
+  GfyResponseSchema,
 } from '@/lib/types/gfys';
 import { validDateStringOrNull } from '@/lib/utils';
 
@@ -39,9 +40,17 @@ export async function searchGfys(formData: FormData) {
       'Content-Type': 'application/json',
     },
   });
-  const data = await res.json();
-  // TODO: Validation
-  return data as GfyResponse;
+  try {
+    const data = await res.json();
+    const parsed = GfyResponseSchema.safeParse(data);
+    if (!parsed.success) {
+      console.error('GfyResponseSchema validation failed', parsed.error);
+      return null;
+    }
+    return parsed.data;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchGfy(videoId: string) {
@@ -68,9 +77,17 @@ export async function fetchAccounts() {
       'Content-Type': 'application/json',
     },
   });
-  const data = await res.json();
-  // TODO: Validation
-  return data as AccountsResponse;
+  try {
+    const data = await res.json();
+    const parsed = AccountsResponseSchema.safeParse(data);
+    if (!parsed.success) {
+      console.error('AccountsResponseSchema validation failed', parsed.error);
+      return null;
+    }
+    return parsed.data;
+  } catch {
+    return null;
+  }
 }
 
 export async function addGfyView(videoUrl: string) {
