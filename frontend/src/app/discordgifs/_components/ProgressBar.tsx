@@ -9,6 +9,7 @@ const maxXPos = (barWidth - ballSize) / scale;
 export default function ProgressBar({
   target,
   current,
+  iterationProgress,
   conversionState,
 }: {
   target?: SizeInfo;
@@ -49,6 +50,7 @@ export default function ProgressBar({
         />
         <Ball xPos={xPos} conversionState={conversionState} />
       </div>
+      <IterationProgress progress={iterationProgress} />
     </div>
   );
 }
@@ -170,15 +172,18 @@ function calcLeftOffset(
 }
 
 function IterationProgress({ progress }: { progress: number }) {
-  // NOTE: FFmpeg.wasm progress is broken right now. Waiting for the fix
-  return null;
-
   return (
     <div
-      style={{
-        width: `${progress * 100}%`,
-      }}
-      className='absolute h-4 bg-blue-300'
-    ></div>
+      style={{ width: `${barWidth}px` }}
+      className='mt-1 h-1.5 overflow-hidden rounded-full bg-gray-700/30'
+    >
+      <div
+        style={{
+          width: `${Math.min(100, Math.max(0, progress * 100))}%`,
+          transition: 'width 0.05s ease-out',
+        }}
+        className='h-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.6)]'
+      />
+    </div>
   );
 }
