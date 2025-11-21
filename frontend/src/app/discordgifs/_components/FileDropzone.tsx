@@ -5,40 +5,28 @@ import {
   FilesState,
   filesStateReducer,
 } from '@/lib/discordgifs/files-state';
-import { FFmpegManager } from '@/lib/discordgifs/ffmpeg-manager';
 import clsx from 'clsx';
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import ConvertedFile from './ConvertedFile';
 import { convert } from '@/lib/discordgifs';
-
-const maxFiles = 6;
-const acceptedImageTypes = ['.gif'];
-const acceptedVideoTypes = [
-  '.mp4',
-  '.mkv',
-  '.webm',
-  '.mov',
-  '.avi',
-  '.flv',
-  '.ts',
-  '.m4v',
-];
-const acceptedTypes = {
-  'image/*': acceptedImageTypes,
-  'video/*': acceptedVideoTypes,
-};
+import {
+  acceptedImageTypes,
+  acceptedTypes,
+  acceptedVideoTypes,
+  maxFiles,
+} from '@/lib/consts/discordgifs';
+import { useFFmpeg } from '@/hooks/discordgifs/useFFmpeg';
+import { useFilePaste } from '@/hooks/discordgifs/useFilePaste';
 
 export default function FileDropzone() {
-  const [isLoaded, setIsLoaded] = useState<boolean | null>(null);
+  const { ffmpegRef, isLoaded } = useFFmpeg();
   const [filesState, dispatch] = useReducer(filesStateReducer, {});
   const [dropError, setDropError] = useState<string | null>(null);
   const [dragEnter, setDragEnter] = useState<boolean>(false);
-  const [buttonEnabled, setButtonEnabled] = useState(false);
   const conversionInProgressRef = useRef(false);
 
-  const ffmpegRef = useRef<FFmpegManager>(new FFmpegManager());
   const { acceptedFiles, getRootProps, getInputProps, fileRejections } =
     useDropzone({
       accept: acceptedTypes,
@@ -71,17 +59,6 @@ export default function FileDropzone() {
     0
   );
 
-  // TODO: Holy useEffects!
-  useEffect(() => {
-    (async () => {
-      await ffmpegRef.current.load();
-      setIsLoaded(true);
-    })();
-    return () => {
-      ffmpegRef.current.terminate();
-    };
-  }, []);
-
   useEffect(() => {
     if (acceptedFiles.length === 0) return;
 
@@ -103,80 +80,44 @@ export default function FileDropzone() {
     setDropError(null);
   }, [acceptedFiles]);
 
-  useEffect(() => {
-    // TODO: wtf? Refactor?
-    const handlePaste = (event: ClipboardEvent) => {
-      const pastedItems = event.clipboardData?.items;
-      if (!pastedItems) return;
-
-      const fileItems = [];
-
-      for (let i = 0; i < pastedItems.length; i++) {
-        const item = pastedItems[i];
-
-        if (item.kind === 'file') {
-          const file = item.getAsFile();
-          if (file) {
-            const fileExtension = `.${file.name.split('.').pop()}`;
-            const isAcceptedType = [
-              ...acceptedImageTypes,
-              ...acceptedVideoTypes,
-            ].includes(fileExtension);
-
-            if (
-              isAcceptedType &&
-              (file.type.startsWith('image/') || file.type.startsWith('video/'))
-            ) {
-              fileItems.push(file);
-            }
-          }
-        }
+  const onFilesPasted = useCallback(
+    (fileItems: File[]) => {
+      if (totalFiles + 1 > maxFiles) {
+        setDropError(`You can only upload up to ${maxFiles} files.`);
+        return;
       }
-
-      if (fileItems.length > 0) {
-        if (totalFiles + 1 > maxFiles) {
-          setDropError(`You can only upload up to ${maxFiles} files.`);
-          return;
+      const newFiles = [];
+      for (let i = 0; i < fileItems.length; i++) {
+        if (totalFiles + i + 1 > maxFiles) {
+          break;
         }
-        const newFiles = [];
-        for (let i = 0; i < fileItems.length; i++) {
-          if (totalFiles + i + 1 > maxFiles) {
-            break;
-          }
-          newFiles.push(fileItems[i]);
-        }
-        dispatch({
-          type: 'addFiles',
-          payload: { files: newFiles },
-        });
-
-        setDropError(null);
+        newFiles.push(fileItems[i]);
       }
-    };
+      dispatch({
+        type: 'addFiles',
+        payload: { files: newFiles },
+      });
 
-    window.addEventListener('paste', handlePaste);
-    return () => {
-      window.removeEventListener('paste', handlePaste);
-    };
-  }, [totalFiles]);
+      setDropError(null);
+    },
+    [totalFiles]
+  );
 
-  useEffect(() => {
-    const anyProcessing = Object.values(filesState).some((d) =>
-      ['busy', 'optimizing', 'converting'].includes(d.conversionState)
-    );
+  useFilePaste(onFilesPasted);
 
-    const hasIdleFiles = Object.values(filesState).some(
-      (d) => d.conversionState === 'idle'
-    );
+  const anyProcessing = Object.values(filesState).some((d) =>
+    ['busy', 'optimizing', 'converting'].includes(d.conversionState)
+  );
 
-    const shouldBeEnabled =
-      !conversionInProgressRef.current &&
-      !anyProcessing &&
-      totalFiles > 0 &&
-      hasIdleFiles;
+  const hasIdleFiles = Object.values(filesState).some(
+    (d) => d.conversionState === 'idle'
+  );
 
-    setButtonEnabled(shouldBeEnabled);
-  }, [filesState, totalFiles]);
+  const buttonEnabled =
+    !conversionInProgressRef.current &&
+    !anyProcessing &&
+    totalFiles > 0 &&
+    hasIdleFiles;
 
   if (isLoaded === false) {
     return (
