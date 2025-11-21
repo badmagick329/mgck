@@ -23,9 +23,9 @@ export default function RootLayout({
     <html lang='en' suppressHydrationWarning>
       <head>
         <Script
-          src='https://analytics.mgck.ink/js/script.js'
+          src='/ingest/js/script.js'
           data-domain='mgck.ink'
-          data-api='https://analytics.mgck.ink/api/event'
+          data-api='/ingest/api/event'
         />
       </head>
       <body className={`${font.className} tracking-wide`}>
