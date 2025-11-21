@@ -76,7 +76,7 @@ export default function useLogin() {
 
   return {
     isRegistering,
-    handleSubmit: () => form.handleSubmit(onSubmit),
+    handleSubmit: form.handleSubmit(onSubmit),
     form,
     handleShowPassword: () => setShowPassword(!showPassword),
     passwordType: showPassword ? 'text' : 'password',
