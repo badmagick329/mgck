@@ -133,6 +133,9 @@ const setDataFromParams = async (
 ) => {
   const listURL = createURL(GFYS_BASE, params.toString());
   const resp = await searchGfys(formDataFromSearchParams(params));
+  if (resp === null) {
+    return null;
+  }
   const d = parseGfyResponse(resp);
   setData(d);
   setGfyViewData({
@@ -163,6 +166,9 @@ const setDataFromURL = async (
     setGfyViewData,
     startIndex
   );
+  if (newData === null) {
+    return null;
+  }
   const newIndex = startIndex === 0 ? 0 : newData.gfys.length - 1;
   const newGfyURL = `${GFYS_BASE}/${newData.gfys[newIndex].imgurId}`;
   return newGfyURL;
@@ -203,6 +209,9 @@ const goToNextGfy = async (
       setData,
       setGfyViewData
     );
+    if (newData === null) {
+      return null;
+    }
     return `${GFYS_BASE}/${newData.gfys[0].imgurId}`;
   }
 
@@ -229,6 +238,9 @@ const goToPreviousGfy = async (
         setData,
         setGfyViewData
       );
+      if (newData === null) {
+        return null;
+      }
       return `${GFYS_BASE}/${newData.gfys[newData.gfys.length - 1].imgurId}`;
     }
     return null;

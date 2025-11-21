@@ -199,6 +199,9 @@ async function initializeAccounts(
   setSelectedAccount: Dispatch<SetStateAction<string>>
 ) {
   const resp = await fetchAccounts();
+  if (resp === null) {
+    return;
+  }
   const newAccounts = ['All', ...resp.accounts];
   setAccounts(newAccounts);
   const accountParam = (searchParams.get('account') || '').trim() as string;
