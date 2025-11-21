@@ -151,7 +151,10 @@ export class FFmpegManager {
     this.updateFileConversionStateCallback &&
       this.updateFileConversionStateCallback('busy');
     const data = await this.ffmpeg.readFile(newName);
-    const blob = new Blob([data], { type: 'video/mp4' });
+    const blob = new Blob(
+      [data instanceof Uint8Array ? new Uint8Array(data) : data],
+      { type: 'video/mp4' }
+    );
     this.fileConfig.file = new File([blob], newName);
     this.fileConfig.optimizedInput = true;
   }
@@ -238,7 +241,10 @@ export class FFmpegManager {
       }
       // console.log('executed', ret);
       const data = await this.ffmpeg.readFile(outputName);
-      blob = new Blob([data], { type: this.ext().slice(1) });
+      blob = new Blob(
+        [data instanceof Uint8Array ? new Uint8Array(data) : data],
+        { type: this.ext().slice(1) }
+      );
       this.newSizeCallback && this.newSizeCallback(blob.size);
       size = calculator.getNewFrameSize(blob.size);
       // console.log(`iteration: ${++iteration}. size`, size);
