@@ -24,8 +24,8 @@ export type GfyParsedResponse = z.infer<typeof GfyParsedResponseSchema>;
 export const GfyResultSchema = z.object({
   imgur_id: z.string(),
   imgur_title: z.string(),
-  gfy_id: z.string(),
-  gfy_title: z.string(),
+  gfy_id: z.string().nullable(),
+  gfy_title: z.string().nullable(),
   date: z.string(),
   account: z.string(),
   tags: z.array(z.string()),
