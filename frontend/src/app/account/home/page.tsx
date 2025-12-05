@@ -59,7 +59,7 @@ export default async function Home() {
           {
             name: 'URL Shortener',
             href: '/shorten',
-            description: 'Shorten your URLs and track their usage',
+            description: 'Shorten your URLs and track their useage',
           },
         ]}
       />
