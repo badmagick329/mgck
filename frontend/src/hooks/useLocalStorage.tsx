@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function useLocalStorage<T>(
   key: string,
@@ -8,12 +8,14 @@ function useLocalStorage<T>(
   value: T;
   updateValue: (newValue: T | ((value: T) => T)) => void;
   removeValue: () => void;
+  isLoaded: boolean;
 } {
   if (typeof window === 'undefined') {
     return {
       value: initialValue,
       updateValue: () => {},
       removeValue: () => {},
+      isLoaded: false,
     };
   }
 
@@ -30,6 +32,10 @@ function useLocalStorage<T>(
       return initialValue;
     }
   });
+  const [isLoaded, setIsLoaded] = useState(false);
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   const updateValue = (newValue: T | ((value: T) => T)) => {
     try {
@@ -55,6 +61,7 @@ function useLocalStorage<T>(
     value,
     updateValue,
     removeValue,
+    isLoaded,
   };
 }
 
