@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 function useLocalStorage<T>(
   key: string,
-  initialValue: T
+  initialValue: T | (() => T)
 ): {
   value: T;
   updateValue: (newValue: T | ((value: T) => T)) => void;
@@ -12,7 +12,7 @@ function useLocalStorage<T>(
 } {
   if (typeof window === 'undefined') {
     return {
-      value: initialValue,
+      value: initialValue instanceof Function ? initialValue() : initialValue,
       updateValue: () => {},
       removeValue: () => {},
       isLoaded: false,
@@ -23,6 +23,8 @@ function useLocalStorage<T>(
   try {
     storedValue = localStorage.getItem(key);
   } catch (error) {}
+  initialValue =
+    initialValue instanceof Function ? initialValue() : initialValue;
 
   const [value, setValue] = useState<T>(() => {
     try {
