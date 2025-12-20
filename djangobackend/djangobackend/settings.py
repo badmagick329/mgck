@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "kpopcomebacks",
     "gfys",
     "emojify",
+    "milestones",
 ]
 
 MIDDLEWARE = [
