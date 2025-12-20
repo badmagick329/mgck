@@ -11,9 +11,11 @@ import { ChevronDownIcon } from 'lucide-react';
 export default function DatetimePicker({
   date,
   setDate,
+  disabled,
 }: {
   date: Date | undefined;
   setDate: React.Dispatch<React.SetStateAction<undefined | Date>>;
+  disabled: boolean;
 }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -29,6 +31,7 @@ export default function DatetimePicker({
               variant='outline'
               id='date'
               className='h-10 w-full justify-between font-normal'
+              disabled={disabled}
             >
               {date ? date.toLocaleDateString() : 'Select date'}
               <ChevronDownIcon />
@@ -45,6 +48,7 @@ export default function DatetimePicker({
               setOpen(false);
             }}
             endMonth={new Date(2150, 0)}
+            disabled={disabled}
           />
         </PopoverContent>
       </Popover>

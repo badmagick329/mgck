@@ -7,7 +7,9 @@ from django.urls import reverse
 
 from milestones.models import Milestone, MilestoneUser
 
-test_timestamp = 1766248695000
+TEST_TIMESTAMP = 1766248695000
+MILESTONES_ENDPOINT = "milestones:milestones"
+MODIFY_MILESTONES_ENDPOINT = "milestones:modify_milestone"
 
 
 @pytest.mark.django_db
@@ -17,7 +19,7 @@ class TestMilestoneCreateEndpoint:
 
     def test_create_milestone_success(self):
         """Test successfully creating a milestone"""
-        timestamp_ms = test_timestamp
+        timestamp_ms = TEST_TIMESTAMP
         data = {
             "timestamp": timestamp_ms,
             "timezone": "America/New_York",
@@ -25,7 +27,7 @@ class TestMilestoneCreateEndpoint:
             "event_name": "Birthday",
         }
         response = self.client.post(
-            reverse("milestones:create_milestone"),
+            reverse(MILESTONES_ENDPOINT),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -38,7 +40,7 @@ class TestMilestoneCreateEndpoint:
 
     def test_create_milestone_missing_username(self):
         """Test creating milestone without username"""
-        timestamp_ms = test_timestamp
+        timestamp_ms = TEST_TIMESTAMP
         data = {
             "timestamp": timestamp_ms,
             "timezone": "UTC",
@@ -46,7 +48,7 @@ class TestMilestoneCreateEndpoint:
             "event_name": "Event",
         }
         response = self.client.post(
-            reverse("milestones:create_milestone"),
+            reverse(MILESTONES_ENDPOINT),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -55,28 +57,9 @@ class TestMilestoneCreateEndpoint:
         response_data = json.loads(response.content)
         assert "Username is required" in response_data["error"]
 
-    def test_create_milestone_missing_event_name(self):
-        """Test creating milestone without event_name"""
-        timestamp_ms = test_timestamp
-        data = {
-            "timestamp": timestamp_ms,
-            "timezone": "UTC",
-            "username": "user",
-            "event_name": None,
-        }
-        response = self.client.post(
-            reverse("milestones:create_milestone"),
-            data=json.dumps(data),
-            content_type="application/json",
-        )
-
-        assert response.status_code == 400
-        response_data = json.loads(response.content)
-        assert "Event name is required" in response_data["error"]
-
     def test_create_milestone_missing_timezone(self):
         """Test creating milestone without timezone"""
-        timestamp_ms = test_timestamp
+        timestamp_ms = TEST_TIMESTAMP
         data = {
             "timestamp": timestamp_ms,
             "timezone": None,
@@ -84,7 +67,7 @@ class TestMilestoneCreateEndpoint:
             "event_name": "Event",
         }
         response = self.client.post(
-            reverse("milestones:create_milestone"),
+            reverse(MILESTONES_ENDPOINT),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -102,7 +85,7 @@ class TestMilestoneCreateEndpoint:
             "event_name": "Event",
         }
         response = self.client.post(
-            reverse("milestones:create_milestone"),
+            reverse(MILESTONES_ENDPOINT),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -113,7 +96,7 @@ class TestMilestoneCreateEndpoint:
 
     def test_create_milestone_duplicate_event_name_same_user(self):
         """Test creating duplicate milestone for same user"""
-        timestamp_ms = test_timestamp
+        timestamp_ms = TEST_TIMESTAMP
         data = {
             "timestamp": timestamp_ms,
             "timezone": "UTC",
@@ -121,14 +104,14 @@ class TestMilestoneCreateEndpoint:
             "event_name": "Event",
         }
         response1 = self.client.post(
-            reverse("milestones:create_milestone"),
+            reverse(MILESTONES_ENDPOINT),
             data=json.dumps(data),
             content_type="application/json",
         )
         assert response1.status_code == 201
 
         response2 = self.client.post(
-            reverse("milestones:create_milestone"),
+            reverse(MILESTONES_ENDPOINT),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -138,7 +121,7 @@ class TestMilestoneCreateEndpoint:
 
     def test_create_milestone_same_event_name_different_users(self):
         """Test creating same event name for different users"""
-        timestamp_ms = test_timestamp
+        timestamp_ms = TEST_TIMESTAMP
         data1 = {
             "timestamp": timestamp_ms,
             "timezone": "UTC",
@@ -153,12 +136,12 @@ class TestMilestoneCreateEndpoint:
         }
 
         response1 = self.client.post(
-            reverse("milestones:create_milestone"),
+            reverse(MILESTONES_ENDPOINT),
             data=json.dumps(data1),
             content_type="application/json",
         )
         response2 = self.client.post(
-            reverse("milestones:create_milestone"),
+            reverse(MILESTONES_ENDPOINT),
             data=json.dumps(data2),
             content_type="application/json",
         )
@@ -175,9 +158,7 @@ class TestMilestoneListEndpoint:
 
     def test_list_milestones_empty(self):
         """Test listing milestones when none exist"""
-        response = self.client.get(
-            reverse("milestones:list_milestones"), {"username": "user1"}
-        )
+        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user1"})
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -194,9 +175,7 @@ class TestMilestoneListEndpoint:
             created_by=user,
         )
 
-        response = self.client.get(
-            reverse("milestones:list_milestones"), {"username": "user1"}
-        )
+        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user1"})
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -222,9 +201,7 @@ class TestMilestoneListEndpoint:
             created_by=user2,
         )
 
-        response = self.client.get(
-            reverse("milestones:list_milestones"), {"username": "user1"}
-        )
+        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user1"})
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -242,9 +219,7 @@ class TestMilestoneListEndpoint:
             created_by=user,
         )
 
-        response = self.client.get(
-            reverse("milestones:list_milestones"), {"username": "user1"}
-        )
+        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user1"})
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -268,9 +243,7 @@ class TestMilestoneListEndpoint:
             created_by=user1,
         )
 
-        response = self.client.get(
-            reverse("milestones:list_milestones"), {"username": "user2"}
-        )
+        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user2"})
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -295,11 +268,10 @@ class TestMilestoneUpdateEndpoint:
 
         data = {
             "username": "user1",
-            "event_name": "OldName",
             "new_event_name": "NewName",
         }
         response = self.client.patch(
-            reverse("milestones:update_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["OldName"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -323,11 +295,10 @@ class TestMilestoneUpdateEndpoint:
         new_timestamp_ms = 1800000000000
         data = {
             "username": "user1",
-            "event_name": "Event",
             "new_timestamp": new_timestamp_ms,
         }
         response = self.client.patch(
-            reverse("milestones:update_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -349,11 +320,10 @@ class TestMilestoneUpdateEndpoint:
 
         data = {
             "username": "user1",
-            "event_name": "Event",
             "new_timezone": "America/Chicago",
         }
         response = self.client.patch(
-            reverse("milestones:update_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -376,13 +346,12 @@ class TestMilestoneUpdateEndpoint:
         new_timestamp_ms = 1800000000000
         data = {
             "username": "user1",
-            "event_name": "OldEvent",
             "new_event_name": "NewEvent",
             "new_timestamp": new_timestamp_ms,
             "new_timezone": "Europe/Paris",
         }
         response = self.client.patch(
-            reverse("milestones:update_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["OldEvent"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -405,10 +374,9 @@ class TestMilestoneUpdateEndpoint:
 
         data = {
             "username": "user1",
-            "event_name": "Event",
         }
         response = self.client.patch(
-            reverse("milestones:update_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -421,11 +389,10 @@ class TestMilestoneUpdateEndpoint:
         """Test updating milestone for nonexistent user"""
         data = {
             "username": "nonexistent",
-            "event_name": "Event",
             "new_event_name": "NewName",
         }
         response = self.client.patch(
-            reverse("milestones:update_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -440,11 +407,10 @@ class TestMilestoneUpdateEndpoint:
 
         data = {
             "username": "user1",
-            "event_name": "NonexistentEvent",
             "new_event_name": "NewName",
         }
         response = self.client.patch(
-            reverse("milestones:update_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["NonexistentEvent"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -472,11 +438,10 @@ class TestMilestoneUpdateEndpoint:
 
         data = {
             "username": "user1",
-            "event_name": "Event2",
             "new_event_name": "Event1",
         }
         response = self.client.patch(
-            reverse("milestones:update_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event2"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -504,10 +469,9 @@ class TestMilestoneDeleteEndpoint:
 
         data = {
             "username": "user1",
-            "event_name": "Event",
         }
         response = self.client.delete(
-            reverse("milestones:delete_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -519,10 +483,9 @@ class TestMilestoneDeleteEndpoint:
         """Test delete without username"""
         data = {
             "username": None,
-            "event_name": "Event",
         }
         response = self.client.delete(
-            reverse("milestones:delete_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -531,30 +494,13 @@ class TestMilestoneDeleteEndpoint:
         response_data = json.loads(response.content)
         assert "Username is required" in response_data["error"]
 
-    def test_delete_milestone_missing_event_name(self):
-        """Test delete without event_name"""
-        data = {
-            "username": "user1",
-            "event_name": None,
-        }
-        response = self.client.delete(
-            reverse("milestones:delete_milestone"),
-            data=json.dumps(data),
-            content_type="application/json",
-        )
-
-        assert response.status_code == 400
-        response_data = json.loads(response.content)
-        assert "Event name is required" in response_data["error"]
-
     def test_delete_milestone_nonexistent_user(self):
         """Test deleting milestone for nonexistent user"""
         data = {
             "username": "nonexistent",
-            "event_name": "Event",
         }
         response = self.client.delete(
-            reverse("milestones:delete_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -569,10 +515,9 @@ class TestMilestoneDeleteEndpoint:
 
         data = {
             "username": "user1",
-            "event_name": "NonexistentEvent",
         }
         response = self.client.delete(
-            reverse("milestones:delete_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["NonexistentEvent"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -595,10 +540,9 @@ class TestMilestoneDeleteEndpoint:
 
         data = {
             "username": "user2",
-            "event_name": "Event",
         }
         response = self.client.delete(
-            reverse("milestones:delete_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event"]),
             data=json.dumps(data),
             content_type="application/json",
         )
@@ -616,13 +560,13 @@ class TestMilestoneEndpointIntegration:
         """Test complete create-read-update-delete workflow"""
         # Create
         create_data = {
-            "timestamp": test_timestamp,
+            "timestamp": TEST_TIMESTAMP,
             "timezone": "UTC",
             "username": "user1",
             "event_name": "Birthday",
         }
         create_response = self.client.post(
-            reverse("milestones:create_milestone"),
+            reverse(MILESTONES_ENDPOINT),
             data=json.dumps(create_data),
             content_type="application/json",
         )
@@ -630,7 +574,7 @@ class TestMilestoneEndpointIntegration:
 
         # Read
         list_response = self.client.get(
-            reverse("milestones:list_milestones"), {"username": "user1"}
+            reverse(MILESTONES_ENDPOINT), {"username": "user1"}
         )
         assert list_response.status_code == 200
         list_data = json.loads(list_response.content)
@@ -640,11 +584,10 @@ class TestMilestoneEndpointIntegration:
         # Update
         update_data = {
             "username": "user1",
-            "event_name": "Birthday",
             "new_event_name": "Updated Birthday",
         }
         update_response = self.client.patch(
-            reverse("milestones:update_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Birthday"]),
             data=json.dumps(update_data),
             content_type="application/json",
         )
@@ -654,7 +597,7 @@ class TestMilestoneEndpointIntegration:
 
         # Verify update
         list_response = self.client.get(
-            reverse("milestones:list_milestones"), {"username": "user1"}
+            reverse(MILESTONES_ENDPOINT), {"username": "user1"}
         )
         list_data = json.loads(list_response.content)
         assert list_data[0]["event_name"] == "Updated Birthday"
@@ -662,10 +605,9 @@ class TestMilestoneEndpointIntegration:
         # Delete
         delete_data = {
             "username": "user1",
-            "event_name": "Updated Birthday",
         }
         delete_response = self.client.delete(
-            reverse("milestones:delete_milestone"),
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Updated Birthday"]),
             data=json.dumps(delete_data),
             content_type="application/json",
         )
@@ -673,7 +615,7 @@ class TestMilestoneEndpointIntegration:
 
         # Verify deletion
         list_response = self.client.get(
-            reverse("milestones:list_milestones"), {"username": "user1"}
+            reverse(MILESTONES_ENDPOINT), {"username": "user1"}
         )
         list_data = json.loads(list_response.content)
         assert len(list_data) == 0

@@ -17,6 +17,8 @@ export default function useMilestones() {
     updateValue: setLocalMilestones,
     isLoaded,
   } = useLocalStorage<Milestone[]>('milestones', []);
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const milestones = localMilstones;
   const setMilestones = setLocalMilestones;
 
@@ -52,27 +54,40 @@ export default function useMilestones() {
     }
 
     setName('');
-    setMilestones([
-      ...milestones,
-      {
-        name: trimmedName,
-        timestamp: utcTimestamp,
-        timezone,
-      },
-    ]);
+    setMilestones(
+      [
+        ...milestones,
+        {
+          name: trimmedName,
+          timestamp: utcTimestamp,
+          timezone,
+        },
+      ].sort((a, b) => a.timestamp - b.timestamp)
+    );
     return toast({
       title: 'Milestone added',
       description: `Milestone "${trimmedName}" added for ${date.toLocaleDateString()}.`,
       duration: toastDuration,
     });
   };
+
   const removeMilestone = (m: Milestone) => {
     setMilestones(
-      milestones.filter(
-        (milestone) => milestoneToKey(m) !== milestoneToKey(milestone)
-      )
+      milestones
+        .filter((milestone) => milestoneToKey(m) !== milestoneToKey(milestone))
+        .sort((a, b) => a.timestamp - b.timestamp)
     );
   };
+
+  const syncMilestones = async () => {
+    console.log('syncing');
+    setIsSyncing(true);
+    await new Promise((r) => setTimeout(r, 2000));
+    setIsSyncing(false);
+    console.log('done');
+  };
+
+  const listMilestones = async () => {};
 
   return {
     date,
@@ -80,11 +95,15 @@ export default function useMilestones() {
     name,
     setName,
     milestones,
-    addCurrentMilestone,
-    removeMilestone,
     getLocalDateDisplay,
     isLoaded,
     milestoneToKey,
+    isSyncing,
+    syncMilestones,
+    db: {
+      removeMilestone,
+      addCurrentMilestone,
+    },
   };
 }
 

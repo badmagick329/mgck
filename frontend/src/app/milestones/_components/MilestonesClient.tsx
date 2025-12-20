@@ -15,11 +15,12 @@ export default function MilestonesClient({ username }: { username: string }) {
     name,
     setName,
     milestones,
-    addCurrentMilestone,
-    removeMilestone,
     getLocalDateDisplay,
     isLoaded,
     milestoneToKey,
+    isSyncing,
+    syncMilestones,
+    db,
   } = useMilestones();
 
   if (!isLoaded) {
@@ -31,6 +32,15 @@ export default function MilestonesClient({ username }: { username: string }) {
       <Navbar />
       <div className='flex w-full grow flex-col bg-background-kp pt-8'>
         <h3 className='text-center text-3xl font-bold'>'{username}'</h3>
+        <div className='flex justify-center'>
+          <Button
+            variant={'secondary'}
+            disabled={isSyncing}
+            onClick={syncMilestones}
+          >
+            Sync
+          </Button>
+        </div>
         <div className='mx-auto flex w-full max-w-lg flex-col gap-4'>
           {milestones.length > 0 ? (
             milestones.map((m) => {
@@ -46,7 +56,8 @@ export default function MilestonesClient({ username }: { username: string }) {
                   </p>
                   <Button
                     variant={'destructive'}
-                    onClick={() => removeMilestone(m)}
+                    onClick={() => db.removeMilestone(m)}
+                    disabled={isSyncing}
                   >
                     Remove
                   </Button>
@@ -64,12 +75,18 @@ export default function MilestonesClient({ username }: { username: string }) {
               type='text'
               onChange={(e) => setName(e.target.value || '')}
               value={name}
+              disabled={isSyncing}
             />
-            <DatetimePicker date={date} setDate={setDate} />
+            <DatetimePicker
+              date={date}
+              setDate={setDate}
+              disabled={isSyncing}
+            />
             <Button
               className='h-10'
               variant={'secondary'}
-              onClick={addCurrentMilestone}
+              onClick={db.addCurrentMilestone}
+              disabled={isSyncing}
             >
               Add
             </Button>

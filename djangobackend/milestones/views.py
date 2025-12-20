@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from milestones.apps import MilestonesConfig
 from milestones.utils import (
@@ -11,8 +12,48 @@ from milestones.utils import (
 app_name = MilestonesConfig.name
 
 
-@api_view(["POST"])
-def create_milestone(request):
+@api_view(["GET", "POST"])
+def milestones(request):
+    if request.method == "GET":
+        return handle_list(request)
+
+    if request.method == "POST":
+        return handle_post(request)
+    return Response({"error": "Method not allowed"}, status=405)
+
+
+@api_view(["PATCH", "DELETE"])
+def modify_milestone(request, event_name):
+    if request.method == "PATCH":
+        return handle_update(request, event_name)
+
+    if request.method == "DELETE":
+        return handle_delete(request, event_name)
+
+    return Response({"error": "Method not allowed"}, status=405)
+
+
+def handle_list(request):
+    """
+    List all milestones.
+
+    Returns:
+    [
+        {
+            "id": int,
+            "event_name": str,
+            "event_datetime_utc": datetime,
+            "event_timezone": str,
+            "created": datetime
+        },
+        ...
+    ]
+    """
+    username = request.GET.get("username", "").strip()
+    return get_all_milestones_response(username)
+
+
+def handle_post(request):
     """
     Create a new milestone.
 
@@ -33,29 +74,7 @@ def create_milestone(request):
     return create_milestone_response(timestamp, timezone, username, event_name)
 
 
-@api_view(["GET"])
-def list_milestones(request):
-    """
-    List all milestones.
-
-    Returns:
-    [
-        {
-            "id": int,
-            "event_name": str,
-            "event_datetime_utc": datetime,
-            "event_timezone": str,
-            "created": datetime
-        },
-        ...
-    ]
-    """
-    username = request.GET.get("username", "").strip()
-    return get_all_milestones_response(username)
-
-
-@api_view(["PATCH"])
-def update_milestone_endpoint(request):
+def handle_update(request, event_name: str):
     """
     Update a milestone by username and event_name.
 
@@ -72,7 +91,6 @@ def update_milestone_endpoint(request):
     """
     data = request.data
     username = data.get("username")
-    event_name = data.get("event_name")
     new_event_name = data.get("new_event_name")
     new_timestamp = data.get("new_timestamp")
     new_timezone = data.get("new_timezone")
@@ -82,8 +100,7 @@ def update_milestone_endpoint(request):
     )
 
 
-@api_view(["DELETE"])
-def delete_milestone_endpoint(request):
+def handle_delete(request, event_name: str):
     """
     Delete a milestone by username and event_name.
 
@@ -95,6 +112,5 @@ def delete_milestone_endpoint(request):
     """
     data = request.data
     username = data.get("username")
-    event_name = data.get("event_name")
 
     return delete_milestone_response(username, event_name)
