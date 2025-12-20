@@ -2,28 +2,67 @@
 
 import { useToast } from '@/components/ui/use-toast';
 import useLocalStorage from '@/hooks/useLocalStorage';
-import { Milestone } from '@/lib/types/milestones';
-import { useState } from 'react';
+import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
+import { useEffect, useState } from 'react';
 import { fromZonedTime, format } from 'date-fns-tz';
+import {
+  createMilestoneAction,
+  listMilestonesAction,
+  removeMilestoneAction,
+} from '@/actions/milestones';
+import { serverMilestoneToClient } from '@/lib/milestones';
+import { useRouter } from 'next/navigation';
 
 const toastDuration = 4000;
 
-export default function useMilestones() {
+export default function useMilestones(username: string) {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [name, setName] = useState('');
   const { toast } = useToast();
   const {
-    value: localMilstones,
-    updateValue: setLocalMilestones,
+    value: milestones,
+    updateValue: setMilestones,
     isLoaded,
-  } = useLocalStorage<Milestone[]>('milestones', []);
+  } = useLocalStorage<ClientMilestone[]>('milestones', []);
+  const {
+    value: isUsingServer,
+    updateValue: setIsUsingServer,
+    isLoaded: isMilestonesSyncedLoaded,
+  } = useLocalStorage('milestonesOnServer', false);
+
   const [isSyncing, setIsSyncing] = useState(false);
+  const router = useRouter();
 
-  const milestones = localMilstones;
-  const setMilestones = setLocalMilestones;
+  useEffect(() => {
+    if (!isUsingServer) {
+      return;
+    }
 
-  const addCurrentMilestone = () => {
-    if (!name || !date) {
+    if (!username) {
+      router.push('/account');
+      return;
+    }
+
+    (async () => {
+      try {
+        setIsSyncing(true);
+        const milestonesFromServer = await listMilestonesAction();
+        if (milestonesFromServer.data) {
+          const clientMilestones = milestonesFromServer.data.map((m) =>
+            serverMilestoneToClient(m)
+          );
+          setMilestones(clientMilestones);
+        } else {
+          setIsUsingServer(false);
+        }
+      } finally {
+        setIsSyncing(false);
+      }
+    })();
+  }, []);
+
+  const addCurrentMilestone = async () => {
+    if (!name.trim() || !date) {
       return toast({
         variant: 'destructive',
         title: 'Missing fields',
@@ -31,78 +70,246 @@ export default function useMilestones() {
         duration: toastDuration,
       });
     }
-    const trimmedName = name.trim();
-    if (milestones.map((m) => m.name).includes(trimmedName)) {
+    const exists = milestones.filter((m) => m.name === name.trim()).length > 0;
+    if (exists) {
       return toast({
         variant: 'destructive',
-        title: 'Milestone already exists',
-        description: `A milestone with the name "${trimmedName}" already exists.`,
+        title: 'Duplicate milestone',
+        description: 'A milestone with this name already exists.',
         duration: toastDuration,
       });
     }
 
-    const { utcDate, timezone } = getUtcDate(date);
-    const utcTimestamp = utcDate.getTime();
-    const diffInDays = getDiffInDays(utcDate);
-    if (diffInDays < 1) {
-      return toast({
-        variant: 'destructive',
-        title: 'Invalid date',
-        description: 'Please select a date in the future.',
-        duration: toastDuration,
-      });
-    }
-
-    setName('');
-    setMilestones(
-      [
-        ...milestones,
-        {
-          name: trimmedName,
-          timestamp: utcTimestamp,
+    if (isUsingServer) {
+      try {
+        setIsSyncing(true);
+        const { utcDate, timezone } = getUtcDate(date);
+        const currentMilestone = {
+          name,
+          timestamp: utcDate.getTime(),
           timezone,
-        },
-      ].sort((a, b) => a.timestamp - b.timestamp)
-    );
-    return toast({
-      title: 'Milestone added',
-      description: `Milestone "${trimmedName}" added for ${date.toLocaleDateString()}.`,
-      duration: toastDuration,
-    });
+        };
+        const parsed = clientMilestoneSchema.safeParse(currentMilestone);
+        if (parsed.error) {
+          return toast({
+            variant: 'destructive',
+            title: 'Invalid milestone',
+            description: `${parsed.error}`,
+            duration: toastDuration,
+          });
+        }
+        const result = await createMilestoneAction(parsed.data);
+        if (result.error) {
+          return toast({
+            variant: 'destructive',
+            title: 'Error adding milestone',
+            description: `${result.error}`,
+            duration: toastDuration,
+          });
+        }
+
+        const clientMilestone = serverMilestoneToClient(result.data!);
+        setName('');
+        setMilestones(
+          [
+            ...milestones,
+            {
+              name: clientMilestone.name,
+              timestamp: clientMilestone.timestamp,
+              timezone,
+            },
+          ].sort((a, b) => a.timestamp - b.timestamp)
+        );
+        return toast({
+          title: 'Milestone added',
+          description: `Milestone "${clientMilestone.name}" added for ${new Date(clientMilestone.timestamp).toLocaleDateString()}.`,
+          duration: toastDuration,
+        });
+      } finally {
+        setIsSyncing(false);
+      }
+    } else {
+      try {
+        setIsSyncing(true);
+        const { utcDate, timezone } = getUtcDate(date);
+        const currentMilestone = {
+          name,
+          timestamp: utcDate.getTime(),
+          timezone,
+        };
+        const parsed = clientMilestoneSchema.safeParse(currentMilestone);
+        if (parsed.error) {
+          return toast({
+            variant: 'destructive',
+            title: 'Invalid milestone',
+            description: `${parsed.error}`,
+            duration: toastDuration,
+          });
+        }
+
+        const clientMilestone = parsed.data;
+
+        setName('');
+        setMilestones(
+          [
+            ...milestones,
+            {
+              name: clientMilestone.name,
+              timestamp: clientMilestone.timestamp,
+              timezone,
+            },
+          ].sort((a, b) => a.timestamp - b.timestamp)
+        );
+        return toast({
+          title: 'Milestone added',
+          description: `Milestone "${clientMilestone.name}" added for ${new Date(clientMilestone.timestamp).toLocaleDateString()}.`,
+          duration: toastDuration,
+        });
+      } finally {
+        setIsSyncing(false);
+      }
+    }
   };
 
-  const removeMilestone = (m: Milestone) => {
-    setMilestones(
-      milestones
-        .filter((milestone) => milestoneToKey(m) !== milestoneToKey(milestone))
-        .sort((a, b) => a.timestamp - b.timestamp)
-    );
+  const removeMilestone = async (milestoneName: string) => {
+    if (isUsingServer) {
+      try {
+        setIsSyncing(true);
+        const result = await removeMilestoneAction(milestoneName);
+        if (result.error) {
+          return toast({
+            variant: 'destructive',
+            title: 'Error removing milestone',
+            description: `${result.error}`,
+            duration: toastDuration,
+          });
+        }
+
+        setMilestones(
+          milestones
+            .filter((m) => milestoneName !== m.name)
+            .sort((a, b) => a.timestamp - b.timestamp)
+        );
+      } finally {
+        setIsSyncing(false);
+        return;
+      }
+    } else {
+      setIsSyncing(true);
+      setMilestones(
+        milestones
+          .filter((m) => milestoneName !== m.name)
+          .sort((a, b) => a.timestamp - b.timestamp)
+      );
+      setIsSyncing(false);
+    }
   };
 
   const syncMilestones = async () => {
-    console.log('syncing');
-    setIsSyncing(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setIsSyncing(false);
-    console.log('done');
+    try {
+      setIsSyncing(true);
+      const safeMilestones = [] as ClientMilestone[];
+      milestones.forEach((m) => {
+        const parsed = clientMilestoneSchema.safeParse(m);
+        if (parsed.error) {
+          return toast({
+            variant: 'destructive',
+            title: 'Invalid milestone in local storage',
+            description: `Please fix or remove the milestone "${m.name}" before syncing.`,
+            duration: toastDuration,
+          });
+        }
+        safeMilestones.push(parsed.data);
+      });
+      const serverMilestones = await listMilestonesAction();
+      if (serverMilestones.error) {
+        return toast({
+          variant: 'destructive',
+          title: 'Error syncing milestones',
+          description: `${serverMilestones.error}`,
+          duration: toastDuration,
+        });
+      }
+      const serverMilestoneNames = serverMilestones.data!.map(
+        (m) => m.event_name
+      );
+      console.log(serverMilestoneNames);
+      const newMilestones = safeMilestones.filter(
+        (m) => !serverMilestoneNames.includes(m.name)
+      );
+      console.log(`found ${newMilestones.length} milestones that server needs`);
+
+      const clientMilestoneNames = safeMilestones.map((m) => m.name);
+      const milestoneNamesToRemove = serverMilestoneNames.filter(
+        (n) => !clientMilestoneNames.includes(n)
+      );
+      console.log('TO REMOVE:');
+      console.log(milestoneNamesToRemove);
+      if (newMilestones.length === 0 && milestoneNamesToRemove.length === 0) {
+        setIsUsingServer(true);
+        return;
+      }
+
+      const createErrorResults = [] as Awaited<
+        ReturnType<typeof createMilestoneAction>
+      >[];
+      for (const m of newMilestones) {
+        const result = await createMilestoneAction(m);
+        if (result.error) {
+          createErrorResults.push(result);
+        }
+      }
+      const deleteErrorResults = [] as Awaited<
+        ReturnType<typeof removeMilestoneAction>
+      >[];
+      for (const name of milestoneNamesToRemove) {
+        const result = await removeMilestoneAction(name);
+        if (result.error) {
+          deleteErrorResults.push(result);
+        }
+      }
+
+      createErrorResults.forEach((r) => console.error(r.error));
+      deleteErrorResults.forEach((r) => console.error(r.error));
+
+      const milestonesFromServer = await listMilestonesAction();
+      if (milestonesFromServer.data) {
+        setMilestones(
+          milestonesFromServer.data.map((m) => serverMilestoneToClient(m))
+        );
+      }
+      setIsUsingServer(true);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
-  const listMilestones = async () => {};
+  const unlinkFromServer = () => {
+    try {
+      setIsSyncing(true);
+      setIsUsingServer(false);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   return {
-    date,
-    setDate,
-    name,
-    setName,
-    milestones,
+    state: {
+      date,
+      setDate,
+      name,
+      setName,
+      isLoaded: isLoaded && isMilestonesSyncedLoaded,
+      isSyncing,
+      milestones,
+      isUsingServer,
+      unlinkFromServer,
+    },
     getLocalDateDisplay,
-    isLoaded,
-    milestoneToKey,
-    isSyncing,
-    syncMilestones,
     db: {
       removeMilestone,
       addCurrentMilestone,
+      syncMilestones,
     },
   };
 }
@@ -122,8 +329,6 @@ const getUtcDate = (date: Date) => {
     timezone,
   };
 };
-
-const milestoneToKey = (m: Milestone) => `${m.name}-${m.timestamp}`;
 
 const getLocalDateDisplay = (date: Date, timezone: string) =>
   format(date, 'yyyy-MM-dd', {

@@ -1,20 +1,19 @@
 import { z } from 'zod';
-export type Milestone = { name: string; timestamp: number; timezone: string };
 
-export const milestoneSchema = z.object({
+export const serverMilestoneSchema = z.object({
   id: z.number(),
-  event_name: z.string(),
-  event_datetime_utc: z.string(),
-  event_timezone: z.string(),
-  created: z.string(),
+  event_name: z.string().trim().nonempty(),
+  event_datetime_utc: z.string().trim().nonempty(),
+  event_timezone: z.string().trim().nonempty(),
+  created: z.string().trim().nonempty(),
 });
-export type MilestoneFromServer = z.infer<typeof milestoneSchema>;
+export type ServerMilestone = z.infer<typeof serverMilestoneSchema>;
 
-export const milestoneListSchema = z.array(milestoneSchema);
+export const serverMilestoneListSchema = z.array(serverMilestoneSchema);
 
 export const clientMilestoneSchema = z.object({
-  name: z.string(),
-  timestamp: z.number(),
+  name: z.string().trim().nonempty(),
+  timestamp: z.number().nonnegative(),
   timezone: z.string(),
 });
 export type ClientMilestone = z.infer<typeof clientMilestoneSchema>;

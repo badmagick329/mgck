@@ -9,55 +9,43 @@ import useMilestones from '@/hooks/milestones/useMilestones';
 import Navbar from '@/app/_components/Navbar';
 
 export default function MilestonesClient({ username }: { username: string }) {
-  const {
-    date,
-    setDate,
-    name,
-    setName,
-    milestones,
-    getLocalDateDisplay,
-    isLoaded,
-    milestoneToKey,
-    isSyncing,
-    syncMilestones,
-    db,
-  } = useMilestones();
+  const { state, getLocalDateDisplay, db } = useMilestones(username);
 
-  if (!isLoaded) {
+  if (!state.isLoaded) {
     return <Loading />;
   }
 
   return (
     <div className='flex min-h-dvh flex-col justify-center'>
       <Navbar />
-      <div className='flex w-full grow flex-col bg-background-kp pt-8'>
-        <h3 className='text-center text-3xl font-bold'>'{username}'</h3>
-        <div className='flex justify-center'>
+      <div className='flex w-full grow flex-col gap-8 bg-background-kp pt-8'>
+        <div className='flex justify-center gap-2'>
           <Button
             variant={'secondary'}
-            disabled={isSyncing}
-            onClick={syncMilestones}
+            disabled={state.isSyncing}
+            onClick={
+              state.isUsingServer ? state.unlinkFromServer : db.syncMilestones
+            }
           >
-            Sync
+            {state.isUsingServer
+              ? 'Unlink from server'
+              : 'Save changes to server'}
           </Button>
         </div>
         <div className='mx-auto flex w-full max-w-lg flex-col gap-4'>
-          {milestones.length > 0 ? (
-            milestones.map((m) => {
+          {state.milestones.length > 0 ? (
+            state.milestones.map((m) => {
               const utcDate = new Date(m.timestamp);
               return (
-                <div
-                  key={milestoneToKey(m)}
-                  className='flex justify-between gap-2'
-                >
+                <div key={m.name} className='flex justify-between gap-2'>
                   <p>
                     {m.name} - {getLocalDateDisplay(utcDate, m.timezone)} - (
                     {getDiffInDays(utcDate)})
                   </p>
                   <Button
                     variant={'destructive'}
-                    onClick={() => db.removeMilestone(m)}
-                    disabled={isSyncing}
+                    onClick={() => db.removeMilestone(m.name)}
+                    disabled={state.isSyncing}
                   >
                     Remove
                   </Button>
@@ -69,24 +57,24 @@ export default function MilestonesClient({ username }: { username: string }) {
           )}
         </div>
         <div className='flex w-full flex-col items-center gap-2'>
-          <h3>Pick a thing</h3>
+          <h3>Enter a thing</h3>
           <div className='flex w-full max-w-lg flex-col items-center gap-2'>
             <Input
               type='text'
-              onChange={(e) => setName(e.target.value || '')}
-              value={name}
-              disabled={isSyncing}
+              onChange={(e) => state.setName(e.target.value || '')}
+              value={state.name}
+              disabled={state.isSyncing}
             />
             <DatetimePicker
-              date={date}
-              setDate={setDate}
-              disabled={isSyncing}
+              date={state.date}
+              setDate={state.setDate}
+              disabled={state.isSyncing}
             />
             <Button
               className='h-10'
               variant={'secondary'}
               onClick={db.addCurrentMilestone}
-              disabled={isSyncing}
+              disabled={state.isSyncing}
             >
               Add
             </Button>
