@@ -30,7 +30,7 @@ urlpatterns = [
     path("v0gfys/", include("gfys.urls")),
     path("emojify/", include("emojify.urls")),
     path("api/", include("api.urls")),
-    path("milestones/", include("milestones.urls")),
+    path("milestones_api/", include("milestones.urls")),
     path("", include("urlshortener.urls")),
 ]
 

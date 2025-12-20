@@ -45,13 +45,13 @@ def list_milestones(request):
             "event_name": str,
             "event_datetime_utc": datetime,
             "event_timezone": str,
-            "created_by": str (username),
             "created": datetime
         },
         ...
     ]
     """
-    return get_all_milestones_response()
+    username = request.GET.get("username", "").strip()
+    return get_all_milestones_response(username)
 
 
 @api_view(["PATCH"])
