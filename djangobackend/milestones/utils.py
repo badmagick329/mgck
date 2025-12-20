@@ -77,16 +77,15 @@ def create_milestone_response(
     )
 
 
-def get_all_milestones() -> Result[list[dict[str, Any]], MilestoneError]:
+def get_all_milestones(username: str) -> Result[list[dict[str, Any]], MilestoneError]:
     try:
-        milestones = Milestone.objects.all()
+        milestones = Milestone.objects.filter(created_by__username=username)
         milestones_data = [
             {
                 "id": milestone.id,  # type: ignore
                 "event_name": milestone.event_name,
                 "event_datetime_utc": milestone.event_datetime_utc,
                 "event_timezone": milestone.event_timezone,
-                "created_by": milestone.created_by.username,
                 "created": milestone.created,
             }
             for milestone in milestones
@@ -96,8 +95,8 @@ def get_all_milestones() -> Result[list[dict[str, Any]], MilestoneError]:
         return Err(MilestoneError(f"Error fetching milestones: {str(e)}", 500))
 
 
-def get_all_milestones_response():
-    result = get_all_milestones()
+def get_all_milestones_response(username: str):
+    result = get_all_milestones(username)
     if result.is_err:
         error = result.unwrap_err()
         return Response({"error": error.error}, status=error.status)

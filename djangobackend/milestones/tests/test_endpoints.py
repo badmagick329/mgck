@@ -34,7 +34,6 @@ class TestMilestoneCreateEndpoint:
         response_data = json.loads(response.content)
         assert response_data["event_name"] == "Birthday"
         assert response_data["event_timezone"] == "America/New_York"
-        assert response_data["created_by"] == "testuser"
         assert Milestone.objects.count() == 1
 
     def test_create_milestone_missing_username(self):
@@ -176,7 +175,9 @@ class TestMilestoneListEndpoint:
 
     def test_list_milestones_empty(self):
         """Test listing milestones when none exist"""
-        response = self.client.get(reverse("milestones:list_milestones"))
+        response = self.client.get(
+            reverse("milestones:list_milestones"), {"username": "user1"}
+        )
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -193,13 +194,14 @@ class TestMilestoneListEndpoint:
             created_by=user,
         )
 
-        response = self.client.get(reverse("milestones:list_milestones"))
+        response = self.client.get(
+            reverse("milestones:list_milestones"), {"username": "user1"}
+        )
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
         assert len(response_data) == 1
         assert response_data[0]["event_name"] == "Event1"
-        assert response_data[0]["created_by"] == "user1"
 
     def test_list_milestones_multiple(self):
         """Test listing multiple milestones"""
@@ -220,12 +222,14 @@ class TestMilestoneListEndpoint:
             created_by=user2,
         )
 
-        response = self.client.get(reverse("milestones:list_milestones"))
+        response = self.client.get(
+            reverse("milestones:list_milestones"), {"username": "user1"}
+        )
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
-        assert len(response_data) == 2
-        assert {m["event_name"] for m in response_data} == {"Event1", "Event2"}
+        assert len(response_data) == 1
+        assert response_data[0]["event_name"] == "Event1"
 
     def test_list_milestones_includes_required_fields(self):
         """Test that list response includes all required fields"""
@@ -238,7 +242,9 @@ class TestMilestoneListEndpoint:
             created_by=user,
         )
 
-        response = self.client.get(reverse("milestones:list_milestones"))
+        response = self.client.get(
+            reverse("milestones:list_milestones"), {"username": "user1"}
+        )
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -247,8 +253,28 @@ class TestMilestoneListEndpoint:
         assert "event_name" in milestone
         assert "event_datetime_utc" in milestone
         assert "event_timezone" in milestone
-        assert "created_by" in milestone
         assert "created" in milestone
+
+    def test_list_milestones_empty_for_user_with_no_milestones(self):
+        """Test that user with no milestones gets empty list"""
+        user1 = MilestoneUser.objects.create(username="user1")
+        MilestoneUser.objects.create(username="user2")
+        dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
+
+        Milestone.objects.create(
+            event_timezone="UTC",
+            event_datetime_utc=dt,
+            event_name="User1Event",
+            created_by=user1,
+        )
+
+        response = self.client.get(
+            reverse("milestones:list_milestones"), {"username": "user2"}
+        )
+
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data == []
 
 
 @pytest.mark.django_db
@@ -603,7 +629,9 @@ class TestMilestoneEndpointIntegration:
         assert create_response.status_code == 201
 
         # Read
-        list_response = self.client.get(reverse("milestones:list_milestones"))
+        list_response = self.client.get(
+            reverse("milestones:list_milestones"), {"username": "user1"}
+        )
         assert list_response.status_code == 200
         list_data = json.loads(list_response.content)
         assert len(list_data) == 1
@@ -625,7 +653,9 @@ class TestMilestoneEndpointIntegration:
         assert update_response_data["event_name"] == "Updated Birthday"
 
         # Verify update
-        list_response = self.client.get(reverse("milestones:list_milestones"))
+        list_response = self.client.get(
+            reverse("milestones:list_milestones"), {"username": "user1"}
+        )
         list_data = json.loads(list_response.content)
         assert list_data[0]["event_name"] == "Updated Birthday"
 
@@ -642,6 +672,8 @@ class TestMilestoneEndpointIntegration:
         assert delete_response.status_code == 204
 
         # Verify deletion
-        list_response = self.client.get(reverse("milestones:list_milestones"))
+        list_response = self.client.get(
+            reverse("milestones:list_milestones"), {"username": "user1"}
+        )
         list_data = json.loads(list_response.content)
         assert len(list_data) == 0
