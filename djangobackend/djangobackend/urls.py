@@ -30,10 +30,9 @@ urlpatterns = [
     path("v0gfys/", include("gfys.urls")),
     path("emojify/", include("emojify.urls")),
     path("api/", include("api.urls")),
+    path("milestones/", include("milestones.urls")),
     path("", include("urlshortener.urls")),
 ]
 
 if not CONTAINERED:
-    urlpatterns += static(
-        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
-    )
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -41,7 +41,6 @@ def get_urls(request):
 
 @api_view(["GET", "POST"])
 def urls(request):
-    print(request.method)
     if request.method == "GET":
         username = request.GET.get("username", "").strip()
         return get_shortened_urls_list_response(username)
