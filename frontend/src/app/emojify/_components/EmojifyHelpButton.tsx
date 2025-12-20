@@ -19,7 +19,7 @@ export default function EmojifyHelpButton() {
         className='justify-self-start no-underline'
         title={`${buttonText} section`}
       >
-        <Button variant={'plain'} className='h-6 px-2 py-0'>
+        <Button variant={'ghost'} className='h-6 px-2 py-0'>
           {buttonText}
         </Button>
       </abbr>
@@ -32,7 +32,7 @@ export default function EmojifyHelpButton() {
       className='justify-self-start no-underline'
       title={`${buttonText} section`}
     >
-      <Button variant={'plain'} className='h-6 px-2 py-0' onClick={toggleHelp}>
+      <Button variant={'ghost'} className='h-6 px-2 py-0' onClick={toggleHelp}>
         {buttonText}
       </Button>
     </abbr>
