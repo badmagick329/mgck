@@ -14,6 +14,7 @@ export const API_GFY_VIEWS = '/api/gfy/views';
 export const API_SHORTENER_URLS = '/api/urlshortener/v2/urls';
 export const API_SHORTENER_URL = '/api/urlshortener/v2/url/';
 export const API_KPOP = '/api/kpopcomebacks';
+export const API_MILESTONES = '/milestones_api/';
 
 const AUTH_BASE = '/api/auth';
 export const API_AUTH_STATUS = `${AUTH_BASE}/status`;
