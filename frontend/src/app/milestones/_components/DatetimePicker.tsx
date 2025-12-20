@@ -42,6 +42,7 @@ export default function DatetimePicker({
               setDate(date);
               setOpen(false);
             }}
+            endMonth={new Date(2150, 0)}
           />
         </PopoverContent>
       </Popover>
