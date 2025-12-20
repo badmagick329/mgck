@@ -4,13 +4,13 @@ import { ParsedToken } from '@/lib/account/parsed-token';
 import { API_MILESTONES } from '@/lib/consts/urls';
 import {
   ClientMilestone,
-  milestoneListSchema,
-  milestoneSchema,
+  serverMilestoneListSchema,
+  serverMilestoneSchema,
 } from '@/lib/types/milestones';
 
 const BASE_URL = process.env.BASE_URL;
 
-export async function listMilestones() {
+export async function listMilestonesAction() {
   const token = await ParsedToken.createFromCookie();
   const username = token.name();
   if (!username) {
@@ -26,7 +26,7 @@ export async function listMilestones() {
       return { error: 'Failed to fetch milestones' };
     }
     const data = await res.json();
-    const parsed = milestoneListSchema.safeParse(data);
+    const parsed = serverMilestoneListSchema.safeParse(data);
     if (!parsed.success) {
       return {
         error: 'Failed to parse milestones',
@@ -42,7 +42,7 @@ export async function listMilestones() {
   }
 }
 
-export async function createMilestone(milestone: ClientMilestone) {
+export async function createMilestoneAction(milestone: ClientMilestone) {
   const token = await ParsedToken.createFromCookie();
   const username = token.name();
   if (!username) {
@@ -68,7 +68,7 @@ export async function createMilestone(milestone: ClientMilestone) {
       return { error: 'Failed to create milestone' };
     }
     const data = await res.json();
-    const parsed = milestoneSchema.safeParse(data);
+    const parsed = serverMilestoneSchema.safeParse(data);
     if (!parsed.success) {
       return {
         error: 'Failed to parse milestone result',
@@ -80,6 +80,38 @@ export async function createMilestone(milestone: ClientMilestone) {
     console.error('Error creating milestone', e);
     return {
       error: 'Error creating milestone',
+    };
+  }
+}
+
+export async function removeMilestoneAction(milestoneName: string) {
+  const token = await ParsedToken.createFromCookie();
+  const username = token.name();
+  if (!username) {
+    return { error: 'User not logged in' };
+  }
+
+  const apiUrl = new URL(`${BASE_URL}${API_MILESTONES}${milestoneName}`);
+  try {
+    const res = await fetch(apiUrl, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username,
+      }),
+    });
+    if (!res.ok) {
+      console.error('Failed to delete milestone', res.statusText);
+      return { error: 'Failed to delete milestone' };
+    }
+
+    return {};
+  } catch (e) {
+    console.error('Error deleting milestone', e);
+    return {
+      error: 'Error deleting milestone',
     };
   }
 }
