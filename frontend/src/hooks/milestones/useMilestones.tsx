@@ -22,27 +22,34 @@ export default function useMilestones() {
 
   const addCurrentMilestone = () => {
     if (!name || !date) {
-      toast({
+      return toast({
         variant: 'destructive',
         title: 'Missing fields',
         description: 'Please provide both a name and a date.',
         duration: toastDuration,
       });
-      return;
     }
     const trimmedName = name.trim();
     if (milestones.map((m) => m.name).includes(trimmedName)) {
-      toast({
+      return toast({
         variant: 'destructive',
         title: 'Milestone already exists',
         description: `A milestone with the name "${trimmedName}" already exists.`,
         duration: toastDuration,
       });
-      return;
     }
 
     const { utcDate, timezone } = getUtcDate(date);
     const utcTimestamp = utcDate.getTime();
+    const diffInDays = getDiffInDays(utcDate);
+    if (diffInDays < 1) {
+      return toast({
+        variant: 'destructive',
+        title: 'Invalid date',
+        description: 'Please select a date in the future.',
+        duration: toastDuration,
+      });
+    }
 
     setName('');
     setMilestones([
@@ -53,7 +60,7 @@ export default function useMilestones() {
         timezone,
       },
     ]);
-    toast({
+    return toast({
       title: 'Milestone added',
       description: `Milestone "${trimmedName}" added for ${date.toLocaleDateString()}.`,
       duration: toastDuration,
@@ -103,3 +110,9 @@ const getLocalDateDisplay = (date: Date, timezone: string) =>
   format(date, 'yyyy-MM-dd', {
     timeZone: timezone,
   });
+
+const getDiffInDays = (date: Date) =>
+  Math.max(
+    Math.ceil((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+    0
+  );

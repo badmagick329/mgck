@@ -28,7 +28,6 @@ function useLocalStorage<T>(
 
   const [value, setValue] = useState<T>(() => {
     try {
-      const readValue = storedValue ? JSON.parse(storedValue) : initialValue;
       return storedValue ? JSON.parse(storedValue) : initialValue;
     } catch (error) {
       return initialValue;
