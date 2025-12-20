@@ -7,16 +7,19 @@ import { Button } from '@/components/ui/button';
 import DatetimePicker from '@/app/milestones/_components/DatetimePicker';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
+
+const toastDuration = 4000;
 
 export default function MilestoneHome() {
-  const {
-    value: message,
-    updateValue: setMessage,
-    isLoaded,
-  } = useLocalStorage('message', 'No saved message');
-
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [name, setName] = useState('');
+  const {
+    value: milestones,
+    updateValue: setMilestones,
+    isLoaded,
+  } = useLocalStorage<{ name: string; timestamp: number }[]>('milestones', []);
+  const { toast } = useToast();
 
   if (!isLoaded) {
     return <Loading />;
@@ -24,11 +27,19 @@ export default function MilestoneHome() {
 
   return (
     <div className='flex min-h-screen flex-col items-center gap-4 bg-background-kp pt-8'>
-      <p>Your saved message: {message}</p>
-      <input
-        type='text'
-        onChange={(e) => setMessage(e.target.value || 'No saved message')}
-      />
+      <div className='flex flex-col gap-2'>
+        {milestones.length > 0 ? (
+          milestones.map((m) => {
+            return (
+              <p key={`${m.name}-${m.timestamp}`}>
+                {m.name} - {new Date(m.timestamp).toLocaleDateString()}
+              </p>
+            );
+          })
+        ) : (
+          <p>No milestones entered</p>
+        )}
+      </div>
       <div className='flex flex-col gap-2'>
         <h3>Pick a thing</h3>
         <div className='flex gap-2'>
@@ -42,12 +53,38 @@ export default function MilestoneHome() {
             className='h-10'
             variant={'secondary'}
             onClick={() => {
-              if (!name) {
+              if (!name || !date) {
+                toast({
+                  variant: 'destructive',
+                  title: 'Missing fields',
+                  description: 'Please provide both a name and a date.',
+                  duration: toastDuration,
+                });
                 return;
               }
-              setDate(undefined);
+              const trimmedName = name.trim();
+              if (milestones.map((m) => m.name).includes(trimmedName)) {
+                toast({
+                  variant: 'destructive',
+                  title: 'Milestone already exists',
+                  description: `A milestone with the name "${trimmedName}" already exists.`,
+                  duration: toastDuration,
+                });
+                return;
+              }
               setName('');
-              console.log('Add milestone', { name, date });
+              setMilestones([
+                ...milestones,
+                {
+                  name: trimmedName,
+                  timestamp: date.getTime(),
+                },
+              ]);
+              toast({
+                title: 'Milestone added',
+                description: `Milestone "${trimmedName}" added for ${date.toLocaleDateString()}.`,
+                duration: toastDuration,
+              });
             }}
           >
             Add
