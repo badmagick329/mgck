@@ -16,9 +16,9 @@ export default function EmojifyHeader({
 
   return (
     <section>
-      <abbr className='no-underline flex justify-center' title='Hi 👋'>
+      <abbr className='flex justify-center no-underline' title='Hi 👋'>
         <TypeAnimation
-          className='inline-block mx-auto text-xl p-2'
+          className='mx-auto inline-block p-2 text-xl'
           sequence={[...headerTypingSequence]}
           wrapper='span'
           cursor={true}
@@ -26,12 +26,12 @@ export default function EmojifyHeader({
       </abbr>
       <div className='flex justify-between p-0'>
         <abbr
-          className='no-underline justify-self-start'
+          className='justify-self-start no-underline'
           title='Reset emojis to the default list'
         >
           <Button
-            variant={'plain'}
-            className='py-0 px-2 h-6'
+            variant={'ghost'}
+            className='h-6 px-2 py-0'
             disabled={emojisInput === defaultEmojis()}
             onClick={() => {
               setEmojisInput(defaultEmojis());
