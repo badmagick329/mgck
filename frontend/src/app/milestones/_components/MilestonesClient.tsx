@@ -24,13 +24,24 @@ export default function MilestonesClient({ username }: { username: string }) {
             variant={'secondary'}
             disabled={state.isSyncing}
             onClick={
-              state.isUsingServer ? state.unlinkFromServer : db.syncMilestones
+              state.isUsingServer
+                ? state.unlinkFromServer
+                : db.applyChangesToServerAndLink
             }
           >
             {state.isUsingServer
               ? 'Unlink from server'
               : 'Save changes to server'}
           </Button>
+          {!state.isUsingServer && (
+            <Button
+              variant={'secondary'}
+              disabled={state.isSyncing}
+              onClick={db.retrieveChangesFromServerAndLink}
+            >
+              Retrieve changes from server
+            </Button>
+          )}
         </div>
         <div className='mx-auto flex w-full max-w-lg flex-col gap-4'>
           {state.milestones.length > 0 ? (
