@@ -205,7 +205,7 @@ export default function useMilestones(username: string) {
     }
   };
 
-  const syncMilestones = async () => {
+  const applyChangesToServerAndLink = async () => {
     try {
       setIsSyncing(true);
       const safeMilestones = [] as ClientMilestone[];
@@ -284,6 +284,28 @@ export default function useMilestones(username: string) {
     }
   };
 
+  const retrieveChangesFromServerAndLink = async () => {
+    try {
+      setIsSyncing(true);
+      const result = await listMilestonesAction();
+      if (result.error) {
+        return toast({
+          variant: 'destructive',
+          title: 'Error retrieving milestones from server',
+          description: `${result.error}`,
+          duration: toastDuration,
+        });
+      }
+      const clientMilestones = result.data!.map((m) =>
+        serverMilestoneToClient(m)
+      );
+      setMilestones(clientMilestones);
+      setIsUsingServer(true);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const unlinkFromServer = () => {
     try {
       setIsSyncing(true);
@@ -309,7 +331,8 @@ export default function useMilestones(username: string) {
     db: {
       removeMilestone,
       addCurrentMilestone,
-      syncMilestones,
+      applyChangesToServerAndLink,
+      retrieveChangesFromServerAndLink,
     },
   };
 }
