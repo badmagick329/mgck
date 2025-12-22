@@ -7,13 +7,10 @@ import DatetimePicker from '@/app/milestones/_components/DatetimePicker';
 import { Input } from '@/components/ui/input';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import Navbar from '@/app/_components/Navbar';
+import MilestonesDisplay from '@/app/milestones/_components/MilestonesDisplay';
 
 export default function MilestonesClient({ username }: { username: string }) {
-  const {
-    state,
-    getLocalDatetimeDisplay: getLocalDatetimeDisplay,
-    db,
-  } = useMilestones(username);
+  const { state, db } = useMilestones(username);
 
   if (!state.isLoaded) {
     return <Loading />;
@@ -47,30 +44,6 @@ export default function MilestonesClient({ username }: { username: string }) {
             </Button>
           )}
         </div>
-        <div className='mx-auto flex w-full max-w-lg flex-col gap-4'>
-          {state.milestones.length > 0 ? (
-            state.milestones.map((m) => {
-              const utcDate = new Date(m.timestamp);
-              return (
-                <div key={m.name} className='flex justify-between gap-2'>
-                  <p>
-                    {m.name} - {getLocalDatetimeDisplay(utcDate, m.timezone)} -
-                    ({getDiffInDays(utcDate)})
-                  </p>
-                  <Button
-                    variant={'destructive'}
-                    onClick={() => db.removeMilestone(m.name)}
-                    disabled={state.isSyncing}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              );
-            })
-          ) : (
-            <p>No milestones entered</p>
-          )}
-        </div>
         <div className='flex w-full flex-col items-center gap-2'>
           <h3>Enter a thing</h3>
           <div className='flex w-full max-w-lg flex-col items-center gap-2'>
@@ -95,13 +68,12 @@ export default function MilestonesClient({ username }: { username: string }) {
             </Button>
           </div>
         </div>
+        <MilestonesDisplay
+          milestones={state.milestones}
+          isSyncing={state.isSyncing}
+          removeMilestone={db.removeMilestone}
+        />
       </div>
     </div>
   );
 }
-
-const getDiffInDays = (date: Date) =>
-  Math.max(
-    Math.ceil((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
-    0
-  );

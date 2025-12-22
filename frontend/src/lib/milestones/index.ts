@@ -1,3 +1,4 @@
+import { format } from 'date-fns-tz';
 import { ServerMilestone } from '@/lib/types/milestones';
 
 export const serverMilestoneToClient = (
@@ -9,3 +10,14 @@ export const serverMilestoneToClient = (
     timezone: milestoneFromServer.event_timezone,
   };
 };
+
+export const getDiffInDays = (date: Date) =>
+  Math.max(
+    Math.ceil((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+    0
+  );
+
+export const getLocalDatetimeDisplay = (date: Date, timezone: string) =>
+  format(date, 'yyyy-MM-dd HH:mm zzz', {
+    timeZone: timezone,
+  });
