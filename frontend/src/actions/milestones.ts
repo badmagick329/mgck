@@ -6,60 +6,54 @@ import { serverMilestoneToClient } from '@/lib/milestones';
 import { ApiResponse } from '@/lib/types';
 import {
   ClientMilestone,
+  ServerMilestone,
   serverMilestoneListSchema,
   serverMilestoneSchema,
 } from '@/lib/types/milestones';
+import { Schema } from 'zod';
 
 const BASE_URL = process.env.BASE_URL;
 
 export async function listMilestonesAction(): Promise<
   ApiResponse<ClientMilestone[]>
 > {
-  const token = await ParsedToken.createFromCookie();
-  const username = token.name();
-  if (!username) {
-    return { ok: false, error: 'User not logged in' };
+  const authResult = await isAuthenticated();
+  if (!authResult.ok) {
+    return authResult;
   }
 
-  const apiUrl = new URL(`${BASE_URL}${API_MILESTONES}`);
-  apiUrl.searchParams.append('username', token.name());
-  try {
-    const res = await fetch(apiUrl);
-    if (!res.ok) {
-      console.error('Failed to fetch milestones', res.statusText);
-      return { ok: false, error: 'Failed to fetch milestones' };
-    }
-    const data = await res.json();
-    const parsed = serverMilestoneListSchema.safeParse(data);
-    if (!parsed.success) {
-      return {
+  const url = new URL(`${BASE_URL}${API_MILESTONES}`);
+  url.searchParams.append('username', authResult.data);
+
+  const result = await fetchAndParse<ServerMilestone[]>(
+    url,
+    serverMilestoneListSchema
+  );
+
+  return result.ok
+    ? {
+        ok: true,
+        data: result.data.map(serverMilestoneToClient),
+      }
+    : {
         ok: false,
-        error: 'Failed to parse milestones',
+        error: 'Failed to fetch milestones',
       };
-    }
-
-    return { ok: true, data: parsed.data.map(serverMilestoneToClient) };
-  } catch (e) {
-    console.error('Error fetching milestones', e);
-    return {
-      ok: false,
-      error: 'Error fetching milestones',
-    };
-  }
 }
 
 export async function createMilestoneAction(
   milestone: ClientMilestone
 ): Promise<ApiResponse<ClientMilestone>> {
-  const token = await ParsedToken.createFromCookie();
-  const username = token.name();
-  if (!username) {
-    return { ok: false, error: 'User not logged in' };
+  const authResult = await isAuthenticated();
+  if (!authResult.ok) {
+    return authResult;
   }
 
-  const apiUrl = new URL(`${BASE_URL}${API_MILESTONES}`);
-  try {
-    const res = await fetch(apiUrl, {
+  const url = new URL(`${BASE_URL}${API_MILESTONES}`);
+  const result = await fetchAndParse<ServerMilestone>(
+    url,
+    serverMilestoneSchema,
+    {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,64 +61,85 @@ export async function createMilestoneAction(
       body: JSON.stringify({
         timestamp: milestone.timestamp,
         timezone: milestone.timezone,
-        username: username,
+        username: authResult.data,
         event_name: milestone.name,
       }),
-    });
-    if (!res.ok) {
-      console.error('Failed to create milestone', res.statusText);
-      return { ok: false, error: 'Failed to create milestone' };
     }
-    const data = await res.json();
-    const parsed = serverMilestoneSchema.safeParse(data);
-    if (!parsed.success) {
-      return {
-        ok: false,
-        error: 'Failed to parse milestone result',
-      };
-    }
+  );
 
-    return { ok: true, data: serverMilestoneToClient(parsed.data) };
-  } catch (e) {
-    console.error('Error creating milestone', e);
-    return {
-      ok: false,
-      error: 'Error creating milestone',
-    };
-  }
+  return result.ok
+    ? {
+        ok: true,
+        data: serverMilestoneToClient(result.data),
+      }
+    : {
+        ok: false,
+        error: 'Failed to create milestone',
+      };
 }
 
 export async function removeMilestoneAction(
   milestoneName: string
 ): Promise<ApiResponse<'success'>> {
-  const token = await ParsedToken.createFromCookie();
-  const username = token.name();
-  if (!username) {
-    return { ok: false, error: 'User not logged in' };
+  const authResult = await isAuthenticated();
+  if (!authResult.ok) {
+    return authResult;
   }
 
-  const apiUrl = new URL(`${BASE_URL}${API_MILESTONES}${milestoneName}`);
+  const url = new URL(`${BASE_URL}${API_MILESTONES}${milestoneName}`);
+
   try {
-    const res = await fetch(apiUrl, {
+    const res = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        username: username,
+        username: authResult.data,
       }),
     });
+
+    return res.ok
+      ? { ok: true, data: 'success' }
+      : { ok: false, error: 'Failed to delete milestone' };
+  } catch (e) {
+    return { ok: false, error: 'Failed to delete milestone' };
+  }
+}
+
+async function isAuthenticated(): Promise<ApiResponse<string>> {
+  const token = await ParsedToken.createFromCookie();
+  const username = token.name();
+  if (!username) {
+    return { ok: false, error: 'User not logged in' };
+  }
+  return { ok: true, data: username };
+}
+
+async function fetchAndParse<T>(
+  url: URL,
+  schema: Schema,
+  options?: RequestInit
+): Promise<ApiResponse<T>> {
+  try {
+    const res = await fetch(url, options);
     if (!res.ok) {
-      console.error('Failed to delete milestone', res.statusText);
-      return { ok: false, error: 'Failed to delete milestone' };
+      return { ok: false, error: res.statusText };
     }
 
-    return { ok: true, data: 'success' };
-  } catch (e) {
-    console.error('Error deleting milestone', e);
+    const data = await res.json();
+
+    const parsed = schema.safeParse(data);
+    return parsed.success
+      ? { ok: true, data }
+      : {
+          ok: false,
+          error: parsed.error.message,
+        };
+  } catch (error) {
     return {
       ok: false,
-      error: 'Error deleting milestone',
+      error: String(error),
     };
   }
 }
