@@ -38,7 +38,7 @@ export default function useMilestonesServer({
       return;
     }
 
-    if (isUserLoggedIn) {
+    if (!isUserLoggedIn) {
       // TODO: add unlink option
       router.push('/account');
       return;
