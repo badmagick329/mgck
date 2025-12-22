@@ -10,8 +10,8 @@ import {
   listMilestonesAction,
   removeMilestoneAction,
 } from '@/actions/milestones';
-import { serverMilestoneToClient } from '@/lib/milestones';
 import { useRouter } from 'next/navigation';
+import { ApiErrorResponse } from '@/lib/types';
 
 const toastDuration = 4000;
 
@@ -46,15 +46,8 @@ export default function useMilestones(username: string) {
     (async () => {
       try {
         setIsSyncing(true);
-        const milestonesFromServer = await listMilestonesAction();
-        if (milestonesFromServer.data) {
-          const clientMilestones = milestonesFromServer.data.map((m) =>
-            serverMilestoneToClient(m)
-          );
-          setMilestones(clientMilestones);
-        } else {
-          setIsUsingServer(false);
-        }
+        const result = await listMilestonesAction();
+        result.ok ? setMilestones(result.data) : setIsUsingServer(false);
       } finally {
         setIsSyncing(false);
       }
@@ -99,7 +92,7 @@ export default function useMilestones(username: string) {
           });
         }
         const result = await createMilestoneAction(parsed.data);
-        if (result.error) {
+        if (!result.ok) {
           return toast({
             variant: 'destructive',
             title: 'Error adding milestone',
@@ -108,7 +101,7 @@ export default function useMilestones(username: string) {
           });
         }
 
-        const clientMilestone = serverMilestoneToClient(result.data!);
+        const clientMilestone = result.data;
         setName('');
         setMilestones(
           [
@@ -176,7 +169,7 @@ export default function useMilestones(username: string) {
       try {
         setIsSyncing(true);
         const result = await removeMilestoneAction(milestoneName);
-        if (result.error) {
+        if (!result.ok) {
           return toast({
             variant: 'destructive',
             title: 'Error removing milestone',
@@ -221,62 +214,50 @@ export default function useMilestones(username: string) {
         }
         safeMilestones.push(parsed.data);
       });
-      const serverMilestones = await listMilestonesAction();
-      if (serverMilestones.error) {
+      const result = await listMilestonesAction();
+      if (!result.ok) {
         return toast({
           variant: 'destructive',
           title: 'Error syncing milestones',
-          description: `${serverMilestones.error}`,
+          description: `${result.error}`,
           duration: toastDuration,
         });
       }
-      const serverMilestoneNames = serverMilestones.data!.map(
-        (m) => m.event_name
-      );
-      console.log(serverMilestoneNames);
+      const serverMilestoneNames = result.data!.map((m) => m.name);
       const newMilestones = safeMilestones.filter(
         (m) => !serverMilestoneNames.includes(m.name)
       );
-      console.log(`found ${newMilestones.length} milestones that server needs`);
 
       const clientMilestoneNames = safeMilestones.map((m) => m.name);
       const milestoneNamesToRemove = serverMilestoneNames.filter(
         (n) => !clientMilestoneNames.includes(n)
       );
-      console.log('TO REMOVE:');
-      console.log(milestoneNamesToRemove);
       if (newMilestones.length === 0 && milestoneNamesToRemove.length === 0) {
         setIsUsingServer(true);
         return;
       }
 
-      const createErrorResults = [] as Awaited<
-        ReturnType<typeof createMilestoneAction>
-      >[];
+      const createResults = [] as ApiErrorResponse[];
       for (const m of newMilestones) {
         const result = await createMilestoneAction(m);
-        if (result.error) {
-          createErrorResults.push(result);
+        if (!result.ok) {
+          createResults.push(result);
         }
       }
-      const deleteErrorResults = [] as Awaited<
-        ReturnType<typeof removeMilestoneAction>
-      >[];
+      const deleteResults = [] as ApiErrorResponse[];
       for (const name of milestoneNamesToRemove) {
         const result = await removeMilestoneAction(name);
-        if (result.error) {
-          deleteErrorResults.push(result);
+        if (!result.ok) {
+          deleteResults.push(result);
         }
       }
 
-      createErrorResults.forEach((r) => console.error(r.error));
-      deleteErrorResults.forEach((r) => console.error(r.error));
+      createResults.forEach((r) => console.error(r.error));
+      deleteResults.forEach((r) => console.error(r.error));
 
-      const milestonesFromServer = await listMilestonesAction();
-      if (milestonesFromServer.data) {
-        setMilestones(
-          milestonesFromServer.data.map((m) => serverMilestoneToClient(m))
-        );
+      const newResult = await listMilestonesAction();
+      if (newResult.ok) {
+        setMilestones(newResult.data);
       }
       setIsUsingServer(true);
     } finally {
@@ -288,7 +269,7 @@ export default function useMilestones(username: string) {
     try {
       setIsSyncing(true);
       const result = await listMilestonesAction();
-      if (result.error) {
+      if (!result.ok) {
         return toast({
           variant: 'destructive',
           title: 'Error retrieving milestones from server',
@@ -296,10 +277,7 @@ export default function useMilestones(username: string) {
           duration: toastDuration,
         });
       }
-      const clientMilestones = result.data!.map((m) =>
-        serverMilestoneToClient(m)
-      );
-      setMilestones(clientMilestones);
+      setMilestones(result.data);
       setIsUsingServer(true);
     } finally {
       setIsSyncing(false);
