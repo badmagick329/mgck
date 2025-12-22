@@ -18,9 +18,6 @@ export default function DatetimePicker({
   disabled: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  useEffect(() => {
-    console.log(date);
-  }, [date]);
 
   return (
     <div className='flex w-full flex-col items-center gap-3'>

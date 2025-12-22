@@ -4,7 +4,6 @@ import { useToast } from '@/components/ui/use-toast';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
 import { useState } from 'react';
-import { format } from 'date-fns-tz';
 import useSyncOperation from '@/hooks/milestones/useSyncOperation';
 import useMilestoneSyncAdaptor from '@/hooks/milestones/useMilestonesSync';
 import useMilestonesServer from '@/hooks/milestones/useMilestonesServer';
@@ -137,7 +136,6 @@ export default function useMilestones(username: string) {
       isUsingServer,
       unlinkFromServer,
     },
-    getLocalDatetimeDisplay,
     db: {
       removeMilestone,
       addCurrentMilestone,
@@ -146,14 +144,3 @@ export default function useMilestones(username: string) {
     },
   };
 }
-
-const getLocalDatetimeDisplay = (date: Date, timezone: string) =>
-  format(date, 'yyyy-MM-dd HH:mm zzz', {
-    timeZone: timezone,
-  });
-
-const getDiffInDays = (date: Date) =>
-  Math.max(
-    Math.ceil((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
-    0
-  );
