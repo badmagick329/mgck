@@ -9,7 +9,11 @@ import useMilestones from '@/hooks/milestones/useMilestones';
 import Navbar from '@/app/_components/Navbar';
 
 export default function MilestonesClient({ username }: { username: string }) {
-  const { state, getLocalDateDisplay, db } = useMilestones(username);
+  const {
+    state,
+    getLocalDatetimeDisplay: getLocalDatetimeDisplay,
+    db,
+  } = useMilestones(username);
 
   if (!state.isLoaded) {
     return <Loading />;
@@ -50,8 +54,8 @@ export default function MilestonesClient({ username }: { username: string }) {
               return (
                 <div key={m.name} className='flex justify-between gap-2'>
                   <p>
-                    {m.name} - {getLocalDateDisplay(utcDate, m.timezone)} - (
-                    {getDiffInDays(utcDate)})
+                    {m.name} - {getLocalDatetimeDisplay(utcDate, m.timezone)} -
+                    ({getDiffInDays(utcDate)})
                   </p>
                   <Button
                     variant={'destructive'}

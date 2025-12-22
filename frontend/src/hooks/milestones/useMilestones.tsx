@@ -4,7 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
 import { useState } from 'react';
-import { fromZonedTime, format } from 'date-fns-tz';
+import { format } from 'date-fns-tz';
 import useSyncOperation from '@/hooks/milestones/useSyncOperation';
 import useMilestoneSyncAdaptor from '@/hooks/milestones/useMilestonesSync';
 import useMilestonesServer from '@/hooks/milestones/useMilestonesServer';
@@ -60,10 +60,10 @@ export default function useMilestones(username: string) {
     }
 
     execute(async () => {
-      const { utcDate, timezone } = getUtcDate(date);
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const currentMilestone = {
         name,
-        timestamp: utcDate.getTime(),
+        timestamp: date.getTime(),
         timezone,
       };
       const parsed = clientMilestoneSchema.safeParse(currentMilestone);
@@ -137,7 +137,7 @@ export default function useMilestones(username: string) {
       isUsingServer,
       unlinkFromServer,
     },
-    getLocalDateDisplay,
+    getLocalDatetimeDisplay,
     db: {
       removeMilestone,
       addCurrentMilestone,
@@ -147,24 +147,8 @@ export default function useMilestones(username: string) {
   };
 }
 
-const getUtcDate = (date: Date) => {
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-
-  const localDatetimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
-  return {
-    utcDate: fromZonedTime(localDatetimeString, timezone),
-    timezone,
-  };
-};
-
-const getLocalDateDisplay = (date: Date, timezone: string) =>
-  format(date, 'yyyy-MM-dd', {
+const getLocalDatetimeDisplay = (date: Date, timezone: string) =>
+  format(date, 'yyyy-MM-dd HH:mm zzz', {
     timeZone: timezone,
   });
 
