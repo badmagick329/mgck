@@ -3,6 +3,7 @@
 !pyproject.toml
 !poetry.lock
 !crontab
+!uv.lock
 .git/
 .gitignore
 **/.next/

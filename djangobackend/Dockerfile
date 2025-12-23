@@ -6,12 +6,11 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip && \
-    pip install poetry==1.8.2
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-COPY pyproject.toml poetry.lock ./
-RUN poetry config virtualenvs.create false && \
-    poetry install --no-root --without dev
+COPY pyproject.toml ./
+COPY uv.lock ./
+RUN uv sync --frozen --no-install-project --no-dev --python 3.10
 
 COPY ./djangobackend .
 
@@ -23,11 +22,14 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages installed in the builder stage
-COPY --from=builder /usr/local /usr/local
+# Copy the virtual environment from builder
+COPY --from=builder /usr/src/app/.venv /usr/src/app/.venv
 
 # Copy the application code
 COPY --from=builder /usr/src/app /usr/src/app
+
+# Add venv to PATH
+ENV PATH="/usr/src/app/.venv/bin:$PATH"
 
 RUN mkdir -p /uploads /redditvideos
 
