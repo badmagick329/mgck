@@ -8,6 +8,7 @@ export const serverMilestoneToClient = (
     name: milestoneFromServer.event_name,
     timestamp: new Date(milestoneFromServer.event_datetime_utc).getTime(),
     timezone: milestoneFromServer.event_timezone,
+    color: milestoneFromServer.color,
   };
 };
 

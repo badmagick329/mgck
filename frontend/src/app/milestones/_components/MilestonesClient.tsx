@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import Navbar from '@/app/_components/Navbar';
 import MilestonesDisplay from '@/app/milestones/_components/MilestonesDisplay';
+import ColorPicker from '@/app/milestones/_components/ColorPicker';
 
 export default function MilestonesClient({ username }: { username: string }) {
   const { state, db } = useMilestones(username);
@@ -47,12 +48,18 @@ export default function MilestonesClient({ username }: { username: string }) {
         <div className='flex w-full flex-col items-center gap-2'>
           <h3>Enter a thing</h3>
           <div className='flex w-full max-w-lg flex-col items-center gap-2'>
-            <Input
-              type='text'
-              onChange={(e) => state.setName(e.target.value || '')}
-              value={state.name}
-              disabled={state.isSyncing}
-            />
+            <div className='flex w-full items-center gap-2'>
+              <Input
+                type='text'
+                onChange={(e) => state.setName(e.target.value || '')}
+                value={state.name}
+                disabled={state.isSyncing}
+              />
+              <ColorPicker
+                color={state.color}
+                handleColorChange={state.handleColorChange}
+              />
+            </div>
             <DatetimePicker
               date={state.date}
               setDate={state.setDate}
