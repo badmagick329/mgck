@@ -19,9 +19,8 @@ class TestMilestoneCreateEndpoint:
 
     def test_create_milestone_success(self):
         """Test successfully creating a milestone"""
-        timestamp_ms = TEST_TIMESTAMP
         data = {
-            "timestamp": timestamp_ms,
+            "timestamp": TEST_TIMESTAMP,
             "timezone": "America/New_York",
             "username": "testuser",
             "event_name": "Birthday",
@@ -36,13 +35,13 @@ class TestMilestoneCreateEndpoint:
         response_data = json.loads(response.content)
         assert response_data["event_name"] == "Birthday"
         assert response_data["event_timezone"] == "America/New_York"
+        assert response_data["color"] == Milestone.DEFAULT_COLOR
         assert Milestone.objects.count() == 1
 
     def test_create_milestone_missing_username(self):
         """Test creating milestone without username"""
-        timestamp_ms = TEST_TIMESTAMP
         data = {
-            "timestamp": timestamp_ms,
+            "timestamp": TEST_TIMESTAMP,
             "timezone": "UTC",
             "username": None,
             "event_name": "Event",
@@ -59,9 +58,8 @@ class TestMilestoneCreateEndpoint:
 
     def test_create_milestone_missing_timezone(self):
         """Test creating milestone without timezone"""
-        timestamp_ms = TEST_TIMESTAMP
         data = {
-            "timestamp": timestamp_ms,
+            "timestamp": TEST_TIMESTAMP,
             "timezone": None,
             "username": "user",
             "event_name": "Event",
@@ -96,9 +94,8 @@ class TestMilestoneCreateEndpoint:
 
     def test_create_milestone_duplicate_event_name_same_user(self):
         """Test creating duplicate milestone for same user"""
-        timestamp_ms = TEST_TIMESTAMP
         data = {
-            "timestamp": timestamp_ms,
+            "timestamp": TEST_TIMESTAMP,
             "timezone": "UTC",
             "username": "user1",
             "event_name": "Event",
@@ -121,15 +118,14 @@ class TestMilestoneCreateEndpoint:
 
     def test_create_milestone_same_event_name_different_users(self):
         """Test creating same event name for different users"""
-        timestamp_ms = TEST_TIMESTAMP
         data1 = {
-            "timestamp": timestamp_ms,
+            "timestamp": TEST_TIMESTAMP,
             "timezone": "UTC",
             "username": "user1",
             "event_name": "Event",
         }
         data2 = {
-            "timestamp": timestamp_ms,
+            "timestamp": TEST_TIMESTAMP,
             "timezone": "UTC",
             "username": "user2",
             "event_name": "Event",
@@ -549,6 +545,27 @@ class TestMilestoneDeleteEndpoint:
 
         assert response.status_code == 404
         assert Milestone.objects.count() == 1
+
+    def test_create_milestone_with_custom_color(self):
+        """Test creating a milestone with a custom color"""
+
+        custom_color = "#FF5733"
+        data = {
+            "timestamp": TEST_TIMESTAMP,
+            "timezone": "UTC",
+            "username": "user1",
+            "event_name": "MyEvent",
+            "color": custom_color,
+        }
+        response = self.client.post(
+            reverse(MILESTONES_ENDPOINT),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        assert response.status_code == 201
+        response_data = json.loads(response.content)
+        assert response_data["color"] == custom_color
 
 
 @pytest.mark.django_db

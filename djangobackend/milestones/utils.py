@@ -4,6 +4,8 @@ from typing import Any
 
 from core.error import Error
 from core.result import Err, Ok, Result
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from rest_framework.response import Response
 
 from milestones.models import Milestone, MilestoneUser
@@ -18,7 +20,11 @@ class MilestoneError(Error):
 
 
 def create_milestone(
-    timestamp: int, timezone: str, username: str, event_name: str
+    timestamp: int | None,
+    timezone: str | None,
+    username: str | None,
+    event_name: str | None,
+    color: str | None,
 ) -> Result[Milestone, MilestoneError]:
     if not username:
         return Err(MilestoneError("Username is required", 400))
@@ -30,35 +36,39 @@ def create_milestone(
         return Err(MilestoneError("Timestamp is required", 400))
 
     try:
-        timestamp_seconds = timestamp / 1000
-        event_datetime = datetime.fromtimestamp(timestamp_seconds, tz=tz.utc)
-
-        milestone_user, _ = MilestoneUser.objects.get_or_create(username=username)
-
-        milestone = Milestone.objects.create(
-            event_timezone=timezone,
-            event_datetime_utc=event_datetime,
+        milestone = Milestone.create(
             event_name=event_name,
-            created_by=milestone_user,
+            timestamp=timestamp,
+            timezone=timezone,
+            username=username,
+            color=color,
         )
+
         return Ok(milestone)
-    except ValueError as e:
-        return Err(MilestoneError(f"Invalid timestamp: {str(e)}", 400))
-    except Exception as e:
-        if "unique constraint" in str(e).lower():
+    except ValidationError as e:
+        return Err(MilestoneError(f"Invalid data: {e.message_dict or str(e)}", 400))
+    except IntegrityError as e:
+        if "unique" in str(e).lower():
             return Err(
                 MilestoneError(
-                    f"Milestone with name '{event_name}' already exists for this user",
+                    f"Milestone with name '{event_name}' already exists",
                     400,
                 )
             )
+        return Err(MilestoneError(f"Constraint violation {str(e)}", 400))
+    except Exception as e:
+        print(e)
         return Err(MilestoneError(f"Error creating milestone: {str(e)}", 500))
 
 
 def create_milestone_response(
-    timestamp: int, timezone: str, username: str, event_name: str
+    timestamp: int | None,
+    timezone: str | None,
+    username: str | None,
+    event_name: str | None,
+    color: str | None,
 ):
-    result = create_milestone(timestamp, timezone, username, event_name)
+    result = create_milestone(timestamp, timezone, username, event_name, color)
     if result.is_err:
         error = result.unwrap_err()
         return Response({"error": error.error}, status=error.status)
@@ -70,6 +80,7 @@ def create_milestone_response(
             "event_name": milestone.event_name,
             "event_datetime_utc": milestone.event_datetime_utc,
             "event_timezone": milestone.event_timezone,
+            "color": milestone.color,
             "created_by": milestone.created_by.username,
             "created": milestone.created,
         },
@@ -77,7 +88,9 @@ def create_milestone_response(
     )
 
 
-def get_all_milestones(username: str) -> Result[list[dict[str, Any]], MilestoneError]:
+def get_all_milestones(
+    username: str,
+) -> Result[list[dict[str, Any]], MilestoneError]:
     try:
         milestones = Milestone.objects.filter(created_by__username=username)
         milestones_data = [
@@ -87,6 +100,7 @@ def get_all_milestones(username: str) -> Result[list[dict[str, Any]], MilestoneE
                 "event_datetime_utc": milestone.event_datetime_utc,
                 "event_timezone": milestone.event_timezone,
                 "created": milestone.created,
+                "color": milestone.color,
             }
             for milestone in milestones
         ]
@@ -95,7 +109,9 @@ def get_all_milestones(username: str) -> Result[list[dict[str, Any]], MilestoneE
         return Err(MilestoneError(f"Error fetching milestones: {str(e)}", 500))
 
 
-def get_all_milestones_response(username: str):
+def get_all_milestones_response(username: str | None):
+    if username is None:
+        return Response({"error": "Username is required"}, status=400)
     result = get_all_milestones(username)
     if result.is_err:
         error = result.unwrap_err()
@@ -106,21 +122,27 @@ def get_all_milestones_response(username: str):
 
 
 def update_milestone(
-    username: str,
-    event_name: str,
+    username: str | None,
+    event_name: str | None,
     new_event_name: str | None = None,
     new_timestamp: int | None = None,
     new_timezone: str | None = None,
+    new_color: str | None = None,
 ) -> Result[Milestone, MilestoneError]:
     if not username:
         return Err(MilestoneError("Username is required", 400))
     if not event_name:
         return Err(MilestoneError("Event name is required", 400))
 
-    if new_event_name is None and new_timestamp is None and new_timezone is None:
+    if (
+        new_event_name is None
+        and new_timestamp is None
+        and new_timezone is None
+        and new_color is None
+    ):
         return Err(
             MilestoneError(
-                "At least one field (new_event_name, new_timestamp, new_timezone) must be provided",
+                "At least one field (new_event_name, new_timestamp, new_timezone, new_color) must be provided",
                 400,
             )
         )
@@ -156,26 +178,32 @@ def update_milestone(
 
         milestone.save()
         return Ok(milestone)
-    except Exception as e:
-        if "unique constraint" in str(e).lower():
+    except ValidationError as e:
+        return Err(MilestoneError(f"Invalid data: {e.message_dict or str(e)}", 400))
+    except IntegrityError as e:
+        if "unique" in str(e).lower():
             return Err(
                 MilestoneError(
-                    f"Milestone with name '{new_event_name}' already exists for this user",
+                    f"Milestone with name '{event_name}' already exists",
                     400,
                 )
             )
-        return Err(MilestoneError(f"Error updating milestone: {str(e)}", 500))
+        return Err(MilestoneError(f"Constraint violation {str(e)}", 400))
+    except Exception as e:
+        print(e)
+        return Err(MilestoneError(f"Error creating milestone: {str(e)}", 500))
 
 
 def update_milestone_response(
-    username: str,
-    event_name: str,
+    username: str | None,
+    event_name: str | None,
     new_event_name: str | None = None,
     new_timestamp: int | None = None,
     new_timezone: str | None = None,
+    new_color: str | None = None,
 ):
     result = update_milestone(
-        username, event_name, new_event_name, new_timestamp, new_timezone
+        username, event_name, new_event_name, new_timestamp, new_timezone, new_color
     )
     if result.is_err:
         error = result.unwrap_err()
@@ -188,6 +216,7 @@ def update_milestone_response(
             "event_name": milestone.event_name,
             "event_datetime_utc": milestone.event_datetime_utc,
             "event_timezone": milestone.event_timezone,
+            "color": milestone.color,
             "created_by": milestone.created_by.username,
             "created": milestone.created,
         },
@@ -195,7 +224,7 @@ def update_milestone_response(
     )
 
 
-def delete_milestone(username: str, event_name: str) -> MilestoneError | None:
+def delete_milestone(username: str | None, event_name: str) -> MilestoneError | None:
     if not username:
         return MilestoneError("Username is required", 400)
     if not event_name:
@@ -221,7 +250,7 @@ def delete_milestone(username: str, event_name: str) -> MilestoneError | None:
         return MilestoneError(f"Error deleting milestone: {str(e)}", 500)
 
 
-def delete_milestone_response(username: str, event_name: str):
+def delete_milestone_response(username: str | None, event_name: str):
     error = delete_milestone(username, event_name)
     if error:
         return Response({"error": error.error}, status=error.status)
