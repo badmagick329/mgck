@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Cell,
 } from 'recharts';
 
 export default function MilestonesDisplay({
@@ -40,7 +41,14 @@ export default function MilestonesDisplay({
               activeBar={{ fill: 'pink', stroke: 'blue' }}
               radius={[0, 4, 4, 0]}
               label={{ fill: 'white', fontSize: 14 }}
-            />
+            >
+              {chartData.map((item, idx) => (
+                <Cell
+                  key={`${item.name}`}
+                  fill={`${getColorString(idx, 10)}`}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
