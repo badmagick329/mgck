@@ -1,37 +1,42 @@
-[tool.poetry]
+[project]
 name = "mgck"
 version = "0.1.0"
 description = ""
-authors = ["badmagick329"]
+requires-python = ">=3.10"
+authors = [{ name = "badmagick329" }]
 license = "MIT"
+dependencies = [
+    "Django==4.2.17",
+    "python-dotenv>=1.0.0,<2",
+    "gunicorn>=22.0.0,<23",
+    "psycopg2-binary>=2.9.6,<3",
+    "requests==2.32.3",
+    "beautifulsoup4>=4.12.2,<5",
+    "pendulum>=2.1.2,<3",
+    "lxml>=4.9.3,<5",
+    "praw>=7.7.1,<8",
+    "result>=0.13.1,<0.14",
+    "djangorestframework>=3.15.2,<4",
+    "django-stubs>=4.2.6,<5",
+    "djangorestframework-stubs>=3.14.4,<4",
+    "django-cors-headers>=4.3.1,<5",
+    "drf-yasg>=1.21.7,<2",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-Django = "4.2.17"
-python-dotenv = "^1.0.0"
-gunicorn = "^22.0.0"
-psycopg2-binary = "^2.9.6"
-requests = "2.32.3"
-beautifulsoup4 = "^4.12.2"
-pendulum = "^2.1.2"
-lxml = "^4.9.3"
-praw = "^7.7.1"
-result = "^0.13.1"
-djangorestframework = "^3.15.2"
-django-stubs = "^4.2.6"
-djangorestframework-stubs = "^3.14.4"
-django-cors-headers = "^4.3.1"
-drf-yasg = "^1.21.7"
+[tool.hatch.build.targets.wheel]
+packages = ["djangobackend"]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-pytest-django = "^4.5.2"
-django-stubs = "^4.2.4"
-djangorestframework-stubs = "^3.14.5"
+[dependency-groups]
+dev = [
+    "pytest>=7.4.0,<8",
+    "pytest-django>=4.5.2,<5",
+    "django-stubs>=4.2.4,<5",
+    "djangorestframework-stubs>=3.14.5,<4",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 79
