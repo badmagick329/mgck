@@ -50,3 +50,8 @@ extend-exclude = '''
 [tool.pyright]
 include = ["./djangobackend"]
 exclude = ["**/node_modules", "**/__pycache__"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "djangobackend.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+pythonpath = ["."]
