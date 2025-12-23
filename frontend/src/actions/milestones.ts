@@ -63,6 +63,7 @@ export async function createMilestoneAction(
         timezone: milestone.timezone,
         username: authResult.data,
         event_name: milestone.name,
+        color: milestone.color,
       }),
     }
   );

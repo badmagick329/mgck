@@ -7,6 +7,8 @@ import { useState } from 'react';
 import useSyncOperation from '@/hooks/milestones/useSyncOperation';
 import useMilestoneSyncAdaptor from '@/hooks/milestones/useMilestonesSync';
 import useMilestonesServer from '@/hooks/milestones/useMilestonesServer';
+import useDebounceInput from '@/hooks/useDebounceInput';
+import { DEFAULT_COLOR } from '@/lib/consts/milestones';
 
 const toastDuration = 4000;
 
@@ -14,6 +16,10 @@ export default function useMilestones(username: string) {
   const { toast } = useToast();
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [name, setName] = useState('');
+  const { value: color, handleChange: handleColorChange } = useDebounceInput({
+    defaultValue: DEFAULT_COLOR,
+    delay: 100,
+  });
   const {
     value: milestones,
     updateValue: setMilestones,
@@ -64,6 +70,7 @@ export default function useMilestones(username: string) {
         name,
         timestamp: date.getTime(),
         timezone,
+        color,
       };
       const parsed = clientMilestoneSchema.safeParse(currentMilestone);
       if (parsed.error) {
@@ -93,6 +100,7 @@ export default function useMilestones(username: string) {
             name: clientMilestone.name,
             timestamp: clientMilestone.timestamp,
             timezone,
+            color,
           },
         ].sort((a, b) => a.timestamp - b.timestamp)
       );
@@ -135,6 +143,8 @@ export default function useMilestones(username: string) {
       milestones,
       isUsingServer,
       unlinkFromServer,
+      color,
+      handleColorChange,
     },
     db: {
       removeMilestone,
