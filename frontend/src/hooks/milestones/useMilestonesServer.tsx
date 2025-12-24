@@ -5,11 +5,12 @@ import {
 } from '@/actions/milestones';
 import { useToast } from '@/components/ui/use-toast';
 import useSyncOperation from '@/hooks/milestones/useSyncOperation';
-import useLocalStorage from '@/hooks/useLocalStorage';
 import { ApiErrorResponse } from '@/lib/types';
-import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import {
+  ClientMilestone,
+  clientMilestoneSchema,
+  MilestonesConfig,
+} from '@/lib/types/milestones';
 
 export default function useMilestonesServer({
   execute,
@@ -17,40 +18,17 @@ export default function useMilestonesServer({
   setMilestones,
   toast,
   toastDuration,
-  isUserLoggedIn,
+  milestonesConfig,
+  setMilestonesConfig,
 }: {
   execute: ReturnType<typeof useSyncOperation>['execute'];
   milestones: ClientMilestone[];
   setMilestones: React.Dispatch<React.SetStateAction<ClientMilestone[]>>;
   toast: ReturnType<typeof useToast>['toast'];
   toastDuration: number;
-  isUserLoggedIn: boolean;
+  milestonesConfig: MilestonesConfig;
+  setMilestonesConfig: (newValue: MilestonesConfig) => void;
 }) {
-  const {
-    value: isUsingServer,
-    updateValue: setIsUsingServer,
-    isLoaded,
-  } = useLocalStorage('milestonesOnServer', false);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isUsingServer) {
-      return;
-    }
-
-    if (!isUserLoggedIn) {
-      // TODO: add unlink option
-      router.push('/account');
-      return;
-    }
-
-    execute(async () => {
-      const result = await listMilestonesAction();
-      // TODO: add retry / unlink option
-      result.ok ? setMilestones(result.data) : setIsUsingServer(false);
-    });
-  }, []);
-
   const applyChangesToServerAndLink = async () => {
     execute(async () => {
       const safeMilestones = [] as ClientMilestone[];
@@ -87,7 +65,7 @@ export default function useMilestonesServer({
         (n) => !clientMilestoneNames.includes(n)
       );
       if (newMilestones.length === 0 && milestoneNamesToRemove.length === 0) {
-        setIsUsingServer(true);
+        setMilestonesConfig({ ...milestonesConfig, milestonesOnServer: true });
         return;
       }
 
@@ -112,10 +90,9 @@ export default function useMilestonesServer({
       const newResult = await listMilestonesAction();
       if (newResult.ok) {
         setMilestones(newResult.data);
-        setIsUsingServer(true);
+        setMilestonesConfig({ ...milestonesConfig, milestonesOnServer: true });
       }
-      // TODO: add retry / unlink option
-      setIsUsingServer(false);
+      setMilestonesConfig({ ...milestonesConfig, milestonesOnServer: false });
     });
   };
 
@@ -131,18 +108,15 @@ export default function useMilestonesServer({
         });
       }
       setMilestones(result.data);
-      setIsUsingServer(true);
+      setMilestonesConfig({ ...milestonesConfig, milestonesOnServer: true });
     });
   };
 
   const unlinkFromServer = () => {
-    setIsUsingServer(false);
+    setMilestonesConfig({ ...milestonesConfig, milestonesOnServer: false });
   };
 
   return {
-    isUsingServer,
-    setIsUsingServer,
-    isServerMilestonesLoaded: isLoaded,
     applyChangesToServerAndLink,
     retrieveChangesFromServerAndLink,
     unlinkFromServer,

@@ -7,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { ChevronDownIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function DatetimePicker({
   date,
@@ -20,7 +21,7 @@ export default function DatetimePicker({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className='flex w-full flex-col items-center gap-3'>
+    <div className='flex w-[200px] flex-col items-center gap-3'>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <div className='flex w-full justify-center'>

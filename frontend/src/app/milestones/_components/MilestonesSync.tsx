@@ -7,7 +7,7 @@ type Props = {
 };
 export default function MilestonesSync({ state, db }: Props) {
   return (
-    <div className='flex justify-center gap-2'>
+    <div className='flex justify-center gap-2 pb-8'>
       <Button
         variant={'secondary'}
         disabled={state.isSyncing}

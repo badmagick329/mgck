@@ -2,7 +2,11 @@
 
 import { useToast } from '@/components/ui/use-toast';
 import useLocalStorage from '@/hooks/useLocalStorage';
-import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
+import {
+  ClientMilestone,
+  clientMilestoneSchema,
+  MilestonesConfig,
+} from '@/lib/types/milestones';
 import { useState } from 'react';
 import useSyncOperation from '@/hooks/milestones/useSyncOperation';
 import useMilestoneSyncAdaptor from '@/hooks/milestones/useMilestonesSync';
@@ -25,12 +29,17 @@ export default function useMilestones(username: string) {
     updateValue: setMilestones,
     isLoaded,
   } = useLocalStorage<ClientMilestone[]>('milestones', []);
+  const {
+    value: milestonesConfig,
+    updateValue: setMilestonesConfig,
+    isLoaded: isConfigLoaded,
+  } = useLocalStorage<MilestonesConfig>('milestonesConfig', {
+    milestonesOnServer: false,
+  });
 
   const { isSyncing, execute } = useSyncOperation();
 
   const {
-    isUsingServer,
-    isServerMilestonesLoaded,
     applyChangesToServerAndLink,
     retrieveChangesFromServerAndLink,
     unlinkFromServer,
@@ -40,10 +49,14 @@ export default function useMilestones(username: string) {
     setMilestones,
     toast,
     toastDuration,
-    isUserLoggedIn: username !== '',
+    milestonesConfig: milestonesConfig,
+    setMilestonesConfig,
   });
 
-  const { create, remove } = useMilestoneSyncAdaptor(isUsingServer, milestones);
+  const { create, remove } = useMilestoneSyncAdaptor(
+    milestonesConfig.milestonesOnServer,
+    milestones
+  );
 
   const addCurrentMilestone = async () => {
     if (!name.trim() || !date) {
@@ -138,10 +151,10 @@ export default function useMilestones(username: string) {
       setDate,
       name,
       setName,
-      isLoaded: isLoaded && isServerMilestonesLoaded,
+      isLoaded: isLoaded && isConfigLoaded,
       isSyncing,
       milestones,
-      isUsingServer,
+      isUsingServer: milestonesConfig.milestonesOnServer,
       unlinkFromServer,
       color,
       handleColorChange,

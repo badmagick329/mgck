@@ -25,3 +25,9 @@ export const clientMilestoneSchema = z.object({
 export type ClientMilestone = z.infer<typeof clientMilestoneSchema>;
 
 export const clientMilestoneListSchema = z.array(clientMilestoneSchema);
+
+export const milestonesConfig = z.object({
+  milestonesOnServer: z.boolean(),
+});
+
+export type MilestonesConfig = z.infer<typeof milestonesConfig>;
