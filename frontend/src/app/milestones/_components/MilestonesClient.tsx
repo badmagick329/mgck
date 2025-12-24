@@ -2,14 +2,13 @@
 
 import Loading from '@/app/milestones/loading';
 
-import { Button } from '@/components/ui/button';
-import DatetimePicker from '@/app/milestones/_components/DatetimePicker';
-import { Input } from '@/components/ui/input';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import Navbar from '@/app/_components/Navbar';
 import MilestonesDisplay from '@/app/milestones/_components/MilestonesDisplay';
-import ColorPicker from '@/app/milestones/_components/ColorPicker';
 import MilestonesChart from '@/app/milestones/_components/MilestonesChart';
+import MilestonesInput from '@/app/milestones/_components/MilestonesInput';
+import MilestonesSync from '@/app/milestones/_components/MilestonesSync';
+import { Separator } from '@/components/ui/separator';
 
 export default function MilestonesClient({ username }: { username: string }) {
   const { state, db } = useMilestones(username);
@@ -21,69 +20,26 @@ export default function MilestonesClient({ username }: { username: string }) {
   return (
     <div className='flex min-h-dvh flex-col justify-center'>
       <Navbar />
-      <div className='flex w-full grow flex-col gap-8 bg-background-kp pt-8'>
-        <div className='flex justify-center gap-2'>
-          <Button
-            variant={'secondary'}
-            disabled={state.isSyncing}
-            onClick={
-              state.isUsingServer
-                ? state.unlinkFromServer
-                : db.applyChangesToServerAndLink
-            }
-          >
-            {state.isUsingServer
-              ? 'Unlink from server'
-              : 'Save changes to server'}
-          </Button>
-          {!state.isUsingServer && (
-            <Button
-              variant={'secondary'}
-              disabled={state.isSyncing}
-              onClick={db.retrieveChangesFromServerAndLink}
-            >
-              Retrieve changes from server
-            </Button>
-          )}
-        </div>
-        <div className='flex w-full flex-col items-center gap-2'>
-          <h3>Enter a thing</h3>
-          <div className='flex w-full max-w-lg flex-col items-center gap-2'>
-            <div className='flex w-full items-center gap-2'>
-              <Input
-                type='text'
-                onChange={(e) => state.setName(e.target.value || '')}
-                value={state.name}
-                disabled={state.isSyncing}
-              />
-              <ColorPicker
-                color={state.color}
-                handleColorChange={state.handleColorChange}
-              />
-            </div>
-            <DatetimePicker
-              date={state.date}
-              setDate={state.setDate}
-              disabled={state.isSyncing}
+      <div className='flex w-full grow flex-col gap-8 bg-background-kp px-4 pt-8'>
+        <div className='mx-auto flex w-full max-w-4xl flex-col gap-4'>
+          <h1 className='text-center text-3xl font-bold'>Milestones</h1>
+
+          <MilestonesChart milestones={state.milestones} />
+          <Separator className='my-4' />
+          <div className='flex flex-col justify-center gap-12 lg:grid lg:grid-cols-5'>
+            <MilestonesInput
+              state={state}
+              addCurrentMilestone={db.addCurrentMilestone}
             />
-            <Button
-              className='h-10'
-              variant={'secondary'}
-              onClick={db.addCurrentMilestone}
-              disabled={state.isSyncing}
-            >
-              Add
-            </Button>
+
+            <MilestonesDisplay
+              milestones={state.milestones}
+              isSyncing={state.isSyncing}
+              removeMilestone={db.removeMilestone}
+            />
           </div>
         </div>
-        <div className='mx-auto flex w-full max-w-2xl flex-col gap-4'>
-          <MilestonesChart milestones={state.milestones} />
-          <MilestonesDisplay
-            milestones={state.milestones}
-            isSyncing={state.isSyncing}
-            removeMilestone={db.removeMilestone}
-          />
-        </div>
+        <MilestonesSync state={state} db={db} />
       </div>
     </div>
   );
