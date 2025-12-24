@@ -36,16 +36,8 @@ export default function MilestonesDisplay({
             <XAxis type='number' />
             <YAxis type='category' width={yAxisWidth} dataKey='name' />
             <Legend />
-            <Bar dataKey='days' radius={[0, 4, 4, 0]}>
-              <LabelList
-                content={(props) =>
-                  renderCustomizedLabel(
-                    getLabelColor(chartData[props.index!]!.color),
-                    props
-                  )
-                }
-              />
-              {chartData.map((item, idx) => (
+            <Bar dataKey='days' radius={[0, 4, 4, 0]} label={<CustomLabel />}>
+              {chartData.map((item) => (
                 <Cell key={`${item.name}`} fill={`${item.color}`} />
               ))}
             </Bar>
@@ -86,58 +78,55 @@ const transformMilestonesForChart = (milestones: ClientMilestone[]) =>
     color: m.color,
   }));
 
-const getColorString = (idx: number, total: number) =>
-  `hsl(${Math.floor((idx / total) * 360)}deg 70% 50%)`;
+const CustomLabel = (props: LabelProps) => {
+  const { x, y, width, height, value } = props;
 
-const getLabelColor = (hexColor: string): string => {
-  const hslColor = hexToHsl(hexColor);
-  const match = hslColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-  if (!match) return 'white';
-
-  const lightness = parseInt(match[3]);
-
-  return lightness > 50 ? '#000000' : '#ffffff';
-};
-
-const hexToHsl = (hex: string): string => {
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-
-  if (max === min) return `hsl(0, 0%, ${Math.round(l * 100)}%)`;
-
-  const d = max - min;
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  let h = 0;
-
-  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-  else if (max === g) h = ((b - r) / d + 2) / 6;
-  else h = ((r - g) / d + 4) / 6;
-
-  return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
-};
-
-const renderCustomizedLabel = (color: string, props: LabelProps) => {
-  const { x, y, width, value, index } = props;
-
-  if (x == null || y == null || width == null || index === undefined) {
+  if (
+    x === undefined ||
+    y === undefined ||
+    value === null ||
+    width === undefined ||
+    height === undefined
+  ) {
     return null;
   }
+  if (!value) return null;
+
+  const padding = { x: 8, y: 4 };
+  const fontSize = 14;
+  const textWidth = String(value).length * 8;
+  const bgWidth = textWidth + padding.x * 2;
+  const bgHeight = fontSize + padding.y * 2;
+  const isSmallBar = Number(width) < bgWidth + 16;
+
+  const labelX = isSmallBar
+    ? Number(x) + Number(width) + bgWidth / 2 + 8
+    : Number(x) + Number(width) / 2;
+
+  const labelY = Number(y) + Number(height) / 2;
 
   return (
-    <text
-      x={Number(x) + Number(width) / 2}
-      y={Number(y) + 26}
-      textAnchor='middle'
-      dominantBaseline='middle'
-      fill={color}
-      fontWeight={'bold'}
-    >
-      {String(value)}
-    </text>
+    <g>
+      <rect
+        x={labelX - bgWidth / 2}
+        y={labelY - bgHeight / 2 - 1}
+        width={bgWidth}
+        height={bgHeight}
+        fill='hsl(0 4% 30%)'
+        rx={4}
+        ry={4}
+      />
+      <text
+        x={labelX}
+        y={labelY}
+        fill='white'
+        fontSize={fontSize}
+        textAnchor='middle'
+        dominantBaseline='middle'
+        fontWeight='bold'
+      >
+        {value}
+      </text>
+    </g>
   );
 };
