@@ -8,23 +8,21 @@ export default function ColorPicker({
   handleColorChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    // <div className='flex items-center justify-center gap-4'>
     <>
       <div className='relative'>
         <input
           type='color'
           value={color}
           onChange={handleColorChange}
-          className='absolute inset-0 h-8 w-8 cursor-pointer rounded-lg border border-foreground opacity-0'
+          className='absolute inset-0 h-8 w-8 cursor-pointer rounded-md border border-foreground opacity-0'
         />
         <div
-          className='h-8 w-8 rounded-lg shadow-md'
+          className='h-8 w-8 rounded-md shadow-md'
           style={{ backgroundColor: color }}
         />
       </div>
       <div className='flex flex-col'>
-        <label className='text-sm font-medium'>Color</label>
-        <span className='text-xs'>{color}</span>
+        <span className='text-sm font-medium'>Select Color</span>
       </div>
     </>
   );

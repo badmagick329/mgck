@@ -9,6 +9,7 @@ import useMilestones from '@/hooks/milestones/useMilestones';
 import Navbar from '@/app/_components/Navbar';
 import MilestonesDisplay from '@/app/milestones/_components/MilestonesDisplay';
 import ColorPicker from '@/app/milestones/_components/ColorPicker';
+import MilestonesChart from '@/app/milestones/_components/MilestonesChart';
 
 export default function MilestonesClient({ username }: { username: string }) {
   const { state, db } = useMilestones(username);
@@ -75,11 +76,14 @@ export default function MilestonesClient({ username }: { username: string }) {
             </Button>
           </div>
         </div>
-        <MilestonesDisplay
-          milestones={state.milestones}
-          isSyncing={state.isSyncing}
-          removeMilestone={db.removeMilestone}
-        />
+        <div className='mx-auto flex w-full max-w-2xl flex-col gap-4'>
+          <MilestonesChart milestones={state.milestones} />
+          <MilestonesDisplay
+            milestones={state.milestones}
+            isSyncing={state.isSyncing}
+            removeMilestone={db.removeMilestone}
+          />
+        </div>
       </div>
     </div>
   );
