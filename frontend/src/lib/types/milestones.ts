@@ -26,8 +26,19 @@ export type ClientMilestone = z.infer<typeof clientMilestoneSchema>;
 
 export const clientMilestoneListSchema = z.array(clientMilestoneSchema);
 
+export const diffPeriodEnum = z.enum([
+  'days',
+  'hours',
+  'minutes',
+  'weeks',
+  'seconds',
+]);
+
 export const milestonesConfig = z.object({
   milestonesOnServer: z.boolean(),
+  diffPeriod: diffPeriodEnum,
 });
 
 export type MilestonesConfig = z.infer<typeof milestonesConfig>;
+
+export type DiffPeriod = z.infer<typeof diffPeriodEnum>;

@@ -9,9 +9,11 @@ import MilestonesChart from '@/app/milestones/_components/MilestonesChart';
 import MilestonesInput from '@/app/milestones/_components/MilestonesInput';
 import MilestonesSync from '@/app/milestones/_components/MilestonesSync';
 import { Separator } from '@/components/ui/separator';
+import { ButtonGroup } from '@/components/ui/button-group';
+import { MilestonesButton } from '@/components/ui/MilestonesButton';
 
 export default function MilestonesClient({ username }: { username: string }) {
-  const { state, db } = useMilestones(username);
+  const { state, db, milestonesConfig } = useMilestones(username);
 
   if (!state.isLoaded) {
     return <Loading />;
@@ -25,13 +27,61 @@ export default function MilestonesClient({ username }: { username: string }) {
           <div className='flex flex-col gap-4'>
             <h1 className='text-center text-3xl font-bold'>Milestones</h1>
 
-            <MilestonesChart milestones={state.milestones} />
+            <MilestonesChart
+              milestones={state.milestones}
+              diffPeriod={milestonesConfig.diffPeriod}
+            />
+            <div className='flex justify-center'>
+              <ButtonGroup>
+                <MilestonesButton
+                  appVariant='milestonesSecondary'
+                  onClick={() => state.setDiffPeriod('seconds')}
+                  disabled={milestonesConfig.diffPeriod === 'seconds'}
+                  className='font-semibold'
+                >
+                  Seconds
+                </MilestonesButton>
+                <MilestonesButton
+                  appVariant='milestonesSecondary'
+                  onClick={() => state.setDiffPeriod('minutes')}
+                  disabled={milestonesConfig.diffPeriod === 'minutes'}
+                  className='font-semibold'
+                >
+                  Minutes
+                </MilestonesButton>
+                <MilestonesButton
+                  appVariant='milestonesSecondary'
+                  onClick={() => state.setDiffPeriod('hours')}
+                  disabled={milestonesConfig.diffPeriod === 'hours'}
+                  className='font-semibold'
+                >
+                  Hours
+                </MilestonesButton>
+                <MilestonesButton
+                  appVariant='milestonesSecondary'
+                  onClick={() => state.setDiffPeriod('days')}
+                  disabled={milestonesConfig.diffPeriod === 'days'}
+                  className='font-semibold'
+                >
+                  Days
+                </MilestonesButton>
+                <MilestonesButton
+                  appVariant='milestonesSecondary'
+                  onClick={() => state.setDiffPeriod('weeks')}
+                  disabled={milestonesConfig.diffPeriod === 'weeks'}
+                  className='font-semibold'
+                >
+                  Weeks
+                </MilestonesButton>
+              </ButtonGroup>
+            </div>
             <Separator className='my-4' />
             <div className='flex flex-col justify-center gap-12'>
               <MilestonesDisplay
                 milestones={state.milestones}
                 isSyncing={state.isSyncing}
                 removeMilestone={db.removeMilestone}
+                diffPeriod={milestonesConfig.diffPeriod}
               />
               <MilestonesInput
                 state={state}
@@ -39,7 +89,11 @@ export default function MilestonesClient({ username }: { username: string }) {
               />
             </div>
           </div>
-          <MilestonesSync state={state} db={db} />
+          <MilestonesSync
+            state={state}
+            db={db}
+            isUsingServer={milestonesConfig.milestonesOnServer}
+          />
         </div>
       </div>
     </div>

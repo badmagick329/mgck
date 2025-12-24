@@ -5,6 +5,7 @@ import useLocalStorage from '@/hooks/useLocalStorage';
 import {
   ClientMilestone,
   clientMilestoneSchema,
+  DiffPeriod,
   MilestonesConfig,
 } from '@/lib/types/milestones';
 import { useState } from 'react';
@@ -35,6 +36,7 @@ export default function useMilestones(username: string) {
     isLoaded: isConfigLoaded,
   } = useLocalStorage<MilestonesConfig>('milestonesConfig', {
     milestonesOnServer: false,
+    diffPeriod: 'days',
   });
 
   const { isSyncing, execute } = useSyncOperation();
@@ -144,6 +146,9 @@ export default function useMilestones(username: string) {
       );
     });
   };
+  const setDiffPeriod = (period: DiffPeriod) => {
+    setMilestonesConfig({ ...milestonesConfig, diffPeriod: period });
+  };
 
   return {
     state: {
@@ -154,11 +159,13 @@ export default function useMilestones(username: string) {
       isLoaded: isLoaded && isConfigLoaded,
       isSyncing,
       milestones,
-      isUsingServer: milestonesConfig.milestonesOnServer,
+
       unlinkFromServer,
       color,
       handleColorChange,
+      setDiffPeriod,
     },
+    milestonesConfig,
     db: {
       removeMilestone,
       addCurrentMilestone,

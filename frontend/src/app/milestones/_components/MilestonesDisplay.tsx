@@ -1,11 +1,12 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import {
+  getDiffIn,
   getDiffInDays,
   getLocalDateDisplay,
   getLocalDatetimeDisplay,
 } from '@/lib/milestones';
-import { ClientMilestone } from '@/lib/types/milestones';
+import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
 import { Trash2Icon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import React from 'react';
@@ -17,15 +18,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { capitaliseWords } from '@/lib/utils';
+
 
 export default function MilestonesDisplay({
   milestones,
   isSyncing,
   removeMilestone,
+  diffPeriod,
 }: {
   milestones: ClientMilestone[];
   isSyncing: boolean;
   removeMilestone: (name: string) => void;
+  diffPeriod: DiffPeriod;
 }) {
   const params = useSearchParams();
   const debug = Boolean(params.get('debug'));
@@ -36,7 +41,9 @@ export default function MilestonesDisplay({
         <TableRow>
           <TableHead>Name</TableHead>
           <TableHead>Date</TableHead>
-          <TableHead className='hidden md:table-cell'>Days to Go</TableHead>
+          <TableHead className='hidden md:table-cell'>
+            {capitaliseWords(diffPeriod)} to Go
+          </TableHead>
           <TableHead className='text-right'>Action</TableHead>
         </TableRow>
       </TableHeader>
@@ -52,7 +59,7 @@ export default function MilestonesDisplay({
                   : getLocalDateDisplay(date, m.timezone)}
               </TableCell>
               <TableCell className='hidden md:block'>
-                {getDiffInDays(date)}
+                {getDiffIn(date, diffPeriod)}
               </TableCell>
               <TableCell className='text-right'>
                 {
