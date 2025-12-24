@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    --background-ml: oklch(0.88 0.01 35.15);
-    --background-light-ml: oklch(0.92 0.01 35.15);
-    --background-lighter-ml: oklch(0.96 0.01 35.15);
+    --background-ml: oklch(0.88 0.01 228.7);
+    --background-light-ml: oklch(0.92 0.01 228.7);
+    --background-lighter-ml: oklch(0.96 0.01 228.7);
     --foreground-ml: oklch(0.2 0 0);
     --foreground-strong-ml: oklch(0.1 0 0);
     --foreground-muted-ml: oklch(0.45 0 0);
@@ -35,7 +35,7 @@
     --primary-em: 190 100% 15.5%;
     --primary-kp: 220 100% 25.5%;
     --primary-gf: 10 100% 80%;
-    --primary-ml: oklch(0.4773 0.1 35.15);
+    --primary-ml: oklch(0.6 0.1963 348.56);
     --primary-foreground: 210 20% 98%;
     --primary-dg-foreground: 220.9 39.3% 95%;
     --primary-gf-foreground: 220.9 39.3% 5%;
@@ -44,6 +44,7 @@
     --secondary-dg: 250 50% 95%;
     --secondary-foreground: 220.9 39.3% 11%;
     --secondary-dg-foreground: 210 20% 98%;
+    --secondary-ml: oklch(0.6 0.04 348.56);
 
     --muted: 220 14.3% 95.9%;
     --muted-foreground: 220 8.9% 46.1%;
@@ -67,9 +68,9 @@
   }
 
   .dark {
-    --background-ml: oklch(0.05 0.06 35.15);
-    --background-light-ml: oklch(0.1 0.06 35.15);
-    --background-lighter-ml: oklch(0.15 0.06 35.15);
+    --background-ml: oklch(0.05 0.06 228.7);
+    --background-light-ml: oklch(0.1 0.06 228.7);
+    --background-lighter-ml: oklch(0.15 0.06 228.7);
     --foreground-ml: oklch(0.9 0 315);
     --foreground-strong-ml: oklch(0.98 0 315);
     --foreground-muted-ml: oklch(0.75 0 315);
@@ -98,7 +99,7 @@
     --primary-kp: 220 100% 20.5%;
     --primary-em: 190 100% 20.5%;
     --primary-gf: 10 100% 80%;
-    --primary-ml: oklch(0.4773 0.1 35.15);
+    --primary-ml: oklch(0.4871 0.1963 348.56);
     --primary-foreground: 220.9 39.3% 95%;
     --primary-dg-foreground: 220.9 39.3% 95%;
     --primary-gf-foreground: 220.9 39.3% 5%;
@@ -107,7 +108,7 @@
     --secondary-dg: 0 0% 10%;
     --secondary-foreground: 210 20% 98%;
     --secondary-dg-foreground: 210 20% 98%;
-    --secondary-ml: oklch(0.4773 0.02 35.15);
+    --secondary-ml: oklch(0.4871 0.04 348.56);
 
     --muted: 215 27.9% 16.9%;
     --muted-foreground: 217.9 10.6% 64.9%;
