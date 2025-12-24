@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { MilestonesButton } from '@/components/ui/MilestonesButton';
 import useMilestones from '@/hooks/milestones/useMilestones';
 
 type Props = {
@@ -8,8 +9,8 @@ type Props = {
 export default function MilestonesSync({ state, db }: Props) {
   return (
     <div className='flex justify-center gap-2 pb-8'>
-      <Button
-        variant={'secondary'}
+      <MilestonesButton
+        appVariant={'milestonesSecondary'}
         disabled={state.isSyncing}
         onClick={
           state.isUsingServer
@@ -18,15 +19,15 @@ export default function MilestonesSync({ state, db }: Props) {
         }
       >
         {state.isUsingServer ? 'Unlink from server' : 'Save changes to server'}
-      </Button>
+      </MilestonesButton>
       {!state.isUsingServer && (
-        <Button
-          variant={'secondary'}
+        <MilestonesButton
+          appVariant={'milestonesSecondary'}
           disabled={state.isSyncing}
           onClick={db.retrieveChangesFromServerAndLink}
         >
           Retrieve changes from server
-        </Button>
+        </MilestonesButton>
       )}
     </div>
   );

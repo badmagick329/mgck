@@ -38,6 +38,7 @@ module.exports = {
           '0 0 10px hsla(10 ,100% ,80%, 1), 0 0 2px hsla(10 ,100% ,80%, 1) inset',
         'glow-secondary-dg':
           '0 0 10px hsla(0, 0%, 10%, 1), 0 0 2px hsla(0, 0%, 10%, 1) inset',
+        card: 'var(--card-shadow)',
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -51,8 +52,14 @@ module.exports = {
         'background-gf': 'hsl(var(--background-gf))',
         'background-gf-dark': 'hsl(var(--background-gf-dark))',
         'background-light': 'hsl(var(--background-light))',
+        'background-ml': 'var(--background-ml)',
+        'background-light-ml': 'var(--background-light-ml)',
+        'background-lighter-ml': 'var(--background-lighter-ml)',
         foreground: 'hsl(var(--foreground))',
         'foreground-dg': 'hsl(var(--foreground-dg))',
+        'foreground-ml': 'var(--foreground-ml)',
+        'foreground-strong-ml': 'var(--foreground-strong-ml)',
+        'foreground-muted-ml': 'var(--foreground-muted-ml)',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
@@ -71,6 +78,10 @@ module.exports = {
           DEFAULT: 'hsl(var(--primary-gf))',
           foreground: 'hsl(var(--primary-gf-foreground))',
         },
+        'primary-ml': {
+          DEFAULT: 'var(--primary-ml)',
+          foreground: 'var(--foreground-ml)',
+        },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',
@@ -78,6 +89,10 @@ module.exports = {
         'secondary-dg': {
           DEFAULT: 'hsl(var(--secondary-dg))',
           foreground: 'hsl(var(--secondary-dg-foreground))',
+        },
+        'secondary-ml': {
+          DEFAULT: 'var(--secondary-ml)',
+          foreground: 'var(--foreground)',
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',

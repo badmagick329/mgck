@@ -18,25 +18,24 @@ export default function MilestonesClient({ username }: { username: string }) {
   }
 
   return (
-    <div className='flex min-h-dvh flex-col justify-center'>
-      <Navbar />
-      <div className='flex w-full grow flex-col gap-8 bg-background-kp px-4 pt-8'>
+    <div className='bg-background-ml text-foreground-ml flex min-h-dvh flex-col justify-center'>
+      <Navbar className='bg-background-lighter-ml' />
+      <div className='flex w-full grow flex-col gap-8 px-4 pt-8'>
         <div className='mx-auto flex w-full max-w-4xl grow flex-col justify-between gap-4'>
           <div className='flex flex-col gap-4'>
             <h1 className='text-center text-3xl font-bold'>Milestones</h1>
 
             <MilestonesChart milestones={state.milestones} />
             <Separator className='my-4' />
-            <div className='flex flex-col justify-center gap-12 lg:grid lg:grid-cols-5'>
-              <MilestonesInput
-                state={state}
-                addCurrentMilestone={db.addCurrentMilestone}
-              />
-
+            <div className='flex flex-col justify-center gap-12'>
               <MilestonesDisplay
                 milestones={state.milestones}
                 isSyncing={state.isSyncing}
                 removeMilestone={db.removeMilestone}
+              />
+              <MilestonesInput
+                state={state}
+                addCurrentMilestone={db.addCurrentMilestone}
               />
             </div>
           </div>

@@ -9,6 +9,14 @@ import { ClientMilestone } from '@/lib/types/milestones';
 import { Trash2Icon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export default function MilestonesDisplay({
   milestones,
@@ -23,34 +31,45 @@ export default function MilestonesDisplay({
   const debug = Boolean(params.get('debug'));
 
   return (
-    <div className='grid grid-cols-4 gap-2 lg:col-span-3'>
-      {milestones.length > 0 ? (
-        milestones.map((m) => {
+    <Table className='sm:text-sm'>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead className='hidden md:table-cell'>Days to Go</TableHead>
+          <TableHead className='text-right'>Action</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {milestones.map((m) => {
           const date = new Date(m.timestamp);
-
           return (
-            <React.Fragment key={m.name}>
-              <span>{m.name}</span>
-              <span>
+            <TableRow key={m.name}>
+              <TableCell className='font-medium'>{m.name}</TableCell>
+              <TableCell>
                 {debug
                   ? getLocalDatetimeDisplay(date, m.timezone)
                   : getLocalDateDisplay(date, m.timezone)}
-              </span>
-              <span>({getDiffInDays(date)})</span>
-              <Button
-                variant={'destructive'}
-                onClick={() => removeMilestone(m.name)}
-                disabled={isSyncing}
-                className='h-8 w-8 justify-self-end'
-              >
-                <Trash2Icon />
-              </Button>
-            </React.Fragment>
+              </TableCell>
+              <TableCell className='hidden md:block'>
+                {getDiffInDays(date)}
+              </TableCell>
+              <TableCell className='text-right'>
+                {
+                  <Button
+                    variant={'destructive'}
+                    onClick={() => removeMilestone(m.name)}
+                    disabled={isSyncing}
+                    className='h-8 w-8 justify-self-end'
+                  >
+                    <Trash2Icon />
+                  </Button>
+                }
+              </TableCell>
+            </TableRow>
           );
-        })
-      ) : (
-        <p>No milestones entered</p>
-      )}
-    </div>
+        })}
+      </TableBody>
+    </Table>
   );
 }
