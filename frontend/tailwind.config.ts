@@ -94,6 +94,10 @@ module.exports = {
           DEFAULT: 'var(--secondary-ml)',
           foreground: 'var(--foreground)',
         },
+        'secondary-ml-hover': {
+          DEFAULT: 'var(--secondary-ml-hover)',
+          foreground: 'var(--foreground)',
+        },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',

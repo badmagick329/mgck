@@ -5,22 +5,23 @@ import useMilestones from '@/hooks/milestones/useMilestones';
 type Props = {
   state: ReturnType<typeof useMilestones>['state'];
   db: ReturnType<typeof useMilestones>['db'];
+  isUsingServer: boolean;
 };
-export default function MilestonesSync({ state, db }: Props) {
+export default function MilestonesSync({ state, db, isUsingServer }: Props) {
   return (
     <div className='flex justify-center gap-2 pb-8'>
       <MilestonesButton
         appVariant={'milestonesSecondary'}
         disabled={state.isSyncing}
         onClick={
-          state.isUsingServer
+          isUsingServer
             ? state.unlinkFromServer
             : db.applyChangesToServerAndLink
         }
       >
-        {state.isUsingServer ? 'Unlink from server' : 'Save changes to server'}
+        {isUsingServer ? 'Unlink from server' : 'Save changes to server'}
       </MilestonesButton>
-      {!state.isUsingServer && (
+      {!isUsingServer && (
         <MilestonesButton
           appVariant={'milestonesSecondary'}
           disabled={state.isSyncing}

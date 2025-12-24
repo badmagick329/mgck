@@ -20,6 +20,7 @@ export default function MilestonesInput({ state, addCurrentMilestone }: Props) {
         value={state.name}
         disabled={state.isSyncing}
         placeholder='Enter milestone name... e.g Birthday'
+        className='focus-visible:ring-0 focus-visible:ring-offset-0'
       />
       <div className='flex w-full flex-col items-start gap-2 sm:flex-row sm:items-center'>
         <DatetimePicker

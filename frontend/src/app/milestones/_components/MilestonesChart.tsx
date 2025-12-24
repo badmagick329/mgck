@@ -1,6 +1,6 @@
-import { getDiffInDays } from '@/lib/milestones';
-import { ClientMilestone } from '@/lib/types/milestones';
-import { memo, useRef } from 'react';
+import { getDiffIn } from '@/lib/milestones';
+import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
+import { memo, useEffect, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -14,13 +14,20 @@ import {
 
 const MilestonesChart = memo(function MilestonesChart({
   milestones,
+  diffPeriod,
 }: {
   milestones: ClientMilestone[];
+  diffPeriod: DiffPeriod;
 }) {
-  const chartData = transformMilestonesForChart(milestones);
+  const [chartData, setChartData] = useState(
+    transformMilestonesForChart(milestones, diffPeriod)
+  );
   const maxLabelLength = Math.max(...chartData.map((d) => d.name.length));
   const yAxisWidth = maxLabelLength * 8;
   const chartHeight = Math.max(200, chartData.length * 65);
+  useEffect(() => {
+    setChartData(transformMilestonesForChart(milestones, diffPeriod));
+  }, [diffPeriod, milestones]);
 
   return (
     <div className='pointer-events-none mx-auto flex w-full flex-col items-center gap-2 rounded-md'>
@@ -28,7 +35,6 @@ const MilestonesChart = memo(function MilestonesChart({
         <BarChart data={chartData} layout='vertical' barCategoryGap={2}>
           <XAxis type='number' />
           <YAxis type='category' width={yAxisWidth} dataKey='name' />
-          <Legend />
           <Bar dataKey='days' radius={[0, 4, 4, 0]} label={<CustomLabel />}>
             {chartData.map((item) => (
               <Cell key={`${item.name}`} fill={`${item.color}`} />
@@ -40,10 +46,13 @@ const MilestonesChart = memo(function MilestonesChart({
   );
 });
 
-const transformMilestonesForChart = (milestones: ClientMilestone[]) =>
+const transformMilestonesForChart = (
+  milestones: ClientMilestone[],
+  diffPeriod: DiffPeriod
+) =>
   milestones.map((m) => ({
     name: m.name,
-    days: getDiffInDays(new Date(m.timestamp)),
+    days: getDiffIn(new Date(m.timestamp), diffPeriod),
     color: m.color,
   }));
 
@@ -54,6 +63,7 @@ const CustomLabel = (props: LabelProps) => {
     x === undefined ||
     y === undefined ||
     value === null ||
+    typeof value !== 'number' ||
     width === undefined ||
     height === undefined
   ) {
@@ -63,7 +73,8 @@ const CustomLabel = (props: LabelProps) => {
 
   const padding = { x: 8, y: 4 };
   const fontSize = 14;
-  const textWidth = String(value).length * 8;
+  const formattedVal = formatNumberWithCommas(value);
+  const textWidth = String(formattedVal).length * 8;
   const bgWidth = textWidth + padding.x * 2;
   const bgHeight = fontSize + padding.y * 2;
   const isSmallBar = Number(width) < bgWidth + 16;
@@ -94,9 +105,14 @@ const CustomLabel = (props: LabelProps) => {
         dominantBaseline='middle'
         fontWeight='bold'
       >
-        {value}
+        {formattedVal}
       </text>
     </g>
   );
 };
+
+const formatNumberWithCommas = (n: number): string => {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
 export default MilestonesChart;
