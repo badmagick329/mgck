@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 const appVariants = {
   milestonesPrimary: 'bg-primary-ml hover:opacity-90',
-  milestonesSecondary: 'bg-secondary-ml hover:bg-emerald-700',
+  milestonesSecondary: 'bg-secondary-ml hover:opacity-90',
 } as const;
 
 interface AppButtonProps extends ButtonProps {
