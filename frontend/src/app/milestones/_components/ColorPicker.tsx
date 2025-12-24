@@ -21,9 +21,7 @@ export default function ColorPicker({
           style={{ backgroundColor: color }}
         />
       </div>
-      <div className='flex flex-col'>
-        <span className='text-sm font-medium'>Select Color</span>
-      </div>
+      <span className='text-sm font-medium'>Pick Color</span>
     </>
   );
 }

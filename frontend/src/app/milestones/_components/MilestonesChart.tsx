@@ -23,7 +23,7 @@ const MilestonesChart = memo(function MilestonesChart({
   const chartHeight = Math.max(200, chartData.length * 65);
 
   return (
-    <div className='mx-auto flex w-full flex-col items-center gap-2'>
+    <div className='pointer-events-none mx-auto flex w-full flex-col items-center gap-2 rounded-md'>
       <ResponsiveContainer width='100%' height={chartHeight}>
         <BarChart data={chartData} layout='vertical' barCategoryGap={2}>
           <XAxis type='number' />
