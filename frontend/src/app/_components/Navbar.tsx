@@ -7,14 +7,15 @@ import { IoHome } from 'react-icons/io5';
 import { FaUser } from 'react-icons/fa';
 
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-export default function Navbar() {
+export default function Navbar({ className = '' }: { className?: string }) {
   const path = usePathname();
   const isHome = path === '/';
   const isUserHome = path.startsWith('/account');
 
   return (
-    <div className='flex w-full justify-between p-2'>
+    <div className={cn('flex w-full justify-between p-2', className)}>
       <div className='flex gap-2'>
         {isHome ? (
           <span className='cursor-default'>

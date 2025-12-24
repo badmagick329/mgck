@@ -81,14 +81,14 @@ const CustomLabel = (props: LabelProps) => {
         y={labelY - bgHeight / 2 - 1}
         width={bgWidth}
         height={bgHeight}
-        fill='hsl(0 4% 30%)'
+        fill='oklch(0.35 0 315)'
         rx={4}
         ry={4}
       />
       <text
         x={labelX}
         y={labelY}
-        fill='white'
+        fill='oklch(0.9 0 315)'
         fontSize={fontSize}
         textAnchor='middle'
         dominantBaseline='middle'

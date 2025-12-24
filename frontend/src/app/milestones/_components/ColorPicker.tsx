@@ -8,7 +8,7 @@ export default function ColorPicker({
   handleColorChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <>
+    <div className='flex items-center gap-4 whitespace-nowrap'>
       <div className='relative'>
         <input
           type='color'
@@ -22,6 +22,6 @@ export default function ColorPicker({
         />
       </div>
       <span className='text-sm font-medium'>Pick Color</span>
-    </>
+    </div>
   );
 }

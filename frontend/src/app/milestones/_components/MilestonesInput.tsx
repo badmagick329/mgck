@@ -1,8 +1,8 @@
 import useMilestones from '@/hooks/milestones/useMilestones';
-import { Button } from '@/components/ui/button';
 import DatetimePicker from '@/app/milestones/_components/DatetimePicker';
 import ColorPicker from '@/app/milestones/_components/ColorPicker';
 import { Input } from '@/components/ui/input';
+import { MilestonesButton } from '@/components/ui/MilestonesButton';
 
 type Props = {
   state: ReturnType<typeof useMilestones>['state'];
@@ -13,7 +13,7 @@ type Props = {
 
 export default function MilestonesInput({ state, addCurrentMilestone }: Props) {
   return (
-    <div className='flex flex-col items-center gap-4 lg:col-span-2'>
+    <div className='bg-background-light-ml flex flex-col items-center gap-4 rounded-md px-4 py-6 shadow-card md:flex-row'>
       <Input
         type='text'
         onChange={(e) => state.setName(e.target.value || '')}
@@ -21,25 +21,27 @@ export default function MilestonesInput({ state, addCurrentMilestone }: Props) {
         disabled={state.isSyncing}
         placeholder='Enter milestone name... e.g Birthday'
       />
-      <div className='flex w-full items-center gap-2'>
+      <div className='flex w-full flex-col items-start gap-2 sm:flex-row sm:items-center'>
         <DatetimePicker
           date={state.date}
           setDate={state.setDate}
           disabled={state.isSyncing}
         />
-        <ColorPicker
-          color={state.color}
-          handleColorChange={state.handleColorChange}
-        />
+        <div className='flex w-full items-center justify-between gap-4 px-1'>
+          <ColorPicker
+            color={state.color}
+            handleColorChange={state.handleColorChange}
+          />
+          <MilestonesButton
+            className='h-10'
+            appVariant={'milestonesPrimary'}
+            onClick={addCurrentMilestone}
+            disabled={state.isSyncing}
+          >
+            Add
+          </MilestonesButton>
+        </div>
       </div>
-      <Button
-        className='h-10'
-        variant={'secondary'}
-        onClick={addCurrentMilestone}
-        disabled={state.isSyncing}
-      >
-        Add
-      </Button>
     </div>
   );
 }
