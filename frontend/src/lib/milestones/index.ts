@@ -22,3 +22,8 @@ export const getLocalDatetimeDisplay = (date: Date, timezone: string) =>
   format(date, 'yyyy-MM-dd HH:mm zzz', {
     timeZone: timezone,
   });
+
+export const getLocalDateDisplay = (date: Date, timezone: string) =>
+  format(date, 'yyyy-MM-dd', {
+    timeZone: timezone,
+  });

@@ -21,9 +21,6 @@ const MilestonesChart = memo(function MilestonesChart({
   const maxLabelLength = Math.max(...chartData.map((d) => d.name.length));
   const yAxisWidth = maxLabelLength * 8;
   const chartHeight = Math.max(200, chartData.length * 65);
-  const renderCount = useRef(0);
-  renderCount.current++;
-  console.log(renderCount.current);
 
   return (
     <div className='mx-auto flex w-full flex-col items-center gap-2'>
