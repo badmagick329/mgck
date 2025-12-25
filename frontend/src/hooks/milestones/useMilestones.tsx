@@ -92,7 +92,7 @@ export default function useMilestones(username: string) {
         return toast({
           variant: 'destructive',
           title: 'Invalid milestone',
-          description: `${parsed.error}`,
+          description: `${parsed.error.errors[0].message}`,
           duration: toastDuration,
         });
       }
@@ -127,7 +127,7 @@ export default function useMilestones(username: string) {
     });
   };
 
-  const removeMilestone = async (milestoneName: string) => {
+  const deleteMilestone = async (milestoneName: string) => {
     execute(async () => {
       const result = await delete_(milestoneName);
       if (!result.ok) {
@@ -154,20 +154,27 @@ export default function useMilestones(username: string) {
     milestoneName: string,
     newMilestone: Partial<ClientMilestone>
   ) => {
-    execute(async () => {
+    return execute(async () => {
       const result = await update(milestoneName, newMilestone);
       if (!result.ok) {
-        return toast({
+        toast({
           variant: 'destructive',
           title: 'Error updating milestone',
           description: `${result.error}`,
           duration: toastDuration,
         });
+        return {
+          ok: false,
+          error: result.error,
+        };
       }
 
       setMilestones(
         milestones.map((m) => (m.name === milestoneName ? result.data : m))
       );
+      return {
+        ok: true,
+      };
     });
   };
 
@@ -180,7 +187,6 @@ export default function useMilestones(username: string) {
       isLoaded: isLoaded && isConfigLoaded,
       isSyncing,
       milestones,
-
       unlinkFromServer,
       color,
       handleColorChange,
@@ -188,10 +194,11 @@ export default function useMilestones(username: string) {
     },
     milestonesConfig,
     db: {
-      removeMilestone,
+      deleteMilestone,
       addCurrentMilestone,
       applyChangesToServerAndLink,
       retrieveChangesFromServerAndLink,
+      updateMilestone,
     },
   };
 }

@@ -21,7 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { useFeedback } from '@/hooks/useFeedback';
 import {
@@ -33,6 +33,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { topRightDefaultToast } from '@/lib/utils';
 import { MessageSquare } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import useKeyboardOffset from '@/hooks/useKeyboardOffset';
 
 const FormSchema = z.object({
   name: z.string(),
@@ -42,7 +43,7 @@ const FormSchema = z.object({
 export default function FeedbackForm() {
   const [open, setOpen] = useState(false);
   const { createFeedback } = useFeedback();
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const { keyboardOffset } = useKeyboardOffset();
   const { toast } = useToast();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -55,19 +56,6 @@ export default function FeedbackForm() {
     shouldFocusError: true,
   });
   const path = usePathname();
-
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const handleResize = () => {
-      const offset = (window.innerHeight - viewport.height) / 2;
-      setKeyboardOffset(offset);
-    };
-
-    viewport.addEventListener('resize', handleResize);
-    return () => viewport.removeEventListener('resize', handleResize);
-  }, []);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     const result = await createFeedback({
