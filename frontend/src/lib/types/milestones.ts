@@ -15,8 +15,8 @@ export type ServerMilestone = z.infer<typeof serverMilestoneSchema>;
 export const serverMilestoneListSchema = z.array(serverMilestoneSchema);
 
 export const clientMilestoneSchema = z.object({
-  name: z.string().trim().nonempty(),
-  timestamp: z.number().nonnegative(),
+  name: z.string().trim().nonempty({ message: 'Name cannot be empty' }),
+  timestamp: z.number(),
   timezone: z.string(),
   color: z.string().refine((s) => s.length === 7 || s.length === 4, {
     message: 'Color must be a valid hex code of length 7 or 4',

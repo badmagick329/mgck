@@ -13,7 +13,7 @@ type Props = {
 
 export default function MilestonesInput({ state, addCurrentMilestone }: Props) {
   return (
-    <div className='bg-background-light-ml flex flex-col items-center gap-4 rounded-md px-4 py-6 shadow-card md:flex-row'>
+    <div className='flex flex-col items-center gap-4 rounded-md bg-background-light-ml px-4 py-6 shadow-card md:flex-row'>
       <Input
         type='text'
         onChange={(e) => state.setName(e.target.value || '')}

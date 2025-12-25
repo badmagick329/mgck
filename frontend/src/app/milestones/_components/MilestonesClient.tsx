@@ -20,7 +20,7 @@ export default function MilestonesClient({ username }: { username: string }) {
   }
 
   return (
-    <div className='bg-background-ml text-foreground-ml flex min-h-dvh flex-col justify-center'>
+    <div className='flex min-h-dvh flex-col justify-center bg-background-ml text-foreground-ml'>
       <Navbar className='bg-background-lighter-ml' />
       <div className='flex w-full grow flex-col gap-8 px-4 pt-8'>
         <div className='mx-auto flex w-full max-w-4xl grow flex-col justify-between gap-4'>
@@ -80,7 +80,8 @@ export default function MilestonesClient({ username }: { username: string }) {
               <MilestonesDisplay
                 milestones={state.milestones}
                 isSyncing={state.isSyncing}
-                removeMilestone={db.removeMilestone}
+                updateMilestone={db.updateMilestone}
+                deleteMilestone={db.deleteMilestone}
                 diffPeriod={milestonesConfig.diffPeriod}
               />
               <MilestonesInput

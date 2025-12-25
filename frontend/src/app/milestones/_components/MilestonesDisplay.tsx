@@ -18,16 +18,20 @@ import {
 } from '@/components/ui/table';
 import { capitaliseWords } from '@/lib/utils';
 import useFeatureFlag from '@/hooks/useFeatureFlag';
+import useMilestones from '@/hooks/milestones/useMilestones';
+import UpdateModal from '@/app/milestones/_components/UpdateMilestoneModal';
 
 export default function MilestonesDisplay({
   milestones,
   isSyncing,
-  removeMilestone,
+  deleteMilestone,
+  updateMilestone,
   diffPeriod,
 }: {
   milestones: ClientMilestone[];
   isSyncing: boolean;
-  removeMilestone: (name: string) => void;
+  deleteMilestone: ReturnType<typeof useMilestones>['db']['deleteMilestone'];
+  updateMilestone: ReturnType<typeof useMilestones>['db']['updateMilestone'];
   diffPeriod: DiffPeriod;
 }) {
   const { getBooleanFlag } = useFeatureFlag();
@@ -60,16 +64,21 @@ export default function MilestonesDisplay({
                 {getDiffIn(date, diffPeriod)}
               </TableCell>
               <TableCell className='text-right'>
-                {
+                <div className='flex justify-end gap-2'>
+                  <UpdateModal
+                    existingMilestone={m}
+                    isSyncing={isSyncing}
+                    updateMilestone={updateMilestone}
+                  />
                   <Button
                     variant={'destructive'}
-                    onClick={() => removeMilestone(m.name)}
+                    onClick={() => deleteMilestone(m.name)}
                     disabled={isSyncing}
-                    className='h-8 w-8 justify-self-end'
+                    className='h-8 w-8'
                   >
                     <Trash2Icon />
                   </Button>
-                }
+                </div>
               </TableCell>
             </TableRow>
           );
