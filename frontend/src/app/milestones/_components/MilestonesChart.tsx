@@ -6,7 +6,6 @@ import {
   BarChart,
   Cell,
   LabelProps,
-  Legend,
   ResponsiveContainer,
   XAxis,
   YAxis,
@@ -23,7 +22,7 @@ const MilestonesChart = memo(function MilestonesChart({
     transformMilestonesForChart(milestones, diffPeriod)
   );
   const maxLabelLength = Math.max(...chartData.map((d) => d.name.length));
-  const yAxisWidth = maxLabelLength * 8;
+  const yAxisWidth = maxLabelLength * 10;
   const chartHeight = Math.max(200, chartData.length * 65);
   useEffect(() => {
     setChartData(transformMilestonesForChart(milestones, diffPeriod));
@@ -38,6 +37,11 @@ const MilestonesChart = memo(function MilestonesChart({
 
   return (
     <div className='pointer-events-none mx-auto flex w-full flex-col items-center gap-2 rounded-md'>
+      {milestones.length === 1 && (
+        <p className='pb-8 pt-4 text-center'>
+          Add one more milestone to start comparing.
+        </p>
+      )}
       <ResponsiveContainer width='100%' height={chartHeight}>
         <BarChart data={chartData} layout='vertical' barCategoryGap={2}>
           <XAxis type='number' />

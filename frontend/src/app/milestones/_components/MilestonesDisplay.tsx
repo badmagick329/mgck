@@ -35,6 +35,9 @@ export default function MilestonesDisplay({
 }) {
   const { getBooleanFlag } = useFeatureFlag();
   const debug = getBooleanFlag('debug');
+  if (milestones.length === 0) {
+    return null;
+  }
 
   return (
     <Table className='sm:text-sm'>
