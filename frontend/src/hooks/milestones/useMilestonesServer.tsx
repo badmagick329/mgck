@@ -1,7 +1,7 @@
 import {
   createMilestoneAction,
   listMilestonesAction,
-  removeMilestoneAction,
+  deleteMilestoneAction,
 } from '@/actions/milestones';
 import { useToast } from '@/components/ui/use-toast';
 import useSyncOperation from '@/hooks/milestones/useSyncOperation';
@@ -78,7 +78,7 @@ export default function useMilestonesServer({
       }
       const deleteResults = [] as ApiErrorResponse[];
       for (const name of milestoneNamesToRemove) {
-        const result = await removeMilestoneAction(name);
+        const result = await deleteMilestoneAction(name);
         if (!result.ok) {
           deleteResults.push(result);
         }
