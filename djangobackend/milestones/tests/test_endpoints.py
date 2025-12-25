@@ -328,6 +328,31 @@ class TestMilestoneUpdateEndpoint:
         response_data = json.loads(response.content)
         assert response_data["event_timezone"] == "America/Chicago"
 
+    def test_update_milestone_color(self):
+        """Test updating just the color"""
+        user = MilestoneUser.objects.create(username="user1")
+        dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
+        Milestone.objects.create(
+            event_timezone="UTC",
+            event_datetime_utc=dt,
+            event_name="Event",
+            created_by=user,
+        )
+
+        data = {
+            "username": "user1",
+            "new_color": "#123456",
+        }
+        response = self.client.patch(
+            reverse(MODIFY_MILESTONES_ENDPOINT, args=["Event"]),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data["color"] == "#123456"
+
     def test_update_milestone_all_fields(self):
         """Test updating all fields"""
         user = MilestoneUser.objects.create(username="user1")
