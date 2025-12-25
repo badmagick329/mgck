@@ -28,6 +28,13 @@ const MilestonesChart = memo(function MilestonesChart({
   useEffect(() => {
     setChartData(transformMilestonesForChart(milestones, diffPeriod));
   }, [diffPeriod, milestones]);
+  if (milestones.length === 0) {
+    return (
+      <p className='pb-8 pt-4 text-center'>
+        No milestones to display. Add your first milestone to start tracking.
+      </p>
+    );
+  }
 
   return (
     <div className='pointer-events-none mx-auto flex w-full flex-col items-center gap-2 rounded-md'>
