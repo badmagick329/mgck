@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Popover,
   PopoverContent,
@@ -7,7 +7,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { ChevronDownIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export default function DatetimePicker({
   date,
@@ -30,6 +29,7 @@ export default function DatetimePicker({
               id='date'
               className='h-10 w-full justify-between font-normal'
               disabled={disabled}
+              type='button'
             >
               {date ? date.toLocaleDateString() : 'Select date'}
               <ChevronDownIcon />
@@ -40,7 +40,7 @@ export default function DatetimePicker({
           <Calendar
             mode='single'
             selected={date}
-            captionLayout='dropdown'
+            captionLayout='label'
             onSelect={(date) => {
               setDate(date);
               setOpen(false);
