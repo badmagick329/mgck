@@ -62,24 +62,32 @@ export default function useMilestones(username: string) {
 
   const addCurrentMilestone = async () => {
     if (!name.trim() || !date) {
-      return toast({
+      toast({
         variant: 'destructive',
         title: 'Missing fields',
         description: 'Please provide both a name and a date.',
         duration: toastDuration,
       });
+      return {
+        ok: false as const,
+        error: 'Please provide both a name and a date.',
+      };
     }
     const exists = milestones.filter((m) => m.name === name.trim()).length > 0;
     if (exists) {
-      return toast({
+      toast({
         variant: 'destructive',
         title: 'Duplicate milestone',
         description: 'A milestone with this name already exists.',
         duration: toastDuration,
       });
+      return {
+        ok: false as const,
+        error: 'A milestone with this name already exists.',
+      };
     }
 
-    execute(async () => {
+    const fn = async () => {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const currentMilestone = {
         name,
@@ -89,21 +97,26 @@ export default function useMilestones(username: string) {
       };
       const parsed = clientMilestoneSchema.safeParse(currentMilestone);
       if (parsed.error) {
-        return toast({
+        toast({
           variant: 'destructive',
           title: 'Invalid milestone',
           description: `${parsed.error.errors[0].message}`,
           duration: toastDuration,
         });
+        return {
+          ok: false as const,
+          error: `${parsed.error.errors[0].message}`,
+        };
       }
       const result = await create(parsed.data);
       if (!result.ok) {
-        return toast({
+        toast({
           variant: 'destructive',
           title: 'Error adding milestone',
           description: `${result.error}`,
           duration: toastDuration,
         });
+        return { ok: false as const, error: `${result.error}` };
       }
 
       const clientMilestone = result.data;
@@ -119,12 +132,14 @@ export default function useMilestones(username: string) {
           },
         ].sort((a, b) => a.timestamp - b.timestamp)
       );
-      return toast({
+      toast({
         title: 'Milestone added',
         description: `Milestone "${clientMilestone.name}" added for ${new Date(clientMilestone.timestamp).toLocaleDateString()}.`,
         duration: toastDuration,
       });
-    });
+      return { ok: true as const };
+    };
+    return execute(fn);
   };
 
   const deleteMilestone = async (milestoneName: string) => {
