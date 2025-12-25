@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
 import { MilestonesButton } from '@/components/ui/MilestonesButton';
 import useMilestones from '@/hooks/milestones/useMilestones';
+import useFeatureFlag from '@/hooks/useFeatureFlag';
 
 type Props = {
   state: ReturnType<typeof useMilestones>['state'];
@@ -8,6 +8,12 @@ type Props = {
   isUsingServer: boolean;
 };
 export default function MilestonesSync({ state, db, isUsingServer }: Props) {
+  const { getBooleanFlag } = useFeatureFlag();
+  const showComponent = getBooleanFlag('milestoneServerSync');
+  if (!showComponent) {
+    return null;
+  }
+
   return (
     <div className='flex justify-center gap-2 pb-8'>
       <MilestonesButton

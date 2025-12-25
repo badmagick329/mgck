@@ -2,13 +2,11 @@
 import { Button } from '@/components/ui/button';
 import {
   getDiffIn,
-  getDiffInDays,
   getLocalDateDisplay,
   getLocalDatetimeDisplay,
 } from '@/lib/milestones';
 import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
 import { Trash2Icon } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
 import React from 'react';
 import {
   Table,
@@ -19,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { capitaliseWords } from '@/lib/utils';
-
+import useFeatureFlag from '@/hooks/useFeatureFlag';
 
 export default function MilestonesDisplay({
   milestones,
@@ -32,8 +30,8 @@ export default function MilestonesDisplay({
   removeMilestone: (name: string) => void;
   diffPeriod: DiffPeriod;
 }) {
-  const params = useSearchParams();
-  const debug = Boolean(params.get('debug'));
+  const { getBooleanFlag } = useFeatureFlag();
+  const debug = getBooleanFlag('debug');
 
   return (
     <Table className='sm:text-sm'>
