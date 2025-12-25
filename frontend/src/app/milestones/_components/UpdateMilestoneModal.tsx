@@ -126,18 +126,25 @@ export default function UpdateModal({
               </div>
             </div>
             <DialogFooter>
-              <DialogClose asChild>
-                <Button variant='outline' disabled={isSyncing}>
-                  Cancel
-                </Button>
-              </DialogClose>
-              <MilestonesButton
-                type='submit'
-                appVariant='milestonesPrimary'
-                disabled={isSyncing}
-              >
-                Update
-              </MilestonesButton>
+              <div className='flex w-full justify-between gap-4'>
+                <DialogClose asChild>
+                  <Button
+                    variant='outline'
+                    disabled={isSyncing}
+                    className='max-w-[100px]'
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <MilestonesButton
+                  type='submit'
+                  appVariant='milestonesPrimary'
+                  disabled={isSyncing}
+                  className='max-w-[100px]'
+                >
+                  Update
+                </MilestonesButton>
+              </div>
             </DialogFooter>
           </div>
         </form>

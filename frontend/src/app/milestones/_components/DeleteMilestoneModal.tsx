@@ -55,14 +55,20 @@ export default function DeleteMilestoneModal({
               Delete <span className='font-bold'>{milestoneName}</span>?
             </p>
             <DialogFooter>
-              <DialogClose asChild>
-                <Button variant='outline' disabled={isSyncing}>
-                  Cancel
+              <div className='flex w-full justify-between gap-4'>
+                <DialogClose asChild>
+                  <Button variant='outline' disabled={isSyncing}>
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  type='submit'
+                  variant='destructive'
+                  disabled={isSyncing}
+                >
+                  Delete
                 </Button>
-              </DialogClose>
-              <Button type='submit' variant='destructive' disabled={isSyncing}>
-                Delete
-              </Button>
+              </div>
             </DialogFooter>
           </div>
         </form>
