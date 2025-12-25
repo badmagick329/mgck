@@ -175,6 +175,8 @@ def update_milestone(
                 return Err(MilestoneError(f"Invalid timestamp: {str(e)}", 400))
         if new_timezone is not None:
             milestone.event_timezone = new_timezone
+        if new_color is not None:
+            milestone.color = new_color
 
         milestone.save()
         return Ok(milestone)
@@ -208,7 +210,6 @@ def update_milestone_response(
     if result.is_err:
         error = result.unwrap_err()
         return Response({"error": error.error}, status=error.status)
-
     milestone = result.unwrap()
     return Response(
         {

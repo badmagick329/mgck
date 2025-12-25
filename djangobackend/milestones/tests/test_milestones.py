@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone as dt_timezone
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -130,3 +131,42 @@ class TestMilestone:
             Milestone.create(
                 "event", TEST_TIMESTAMP, "UTC", "user", color=invalid_color
             )
+
+    def test_milestone_update_with_new_name(self):
+        """Test updating a milestone's event name"""
+        milestone = Milestone.create("OldName", TEST_TIMESTAMP, "UTC", "user")
+
+        milestone.event_name = "NewName"
+        milestone.save()
+
+        updated_milestone = Milestone.objects.get(id=milestone.id)  # type: ignore
+        assert updated_milestone.event_name == "NewName"
+
+    def test_milestone_update_with_new_timestamp(self):
+        """Test updating a milestone's timestamp"""
+        milestone = Milestone.create("Event", TEST_TIMESTAMP, "UTC", "user")
+
+        new_timestamp = TEST_TIMESTAMP + 86400000  # +1 day in milliseconds
+        new_datetime_utc = datetime.fromtimestamp(
+            new_timestamp / 1000, tz=dt_timezone.utc
+        )
+
+        milestone.event_datetime_utc = new_datetime_utc
+        milestone.save()
+
+        updated_milestone = Milestone.objects.get(id=milestone.id)  # type: ignore
+        assert (
+            updated_milestone.event_datetime_utc.timestamp()
+            == new_datetime_utc.timestamp()
+        )
+
+    def test_milestone_update_with_new_color(self):
+        """Test updating a milestone's color"""
+        milestone = Milestone.create("Event", TEST_TIMESTAMP, "UTC", "user")
+
+        new_color = "#00FF00"
+        milestone.color = new_color
+        milestone.save()
+
+        updated_milestone = Milestone.objects.get(id=milestone.id)  # type: ignore
+        assert updated_milestone.color == new_color
