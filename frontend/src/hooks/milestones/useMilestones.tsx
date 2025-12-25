@@ -55,7 +55,7 @@ export default function useMilestones(username: string) {
     setMilestonesConfig,
   });
 
-  const { create, remove } = useMilestoneSyncAdaptor(
+  const { create, delete_, update } = useMilestoneSyncAdaptor(
     milestonesConfig.milestonesOnServer,
     milestones
   );
@@ -129,7 +129,7 @@ export default function useMilestones(username: string) {
 
   const removeMilestone = async (milestoneName: string) => {
     execute(async () => {
-      const result = await remove(milestoneName);
+      const result = await delete_(milestoneName);
       if (!result.ok) {
         return toast({
           variant: 'destructive',
@@ -148,6 +148,27 @@ export default function useMilestones(username: string) {
   };
   const setDiffPeriod = (period: DiffPeriod) => {
     setMilestonesConfig({ ...milestonesConfig, diffPeriod: period });
+  };
+
+  const updateMilestone = async (
+    milestoneName: string,
+    newMilestone: Partial<ClientMilestone>
+  ) => {
+    execute(async () => {
+      const result = await update(milestoneName, newMilestone);
+      if (!result.ok) {
+        return toast({
+          variant: 'destructive',
+          title: 'Error updating milestone',
+          description: `${result.error}`,
+          duration: toastDuration,
+        });
+      }
+
+      setMilestones(
+        milestones.map((m) => (m.name === milestoneName ? result.data : m))
+      );
+    });
   };
 
   return {

@@ -79,7 +79,7 @@ export async function createMilestoneAction(
       };
 }
 
-export async function removeMilestoneAction(
+export async function deleteMilestoneAction(
   milestoneName: string
 ): Promise<ApiResponse<'success'>> {
   const authResult = await isAuthenticated();
@@ -106,6 +106,45 @@ export async function removeMilestoneAction(
   } catch (e) {
     return { ok: false, error: 'Failed to delete milestone' };
   }
+}
+
+export async function updateMilestoneAction(
+  milestoneName: string,
+  newMilestone: Partial<ClientMilestone>
+): Promise<ApiResponse<ClientMilestone>> {
+  const authResult = await isAuthenticated();
+  if (!authResult.ok) {
+    return authResult;
+  }
+
+  const url = new URL(`${BASE_URL}${API_MILESTONES}${milestoneName}`);
+  const result = await fetchAndParse<ServerMilestone>(
+    url,
+    serverMilestoneSchema,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: authResult.data,
+        new_event_name: newMilestone.name || null,
+        new_timestamp: newMilestone.timestamp || null,
+        new_timezone: newMilestone.timezone || null,
+        new_color: newMilestone.color || null,
+      }),
+    }
+  );
+
+  return result.ok
+    ? {
+        ok: true,
+        data: serverMilestoneToClient(result.data),
+      }
+    : {
+        ok: false,
+        error: 'Failed to update milestone',
+      };
 }
 
 async function isAuthenticated(): Promise<ApiResponse<string>> {
