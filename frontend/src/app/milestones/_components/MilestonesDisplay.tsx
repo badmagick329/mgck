@@ -1,12 +1,10 @@
 'use client';
-import { Button } from '@/components/ui/button';
 import {
   getDiffIn,
   getLocalDateDisplay,
   getLocalDatetimeDisplay,
 } from '@/lib/milestones';
 import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
-import { Trash2Icon } from 'lucide-react';
 import React from 'react';
 import {
   Table,
@@ -20,6 +18,7 @@ import { capitaliseWords } from '@/lib/utils';
 import useFeatureFlag from '@/hooks/useFeatureFlag';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import UpdateModal from '@/app/milestones/_components/UpdateMilestoneModal';
+import DeleteMilestoneModal from '@/app/milestones/_components/DeleteMilestoneModal';
 
 export default function MilestonesDisplay({
   milestones,
@@ -70,14 +69,11 @@ export default function MilestonesDisplay({
                     isSyncing={isSyncing}
                     updateMilestone={updateMilestone}
                   />
-                  <Button
-                    variant={'destructive'}
-                    onClick={() => deleteMilestone(m.name)}
-                    disabled={isSyncing}
-                    className='h-8 w-8'
-                  >
-                    <Trash2Icon />
-                  </Button>
+                  <DeleteMilestoneModal
+                    milestoneName={m.name}
+                    isSyncing={isSyncing}
+                    deleteMilestone={deleteMilestone}
+                  />
                 </div>
               </TableCell>
             </TableRow>

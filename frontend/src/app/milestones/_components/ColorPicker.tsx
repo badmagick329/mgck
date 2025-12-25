@@ -3,9 +3,11 @@ import { ChangeEvent } from 'react';
 export default function ColorPicker({
   color,
   handleColorChange,
+  disabled,
 }: {
   color: string;
   handleColorChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className='flex items-center gap-4 whitespace-nowrap'>
@@ -15,6 +17,7 @@ export default function ColorPicker({
           value={color}
           onChange={handleColorChange}
           className='absolute inset-0 h-8 w-8 cursor-pointer rounded-md border border-foreground opacity-0'
+          disabled={disabled !== undefined && disabled}
         />
         <div
           className='h-8 w-8 rounded-md shadow-md'
