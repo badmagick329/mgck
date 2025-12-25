@@ -112,19 +112,30 @@ export default function UpdateModal({
                 placeholder='Enter milestone name... e.g Birthday'
                 className='focus-visible:ring-0 focus-visible:ring-offset-0'
               />
-              <DatetimePicker date={date} setDate={setDate} disabled={false} />
+              <DatetimePicker
+                date={date}
+                setDate={setDate}
+                disabled={isSyncing}
+              />
               <div className='ml-auto'>
                 <ColorPicker
                   color={color}
                   handleColorChange={handleColorChange}
+                  disabled={isSyncing}
                 />
               </div>
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant='outline'>Cancel</Button>
+                <Button variant='outline' disabled={isSyncing}>
+                  Cancel
+                </Button>
               </DialogClose>
-              <MilestonesButton type='submit' appVariant='milestonesPrimary'>
+              <MilestonesButton
+                type='submit'
+                appVariant='milestonesPrimary'
+                disabled={isSyncing}
+              >
                 Update
               </MilestonesButton>
             </DialogFooter>
