@@ -31,51 +31,55 @@ export default function MilestonesClient({ username }: { username: string }) {
               milestones={state.milestones}
               diffPeriod={milestonesConfig.diffPeriod}
             />
-            <div className='flex justify-center'>
-              <ButtonGroup>
-                <MilestonesButton
-                  appVariant='milestonesSecondary'
-                  onClick={() => state.setDiffPeriod('seconds')}
-                  disabled={milestonesConfig.diffPeriod === 'seconds'}
-                  className='font-semibold'
-                >
-                  Seconds
-                </MilestonesButton>
-                <MilestonesButton
-                  appVariant='milestonesSecondary'
-                  onClick={() => state.setDiffPeriod('minutes')}
-                  disabled={milestonesConfig.diffPeriod === 'minutes'}
-                  className='font-semibold'
-                >
-                  Minutes
-                </MilestonesButton>
-                <MilestonesButton
-                  appVariant='milestonesSecondary'
-                  onClick={() => state.setDiffPeriod('hours')}
-                  disabled={milestonesConfig.diffPeriod === 'hours'}
-                  className='font-semibold'
-                >
-                  Hours
-                </MilestonesButton>
-                <MilestonesButton
-                  appVariant='milestonesSecondary'
-                  onClick={() => state.setDiffPeriod('days')}
-                  disabled={milestonesConfig.diffPeriod === 'days'}
-                  className='font-semibold'
-                >
-                  Days
-                </MilestonesButton>
-                <MilestonesButton
-                  appVariant='milestonesSecondary'
-                  onClick={() => state.setDiffPeriod('weeks')}
-                  disabled={milestonesConfig.diffPeriod === 'weeks'}
-                  className='font-semibold'
-                >
-                  Weeks
-                </MilestonesButton>
-              </ButtonGroup>
-            </div>
-            <Separator className='my-4' />
+            {state.milestones.length > 0 && (
+              <>
+                <div className='flex justify-center'>
+                  <ButtonGroup>
+                    <MilestonesButton
+                      appVariant='milestonesSecondary'
+                      onClick={() => state.setDiffPeriod('seconds')}
+                      disabled={milestonesConfig.diffPeriod === 'seconds'}
+                      className='font-semibold'
+                    >
+                      Seconds
+                    </MilestonesButton>
+                    <MilestonesButton
+                      appVariant='milestonesSecondary'
+                      onClick={() => state.setDiffPeriod('minutes')}
+                      disabled={milestonesConfig.diffPeriod === 'minutes'}
+                      className='font-semibold'
+                    >
+                      Minutes
+                    </MilestonesButton>
+                    <MilestonesButton
+                      appVariant='milestonesSecondary'
+                      onClick={() => state.setDiffPeriod('hours')}
+                      disabled={milestonesConfig.diffPeriod === 'hours'}
+                      className='font-semibold'
+                    >
+                      Hours
+                    </MilestonesButton>
+                    <MilestonesButton
+                      appVariant='milestonesSecondary'
+                      onClick={() => state.setDiffPeriod('days')}
+                      disabled={milestonesConfig.diffPeriod === 'days'}
+                      className='font-semibold'
+                    >
+                      Days
+                    </MilestonesButton>
+                    <MilestonesButton
+                      appVariant='milestonesSecondary'
+                      onClick={() => state.setDiffPeriod('weeks')}
+                      disabled={milestonesConfig.diffPeriod === 'weeks'}
+                      className='font-semibold'
+                    >
+                      Weeks
+                    </MilestonesButton>
+                  </ButtonGroup>
+                </div>
+                <Separator className='my-4' />
+              </>
+            )}
             <div className='flex flex-col justify-center gap-12'>
               <MilestonesDisplay
                 milestones={state.milestones}
