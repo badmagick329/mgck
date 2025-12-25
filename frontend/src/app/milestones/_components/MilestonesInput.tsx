@@ -36,7 +36,15 @@ export default function MilestonesInput({ state, addCurrentMilestone }: Props) {
           <MilestonesButton
             className='h-10'
             appVariant={'milestonesPrimary'}
-            onClick={addCurrentMilestone}
+            onClick={() => {
+              (async () => {
+                const result = await addCurrentMilestone();
+                if (result.ok) {
+                  state.setName('');
+                  state.setDate(undefined);
+                }
+              })();
+            }}
             disabled={state.isSyncing}
           >
             Add
