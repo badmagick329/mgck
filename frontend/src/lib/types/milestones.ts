@@ -37,11 +37,11 @@ export type ClientMilestone = z.infer<typeof clientMilestoneSchema>;
 export const clientMilestoneListSchema = z.array(clientMilestoneSchema);
 
 export const diffPeriodEnum = z.enum([
-  'days',
-  'hours',
-  'minutes',
-  'weeks',
   'seconds',
+  'minutes',
+  'hours',
+  'days',
+  'weeks',
 ]);
 
 export const milestonesConfig = z.object({

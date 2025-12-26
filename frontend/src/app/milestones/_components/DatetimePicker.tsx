@@ -40,7 +40,7 @@ export default function DatetimePicker({
           <Calendar
             mode='single'
             selected={date}
-            captionLayout='label'
+            captionLayout='dropdown-years'
             onSelect={(date) => {
               setDate(date);
               setOpen(false);
