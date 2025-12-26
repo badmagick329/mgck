@@ -14,6 +14,7 @@ import useMilestoneSyncAdaptor from '@/hooks/milestones/useMilestonesSync';
 import useMilestonesServer from '@/hooks/milestones/useMilestonesServer';
 import useDebounceInput from '@/hooks/useDebounceInput';
 import { DEFAULT_COLOR } from '@/lib/consts/milestones';
+import useMilestoneVisibility from '@/hooks/milestones/useMilestoneVisibility';
 
 const toastDuration = 4000;
 
@@ -59,7 +60,12 @@ export default function useMilestones(username: string) {
     milestonesConfig.milestonesOnServer,
     milestones
   );
-
+  const {
+    hiddenMilestones,
+    hideMilestone,
+    unhideMilestone,
+    isMilestoneHidden,
+  } = useMilestoneVisibility();
   const addCurrentMilestone = async () => {
     if (!name.trim() || !date) {
       toast({
@@ -159,6 +165,7 @@ export default function useMilestones(username: string) {
           .filter((m) => milestoneName !== m.name)
           .sort((a, b) => a.timestamp - b.timestamp)
       );
+      unhideMilestone(milestoneName);
     });
   };
   const setDiffPeriod = (period: DiffPeriod) => {
@@ -187,6 +194,14 @@ export default function useMilestones(username: string) {
       setMilestones(
         milestones.map((m) => (m.name === milestoneName ? result.data : m))
       );
+      if (
+        newMilestone.name &&
+        milestoneName !== newMilestone.name &&
+        isMilestoneHidden(milestoneName)
+      ) {
+        unhideMilestone(milestoneName);
+        hideMilestone(newMilestone.name);
+      }
       return {
         ok: true,
       };
@@ -206,6 +221,10 @@ export default function useMilestones(username: string) {
       color,
       handleColorChange,
       setDiffPeriod,
+      hiddenMilestones,
+      hideMilestone,
+      unhideMilestone,
+      isMilestoneHidden,
     },
     milestonesConfig,
     db: {

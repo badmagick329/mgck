@@ -30,6 +30,7 @@ export default function MilestonesClient({ username }: { username: string }) {
             <MilestonesChart
               milestones={state.milestones}
               diffPeriod={milestonesConfig.diffPeriod}
+              hiddenMilestones={state.hiddenMilestones}
             />
             {state.milestones.length > 0 && (
               <>
@@ -87,6 +88,9 @@ export default function MilestonesClient({ username }: { username: string }) {
                 updateMilestone={db.updateMilestone}
                 deleteMilestone={db.deleteMilestone}
                 diffPeriod={milestonesConfig.diffPeriod}
+                hideMilestone={state.hideMilestone}
+                unhideMilestone={state.unhideMilestone}
+                isMilestoneHidden={state.isMilestoneHidden}
               />
               <MilestonesInput
                 state={state}

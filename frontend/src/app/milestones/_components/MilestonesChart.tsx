@@ -1,3 +1,4 @@
+import useMilestoneVisibility from '@/hooks/milestones/useMilestoneVisibility';
 import { getDiffIn } from '@/lib/milestones';
 import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
 import { memo, useEffect, useState } from 'react';
@@ -14,24 +15,36 @@ import {
 const MilestonesChart = memo(function MilestonesChart({
   milestones,
   diffPeriod,
+  hiddenMilestones,
 }: {
   milestones: ClientMilestone[];
   diffPeriod: DiffPeriod;
+  hiddenMilestones: string[] | undefined;
 }) {
   const [chartData, setChartData] = useState(
-    transformMilestonesForChart(milestones, diffPeriod)
+    transformMilestonesForChart(milestones, diffPeriod, hiddenMilestones)
   );
   const maxLabelLength = Math.max(...chartData.map((d) => d.name.length));
   const yAxisWidth = maxLabelLength * 10;
   const chartHeight = Math.max(200, chartData.length * 65);
   useEffect(() => {
-    setChartData(transformMilestonesForChart(milestones, diffPeriod));
-  }, [diffPeriod, milestones]);
+    setChartData(
+      transformMilestonesForChart(milestones, diffPeriod, hiddenMilestones)
+    );
+  }, [diffPeriod, milestones, hiddenMilestones]);
   if (milestones.length === 0) {
     return (
       <p className='pb-8 pt-4 text-center'>
         No milestones to display. Add your first milestone to start tracking.
       </p>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return (
+      <div className='mx-auto flex w-full flex-col items-center gap-2 rounded-md pb-8 pt-4'>
+        <p>Nothing to show</p>
+      </div>
     );
   }
 
@@ -59,13 +72,21 @@ const MilestonesChart = memo(function MilestonesChart({
 
 const transformMilestonesForChart = (
   milestones: ClientMilestone[],
-  diffPeriod: DiffPeriod
-) =>
-  milestones.map((m) => ({
+  diffPeriod: DiffPeriod,
+  hiddenMilestones: string[] | undefined
+) => {
+  const visibleMilestones = milestones.filter(
+    (m) =>
+      hiddenMilestones === undefined ||
+      hiddenMilestones.length === 0 ||
+      !hiddenMilestones.includes(m.name)
+  );
+  return visibleMilestones.map((m) => ({
     name: m.name,
     days: getDiffIn(new Date(m.timestamp), diffPeriod),
     color: m.color,
   }));
+};
 
 const CustomLabel = (props: LabelProps) => {
   const { x, y, width, height, value } = props;
