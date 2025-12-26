@@ -78,17 +78,8 @@ export default function useMilestones(username: string) {
       }
 
       const clientMilestone = result.data;
-      store.setMilestones(
-        [
-          ...store.milestones,
-          {
-            name: clientMilestone.name,
-            timestamp: clientMilestone.timestamp,
-            timezone,
-            color,
-          },
-        ].sort((a, b) => a.timestamp - b.timestamp)
-      );
+      store.addMilestone(clientMilestone);
+
       showSuccess(
         'Milestone added',
         `Milestone "${clientMilestone.name}" added for ${new Date(clientMilestone.timestamp).toLocaleDateString()}.`
@@ -105,12 +96,7 @@ export default function useMilestones(username: string) {
         showError('Error removing milestone', `${result.error}`);
         return;
       }
-
-      store.setMilestones(
-        store.milestones
-          .filter((m) => milestoneName !== m.name)
-          .sort((a, b) => a.timestamp - b.timestamp)
-      );
+      store.removeMilestone(milestoneName);
       visibility.unhideMilestone(milestoneName);
     });
   };
@@ -129,11 +115,7 @@ export default function useMilestones(username: string) {
         };
       }
 
-      store.setMilestones(
-        store.milestones.map((m) =>
-          m.name === milestoneName ? result.data : m
-        )
-      );
+      store.updateMilestone(milestoneName, result.data);
       if (
         newMilestone.name &&
         milestoneName !== newMilestone.name &&

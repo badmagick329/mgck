@@ -36,12 +36,18 @@ export default function useMilestoneStore() {
   };
 
   const removeMilestone = (name: string) => {
-    setMilestones((prev) => prev.filter((m) => m.name !== name));
+    setMilestones((prev) =>
+      prev
+        .filter((m) => m.name !== name)
+        .sort((a, b) => a.timestamp - b.timestamp)
+    );
   };
 
   const updateMilestone = (name: string, updates: Partial<ClientMilestone>) => {
     setMilestones((prev) =>
-      prev.map((m) => (m.name === name ? { ...m, ...updates } : m))
+      prev
+        .map((m) => (m.name === name ? { ...m, ...updates } : m))
+        .sort((a, b) => a.timestamp - b.timestamp)
     );
   };
 
