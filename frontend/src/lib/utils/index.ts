@@ -106,3 +106,6 @@ export function topRightDefaultToast(
 export function randomBetween(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
+
+export const formatNumberWithCommas = (n: number): string =>
+  n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');

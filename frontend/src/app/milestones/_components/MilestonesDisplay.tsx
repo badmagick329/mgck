@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { capitaliseWords } from '@/lib/utils';
+import { capitaliseWords, formatNumberWithCommas } from '@/lib/utils';
 import useFeatureFlag from '@/hooks/useFeatureFlag';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import UpdateModal from '@/app/milestones/_components/UpdateMilestoneModal';
@@ -52,7 +52,7 @@ export default function MilestonesDisplay({
   }
 
   return (
-    <Table className='sm:text-sm'>
+    <Table className='mx-auto max-w-4xl sm:text-sm'>
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
@@ -67,7 +67,6 @@ export default function MilestonesDisplay({
         {milestones.map((m) => {
           const date = new Date(m.timestamp);
           const isHidden = isMilestoneHidden(m.name);
-          console.log('ishidden', isHidden);
           return (
             <TableRow key={m.name}>
               <TableCell className='font-medium'>{m.name}</TableCell>
@@ -77,7 +76,7 @@ export default function MilestonesDisplay({
                   : getLocalDateDisplay(date, m.timezone)}
               </TableCell>
               <TableCell className='hidden md:block'>
-                {getDiffIn(date, diffPeriod)}
+                {formatNumberWithCommas(getDiffIn(date, diffPeriod))}
               </TableCell>
               <TableCell className='text-right'>
                 <div className='flex justify-end gap-2'>

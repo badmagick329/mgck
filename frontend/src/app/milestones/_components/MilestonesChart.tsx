@@ -1,6 +1,7 @@
 import useMilestoneVisibility from '@/hooks/milestones/useMilestoneVisibility';
 import { getDiffIn } from '@/lib/milestones';
 import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
+import { formatNumberWithCommas } from '@/lib/utils';
 import { memo, useEffect, useState } from 'react';
 import {
   Bar,
@@ -52,7 +53,7 @@ const MilestonesChart = memo(function MilestonesChart({
     <div className='pointer-events-none mx-auto flex w-full flex-col items-center gap-2 rounded-md'>
       {milestones.length === 1 && (
         <p className='pb-8 pt-4 text-center'>
-          Add one more milestone to start comparing.
+          Try adding one more milestone to start comparing.
         </p>
       )}
       <ResponsiveContainer width='100%' height={chartHeight}>
@@ -141,10 +142,6 @@ const CustomLabel = (props: LabelProps) => {
       </text>
     </g>
   );
-};
-
-const formatNumberWithCommas = (n: number): string => {
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
 export default MilestonesChart;
