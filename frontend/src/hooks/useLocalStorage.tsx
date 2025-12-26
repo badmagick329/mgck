@@ -1,69 +1,43 @@
 'use client';
-import { useEffect, useState } from 'react';
 
-function useLocalStorage<T>(
-  key: string,
-  initialValue: T | (() => T)
-): {
-  value: T;
-  updateValue: (newValue: T | ((value: T) => T)) => void;
-  removeValue: () => void;
-  isLoaded: boolean;
-} {
-  if (typeof window === 'undefined') {
-    return {
-      value: initialValue instanceof Function ? initialValue() : initialValue,
-      updateValue: () => {},
-      removeValue: () => {},
-      isLoaded: false,
-    };
-  }
+import { useEffect, useState, useCallback } from 'react';
 
-  let storedValue: string | null = null;
-  try {
-    storedValue = localStorage.getItem(key);
-  } catch (error) {}
-  initialValue =
-    initialValue instanceof Function ? initialValue() : initialValue;
-
-  const [value, setValue] = useState<T>(() => {
-    try {
-      return storedValue ? JSON.parse(storedValue) : initialValue;
-    } catch (error) {
-      return initialValue;
-    }
-  });
+export default function useLocalStorage<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(initialValue);
   const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        setValue(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error(`Error reading localStorage key "${key}":`, e);
+    }
     setIsLoaded(true);
-  }, []);
+  }, [key]);
 
-  const updateValue = (newValue: T | ((value: T) => T)) => {
-    try {
-      const valueToStore =
-        newValue instanceof Function ? newValue(value) : newValue;
-      setValue(valueToStore);
-      localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      console.error('Error on update local storage');
-    }
-  };
+  const updateValue = useCallback(
+    (newValue: T | ((prev: T) => T)) => {
+      setValue((prev) => {
+        const resolved =
+          newValue instanceof Function ? newValue(prev) : newValue;
+        try {
+          localStorage.setItem(key, JSON.stringify(resolved));
+        } catch (e) {
+          console.error(`Error writing localStorage key "${key}":`, e);
+        }
+        return resolved;
+      });
+    },
+    [key]
+  );
 
-  const removeValue = () => {
-    try {
-      localStorage.removeItem(key);
-      setValue(initialValue);
-    } catch (error) {
-      console.error('Error on remove local storage');
-    }
-  };
+  const removeValue = useCallback(() => {
+    localStorage.removeItem(key);
+    setValue(initialValue);
+  }, [key, initialValue]);
 
-  return {
-    value,
-    updateValue,
-    removeValue,
-    isLoaded,
-  };
+  return { value, updateValue, removeValue, isLoaded };
 }
-
-export default useLocalStorage;
