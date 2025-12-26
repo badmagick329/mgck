@@ -1,13 +1,17 @@
 import { MilestonesButton } from '@/components/ui/MilestonesButton';
-import useMilestones from '@/hooks/milestones/useMilestones';
+import useMilestonesServer from '@/hooks/milestones/useMilestonesServer';
 import useFeatureFlag from '@/hooks/useFeatureFlag';
 
 type Props = {
-  state: ReturnType<typeof useMilestones>['state'];
-  db: ReturnType<typeof useMilestones>['db'];
+  isSyncing: boolean;
   isUsingServer: boolean;
+  server: ReturnType<typeof useMilestonesServer>;
 };
-export default function MilestonesSync({ state, db, isUsingServer }: Props) {
+export default function MilestonesSync({
+  isSyncing,
+  isUsingServer,
+  server,
+}: Props) {
   const { getBooleanFlag } = useFeatureFlag();
   const showComponent = getBooleanFlag('milestoneServerSync');
   if (!showComponent) {
@@ -18,11 +22,11 @@ export default function MilestonesSync({ state, db, isUsingServer }: Props) {
     <div className='flex justify-center gap-2 pb-8'>
       <MilestonesButton
         appVariant={'milestonesSecondary'}
-        disabled={state.isSyncing}
+        disabled={isSyncing}
         onClick={
           isUsingServer
-            ? state.unlinkFromServer
-            : db.applyChangesToServerAndLink
+            ? server.unlinkFromServer
+            : server.applyChangesToServerAndLink
         }
       >
         {isUsingServer ? 'Unlink from server' : 'Save changes to server'}
@@ -30,8 +34,8 @@ export default function MilestonesSync({ state, db, isUsingServer }: Props) {
       {!isUsingServer && (
         <MilestonesButton
           appVariant={'milestonesSecondary'}
-          disabled={state.isSyncing}
-          onClick={db.retrieveChangesFromServerAndLink}
+          disabled={isSyncing}
+          onClick={server.retrieveChangesFromServerAndLink}
         >
           Retrieve changes from server
         </MilestonesButton>

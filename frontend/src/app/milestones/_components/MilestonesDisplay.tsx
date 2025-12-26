@@ -25,14 +25,10 @@ import { EyeIcon, EyeOffIcon } from 'lucide-react';
 type Props = {
   milestones: ClientMilestone[];
   isSyncing: boolean;
-  deleteMilestone: ReturnType<typeof useMilestones>['db']['deleteMilestone'];
-  updateMilestone: ReturnType<typeof useMilestones>['db']['updateMilestone'];
+  deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
+  updateMilestone: ReturnType<typeof useMilestones>['updateMilestone'];
   diffPeriod: DiffPeriod;
-  hideMilestone: ReturnType<typeof useMilestones>['state']['hideMilestone'];
-  unhideMilestone: ReturnType<typeof useMilestones>['state']['unhideMilestone'];
-  isMilestoneHidden: ReturnType<
-    typeof useMilestones
-  >['state']['isMilestoneHidden'];
+  visibility: ReturnType<typeof useMilestones>['visibility'];
 };
 
 export default function MilestonesDisplay({
@@ -41,9 +37,7 @@ export default function MilestonesDisplay({
   deleteMilestone,
   updateMilestone,
   diffPeriod,
-  hideMilestone,
-  unhideMilestone,
-  isMilestoneHidden,
+  visibility,
 }: Props) {
   const { getBooleanFlag } = useFeatureFlag();
   const debug = getBooleanFlag('debug');
@@ -66,7 +60,7 @@ export default function MilestonesDisplay({
       <TableBody>
         {milestones.map((m) => {
           const date = new Date(m.timestamp);
-          const isHidden = isMilestoneHidden(m.name);
+          const isHidden = visibility.isMilestoneHidden(m.name);
           return (
             <TableRow key={m.name}>
               <TableCell className='font-medium'>{m.name}</TableCell>
@@ -85,7 +79,9 @@ export default function MilestonesDisplay({
                     variant='outline'
                     type='button'
                     onClick={(e) =>
-                      isHidden ? unhideMilestone(m.name) : hideMilestone(m.name)
+                      isHidden
+                        ? visibility.unhideMilestone(m.name)
+                        : visibility.hideMilestone(m.name)
                     }
                   >
                     {isHidden ? <EyeOffIcon /> : <EyeIcon />}

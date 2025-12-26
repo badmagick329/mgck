@@ -1,39 +1,30 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
-import { ClientMilestone } from '@/lib/types/milestones';
+import { useMemo } from 'react';
 
 export default function useMilestoneVisibility() {
   const { value: hiddenMilestones, updateValue: setHiddenMilestones } =
     useLocalStorage<string[]>('hiddenMilestones', []);
 
-  const hideMilestone = (name: string) => {
-    if (hiddenMilestones.length === 0) {
-      setHiddenMilestones([name]);
-      return;
-    }
+  const hiddenSet = useMemo(
+    () => new Set(hiddenMilestones),
+    [hiddenMilestones]
+  );
 
-    if (hiddenMilestones.includes(name)) {
+  const hideMilestone = (name: string) => {
+    if (hiddenSet.has(name)) {
       return;
     }
-    setHiddenMilestones([...hiddenMilestones, name]);
+    setHiddenMilestones((prev) => [...prev, name]);
   };
 
   const unhideMilestone = (name: string) => {
-    const hidden = Array.isArray(hiddenMilestones) ? hiddenMilestones : [];
-    if (!hidden.includes(name)) return;
-    setHiddenMilestones(hidden.filter((m) => m !== name));
+    if (!hiddenSet.has(name)) {
+      return;
+    }
+    setHiddenMilestones((prev) => prev.filter((n) => n !== name));
   };
 
-  const visibleMilestones = (milestones: ClientMilestone[]) => {
-    const hidden = Array.isArray(hiddenMilestones) ? hiddenMilestones : [];
-    if (hidden.length === 0) return milestones;
-    return milestones.filter((m) => !hidden.includes(m.name));
-  };
-
-  const isMilestoneHidden = (name: string) => {
-    const hidden = Array.isArray(hiddenMilestones) ? hiddenMilestones : [];
-    if (hidden.length === 0) return false;
-    return hidden.includes(name);
-  };
+  const isMilestoneHidden = (name: string) => hiddenSet.has(name);
 
   return {
     hiddenMilestones,

@@ -5,13 +5,15 @@ import useMilestones from '@/hooks/milestones/useMilestones';
 import { DiffPeriod, diffPeriodEnum } from '@/lib/types/milestones';
 import { capitaliseWords } from '@/lib/utils';
 
+type Props = {
+  diffPeriod: DiffPeriod;
+  setDiffPeriod: ReturnType<typeof useMilestones>['store']['setDiffPeriod'];
+};
+
 export default function TimePeriodButtonGroup({
   diffPeriod,
   setDiffPeriod,
-}: {
-  diffPeriod: DiffPeriod;
-  setDiffPeriod: ReturnType<typeof useMilestones>['state']['setDiffPeriod'];
-}) {
+}: Props) {
   return (
     <>
       <MobileView diffPeriod={diffPeriod} setDiffPeriod={setDiffPeriod} />
@@ -21,13 +23,7 @@ export default function TimePeriodButtonGroup({
   );
 }
 
-function MobileView({
-  diffPeriod,
-  setDiffPeriod,
-}: {
-  diffPeriod: DiffPeriod;
-  setDiffPeriod: ReturnType<typeof useMilestones>['state']['setDiffPeriod'];
-}) {
+function MobileView({ diffPeriod, setDiffPeriod }: Props) {
   return (
     <div className='flex flex-col items-center gap-2 xs:hidden'>
       <ButtonGroup>
@@ -65,13 +61,7 @@ function MobileView({
   );
 }
 
-function StandardView({
-  diffPeriod,
-  setDiffPeriod,
-}: {
-  diffPeriod: DiffPeriod;
-  setDiffPeriod: ReturnType<typeof useMilestones>['state']['setDiffPeriod'];
-}) {
+function StandardView({ diffPeriod, setDiffPeriod }: Props) {
   return (
     <div className='hidden justify-center xs:flex'>
       <ButtonGroup>
