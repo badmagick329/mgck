@@ -17,10 +17,7 @@ import {
 import { capitaliseWords, formatNumberWithCommas } from '@/lib/utils';
 import useFeatureFlag from '@/hooks/useFeatureFlag';
 import useMilestones from '@/hooks/milestones/useMilestones';
-import UpdateModal from '@/app/milestones/_components/UpdateMilestoneModal';
-import DeleteMilestoneModal from '@/app/milestones/_components/DeleteMilestoneModal';
-import { Button } from '@/components/ui/button';
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import MilestoneActions from '@/app/milestones/_components/MilestoneActions';
 
 type Props = {
   milestones: ClientMilestone[];
@@ -64,7 +61,7 @@ export default function MilestonesDisplay({
           return (
             <TableRow key={m.name}>
               <TableCell className='font-medium'>
-                <div className='flex items-center gap-2'>
+                <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
                   <div
                     className='h-3 w-3'
                     style={{ backgroundColor: m.color }}
@@ -77,34 +74,18 @@ export default function MilestonesDisplay({
                   ? getLocalDatetimeDisplay(date, m.timezone)
                   : getLocalDateDisplay(date, m.timezone)}
               </TableCell>
-              <TableCell className='hidden md:block'>
+              <TableCell className='hidden md:table-cell'>
                 {formatNumberWithCommas(getDiffIn(date, diffPeriod))}
               </TableCell>
               <TableCell className='text-right'>
-                <div className='flex justify-end gap-2'>
-                  <Button
-                    className='h-8 w-8'
-                    variant='outline'
-                    type='button'
-                    onClick={(e) =>
-                      isHidden
-                        ? visibility.unhideMilestone(m.name)
-                        : visibility.hideMilestone(m.name)
-                    }
-                  >
-                    {isHidden ? <EyeOffIcon /> : <EyeIcon />}
-                  </Button>
-                  <UpdateModal
-                    existingMilestone={m}
-                    isSyncing={isSyncing}
-                    updateMilestone={updateMilestone}
-                  />
-                  <DeleteMilestoneModal
-                    milestoneName={m.name}
-                    isSyncing={isSyncing}
-                    deleteMilestone={deleteMilestone}
-                  />
-                </div>
+                <MilestoneActions
+                  isHidden={isHidden}
+                  isSyncing={isSyncing}
+                  deleteMilestone={deleteMilestone}
+                  updateMilestone={updateMilestone}
+                  visibility={visibility}
+                  milestone={m}
+                />
               </TableCell>
             </TableRow>
           );
