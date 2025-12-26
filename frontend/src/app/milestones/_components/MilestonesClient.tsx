@@ -28,11 +28,12 @@ export default function MilestonesClient({ username }: { username: string }) {
             diffPeriod={milestonesConfig.diffPeriod}
             hiddenMilestones={state.hiddenMilestones}
           />
-          <TimePeriodButtonGroup
-            milestones={state.milestones}
-            diffPeriod={milestonesConfig.diffPeriod}
-            setDiffPeriod={state.setDiffPeriod}
-          />
+          {state.milestones.length > 0 && (
+            <TimePeriodButtonGroup
+              diffPeriod={milestonesConfig.diffPeriod}
+              setDiffPeriod={state.setDiffPeriod}
+            />
+          )}
           <div className='flex flex-col justify-center gap-12'>
             <MilestonesDisplay
               milestones={state.milestones}
