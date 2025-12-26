@@ -19,6 +19,21 @@ import useFeatureFlag from '@/hooks/useFeatureFlag';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import UpdateModal from '@/app/milestones/_components/UpdateMilestoneModal';
 import DeleteMilestoneModal from '@/app/milestones/_components/DeleteMilestoneModal';
+import { Button } from '@/components/ui/button';
+import { EyeIcon, EyeOffIcon } from 'lucide-react';
+
+type Props = {
+  milestones: ClientMilestone[];
+  isSyncing: boolean;
+  deleteMilestone: ReturnType<typeof useMilestones>['db']['deleteMilestone'];
+  updateMilestone: ReturnType<typeof useMilestones>['db']['updateMilestone'];
+  diffPeriod: DiffPeriod;
+  hideMilestone: ReturnType<typeof useMilestones>['state']['hideMilestone'];
+  unhideMilestone: ReturnType<typeof useMilestones>['state']['unhideMilestone'];
+  isMilestoneHidden: ReturnType<
+    typeof useMilestones
+  >['state']['isMilestoneHidden'];
+};
 
 export default function MilestonesDisplay({
   milestones,
@@ -26,13 +41,10 @@ export default function MilestonesDisplay({
   deleteMilestone,
   updateMilestone,
   diffPeriod,
-}: {
-  milestones: ClientMilestone[];
-  isSyncing: boolean;
-  deleteMilestone: ReturnType<typeof useMilestones>['db']['deleteMilestone'];
-  updateMilestone: ReturnType<typeof useMilestones>['db']['updateMilestone'];
-  diffPeriod: DiffPeriod;
-}) {
+  hideMilestone,
+  unhideMilestone,
+  isMilestoneHidden,
+}: Props) {
   const { getBooleanFlag } = useFeatureFlag();
   const debug = getBooleanFlag('debug');
   if (milestones.length === 0) {
@@ -54,6 +66,8 @@ export default function MilestonesDisplay({
       <TableBody>
         {milestones.map((m) => {
           const date = new Date(m.timestamp);
+          const isHidden = isMilestoneHidden(m.name);
+          console.log('ishidden', isHidden);
           return (
             <TableRow key={m.name}>
               <TableCell className='font-medium'>{m.name}</TableCell>
@@ -67,6 +81,16 @@ export default function MilestonesDisplay({
               </TableCell>
               <TableCell className='text-right'>
                 <div className='flex justify-end gap-2'>
+                  <Button
+                    className='h-8 w-8'
+                    variant='outline'
+                    type='button'
+                    onClick={(e) =>
+                      isHidden ? unhideMilestone(m.name) : hideMilestone(m.name)
+                    }
+                  >
+                    {isHidden ? <EyeOffIcon /> : <EyeIcon />}
+                  </Button>
                   <UpdateModal
                     existingMilestone={m}
                     isSyncing={isSyncing}
