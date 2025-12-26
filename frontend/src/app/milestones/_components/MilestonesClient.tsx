@@ -9,6 +9,7 @@ import MilestonesChart from '@/app/milestones/_components/MilestonesChart';
 import MilestonesInput from '@/app/milestones/_components/MilestonesInput';
 import MilestonesSync from '@/app/milestones/_components/MilestonesSync';
 import TimePeriodButtonGroup from '@/app/milestones/_components/TimePeriodButtonGroup';
+import MilestonesHeading from '@/app/milestones/_components/MilestonesHeading';
 
 export default function MilestonesClient({ username }: { username: string }) {
   const {
@@ -29,8 +30,8 @@ export default function MilestonesClient({ username }: { username: string }) {
     <div className='flex min-h-dvh flex-col justify-center bg-background-ml text-foreground-ml'>
       <Navbar className='bg-background-lighter-ml' />
       <div className='flex w-full grow flex-col justify-between gap-4 px-2 md:px-4 lg:px-8'>
-        <div className='flex flex-col gap-4'>
-          <h1 className='text-center text-3xl font-bold'>Milestones</h1>
+        <div className='flex flex-col gap-4 pt-8'>
+          <MilestonesHeading />
           <MilestonesChart
             milestones={store.milestones}
             diffPeriod={store.config.diffPeriod}

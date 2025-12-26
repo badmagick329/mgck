@@ -24,10 +24,12 @@ export default function UpdateModal({
   existingMilestone,
   isSyncing,
   updateMilestone,
+  trigger,
 }: {
   existingMilestone: ClientMilestone;
   isSyncing: boolean;
-  updateMilestone: ReturnType<typeof useMilestones>['db']['updateMilestone'];
+  updateMilestone: ReturnType<typeof useMilestones>['updateMilestone'];
+  trigger?: React.ReactNode;
 }) {
   const { keyboardOffset } = useKeyboardOffset();
   const [date, setDate] = useState<Date | undefined>(
@@ -53,13 +55,15 @@ export default function UpdateModal({
     setOpen(isOpen);
   };
 
+  const defaultTrigger = (
+    <Button variant='outline' className='h-8 w-8'>
+      <SquarePenIcon />
+    </Button>
+  );
+
   return (
     <Dialog open={open} onOpenChange={setDialog}>
-      <DialogTrigger asChild>
-        <Button variant='outline' className='h-8 w-8'>
-          <SquarePenIcon />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
       <DialogContent
         className='sm:max-w-[425px]'
         style={{

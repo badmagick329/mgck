@@ -17,21 +17,24 @@ export default function DeleteMilestoneModal({
   milestoneName,
   deleteMilestone,
   isSyncing,
+  trigger,
 }: {
   milestoneName: string;
-  deleteMilestone: ReturnType<typeof useMilestones>['db']['deleteMilestone'];
+  deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
   isSyncing: boolean;
+  trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const { keyboardOffset } = useKeyboardOffset();
+  const defaultTrigger = (
+    <Button variant='outline' className='h-8 w-8'>
+      <Trash2Icon />
+    </Button>
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant='outline' className='h-8 w-8'>
-          <Trash2Icon />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
       <DialogContent
         className='sm:max-w-[425px]'
         style={{
