@@ -1,5 +1,5 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
-import { ClientMilestone, MilestonesConfig } from '@/lib/types/milestones';
+import { ClientMilestone } from '@/lib/types/milestones';
 
 export default function useMilestoneVisibility() {
   const { value: hiddenMilestones, updateValue: setHiddenMilestones } =
