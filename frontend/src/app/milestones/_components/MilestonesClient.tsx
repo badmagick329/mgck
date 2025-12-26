@@ -11,9 +11,17 @@ import MilestonesSync from '@/app/milestones/_components/MilestonesSync';
 import TimePeriodButtonGroup from '@/app/milestones/_components/TimePeriodButtonGroup';
 
 export default function MilestonesClient({ username }: { username: string }) {
-  const { state, db, milestonesConfig } = useMilestones(username);
+  const {
+    visibility,
+    store,
+    server,
+    isSyncing,
+    createMilestone,
+    updateMilestone,
+    deleteMilestone,
+  } = useMilestones(username);
 
-  if (!state.isLoaded) {
+  if (!store.isLoaded) {
     return <Loading />;
   }
 
@@ -24,37 +32,35 @@ export default function MilestonesClient({ username }: { username: string }) {
         <div className='flex flex-col gap-4'>
           <h1 className='text-center text-3xl font-bold'>Milestones</h1>
           <MilestonesChart
-            milestones={state.milestones}
-            diffPeriod={milestonesConfig.diffPeriod}
-            hiddenMilestones={state.hiddenMilestones}
+            milestones={store.milestones}
+            diffPeriod={store.config.diffPeriod}
+            hiddenMilestones={visibility.hiddenMilestones}
           />
-          {state.milestones.length > 0 && (
+          {store.milestones.length > 0 && (
             <TimePeriodButtonGroup
-              diffPeriod={milestonesConfig.diffPeriod}
-              setDiffPeriod={state.setDiffPeriod}
+              diffPeriod={store.config.diffPeriod}
+              setDiffPeriod={store.setDiffPeriod}
             />
           )}
           <div className='flex flex-col justify-center gap-12'>
             <MilestonesDisplay
-              milestones={state.milestones}
-              isSyncing={state.isSyncing}
-              updateMilestone={db.updateMilestone}
-              deleteMilestone={db.deleteMilestone}
-              diffPeriod={milestonesConfig.diffPeriod}
-              hideMilestone={state.hideMilestone}
-              unhideMilestone={state.unhideMilestone}
-              isMilestoneHidden={state.isMilestoneHidden}
+              milestones={store.milestones}
+              isSyncing={isSyncing}
+              updateMilestone={updateMilestone}
+              deleteMilestone={deleteMilestone}
+              diffPeriod={store.config.diffPeriod}
+              visibility={visibility}
             />
             <MilestonesInput
-              state={state}
-              addCurrentMilestone={db.addCurrentMilestone}
+              isSyncing={isSyncing}
+              createMilestone={createMilestone}
             />
           </div>
         </div>
         <MilestonesSync
-          state={state}
-          db={db}
-          isUsingServer={milestonesConfig.milestonesOnServer}
+          isSyncing={isSyncing}
+          isUsingServer={store.config.milestonesOnServer}
+          server={server}
         />
       </div>
     </div>

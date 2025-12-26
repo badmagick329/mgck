@@ -1,4 +1,3 @@
-import useMilestoneVisibility from '@/hooks/milestones/useMilestoneVisibility';
 import { getDiffIn } from '@/lib/milestones';
 import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
 import { formatNumberWithCommas } from '@/lib/utils';

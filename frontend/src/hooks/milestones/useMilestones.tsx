@@ -1,92 +1,54 @@
 'use client';
 
-import { useToast } from '@/components/ui/use-toast';
-import useLocalStorage from '@/hooks/useLocalStorage';
-import {
-  ClientMilestone,
-  clientMilestoneSchema,
-  DiffPeriod,
-  MilestonesConfig,
-} from '@/lib/types/milestones';
-import { useState } from 'react';
+import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
 import useSyncOperation from '@/hooks/milestones/useSyncOperation';
 import useMilestoneSyncAdaptor from '@/hooks/milestones/useMilestonesSync';
 import useMilestonesServer from '@/hooks/milestones/useMilestonesServer';
-import useDebounceInput from '@/hooks/useDebounceInput';
-import { DEFAULT_COLOR } from '@/lib/consts/milestones';
 import useMilestoneVisibility from '@/hooks/milestones/useMilestoneVisibility';
-
-const toastDuration = 4000;
+import useMilestoneStore from '@/hooks/milestones/useMilestoneStore';
+import useOperationToast from '@/hooks/milestones/useOperationToast';
 
 export default function useMilestones(username: string) {
-  const { toast } = useToast();
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [name, setName] = useState('');
-  const { value: color, handleChange: handleColorChange } = useDebounceInput({
-    defaultValue: DEFAULT_COLOR,
-    delay: 100,
-  });
-  const {
-    value: milestones,
-    updateValue: setMilestones,
-    isLoaded,
-  } = useLocalStorage<ClientMilestone[]>('milestones', []);
-  const {
-    value: milestonesConfig,
-    updateValue: setMilestonesConfig,
-    isLoaded: isConfigLoaded,
-  } = useLocalStorage<MilestonesConfig>('milestonesConfig', {
-    milestonesOnServer: false,
-    diffPeriod: 'days',
-  });
-
+  const store = useMilestoneStore();
+  const { showError, showSuccess } = useOperationToast();
   const { isSyncing, execute } = useSyncOperation();
 
-  const {
-    applyChangesToServerAndLink,
-    retrieveChangesFromServerAndLink,
-    unlinkFromServer,
-  } = useMilestonesServer({
+  const server = useMilestonesServer({
     execute,
-    milestones,
-    setMilestones,
-    toast,
-    toastDuration,
-    milestonesConfig: milestonesConfig,
-    setMilestonesConfig,
+    milestones: store.milestones,
+    setMilestones: store.setMilestones,
+    setServerLinked: store.setServerLinked,
   });
 
   const { create, delete_, update } = useMilestoneSyncAdaptor(
-    milestonesConfig.milestonesOnServer,
-    milestones
+    store.config.milestonesOnServer,
+    store.milestones
   );
-  const {
-    hiddenMilestones,
-    hideMilestone,
-    unhideMilestone,
-    isMilestoneHidden,
-  } = useMilestoneVisibility();
-  const addCurrentMilestone = async () => {
+  const visibility = useMilestoneVisibility();
+
+  const createMilestone = async ({
+    name,
+    date,
+    color,
+  }: {
+    name: string;
+    date: Date | undefined;
+    color: string;
+  }) => {
     if (!name.trim() || !date) {
-      toast({
-        variant: 'destructive',
-        title: 'Missing fields',
-        description: 'Please provide both a name and a date.',
-        duration: toastDuration,
-      });
+      showError('Missing fields', 'Please provide both a name and a date.');
       return {
         ok: false as const,
         error: 'Please provide both a name and a date.',
       };
     }
-    const exists = milestones.filter((m) => m.name === name.trim()).length > 0;
+    const exists =
+      store.milestones.filter((m) => m.name === name.trim()).length > 0;
     if (exists) {
-      toast({
-        variant: 'destructive',
-        title: 'Duplicate milestone',
-        description: 'A milestone with this name already exists.',
-        duration: toastDuration,
-      });
+      showError(
+        'Duplicate milestone',
+        'A milestone with this name already exists.'
+      );
       return {
         ok: false as const,
         error: 'A milestone with this name already exists.',
@@ -103,12 +65,7 @@ export default function useMilestones(username: string) {
       };
       const parsed = clientMilestoneSchema.safeParse(currentMilestone);
       if (parsed.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid milestone',
-          description: `${parsed.error.errors[0].message}`,
-          duration: toastDuration,
-        });
+        showError('Invalid milestone', `${parsed.error.errors[0].message}`);
         return {
           ok: false as const,
           error: `${parsed.error.errors[0].message}`,
@@ -116,20 +73,14 @@ export default function useMilestones(username: string) {
       }
       const result = await create(parsed.data);
       if (!result.ok) {
-        toast({
-          variant: 'destructive',
-          title: 'Error adding milestone',
-          description: `${result.error}`,
-          duration: toastDuration,
-        });
+        showError('Error adding milestone', `${result.error}`);
         return { ok: false as const, error: `${result.error}` };
       }
 
       const clientMilestone = result.data;
-      setName('');
-      setMilestones(
+      store.setMilestones(
         [
-          ...milestones,
+          ...store.milestones,
           {
             name: clientMilestone.name,
             timestamp: clientMilestone.timestamp,
@@ -138,11 +89,10 @@ export default function useMilestones(username: string) {
           },
         ].sort((a, b) => a.timestamp - b.timestamp)
       );
-      toast({
-        title: 'Milestone added',
-        description: `Milestone "${clientMilestone.name}" added for ${new Date(clientMilestone.timestamp).toLocaleDateString()}.`,
-        duration: toastDuration,
-      });
+      showSuccess(
+        'Milestone added',
+        `Milestone "${clientMilestone.name}" added for ${new Date(clientMilestone.timestamp).toLocaleDateString()}.`
+      );
       return { ok: true as const };
     };
     return execute(fn);
@@ -152,24 +102,17 @@ export default function useMilestones(username: string) {
     execute(async () => {
       const result = await delete_(milestoneName);
       if (!result.ok) {
-        return toast({
-          variant: 'destructive',
-          title: 'Error removing milestone',
-          description: `${result.error}`,
-          duration: toastDuration,
-        });
+        showError('Error removing milestone', `${result.error}`);
+        return;
       }
 
-      setMilestones(
-        milestones
+      store.setMilestones(
+        store.milestones
           .filter((m) => milestoneName !== m.name)
           .sort((a, b) => a.timestamp - b.timestamp)
       );
-      unhideMilestone(milestoneName);
+      visibility.unhideMilestone(milestoneName);
     });
-  };
-  const setDiffPeriod = (period: DiffPeriod) => {
-    setMilestonesConfig({ ...milestonesConfig, diffPeriod: period });
   };
 
   const updateMilestone = async (
@@ -179,28 +122,25 @@ export default function useMilestones(username: string) {
     return execute(async () => {
       const result = await update(milestoneName, newMilestone);
       if (!result.ok) {
-        toast({
-          variant: 'destructive',
-          title: 'Error updating milestone',
-          description: `${result.error}`,
-          duration: toastDuration,
-        });
+        showError('Error updating milestone', `${result.error}`);
         return {
           ok: false,
           error: result.error,
         };
       }
 
-      setMilestones(
-        milestones.map((m) => (m.name === milestoneName ? result.data : m))
+      store.setMilestones(
+        store.milestones.map((m) =>
+          m.name === milestoneName ? result.data : m
+        )
       );
       if (
         newMilestone.name &&
         milestoneName !== newMilestone.name &&
-        isMilestoneHidden(milestoneName)
+        visibility.isMilestoneHidden(milestoneName)
       ) {
-        unhideMilestone(milestoneName);
-        hideMilestone(newMilestone.name);
+        visibility.unhideMilestone(milestoneName);
+        visibility.hideMilestone(newMilestone.name);
       }
       return {
         ok: true,
@@ -209,30 +149,12 @@ export default function useMilestones(username: string) {
   };
 
   return {
-    state: {
-      date,
-      setDate,
-      name,
-      setName,
-      isLoaded: isLoaded && isConfigLoaded,
-      isSyncing,
-      milestones,
-      unlinkFromServer,
-      color,
-      handleColorChange,
-      setDiffPeriod,
-      hiddenMilestones,
-      hideMilestone,
-      unhideMilestone,
-      isMilestoneHidden,
-    },
-    milestonesConfig,
-    db: {
-      deleteMilestone,
-      addCurrentMilestone,
-      applyChangesToServerAndLink,
-      retrieveChangesFromServerAndLink,
-      updateMilestone,
-    },
+    visibility,
+    store,
+    server,
+    isSyncing,
+    createMilestone,
+    updateMilestone,
+    deleteMilestone,
   };
 }
