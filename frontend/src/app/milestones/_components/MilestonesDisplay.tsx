@@ -63,7 +63,15 @@ export default function MilestonesDisplay({
           const isHidden = visibility.isMilestoneHidden(m.name);
           return (
             <TableRow key={m.name}>
-              <TableCell className='font-medium'>{m.name}</TableCell>
+              <TableCell className='font-medium'>
+                <div className='flex items-center gap-2'>
+                  <div
+                    className='h-3 w-3'
+                    style={{ backgroundColor: m.color }}
+                  ></div>
+                  <span>{m.name}</span>
+                </div>
+              </TableCell>
               <TableCell>
                 {debug
                   ? getLocalDatetimeDisplay(date, m.timezone)
