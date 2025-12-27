@@ -32,6 +32,7 @@ const MilestonesChart = memo(function MilestonesChart({
       transformMilestonesForChart(milestones, diffPeriod, hiddenMilestones)
     );
   }, [diffPeriod, milestones, hiddenMilestones]);
+
   if (milestones.length === 0) {
     return (
       <p className='pb-8 pt-4 text-center'>
@@ -59,7 +60,17 @@ const MilestonesChart = memo(function MilestonesChart({
         <BarChart data={chartData} layout='vertical' barCategoryGap={2}>
           <XAxis type='number' />
           <YAxis type='category' width={yAxisWidth} dataKey='name' />
-          <Bar dataKey='days' radius={[0, 4, 4, 0]} label={<CustomLabel />}>
+          <Bar
+            dataKey='period'
+            radius={[0, 4, 4, 0]}
+            label={(props) => (
+              <CustomLabel
+                {...props}
+                diffPeriod={diffPeriod}
+                timestamp={chartData[props.index!].timestamp}
+              />
+            )}
+          >
             {chartData.map((item) => (
               <Cell key={`${item.name}`} fill={`${item.color}`} />
             ))}
@@ -83,29 +94,41 @@ const transformMilestonesForChart = (
   );
   return visibleMilestones.map((m) => ({
     name: m.name,
-    days: getDiffIn(new Date(m.timestamp), diffPeriod),
+    timestamp: m.timestamp,
+    period: getDiffIn(new Date(m.timestamp), diffPeriod),
     color: m.color,
   }));
 };
 
-const CustomLabel = (props: LabelProps) => {
-  const { x, y, width, height, value } = props;
+const CustomLabel = (
+  props: LabelProps & { diffPeriod: DiffPeriod; timestamp: number }
+) => {
+  const { x, y, width, height, value, timestamp, diffPeriod } = props;
+  const [calculatedValue, setCalculatedValue] = useState(
+    getDiffIn(new Date(timestamp), diffPeriod)
+  );
+  useEffect(() => {
+    let intervalPeriod = diffPeriod === 'seconds' ? 1000 : 10000;
+    const interval = setInterval(
+      () => setCalculatedValue(getDiffIn(new Date(timestamp), diffPeriod)),
+      intervalPeriod
+    );
+    return () => clearInterval(interval);
+  }, []);
 
   if (
     x === undefined ||
     y === undefined ||
-    value === null ||
-    typeof value !== 'number' ||
     width === undefined ||
     height === undefined
   ) {
     return null;
   }
-  if (!value) return null;
+  if (!calculatedValue) return null;
 
   const padding = { x: 8, y: 4 };
   const fontSize = 14;
-  const formattedVal = formatNumberWithCommas(value);
+  const formattedVal = formatNumberWithCommas(calculatedValue);
   const textWidth = String(formattedVal).length * 8;
   const bgWidth = textWidth + padding.x * 2;
   const bgHeight = fontSize + padding.y * 2;

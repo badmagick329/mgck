@@ -5,7 +5,7 @@ import {
   getLocalDatetimeDisplay,
 } from '@/lib/milestones';
 import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -37,6 +37,7 @@ export default function MilestonesDisplay({
   visibility,
 }: Props) {
   const { getBooleanFlag } = useFeatureFlag();
+
   const debug = getBooleanFlag('debug');
   if (milestones.length === 0) {
     return null;
@@ -74,9 +75,7 @@ export default function MilestonesDisplay({
                   ? getLocalDatetimeDisplay(date, m.timezone)
                   : getLocalDateDisplay(date, m.timezone)}
               </TableCell>
-              <TableCell className='hidden md:table-cell'>
-                {formatNumberWithCommas(getDiffIn(date, diffPeriod))}
-              </TableCell>
+              <PeriodCell date={date} diffPeriod={diffPeriod} />
               <TableCell className='text-right'>
                 <MilestoneActions
                   isHidden={isHidden}
@@ -94,3 +93,29 @@ export default function MilestonesDisplay({
     </Table>
   );
 }
+
+function PeriodCell({
+  date,
+  diffPeriod,
+}: {
+  date: Date;
+  diffPeriod: DiffPeriod;
+}) {
+  const [value, setValue] = useState(
+    getPeriodCellDisplayValue(date, diffPeriod)
+  );
+  useEffect(() => {
+    let intervalPeriod = diffPeriod === 'seconds' ? 1000 : 10000;
+    setValue(getPeriodCellDisplayValue(date, diffPeriod));
+    const interval = setInterval(
+      () => setValue(getPeriodCellDisplayValue(date, diffPeriod)),
+      intervalPeriod
+    );
+    return () => clearInterval(interval);
+  }, [diffPeriod]);
+
+  return <TableCell>{value}</TableCell>;
+}
+
+const getPeriodCellDisplayValue = (date: Date, diffPeriod: DiffPeriod) =>
+  formatNumberWithCommas(getDiffIn(date, diffPeriod));
