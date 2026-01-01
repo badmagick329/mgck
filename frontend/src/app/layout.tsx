@@ -12,6 +12,9 @@ const font = Quicksand({
 
 export const metadata: Metadata = {
   title: 'Mgck.ink',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
