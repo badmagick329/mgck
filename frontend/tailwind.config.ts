@@ -36,6 +36,8 @@ module.exports = {
           '0 0 10px hsla(220 ,100% ,15.5%, 1), 0 0 2px hsla(220 ,100% ,15.5%, 1) inset',
         'glow-primary-gf':
           '0 0 10px hsla(10 ,100% ,80%, 1), 0 0 2px hsla(10 ,100% ,80%, 1) inset',
+        'glow-primary-ml':
+          '0 0 10px oklch(0.6 0.1963 348.56), 0 0 2px oklch(0.6 0.1963 348.56) inset',
         'glow-secondary-dg':
           '0 0 10px hsla(0, 0%, 10%, 1), 0 0 2px hsla(0, 0%, 10%, 1) inset',
         card: 'var(--card-shadow)',
@@ -79,7 +81,7 @@ module.exports = {
           foreground: 'hsl(var(--primary-gf-foreground))',
         },
         'primary-ml': {
-          DEFAULT: 'var(--primary-ml)',
+          DEFAULT: 'oklch(0.6 0.1963 348.56 / <alpha-value>)',
           foreground: 'var(--foreground-ml)',
         },
         secondary: {

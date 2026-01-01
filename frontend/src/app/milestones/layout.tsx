@@ -3,7 +3,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Milestones',
-  description: 'Track your milestones',
+  description:
+    'Life moves fast. This app slows it down. Set your milestones, watch your countdown, and gain perspective on the time you have.',
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

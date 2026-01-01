@@ -35,9 +35,18 @@ const MilestonesChart = memo(function MilestonesChart({
 
   if (milestones.length === 0) {
     return (
-      <p className='pb-8 pt-4 text-center'>
-        No milestones to display. Add your first milestone to start tracking.
-      </p>
+      <div className='container'>
+        <div className='flex flex-col items-center gap-8 py-4'>
+          <h3 className='text-center text-xl font-semibold'>
+            Life moves fast. This app slows it down. Set your milestones, watch
+            your countdown, and gain perspective on the time you have.
+          </h3>
+          <p className='pb-8 pt-4 text-center'>
+            No milestones to display. Add your first milestone to start
+            tracking.
+          </p>
+        </div>
+      </div>
     );
   }
 
