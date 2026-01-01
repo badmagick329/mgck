@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: 'Red Velvet Gfy Archive',
   description:
     'Browse High Quality Gfys of the famous Kpop girl group Red Velvet',
+  icons: {
+    icon: '/gfys.ico',
+  },
 };
 
 export default function RootLayout({
