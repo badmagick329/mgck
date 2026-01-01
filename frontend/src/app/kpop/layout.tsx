@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: 'Kpop comebacks',
   description:
     'Stay ahead of the latest Kpop comebacks by your favourite groups. Search for any comebacks you may have missed.',
+  icons: {
+    icon: '/kpop.ico',
+  },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

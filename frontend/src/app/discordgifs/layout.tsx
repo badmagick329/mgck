@@ -15,6 +15,9 @@ export const metadata: Metadata = {
     'animated',
     'emojis',
   ],
+  icons: {
+    icon: '/discordgifs.ico',
+  },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
