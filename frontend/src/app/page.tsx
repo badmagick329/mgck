@@ -21,14 +21,14 @@ export default async function Index() {
       <div
         className={clsx(
           `grid grow grid-cols-1 place-content-center`,
-          shortenerAllowed ? 'grid-rows-7' : 'grid-rows-6'
+          shortenerAllowed ? 'grid-rows-6' : 'grid-rows-5'
         )}
       >
         <MilestonesIntro />
         {shortenerAllowed && <UrlShortenerIntro />}
         <GfysIntro />
         <KpopComebacksIntro />
-        <ImageEditIntro />
+        {/* <ImageEditIntro /> */}
         <EmojifyIntro />
         <DiscordGifsIntro />
       </div>
