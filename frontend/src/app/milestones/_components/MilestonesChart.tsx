@@ -50,7 +50,7 @@ const MilestonesChart = memo(function MilestonesChart({
   }
 
   return (
-    <div className='pointer-events-none mx-auto flex w-full flex-col items-center gap-2 rounded-md'>
+    <div className='pointer-events-none mx-auto flex w-full max-w-6xl flex-col items-center gap-2 rounded-md'>
       {milestones.length === 1 && (
         <p className='pb-8 pt-4 text-center'>
           Try adding one more milestone to start comparing.
