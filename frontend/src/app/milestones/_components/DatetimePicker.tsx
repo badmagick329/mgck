@@ -36,11 +36,15 @@ export default function DatetimePicker({
             </Button>
           </div>
         </PopoverTrigger>
-        <PopoverContent className='w-auto overflow-hidden p-0' align='start'>
+        <PopoverContent
+          className='h-[340px] w-auto overflow-hidden p-0'
+          align='start'
+          side='top'
+        >
           <Calendar
             mode='single'
             selected={date}
-            captionLayout='dropdown-years'
+            captionLayout='dropdown'
             onSelect={(date) => {
               setDate(date);
               setOpen(false);
