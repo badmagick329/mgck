@@ -18,7 +18,7 @@ export default function TimePeriodButtonGroup({
     <>
       <MobileView diffPeriod={diffPeriod} setDiffPeriod={setDiffPeriod} />
       <StandardView diffPeriod={diffPeriod} setDiffPeriod={setDiffPeriod} />
-      <Separator className='mx-auto my-4' />
+      <Separator className='mx-auto my-4 max-w-6xl' />
     </>
   );
 }

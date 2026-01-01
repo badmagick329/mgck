@@ -29,7 +29,7 @@ export default function MilestonesClient({ username }: { username: string }) {
   return (
     <div className='flex min-h-dvh flex-col justify-center bg-background-ml text-foreground-ml'>
       <Navbar className='bg-background-lighter-ml' />
-      <div className='flex w-full grow flex-col justify-between gap-4 px-2 md:px-4 lg:px-8'>
+      <div className='flex w-full grow flex-col justify-between gap-4 px-2 md:px-4'>
         <div className='flex flex-col gap-4 pt-8'>
           <MilestonesHeading />
           <MilestonesChart
