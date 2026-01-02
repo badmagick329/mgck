@@ -7,10 +7,9 @@ import { useRef } from 'react';
 
 type Props = {
   store: ReturnType<typeof useMilestones>['store'];
-  visibility: ReturnType<typeof useMilestones>['visibility'];
 };
 
-export default function BackupRestore({ store, visibility }: Props) {
+export default function BackupRestore({ store }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const toast = useOperationToast();
 

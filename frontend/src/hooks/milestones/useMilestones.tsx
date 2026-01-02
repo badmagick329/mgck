@@ -23,13 +23,6 @@ export default function useMilestones(username: string) {
     store.config.milestonesOnServer,
     store.milestones
   );
-  const visibility = {
-    hiddenMilestones: store.hiddenMilestones,
-    hideMilestone: store.hideMilestone,
-    unhideMilestone: store.unhideMilestone,
-    isMilestoneHidden: store.isMilestoneHidden,
-    setHiddenMilestones: store.setHiddenMilestones,
-  };
 
   const createMilestone = async ({
     name,
@@ -102,7 +95,7 @@ export default function useMilestones(username: string) {
         return;
       }
       store.removeMilestone(milestoneName);
-      visibility.unhideMilestone(milestoneName);
+      store.unhideMilestone(milestoneName);
     });
   };
 
@@ -124,10 +117,10 @@ export default function useMilestones(username: string) {
       if (
         newMilestone.name &&
         milestoneName !== newMilestone.name &&
-        visibility.isMilestoneHidden(milestoneName)
+        store.isMilestoneHidden(milestoneName)
       ) {
-        visibility.unhideMilestone(milestoneName);
-        visibility.hideMilestone(newMilestone.name);
+        store.unhideMilestone(milestoneName);
+        store.hideMilestone(newMilestone.name);
       }
       return {
         ok: true,
@@ -136,7 +129,6 @@ export default function useMilestones(username: string) {
   };
 
   return {
-    visibility,
     store,
     server,
     isSyncing,

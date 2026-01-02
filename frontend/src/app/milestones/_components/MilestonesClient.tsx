@@ -15,7 +15,6 @@ import BackupRestore from '@/app/milestones/_components/BackupRestore';
 
 export default function MilestonesClient({ username }: { username: string }) {
   const {
-    visibility,
     store,
     server,
     isSyncing,
@@ -37,7 +36,7 @@ export default function MilestonesClient({ username }: { username: string }) {
           <MilestonesChart
             milestones={store.milestones}
             diffPeriod={store.config.diffPeriod}
-            hiddenMilestones={visibility.hiddenMilestones}
+            hiddenMilestones={store.hiddenMilestones}
           />
           {store.milestones.length > 0 && (
             <TimePeriodButtonGroup
@@ -51,8 +50,7 @@ export default function MilestonesClient({ username }: { username: string }) {
               isSyncing={isSyncing}
               updateMilestone={updateMilestone}
               deleteMilestone={deleteMilestone}
-              diffPeriod={store.config.diffPeriod}
-              visibility={visibility}
+              store={store}
             />
             <MilestonesInput
               isSyncing={isSyncing}
@@ -66,7 +64,7 @@ export default function MilestonesClient({ username }: { username: string }) {
           server={server}
         />
       </div>
-      <BackupRestore store={store} visibility={visibility} />
+      <BackupRestore store={store} />
       <Footer />
     </div>
   );

@@ -24,8 +24,7 @@ type Props = {
   isSyncing: boolean;
   deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
   updateMilestone: ReturnType<typeof useMilestones>['updateMilestone'];
-  diffPeriod: DiffPeriod;
-  visibility: ReturnType<typeof useMilestones>['visibility'];
+  store: ReturnType<typeof useMilestones>['store'];
 };
 
 export default function MilestonesDisplay({
@@ -33,8 +32,7 @@ export default function MilestonesDisplay({
   isSyncing,
   deleteMilestone,
   updateMilestone,
-  diffPeriod,
-  visibility,
+  store,
 }: Props) {
   const { getBooleanFlag } = useFeatureFlag();
 
@@ -50,7 +48,7 @@ export default function MilestonesDisplay({
           <TableHead>Name</TableHead>
           <TableHead>Date</TableHead>
           <TableHead className='hidden md:table-cell'>
-            {capitaliseWords(diffPeriod)} to Go
+            {capitaliseWords(store.config.diffPeriod)} to Go
           </TableHead>
           <TableHead className='text-right'>Action</TableHead>
         </TableRow>
@@ -58,7 +56,7 @@ export default function MilestonesDisplay({
       <TableBody>
         {milestones.map((m) => {
           const date = new Date(m.timestamp);
-          const isHidden = visibility.isMilestoneHidden(m.name);
+          const isHidden = store.isMilestoneHidden(m.name);
           return (
             <TableRow key={m.name}>
               <TableCell className='font-medium'>
@@ -75,14 +73,14 @@ export default function MilestonesDisplay({
                   ? getLocalDatetimeDisplay(date, m.timezone)
                   : getLocalDateDisplay(date, m.timezone)}
               </TableCell>
-              <PeriodCell date={date} diffPeriod={diffPeriod} />
+              <PeriodCell date={date} diffPeriod={store.config.diffPeriod} />
               <TableCell className='text-right'>
                 <MilestoneActions
                   isHidden={isHidden}
                   isSyncing={isSyncing}
                   deleteMilestone={deleteMilestone}
                   updateMilestone={updateMilestone}
-                  visibility={visibility}
+                  store={store}
                   milestone={m}
                 />
               </TableCell>
