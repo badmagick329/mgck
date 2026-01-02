@@ -4,6 +4,7 @@ import {
   MilestonesConfig,
   DiffPeriod,
 } from '@/lib/types/milestones';
+import { useMemo } from 'react';
 
 export default function useMilestoneStore() {
   const {
@@ -20,6 +21,13 @@ export default function useMilestoneStore() {
     milestonesOnServer: false,
     diffPeriod: 'days',
   });
+  const { value: hiddenMilestones, updateValue: setHiddenMilestones } =
+    useLocalStorage<string[]>('hiddenMilestones', []);
+
+  const hiddenSet = useMemo(
+    () => new Set(hiddenMilestones),
+    [hiddenMilestones]
+  );
 
   const setDiffPeriod = (period: DiffPeriod) => {
     setConfig((prev) => ({ ...prev, diffPeriod: period }));
@@ -51,6 +59,22 @@ export default function useMilestoneStore() {
     );
   };
 
+  const hideMilestone = (name: string) => {
+    if (hiddenSet.has(name)) {
+      return;
+    }
+    setHiddenMilestones((prev) => [...prev, name]);
+  };
+
+  const unhideMilestone = (name: string) => {
+    if (!hiddenSet.has(name)) {
+      return;
+    }
+    setHiddenMilestones((prev) => prev.filter((n) => n !== name));
+  };
+
+  const isMilestoneHidden = (name: string) => hiddenSet.has(name);
+
   return {
     milestones,
     config,
@@ -61,5 +85,10 @@ export default function useMilestoneStore() {
     setDiffPeriod,
     setServerLinked,
     setMilestones,
+    hiddenMilestones,
+    hideMilestone,
+    unhideMilestone,
+    isMilestoneHidden,
+    setHiddenMilestones,
   };
 }
