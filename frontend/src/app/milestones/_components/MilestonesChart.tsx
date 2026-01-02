@@ -12,15 +12,17 @@ import {
   YAxis,
 } from 'recharts';
 
+type Props = {
+  milestones: ClientMilestone[];
+  diffPeriod: DiffPeriod;
+  hiddenMilestones: string[] | undefined;
+};
+
 const MilestonesChart = memo(function MilestonesChart({
   milestones,
   diffPeriod,
   hiddenMilestones,
-}: {
-  milestones: ClientMilestone[];
-  diffPeriod: DiffPeriod;
-  hiddenMilestones: string[] | undefined;
-}) {
+}: Props) {
   const [chartData, setChartData] = useState(
     transformMilestonesForChart(milestones, diffPeriod, hiddenMilestones)
   );

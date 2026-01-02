@@ -18,7 +18,7 @@ export default function MilestoneActions({
   isSyncing,
   deleteMilestone,
   updateMilestone,
-  visibility,
+  store,
   milestone,
 }: {
   milestone: ClientMilestone;
@@ -26,7 +26,7 @@ export default function MilestoneActions({
   isSyncing: boolean;
   deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
   updateMilestone: ReturnType<typeof useMilestones>['updateMilestone'];
-  visibility: ReturnType<typeof useMilestones>['visibility'];
+  store: ReturnType<typeof useMilestones>['store'];
 }) {
   return (
     <>
@@ -42,8 +42,8 @@ export default function MilestoneActions({
               onSelect={(e) => e.preventDefault()}
               onClick={(e) =>
                 isHidden
-                  ? visibility.unhideMilestone(milestone.name)
-                  : visibility.hideMilestone(milestone.name)
+                  ? store.unhideMilestone(milestone.name)
+                  : store.hideMilestone(milestone.name)
               }
               className='py-2'
             >
@@ -85,8 +85,8 @@ export default function MilestoneActions({
           type='button'
           onClick={(e) =>
             isHidden
-              ? visibility.unhideMilestone(milestone.name)
-              : visibility.hideMilestone(milestone.name)
+              ? store.unhideMilestone(milestone.name)
+              : store.hideMilestone(milestone.name)
           }
         >
           {isHidden ? <EyeOffIcon /> : <EyeIcon />}
