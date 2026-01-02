@@ -4,7 +4,6 @@ import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
 import useSyncOperation from '@/hooks/milestones/useSyncOperation';
 import useMilestoneSyncAdaptor from '@/hooks/milestones/useMilestonesSync';
 import useMilestonesServer from '@/hooks/milestones/useMilestonesServer';
-import useMilestoneVisibility from '@/hooks/milestones/useMilestoneVisibility';
 import useMilestoneStore from '@/hooks/milestones/useMilestoneStore';
 import useOperationToast from '@/hooks/milestones/useOperationToast';
 
@@ -24,7 +23,13 @@ export default function useMilestones(username: string) {
     store.config.milestonesOnServer,
     store.milestones
   );
-  const visibility = useMilestoneVisibility();
+  const visibility = {
+    hiddenMilestones: store.hiddenMilestones,
+    hideMilestone: store.hideMilestone,
+    unhideMilestone: store.unhideMilestone,
+    isMilestoneHidden: store.isMilestoneHidden,
+    setHiddenMilestones: store.setHiddenMilestones,
+  };
 
   const createMilestone = async ({
     name,

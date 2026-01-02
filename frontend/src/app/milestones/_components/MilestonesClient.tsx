@@ -11,6 +11,7 @@ import MilestonesSync from '@/app/milestones/_components/MilestonesSync';
 import TimePeriodButtonGroup from '@/app/milestones/_components/TimePeriodButtonGroup';
 import MilestonesHeading from '@/app/milestones/_components/MilestonesHeading';
 import Footer from '@/app/_components/Footer';
+import BackupRestore from '@/app/milestones/_components/BackupRestore';
 
 export default function MilestonesClient({ username }: { username: string }) {
   const {
@@ -65,6 +66,7 @@ export default function MilestonesClient({ username }: { username: string }) {
           server={server}
         />
       </div>
+      <BackupRestore store={store} visibility={visibility} />
       <Footer />
     </div>
   );

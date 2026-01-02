@@ -52,3 +52,17 @@ export const milestonesConfig = z.object({
 export type MilestonesConfig = z.infer<typeof milestonesConfig>;
 
 export type DiffPeriod = z.infer<typeof diffPeriodEnum>;
+
+export const milestonesBackupSchema = z.object({
+  hiddenMilestones: z
+    .array(z.string().trim())
+    .transform((arr) => arr.filter(Boolean))
+    .default([]),
+  milestonesConfig: milestonesConfig.default({
+    milestonesOnServer: false,
+    diffPeriod: 'days',
+  }),
+  milestones: z.array(clientMilestoneSchema).default([]),
+});
+
+export type MilestonesBackup = z.infer<typeof milestonesBackupSchema>;
