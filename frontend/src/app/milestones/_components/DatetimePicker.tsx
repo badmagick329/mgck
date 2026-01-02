@@ -37,7 +37,7 @@ export default function DatetimePicker({
           </div>
         </PopoverTrigger>
         <PopoverContent
-          className='h-[340px] w-auto overflow-hidden p-0'
+          className='h-[340px] w-auto overflow-hidden bg-background p-0'
           align='start'
           side='top'
         >
