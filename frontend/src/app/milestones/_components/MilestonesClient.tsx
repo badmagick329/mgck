@@ -28,10 +28,10 @@ export default function MilestonesClient({ username }: { username: string }) {
   }
 
   return (
-    <div className='flex min-h-dvh flex-col justify-center bg-background-ml text-foreground-ml'>
+    <main className='flex min-h-dvh flex-col justify-center bg-background-ml text-foreground-ml'>
       <Navbar className='bg-background-lighter-ml' />
-      <div className='flex w-full grow flex-col justify-between gap-4 px-2 md:px-4'>
-        <div className='flex flex-col gap-4 pt-8'>
+      <article className='flex w-full grow flex-col justify-between gap-4 px-2 md:px-4'>
+        <section className='flex flex-col gap-4 pt-8'>
           <MilestonesHeading />
           <MilestonesChart
             milestones={store.milestones}
@@ -44,7 +44,7 @@ export default function MilestonesClient({ username }: { username: string }) {
               setDiffPeriod={store.setDiffPeriod}
             />
           )}
-          <div className='flex flex-col justify-center gap-12'>
+          <section className='flex flex-col justify-center gap-12'>
             <MilestonesDisplay
               milestones={store.milestones}
               isSyncing={isSyncing}
@@ -56,16 +56,16 @@ export default function MilestonesClient({ username }: { username: string }) {
               isSyncing={isSyncing}
               createMilestone={createMilestone}
             />
-          </div>
-        </div>
+          </section>
+        </section>
         <MilestonesSync
           isSyncing={isSyncing}
           isUsingServer={store.config.milestonesOnServer}
           server={server}
         />
-      </div>
+      </article>
       <BackupRestore store={store} />
       <Footer />
-    </div>
+    </main>
   );
 }

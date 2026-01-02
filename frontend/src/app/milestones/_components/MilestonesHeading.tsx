@@ -9,7 +9,7 @@ const font = Outfit({
 
 export default function MilestonesHeading() {
   return (
-    <div className={`flex justify-center gap-2 ${font.className}`}>
+    <section className={`flex justify-center gap-2 ${font.className}`}>
       <SignPostSvg />
       <motion.h1
         initial={{ x: 100, opacity: 0.5 }}
@@ -23,6 +23,6 @@ export default function MilestonesHeading() {
       >
         Milestones
       </motion.h1>
-    </div>
+    </section>
   );
 }
