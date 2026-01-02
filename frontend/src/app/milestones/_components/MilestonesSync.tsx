@@ -13,7 +13,7 @@ export default function MilestonesSync({
   server,
 }: Props) {
   const { getBooleanFlag } = useFeatureFlag();
-  const showComponent = getBooleanFlag('milestoneServerSync');
+  const showComponent = getBooleanFlag('sync');
   if (!showComponent) {
     return null;
   }

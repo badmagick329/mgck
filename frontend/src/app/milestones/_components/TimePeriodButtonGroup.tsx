@@ -25,7 +25,7 @@ export default function TimePeriodButtonGroup({
 
 function MobileView({ diffPeriod, setDiffPeriod }: Props) {
   return (
-    <div className='flex flex-col items-center gap-2 xs:hidden'>
+    <section className='flex flex-col items-center gap-2 xs:hidden'>
       <ButtonGroup>
         {diffPeriodEnum.options
           .slice(0, Math.ceil(diffPeriodEnum.options.length / 2))
@@ -57,7 +57,7 @@ function MobileView({ diffPeriod, setDiffPeriod }: Props) {
             </MilestonesButton>
           ))}
       </ButtonGroup>
-    </div>
+    </section>
   );
 }
 
