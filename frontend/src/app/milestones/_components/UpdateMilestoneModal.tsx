@@ -67,7 +67,7 @@ export default function UpdateModal({
       <DialogContent
         className='sm:max-w-[425px]'
         style={{
-          transform: `translate(-50%, calc(-50% - ${keyboardOffset}px))`,
+          transform: `translate(-50%, calc(-50% + ${keyboardOffset}px))`,
         }}
       >
         <form

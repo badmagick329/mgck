@@ -7,12 +7,18 @@ export default function useKeyboardOffset() {
     if (!viewport) return;
 
     const handleResize = () => {
-      const offset = (window.innerHeight - viewport.height) / 2;
-      setKeyboardOffset(offset);
+      const visualViewportCenter = viewport.offsetTop + viewport.height / 2;
+      const layoutViewportCenter = window.innerHeight / 2;
+      setKeyboardOffset(visualViewportCenter - layoutViewportCenter);
     };
 
+    handleResize();
     viewport.addEventListener('resize', handleResize);
-    return () => viewport.removeEventListener('resize', handleResize);
+    viewport.addEventListener('scroll', handleResize);
+    return () => {
+      viewport.removeEventListener('resize', handleResize);
+      viewport.removeEventListener('scroll', handleResize);
+    };
   }, []);
 
   return {

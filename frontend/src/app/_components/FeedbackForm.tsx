@@ -102,7 +102,7 @@ export default function FeedbackForm() {
       <DialogContent
         className='sm:max-w-[425px]'
         style={{
-          transform: `translate(-50%, calc(-50% - ${keyboardOffset}px))`,
+          transform: `translate(-50%, calc(-50% + ${keyboardOffset}px))`,
         }}
       >
         <Form {...form}>
