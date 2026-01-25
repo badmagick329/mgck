@@ -77,7 +77,7 @@ export default function BackupRestore({ store }: Props) {
   };
 
   return (
-    <div className='mx-auto flex w-full max-w-6xl justify-end gap-4 px-2 sm:px-4'>
+    <div className='mx-auto flex w-full max-w-6xl justify-end gap-4 p-2 sm:px-4'>
       <MilestonesButton variant='outline' onClick={downloadBackup}>
         Backup
       </MilestonesButton>
