@@ -61,6 +61,7 @@ export default function useLogin() {
         const loggedIn = await loginUser({ username, password });
         if (loggedIn) {
           router.push(ACCOUNT_USER_HOME);
+          router.refresh();
         }
         return;
       }
@@ -68,6 +69,7 @@ export default function useLogin() {
       const loggedIn = await loginUser({ username, password });
       if (loggedIn) {
         router.push(ACCOUNT_USER_HOME);
+        router.refresh();
       }
     } finally {
       setIsSubmitting(false);

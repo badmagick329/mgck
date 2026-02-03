@@ -34,26 +34,46 @@ async function refreshTokens(refreshToken: string): Promise<{
   return null;
 }
 
+function isProtectedRoute(pathname: string) {
+  if (pathname.startsWith('/account')) {
+    return !pathname.startsWith('/account/login');
+  }
+
+  return pathname === '/authtest';
+}
+
 export async function middleware(request: NextRequest) {
   console.log(`[Middleware] current route is: ${request.url}`);
   const token = request.cookies.get('token')?.value;
   const currentRefreshToken = request.cookies.get('refreshToken')?.value;
   const parsedToken = new ParsedToken(token);
+  const pathname = request.nextUrl.pathname;
+  const protectedRoute = isProtectedRoute(pathname);
 
   if (parsedToken.isExpiring()) {
     if (!currentRefreshToken) {
-      console.log(
-        '[Middleware] No refresh token found. Redirecting to login page.'
-      );
-      return NextResponse.redirect(new URL('/account/login', request.url));
+      if (protectedRoute) {
+        console.log(
+          '[Middleware] No refresh token found. Redirecting to login page.'
+        );
+        return NextResponse.redirect(new URL('/account/login', request.url));
+      }
+
+      console.log('[Middleware] No refresh token found. Skipping refresh.');
+      return NextResponse.next();
     }
 
     const newTokens = await refreshTokens(currentRefreshToken);
     if (newTokens === null) {
-      console.log(
-        '[Middleware] Failed to refresh tokens. Redirecting to login page.'
-      );
-      return NextResponse.redirect(new URL('/account/login', request.url));
+      if (protectedRoute) {
+        console.log(
+          '[Middleware] Failed to refresh tokens. Redirecting to login page.'
+        );
+        return NextResponse.redirect(new URL('/account/login', request.url));
+      }
+
+      console.log('[Middleware] Failed to refresh tokens. Skipping refresh.');
+      return NextResponse.next();
     }
 
     console.log(
@@ -61,11 +81,8 @@ export async function middleware(request: NextRequest) {
         -10
       )} refreshToken ${newTokens.refreshToken.slice(-10)}`
     );
-    console.log('[Middleware] changing response to a redirect');
-    const response = NextResponse.redirect(
-      new URL(request.nextUrl.pathname, request.url)
-    );
     console.log('[Middleware] setting new tokens in cookies');
+    const response = NextResponse.next();
     response.cookies.set('token', newTokens.token, {
       httpOnly: true,
       path: '/',
@@ -87,5 +104,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/account/:path((?!login$).*)', '/authtest'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
