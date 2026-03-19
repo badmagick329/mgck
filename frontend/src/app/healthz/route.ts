@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { Client } from 'pg';
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -31,23 +32,59 @@ type HealthResponse = {
     django: HttpServiceHealth;
     coreapi: HttpServiceHealth;
     redis: RedisServiceHealth;
+    postgresDjango: DataServiceHealth;
+    postgresCore: DataServiceHealth;
   };
 };
 
+type DataServiceHealth = {
+  status: ServiceStatus;
+  latencyMs: number;
+  result?: string;
+  error?: string;
+};
+
+type PostgresConfig = {
+  host: string | undefined;
+  port: string | undefined;
+  database: string | undefined;
+  user: string | undefined;
+  password: string | undefined;
+};
+
 export async function GET() {
-  const [django, coreapi, redis] = await Promise.all([
+  const [django, coreapi, redis, postgresDjango, postgresCore] =
+    await Promise.all([
     checkHttpService(process.env.BASE_URL, DJANGO_HEALTH_PATH),
     checkHttpService(process.env.CORE_API_BASE_URL, CORE_API_HEALTH_PATH),
     checkRedis(process.env.REDIS_URL),
-  ]);
+    checkPostgres({
+      host: process.env.HEALTH_DJANGO_DB_HOST,
+      port: process.env.HEALTH_DJANGO_DB_PORT,
+      database: process.env.HEALTH_DJANGO_DB_NAME,
+      user: process.env.HEALTH_DJANGO_DB_USER,
+      password: process.env.HEALTH_DJANGO_DB_PASSWORD,
+    }),
+    checkPostgres({
+      host: process.env.HEALTH_CORE_DB_HOST,
+      port: process.env.HEALTH_CORE_DB_PORT,
+      database: process.env.HEALTH_CORE_DB_NAME,
+      user: process.env.HEALTH_CORE_DB_USER,
+      password: process.env.HEALTH_CORE_DB_PASSWORD,
+    }),
+    ]);
 
   const allHealthy =
-    django.status === 'up' && coreapi.status === 'up' && redis.status === 'up';
+    django.status === 'up' &&
+    coreapi.status === 'up' &&
+    redis.status === 'up' &&
+    postgresDjango.status === 'up' &&
+    postgresCore.status === 'up';
 
   const body: HealthResponse = {
     status: allHealthy ? 'ok' : 'degraded',
     timestamp: new Date().toISOString(),
-    services: { django, coreapi, redis },
+    services: { django, coreapi, redis, postgresDjango, postgresCore },
   };
 
   return NextResponse.json(body, {
@@ -152,6 +189,54 @@ async function checkRedis(redisUrl: string | undefined): Promise<RedisServiceHea
   }
 }
 
+async function checkPostgres(config: PostgresConfig): Promise<DataServiceHealth> {
+  const hasAllFields =
+    !!config.host &&
+    !!config.port &&
+    !!config.database &&
+    !!config.user &&
+    !!config.password;
+  if (!hasAllFields) {
+    return {
+      status: 'down',
+      latencyMs: 0,
+      error: 'missing_env',
+    };
+  }
+
+  const client = new Client({
+    host: config.host,
+    port: Number(config.port),
+    database: config.database,
+    user: config.user,
+    password: config.password,
+    connectionTimeoutMillis: CHECK_TIMEOUT_MS,
+  });
+
+  const start = Date.now();
+  try {
+    await withTimeout(() => client.connect(), CHECK_TIMEOUT_MS);
+    await withTimeout(() => client.query('SELECT 1'), CHECK_TIMEOUT_MS);
+    return {
+      status: 'up',
+      latencyMs: Date.now() - start,
+      result: 'SELECT 1 ok',
+    };
+  } catch (error) {
+    return {
+      status: 'down',
+      latencyMs: Date.now() - start,
+      error: asErrorMessage(error),
+    };
+  } finally {
+    try {
+      await withTimeout(() => client.end(), CHECK_TIMEOUT_MS);
+    } catch {
+      //
+    }
+  }
+}
+
 async function withTimeout<T>(fn: () => Promise<T>, timeoutMs: number): Promise<T> {
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -172,6 +257,9 @@ function asErrorMessage(error: unknown): string {
     return 'timeout';
   }
   if (error instanceof Error) {
+    if (error.message === 'timeout') {
+      return 'timeout';
+    }
     return error.message || 'unknown_error';
   }
   return 'unknown_error';
