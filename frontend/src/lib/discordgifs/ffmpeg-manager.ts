@@ -135,10 +135,8 @@ export class FFmpegManager {
     }
     const { file } = this.fileConfig;
     if (file.size < 0.6 * 1024 * 1024) {
-      // console.log(`optimization not needed. ${file.size}bytes`);
       return;
     }
-    // console.log('optimizing input');
     this.updateFileConversionStateCallback &&
       this.updateFileConversionStateCallback('optimizing');
     await this.ffmpeg.writeFile(file.name, await fetchFile(file));
@@ -225,7 +223,6 @@ export class FFmpegManager {
     let blob = null;
     let iteration = 0;
 
-    // const startTime = performance.now();
     this.logMessageCallback && this.ffmpeg.on('log', this.logMessageCallback);
     this.progressCallback && this.ffmpeg.on('progress', this.progressCallback);
     this.updateFileConversionStateCallback &&
@@ -239,7 +236,6 @@ export class FFmpegManager {
       if (ret === 1) {
         return null;
       }
-      // console.log('executed', ret);
       const data = await this.ffmpeg.readFile(outputName);
       blob = new Blob(
         [data instanceof Uint8Array ? new Uint8Array(data) : data],
@@ -247,14 +243,10 @@ export class FFmpegManager {
       );
       this.newSizeCallback && this.newSizeCallback(blob.size);
       size = calculator.getNewFrameSize(blob.size);
-      // console.log(`iteration: ${++iteration}. size`, size);
       ++iteration;
     }
     this.updateFileConversionStateCallback &&
       this.updateFileConversionStateCallback('busy');
-    // console.log(
-    //   `iteration: ${iteration}. time taken ${((performance.now() - startTime) / 1000).toFixed(2)}s`
-    // );
     this.logMessageCallback && this.ffmpeg.off('log', this.logMessageCallback);
     this.progressCallback && this.ffmpeg.off('progress', this.progressCallback);
     this.cleanupOptimizedFile();
