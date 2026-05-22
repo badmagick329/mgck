@@ -10,16 +10,228 @@
   <meta name="color-scheme" content="dark light">
   <link rel="icon" type="image/x-icon" href="{% static 'favicons/favicon.ico' %}">
   <link href={% static 'css/style.css' %} rel="stylesheet">
+  <style>
+    body {
+      background:
+        radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 30%),
+        linear-gradient(180deg, #1c1f28 0%, #17181d 100%);
+      color: #f8fafc;
+    }
+
+    .fu-shell {
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .fu-title {
+      font-size: 2.25rem;
+      line-height: 1.1;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .fu-subtitle {
+      color: #cbd5e1;
+      margin-bottom: 1.5rem;
+    }
+
+    .fu-grid {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr 2fr;
+    }
+
+    .fu-card {
+      background: linear-gradient(180deg, #232734 0%, #1d2230 100%);
+      color: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      padding: 1.25rem;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+    }
+
+    .fu-card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .fu-muted {
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+
+    .fu-meta-box {
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .fu-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .fu-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .fu-file {
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 1rem;
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    .fu-file-name {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      overflow-wrap: anywhere;
+    }
+
+    .fu-file-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      color: #cbd5e1;
+      font-size: 0.95rem;
+    }
+
+    .fu-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 140px;
+    }
+
+    .fu-button,
+    .fu-button:visited,
+    .fu-button:hover {
+      display: inline-block;
+      text-align: center;
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      color: #ffffff;
+      font-weight: 700;
+      text-decoration: none;
+      border: 0;
+    }
+
+    .fu-button-primary {
+      background: #2563eb;
+    }
+
+    .fu-button-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .fu-button-secondary {
+      background: #475569;
+    }
+
+    .fu-button-secondary:hover {
+      background: #334155;
+    }
+
+    .fu-button-danger {
+      background: #dc2626;
+    }
+
+    .fu-button-danger:hover {
+      background: #b91c1c;
+    }
+
+    .fu-message {
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .fu-message-success {
+      background: rgba(34, 197, 94, 0.16);
+      color: #dcfce7;
+      border: 1px solid rgba(74, 222, 128, 0.45);
+    }
+
+    .fu-message-error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fee2e2;
+      border: 1px solid rgba(248, 113, 113, 0.45);
+    }
+
+    .fu-input-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #f8fafc;
+    }
+
+    .fu-empty {
+      border: 1px dashed #475569;
+      border-radius: 10px;
+      padding: 2rem 1rem;
+      text-align: center;
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, 0.3);
+    }
+
+    .fu-login-card {
+      width: 100%;
+      max-width: 420px;
+      background: linear-gradient(180deg, #232734 0%, #1d2230 100%);
+      color: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      padding: 1.5rem;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+    }
+
+    .fu-login-input {
+      width: 100%;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      color: #f8fafc;
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    .fu-login-input::placeholder {
+      color: #94a3b8;
+    }
+
+    @media (max-width: 900px) {
+      .fu-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .fu-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .fu-actions {
+        min-width: 0;
+      }
+    }
+  </style>
   {% block extrahead %}{% endblock %}
 </head>
 
 <body>
   {% if user.is_authenticated %}
-    <div class="flex justify-end bg-white border-gray-200 dark:bg-gray-900 py-4">
+    <div class="flex items-center justify-between bg-white border-gray-200 dark:bg-gray-900 px-6 py-4">
+        <a class="font-semibold" href="{% url 'fileuploader:list_files' %}">File Uploader</a>
         <a class="mx-4" href="{% url 'fileuploader:logout' %}">Logout</a>
     </div>
   {% endif %}
-  <div class="flex items-center justify-center h-screen">
+  <div class="mx-auto flex min-h-screen w-full max-w-5xl items-start justify-center px-4 py-10">
     {% block body %}{% endblock %}
   </div>
 </body>

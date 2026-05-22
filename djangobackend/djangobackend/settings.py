@@ -33,6 +33,10 @@ API_CACHE_TTL = 2
 GFY_PAGE_SIZE = os.environ.get("GFY_PAGE_SIZE", 100)
 
 ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(" ") or None
+csrf_trusted_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "").replace(
+    ",", " "
+)
+CSRF_TRUSTED_ORIGINS = [origin for origin in csrf_trusted_origins.split() if origin]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [

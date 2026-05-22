@@ -1,15 +1,15 @@
 {% extends "fileuploader/base.html" %}
 {% block body %}
-<div class="flex flex-col">
-  <h1 class="font-bold mb-6 text-center text-3xl">Login</h1>
+<div class="fu-login-card">
+  <h1 class="fu-card-title" style="font-size: 2rem; text-align: center;">Login</h1>
   {% if message %}
-  <div class="text-red-600 font-semibold mb-4">{{ message }}</div>
+  <div class="fu-message fu-message-error">{{ message }}</div>
   {% endif %}
-  <form class="flex flex-col" action={{ action }} method="post">
+  <form class="flex flex-col" action="{{ action }}" method="post">
     {% csrf_token %}
-    <input class="rounded mb-4 p-2" name="username" placeholder="Username">
-    <input class="rounded mb-4 p-2" type="password" name="password" placeholder="Password">
-    <input class="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 rounded " type="submit" value="Login">
+    <input class="fu-login-input" name="username" placeholder="Username">
+    <input class="fu-login-input" type="password" name="password" placeholder="Password">
+    <input class="fu-button fu-button-primary" type="submit" value="Login">
   </form>
 </div>
 {% endblock %}
