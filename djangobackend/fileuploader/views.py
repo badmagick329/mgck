@@ -1,68 +1,96 @@
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import QuerySet
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from fileuploader.forms import UploadedFileForm
-from fileuploader.models import UploadUser
+from fileuploader.models import UploadedFile, UploadUser
 
 
-@login_required(login_url="login/")
+@login_required(login_url=reverse_lazy("fileuploader:login"))
 def upload_file(request):
-    if not UploadUser.objects.filter(user=request.user).exists():
-        return HttpResponse(
-            "<h1>You do not have permission to upload files. Please contact the admin</h1>"
+    upload_user = get_upload_user(request)
+    if upload_user is None:
+        return render_file_manager(
+            request,
+            UploadedFileForm(),
+            upload_user=None,
+            error_message=(
+                "You do not have permission to upload files. Please contact the admin."
+            ),
+            status=403,
         )
+
     if request.method == "POST":
         form = UploadedFileForm(request.POST, request.FILES)
         if form.is_valid():
+            uploaded = form.cleaned_data["file"]
+            incoming_size = uploaded.size
+            if not upload_user.can_store(incoming_size):
+                return render_file_manager(
+                    request,
+                    form,
+                    upload_user=upload_user,
+                    error_message=(
+                        "This upload exceeds your remaining storage quota."
+                    ),
+                    status=400,
+                )
             instance = form.save(commit=False)
             instance.uploaded_by = request.user
+            instance.original_name = uploaded.name
+            instance.stored_size_bytes = incoming_size
+            instance.content_type = uploaded.content_type or ""
             instance.save()
-            return render(
+            messages.success(
                 request,
-                "fileuploader/success.html",
-                {
-                    "filename": instance.file.name,
-                    "file_url": instance.file.url,
-                },
+                f"{instance.display_name} uploaded successfully.",
             )
+            return HttpResponseRedirect(reverse("fileuploader:list_files"))
         else:
-            return render(
+            return render_file_manager(
                 request,
-                "fileuploader/upload.html",
-                {"form": form, "errors": form.errors},
+                form,
+                upload_user=upload_user,
+                error_message="Please fix the upload form errors below.",
+                status=400,
             )
-    else:
-        return render(
-            request, "fileuploader/upload.html", {"form": UploadedFileForm()}
-        )
+    return HttpResponseRedirect(reverse("fileuploader:list_files"))
 
 
-@login_required(login_url="login/")
+@login_required(login_url=reverse_lazy("fileuploader:login"))
 def list_files(request):
-    if not UploadUser.objects.filter(user=request.user).exists():
-        return HttpResponse(
-            "<h1>You do not have permission to upload files. Please contact the admin</h1>"
+    upload_user = get_upload_user(request)
+    if upload_user is None:
+        return render_file_manager(
+            request,
+            UploadedFileForm(),
+            upload_user=None,
+            error_message=(
+                "You do not have permission to upload files. Please contact the admin."
+            ),
+            status=403,
         )
-    user_files = request.user.uploaded_files.all()
-    return render(
+
+    return render_file_manager(
         request,
-        "fileuploader/list.html",
-        {"files": user_files},
+        UploadedFileForm(),
+        upload_user=upload_user,
     )
 
 
-@login_required(login_url="login/")
+@login_required(login_url=reverse_lazy("fileuploader:login"))
 def delete_file(request, file_id):
-    if not UploadUser.objects.filter(user=request.user).exists():
-        return HttpResponse(
-            "<h1>You do not have permission to upload files. Please contact the admin</h1>"
-        )
+    if get_upload_user(request) is None:
+        return HttpResponse(status=403)
     file_to_delete = get_object_or_404(
         request.user.uploaded_files, pk=file_id, uploaded_by=request.user
     )
+    filename = file_to_delete.display_name
     file_to_delete.delete()
+    messages.success(request, f"{filename} deleted successfully.")
     return HttpResponseRedirect(reverse("fileuploader:list_files"))
 
 
@@ -91,3 +119,44 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("fileuploader:login"))
+
+
+def render_file_manager(
+    request,
+    form: UploadedFileForm,
+    upload_user: UploadUser | None,
+    error_message: str | None = None,
+    status: int = 200,
+):
+    files: QuerySet[UploadedFile] = request.user.uploaded_files.all().order_by("-uploaded_at")
+    if upload_user is None:
+        files = UploadedFile.objects.none()
+
+    return render(
+        request,
+        "fileuploader/list.html",
+        {
+            "form": form,
+            "upload_user": upload_user,
+            "files": files,
+            "error_message": error_message,
+        },
+        status=status,
+    )
+
+
+def get_upload_user(request) -> UploadUser | None:
+    upload_user = (
+        UploadUser.objects.filter(user=request.user).select_related("user").first()
+    )
+    if upload_user is not None:
+        return upload_user
+
+    if request.user.is_superuser:
+        return UploadUser(
+            user=request.user,
+            is_unlimited=True,
+            storage_quota_bytes=0,
+        )
+
+    return None

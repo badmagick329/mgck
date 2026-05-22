@@ -1,30 +1,114 @@
 {% extends 'fileuploader/base.html' %}
 {% load static %}
 {% block title %}
-<title>Files</title>
+<title>File Uploader</title>
 {% endblock %}
 {% block body %}
-<div class="flex flex-col">
-  {% if files.count == 0 %}
-  <h1 class="text-3xl font-bold mb-4">No files uploaded yet</h1>
-  <a class="bg-blue-500 hover:bg-blue-700 text-white 
-    font-bold py-2 px-4 rounded text-center" href="{% url 'fileuploader:upload_file' %}">Upload</a>
-  {% else %}
-  <h1 class="text-3xl font-bold mb-4">Files</h1>
-  <ul>
-    {% for file in files %}
-    <li class="mb-2">
-      <a target="_blank" class="underline font-semibold" href={{ file.file.url }}>{{ file.file.name }}</a>
-    </li>
-    <form class="mb-2" method="post" action="{% url 'fileuploader:delete_file' file.id %}">
-      {% csrf_token %}
-      <button type="submit"
-        class="bg-gray-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Delete</button>
-    </form>
+<div class="fu-shell">
+  <h1 class="fu-title">File Uploader</h1>
+  <p class="fu-subtitle">
+      Upload files, copy the file URL, and share it with anyone who needs access.
+  </p>
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="fu-message fu-message-success">
+      {{ message }}
+    </div>
     {% endfor %}
-  </ul>
-  <a class="bg-blue-500 hover:bg-blue-700 text-white 
-    font-bold py-2 px-4 rounded text-center mt-2" href="{% url 'fileuploader:upload_file' %}">Upload</a>
+  {% endif %}
+
+  {% if error_message %}
+  <div class="fu-message fu-message-error">
+    {{ error_message }}
+  </div>
+  {% endif %}
+
+  {% if upload_user %}
+  <div class="fu-grid">
+    <section class="fu-card">
+      <h2 class="fu-card-title">Upload</h2>
+      <div class="fu-meta-box">
+        <p class="mb-1"><span class="font-semibold">Used:</span> {{ upload_user.used_storage_bytes|filesizeformat }}</p>
+        {% if upload_user.is_unlimited %}
+        <p><span class="font-semibold">Quota:</span> Unlimited</p>
+        {% else %}
+        <p class="mb-1"><span class="font-semibold">Quota:</span> {{ upload_user.storage_quota_bytes|filesizeformat }}</p>
+        <p><span class="font-semibold">Remaining:</span> {{ upload_user.remaining_storage_bytes|filesizeformat }}</p>
+        {% endif %}
+      </div>
+      <form autocomplete="off" method="post" action="{% url 'fileuploader:upload_file' %}" enctype="multipart/form-data" class="fu-stack">
+        {% csrf_token %}
+        <div>
+          <label class="fu-input-label" for="id_file">Choose file</label>
+          {{ form.file }}
+          {% if form.file.errors %}
+            {% for error in form.file.errors %}
+            <div class="fu-message fu-message-error" style="margin-top: 0.75rem; margin-bottom: 0;">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+        <button
+          class="fu-button fu-button-primary"
+          type="submit">
+          Upload File
+        </button>
+      </form>
+    </section>
+
+    <section class="fu-card">
+      <div class="fu-row" style="margin-bottom: 1rem;">
+        <h2 class="fu-card-title" style="margin-bottom: 0;">Your Files</h2>
+        <span class="fu-muted">{{ files|length }} file{{ files|length|pluralize }}</span>
+      </div>
+
+      {% if files %}
+      <div class="fu-stack">
+        {% for file in files %}
+        <article class="fu-file">
+          <div class="fu-row">
+            <div style="flex: 1 1 auto; min-width: 0;">
+              <p class="fu-file-name">{{ file.display_name }}</p>
+              <div class="fu-file-meta">
+                <p><span class="font-medium">Size:</span> {{ file.stored_size_bytes|filesizeformat }}</p>
+                <p><span class="font-medium">Uploaded:</span> {{ file.uploaded_at }}</p>
+                <p style="overflow-wrap: anywhere;"><span class="font-medium">URL:</span> <a class="underline" style="color: #1d4ed8;" target="_blank" href="{{ file.file.url }}">{{ file.file.url }}</a></p>
+              </div>
+            </div>
+            <div class="fu-actions">
+              <a
+                class="fu-button fu-button-secondary"
+                target="_blank"
+                href="{{ file.file.url }}">
+                View
+              </a>
+              <a
+                class="fu-button fu-button-primary"
+                download="{{ file.display_name }}"
+                href="{{ file.file.url }}">
+                Download
+              </a>
+              <form method="post" action="{% url 'fileuploader:delete_file' file.id %}">
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="fu-button fu-button-danger"
+                  style="width: 100%;">
+                  Delete
+                </button>
+              </form>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="fu-empty">
+        No files uploaded yet.
+      </div>
+      {% endif %}
+    </section>
+  </div>
   {% endif %}
 </div>
 {% endblock %}
