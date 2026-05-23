@@ -1,6 +1,8 @@
+const path = require("path");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./djangobackend/**/*.html"],
+  content: [path.join(__dirname, "djangobackend/**/*.html")],
   theme: {
     extend: {},
   },
