@@ -91,6 +91,26 @@
     @apply border-red-400/40 bg-red-500/15 text-red-50;
   }
 
+  .fu-form-grid {
+    @apply flex flex-col gap-4;
+  }
+
+  .fu-field {
+    @apply flex flex-col gap-2;
+  }
+
+  .fu-field-label {
+    @apply text-sm font-semibold uppercase tracking-wide text-fu-muted;
+  }
+
+  .fu-help-text {
+    @apply text-sm text-fu-muted;
+  }
+
+  .fu-error-list {
+    @apply flex flex-col gap-2;
+  }
+
   .fu-login-input {
     @apply w-full rounded-sm border border-fu-border-strong bg-fu-panel/55 px-4 py-3 text-fu-foreground placeholder:text-fu-muted-strong;
   }

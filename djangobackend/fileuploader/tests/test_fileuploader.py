@@ -48,6 +48,11 @@ class FileUploaderTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("fileuploader:login"), response.url)
 
+    def test_password_change_route_requires_login(self):
+        response = self.client.get(reverse("fileuploader:password_change"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("fileuploader:login"), response.url)
+
     def test_user_without_upload_access_sees_clear_message(self):
         self.login()
         response = self.client.get(reverse("fileuploader:list_files"))
@@ -141,6 +146,30 @@ class FileUploaderTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(UploadedFile.objects.filter(uploaded_by=self.unlimited_user).count(), 1)
+
+    def test_password_change_updates_password_and_keeps_user_logged_in(self):
+        UploadUser.objects.create(user=self.user, storage_quota_bytes=20)
+        self.login()
+        new_password = "new-password-456"
+
+        response = self.client.post(
+            reverse("fileuploader:password_change"),
+            {
+                "old_password": self.password,
+                "new_password1": new_password,
+                "new_password2": new_password,
+            },
+            follow=True,
+        )
+
+        self.user.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Password Updated")
+        self.assertTrue(self.user.check_password(new_password))
+        self.assertEqual(
+            int(self.client.session["_auth_user_id"]),
+            self.user.id,
+        )
 
     def test_delete_removes_database_record_and_file(self):
         UploadUser.objects.create(user=self.user, storage_quota_bytes=10)
