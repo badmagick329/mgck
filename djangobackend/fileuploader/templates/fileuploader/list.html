@@ -5,17 +5,21 @@
 {% endblock %}
 {% block body %}
 <div class="fu-shell">
-  <h1 class="fu-title">File Uploader</h1>
-  <p class="fu-subtitle">
+  <div class="flex flex-col gap-2">
+    <h1 class="text-4xl font-bold tracking-tight text-fu-foreground">File Uploader</h1>
+    <p class="max-w-3xl text-lg text-fu-muted">
       Upload files, copy the file URL, and share it with anyone who needs access.
-  </p>
+    </p>
+  </div>
 
   {% if messages %}
+  <div class="flex flex-col gap-3">
     {% for message in messages %}
     <div class="fu-message fu-message-success">
       {{ message }}
     </div>
     {% endfor %}
+  </div>
   {% endif %}
 
   {% if error_message %}
@@ -25,27 +29,32 @@
   {% endif %}
 
   {% if upload_user %}
-  <div class="fu-grid">
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)]">
     <section class="fu-card">
-      <h2 class="fu-card-title">Upload</h2>
+      <div class="flex flex-col gap-1">
+        <h2 class="text-2xl font-bold text-fu-foreground">Upload</h2>
+        <p class="text-sm text-fu-muted">Manage quota and upload a new file.</p>
+      </div>
       <div class="fu-meta-box">
-        <p class="mb-1"><span class="font-semibold">Used:</span> {{ upload_user.used_storage_bytes|filesizeformat }}</p>
+        <p><span class="font-semibold">Used:</span> {{ upload_user.used_storage_bytes|filesizeformat }}</p>
         {% if upload_user.is_unlimited %}
         <p><span class="font-semibold">Quota:</span> Unlimited</p>
         {% else %}
-        <p class="mb-1"><span class="font-semibold">Quota:</span> {{ upload_user.storage_quota_bytes|filesizeformat }}</p>
+        <p><span class="font-semibold">Quota:</span> {{ upload_user.storage_quota_bytes|filesizeformat }}</p>
         <p><span class="font-semibold">Remaining:</span> {{ upload_user.remaining_storage_bytes|filesizeformat }}</p>
         {% endif %}
       </div>
-      <form autocomplete="off" method="post" action="{% url 'fileuploader:upload_file' %}" enctype="multipart/form-data" class="fu-stack">
+      <form autocomplete="off" method="post" action="{% url 'fileuploader:upload_file' %}" enctype="multipart/form-data" class="flex flex-col gap-4">
         {% csrf_token %}
-        <div>
-          <label class="fu-input-label" for="id_file">Choose file</label>
+        <div class="flex flex-col gap-3">
+          <label class="text-sm font-semibold uppercase tracking-wide text-fu-muted" for="id_file">Choose file</label>
           {{ form.file }}
           {% if form.file.errors %}
+          <div class="flex flex-col gap-2">
             {% for error in form.file.errors %}
-            <div class="fu-message fu-message-error" style="margin-top: 0.75rem; margin-bottom: 0;">{{ error }}</div>
+            <div class="fu-message fu-message-error">{{ error }}</div>
             {% endfor %}
+          </div>
           {% endif %}
         </div>
         <button
@@ -57,25 +66,27 @@
     </section>
 
     <section class="fu-card">
-      <div class="fu-row" style="margin-bottom: 1rem;">
-        <h2 class="fu-card-title" style="margin-bottom: 0;">Your Files</h2>
-        <span class="fu-muted">{{ files|length }} file{{ files|length|pluralize }}</span>
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-col gap-1">
+          <h2 class="text-2xl font-bold text-fu-foreground">Your Files</h2>
+          <p class="text-sm text-fu-muted">Direct links stay public if someone has the URL.</p>
+        </div>
+        <span class="text-sm font-medium text-fu-muted-strong">{{ files|length }} file{{ files|length|pluralize }}</span>
       </div>
 
       {% if files %}
-      <div class="fu-stack">
+      <div class="flex flex-col gap-4">
         {% for file in files %}
         <article class="fu-file">
-          <div class="fu-row">
-            <div style="flex: 1 1 auto; min-width: 0;">
-              <p class="fu-file-name">{{ file.display_name }}</p>
+          <div class="flex min-w-0 flex-1 flex-col gap-3">
+              <p class="break-all text-xl font-bold text-fu-foreground">{{ file.display_name }}</p>
               <div class="fu-file-meta">
                 <p><span class="font-medium">Size:</span> {{ file.stored_size_bytes|filesizeformat }}</p>
                 <p><span class="font-medium">Uploaded:</span> {{ file.uploaded_at }}</p>
-                <p style="overflow-wrap: anywhere;"><span class="font-medium">URL:</span> <a class="underline" style="color: #1d4ed8;" target="_blank" href="{{ file.file.url }}">{{ file.file.url }}</a></p>
+                <p class="break-all"><span class="font-medium">URL:</span> <a class="font-medium text-fu-primary underline underline-offset-2 hover:text-fu-primary-hover" target="_blank" href="{{ file.file.url }}">{{ file.file.url }}</a></p>
               </div>
-            </div>
-            <div class="fu-actions">
+          </div>
+          <div class="fu-actions">
               <a
                 class="fu-button fu-button-secondary"
                 target="_blank"
@@ -92,18 +103,16 @@
                 {% csrf_token %}
                 <button
                   type="submit"
-                  class="fu-button fu-button-danger"
-                  style="width: 100%;">
+                  class="fu-button fu-button-danger w-full">
                   Delete
                 </button>
               </form>
-            </div>
           </div>
         </article>
         {% endfor %}
       </div>
       {% else %}
-      <div class="fu-empty">
+      <div class="flex items-center justify-center rounded-xl border border-dashed border-fu-border-strong bg-fu-panel/30 px-6 py-12 text-center text-fu-muted">
         No files uploaded yet.
       </div>
       {% endif %}

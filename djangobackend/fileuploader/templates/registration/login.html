@@ -1,15 +1,31 @@
-{% extends "fileuploader/base.html" %}
-{% block body %}
-<div class="fu-login-card">
-  <h1 class="fu-card-title" style="font-size: 2rem; text-align: center;">Login</h1>
-  {% if message %}
-  <div class="fu-message fu-message-error">{{ message }}</div>
-  {% endif %}
-  <form class="flex flex-col" action="{{ action }}" method="post">
-    {% csrf_token %}
-    <input class="fu-login-input" name="username" placeholder="Username">
-    <input class="fu-login-input" type="password" name="password" placeholder="Password">
-    <input class="fu-button fu-button-primary" type="submit" value="Login">
-  </form>
+{% extends "fileuploader/base.html" %} {% block body %}
+<div class="flex w-full max-w-md justify-center">
+  <div class="fu-card w-full max-w-md">
+    <div class="flex flex-col items-center gap-2 text-center">
+      <h1 class="text-4xl font-bold tracking-tight text-fu-foreground">
+        Login
+      </h1>
+    </div>
+    {% if message %}
+    <div class="fu-message fu-message-error">{{ message }}</div>
+    {% endif %}
+    <form class="flex flex-col gap-4" action="{{ action }}" method="post">
+      {% csrf_token %}
+      <input class="fu-login-input" name="username" placeholder="Username" />
+      <input
+        class="fu-login-input"
+        type="password"
+        name="password"
+        placeholder="Password"
+      />
+      <div class="mx-auto">
+        <input
+          class="fu-button fu-button-primary"
+          type="submit"
+          value="Login"
+        />
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
