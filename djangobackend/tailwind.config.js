@@ -2,7 +2,7 @@ const path = require("path");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [path.join(__dirname, "djangobackend/**/*.html")],
+  content: [path.join(__dirname, "**/*.html")],
   theme: {
     extend: {
       colors: {
@@ -27,4 +27,3 @@ module.exports = {
   },
   plugins: [],
 }
-
