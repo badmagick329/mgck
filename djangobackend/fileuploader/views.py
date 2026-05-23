@@ -1,11 +1,13 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import PasswordChangeDoneView, PasswordChangeView
 from django.db.models import QuerySet
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
-from fileuploader.forms import UploadedFileForm
+from fileuploader.forms import StyledPasswordChangeForm, UploadedFileForm
 from fileuploader.models import UploadedFile, UploadUser
 
 
@@ -119,6 +121,18 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("fileuploader:login"))
+
+
+class FileUploaderPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
+    form_class = StyledPasswordChangeForm
+    template_name = "fileuploader/password_change.html"
+    success_url = reverse_lazy("fileuploader:password_change_done")
+    login_url = reverse_lazy("fileuploader:login")
+
+
+class FileUploaderPasswordChangeDoneView(LoginRequiredMixin, PasswordChangeDoneView):
+    template_name = "fileuploader/password_change_done.html"
+    login_url = reverse_lazy("fileuploader:login")
 
 
 def render_file_manager(

@@ -24,11 +24,18 @@
       <a class="font-semibold" href="{% url 'fileuploader:list_files' %}"
         >File Uploader</a
       >
-      <a
-        class="font-medium text-fu-muted transition-colors hover:text-fu-foreground"
-        href="{% url 'fileuploader:logout' %}"
-        >Logout</a
-      >
+      <div class="flex items-center gap-4 text-sm font-medium">
+        <a
+          class="text-fu-muted transition-colors hover:text-fu-foreground"
+          href="{% url 'fileuploader:password_change' %}"
+          >Change Password</a
+        >
+        <a
+          class="text-fu-muted transition-colors hover:text-fu-foreground"
+          href="{% url 'fileuploader:logout' %}"
+          >Logout</a
+        >
+      </div>
     </div>
     {% endif %}
     <div class="flex w-full justify-center px-4 py-10">
