@@ -3,6 +3,9 @@
 {% block title %}
 <title>File Uploader</title>
 {% endblock %}
+{% block extrahead %}
+<script defer src="{% static 'fileuploader/fileuploader.js' %}"></script>
+{% endblock %}
 {% block body %}
 <div class="fu-shell">
   <div class="flex flex-col gap-2">
@@ -44,7 +47,7 @@
         <p><span class="font-semibold">Remaining:</span> {{ upload_user.remaining_storage_bytes|filesizeformat }}</p>
         {% endif %}
       </div>
-      <form autocomplete="off" method="post" action="{% url 'fileuploader:upload_file' %}" enctype="multipart/form-data" class="flex flex-col gap-4">
+      <form id="fu-upload-form" autocomplete="off" method="post" action="{% url 'fileuploader:upload_file' %}" enctype="multipart/form-data" class="flex flex-col gap-4">
         {% csrf_token %}
         <div class="flex flex-col gap-3">
           <label class="text-sm font-semibold uppercase tracking-wide text-fu-muted" for="id_file">Choose file</label>
@@ -57,11 +60,29 @@
           </div>
           {% endif %}
         </div>
-        <button
-          class="fu-button fu-button-primary"
-          type="submit">
-          Upload File
-        </button>
+        <div id="fu-upload-progress" class="fu-progress hidden" aria-live="polite">
+          <div class="flex items-center justify-between gap-3 text-sm text-fu-muted">
+            <span id="fu-upload-status">Preparing upload...</span>
+            <span id="fu-upload-percent" class="font-semibold text-fu-foreground">0%</span>
+          </div>
+          <div class="fu-progress-track">
+            <div id="fu-upload-bar" class="fu-progress-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            id="fu-upload-submit"
+            class="fu-button fu-button-primary"
+            type="submit">
+            Upload File
+          </button>
+          <button
+            id="fu-upload-cancel"
+            class="fu-button fu-button-secondary hidden"
+            type="button">
+            Cancel Upload
+          </button>
+        </div>
       </form>
     </section>
 

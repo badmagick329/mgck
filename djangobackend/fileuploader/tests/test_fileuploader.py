@@ -124,6 +124,48 @@ class FileUploaderTests(TestCase):
         )
         self.assertEqual(UploadedFile.objects.count(), 0)
 
+    def test_ajax_upload_returns_json_success_payload(self):
+        UploadUser.objects.create(user=self.user, storage_quota_bytes=10)
+        self.login()
+
+        response = self.client.post(
+            reverse("fileuploader:upload_file"),
+            {
+                "file": SimpleUploadedFile(
+                    "ajax.txt",
+                    b"hello",
+                    content_type="text/plain",
+                )
+            },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["redirect_url"], reverse("fileuploader:list_files"))
+        self.assertIn("uploaded successfully", response.json()["message"])
+
+    def test_ajax_upload_quota_error_returns_json(self):
+        UploadUser.objects.create(user=self.user, storage_quota_bytes=4)
+        self.login()
+
+        response = self.client.post(
+            reverse("fileuploader:upload_file"),
+            {
+                "file": SimpleUploadedFile(
+                    "too-big.txt",
+                    b"hello",
+                    content_type="text/plain",
+                )
+            },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["error_message"],
+            "This upload exceeds your remaining storage quota.",
+        )
+
     def test_unlimited_user_bypasses_quota(self):
         UploadUser.objects.create(
             user=self.unlimited_user,
