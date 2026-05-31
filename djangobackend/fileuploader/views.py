@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeDoneView, PasswordChangeView
 from django.db.models import QuerySet
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from fileuploader.forms import StyledPasswordChangeForm, UploadedFileForm
@@ -15,13 +15,16 @@ from fileuploader.models import UploadedFile, UploadUser
 def upload_file(request):
     upload_user = get_upload_user(request)
     if upload_user is None:
+        error_message = (
+            "You do not have permission to upload files. Please contact the admin."
+        )
+        if is_ajax_request(request):
+            return JsonResponse({"error_message": error_message}, status=403)
         return render_file_manager(
             request,
             UploadedFileForm(),
             upload_user=None,
-            error_message=(
-                "You do not have permission to upload files. Please contact the admin."
-            ),
+            error_message=error_message,
             status=403,
         )
 
@@ -31,13 +34,14 @@ def upload_file(request):
             uploaded = form.cleaned_data["file"]
             incoming_size = uploaded.size
             if not upload_user.can_store(incoming_size):
+                error_message = "This upload exceeds your remaining storage quota."
+                if is_ajax_request(request):
+                    return JsonResponse({"error_message": error_message}, status=400)
                 return render_file_manager(
                     request,
                     form,
                     upload_user=upload_user,
-                    error_message=(
-                        "This upload exceeds your remaining storage quota."
-                    ),
+                    error_message=error_message,
                     status=400,
                 )
             instance = form.save(commit=False)
@@ -50,8 +54,26 @@ def upload_file(request):
                 request,
                 f"{instance.display_name} uploaded successfully.",
             )
+            if is_ajax_request(request):
+                return JsonResponse(
+                    {
+                        "message": f"{instance.display_name} uploaded successfully.",
+                        "redirect_url": reverse("fileuploader:list_files"),
+                    }
+                )
             return HttpResponseRedirect(reverse("fileuploader:list_files"))
         else:
+            if is_ajax_request(request):
+                errors = []
+                for field_errors in form.errors.values():
+                    errors.extend(field_errors)
+                return JsonResponse(
+                    {
+                        "error_message": "Please fix the upload form errors below.",
+                        "errors": errors,
+                    },
+                    status=400,
+                )
             return render_file_manager(
                 request,
                 form,
@@ -174,3 +196,7 @@ def get_upload_user(request) -> UploadUser | None:
         )
 
     return None
+
+
+def is_ajax_request(request) -> bool:
+    return request.headers.get("X-Requested-With") == "XMLHttpRequest"

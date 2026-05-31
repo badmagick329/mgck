@@ -114,4 +114,16 @@
   .fu-login-input {
     @apply w-full rounded-sm border border-fu-border-strong bg-fu-panel/55 px-4 py-3 text-fu-foreground placeholder:text-fu-muted-strong;
   }
+
+  .fu-progress {
+    @apply flex flex-col gap-3 rounded-sm border border-fu-border bg-fu-panel/40 p-4;
+  }
+
+  .fu-progress-track {
+    @apply h-3 overflow-hidden rounded-sm bg-fu-panel;
+  }
+
+  .fu-progress-bar {
+    @apply h-full rounded-sm bg-fu-primary transition-[width] duration-150 ease-out;
+  }
 }
