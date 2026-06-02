@@ -1,75 +1,56 @@
-'use server';
-
 import { API_KPOP } from '@/lib/consts/urls';
+import { KpopQueryState, getKpopApiQuery } from '@/lib/kpop/query';
 import { ComebacksResult, ComebacksResultSchema } from '@/lib/types/kpop';
-import { validDateStringOrNull } from '@/lib/utils';
 
 const BASE_URL = process.env.BASE_URL;
 
 export async function fetchComebacks(
-  formData?: FormData
+  state: KpopQueryState
 ): Promise<ComebacksResult | string> {
-  if (!formData) {
-    formData = new FormData();
-  }
-  const { title, artist, startDate, endDate, page, exact } =
-    preparedFormValues(formData);
-  const apiUrl = createURL(title, artist, startDate, endDate, page, exact);
-
-  const res = await fetch(apiUrl.toString(), {
+  const apiQuery = getKpopApiQuery(state);
+  const apiUrl = createURL(apiQuery);
+  const response = await fetch(apiUrl.toString(), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
+    cache: 'no-store',
   });
-  if (res.ok) {
-    const data = await res.json();
-    const parsed = ComebacksResultSchema.safeParse(data);
-    if (!parsed.success) {
-      return 'Server Error';
+
+  if (response.ok) {
+    return parseComebacksResponse(response);
+  }
+
+  if (response.status === 404 && state.page > 1) {
+    const retryResponse = await fetch(createURL({ ...apiQuery, page: '1' }), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    if (retryResponse.ok) {
+      return parseComebacksResponse(retryResponse);
     }
-    return parsed.data;
   }
-  return res.status === 404 ? 'Page Not Found' : 'Server Error';
+
+  return response.status === 404 ? 'Page Not Found' : 'Server Error';
 }
 
-function preparedFormValues(formData: FormData) {
-  let title = formData.get('title')?.toString() || '';
-  let artist = formData.get('artist')?.toString() || '';
-  let startDate = formData.get('start-date')?.toString() || '';
-  if (startDate) {
-    startDate = validDateStringOrNull(startDate) || '';
+async function parseComebacksResponse(response: Response) {
+  const data = await response.json();
+  const parsed = ComebacksResultSchema.safeParse(data);
+  if (!parsed.success) {
+    return 'Server Error';
   }
-  let endDate = formData.get('end-date')?.toString() || '';
-  if (endDate) {
-    endDate = validDateStringOrNull(endDate) || '';
-  }
-  let page = formData.get('page')?.toString() || '1';
-  let exact = Boolean(formData.get('exact')) ? 'on' : '';
-  return {
-    title,
-    artist,
-    startDate,
-    endDate,
-    page,
-    exact,
-  };
+  return parsed.data;
 }
 
-function createURL(
-  title: string,
-  artist: string,
-  startDate: string,
-  endDate: string,
-  page: string,
-  exact: string
-) {
+function createURL(query: Record<string, string>) {
   const apiUrl = new URL(`${BASE_URL}${API_KPOP}`);
-  apiUrl.searchParams.append('title', title);
-  apiUrl.searchParams.append('artist', artist);
-  apiUrl.searchParams.append('start_date', startDate);
-  apiUrl.searchParams.append('end_date', endDate);
-  apiUrl.searchParams.append('page', page);
-  apiUrl.searchParams.append('exact', exact);
+  for (const [key, value] of Object.entries(query)) {
+    apiUrl.searchParams.append(key, value);
+  }
   return apiUrl;
 }

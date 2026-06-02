@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+'use client';
 
 import ComebackCardAlbum from './ComebackCardAlbum';
 import ComebackCardYoutube from './ComebackCardYoutube';
@@ -21,20 +21,16 @@ export default function ComebackCard({
   releaseDate,
   urls,
 }: ComebackProps) {
-  const videoIds = useMemo(
-    () =>
-      urls
-        .map((url) => {
-          if (url.includes('v=')) {
-            return url.split('v=')[1];
-          } else if (url.includes('youtu.be/')) {
-            return url.split('youtu.be/')[1].split('?')[0];
-          }
-          return '';
-        })
-        .filter(Boolean),
-    [urls]
-  );
+  const videoIds = urls
+    .map((url) => {
+      if (url.includes('v=')) {
+        return url.split('v=')[1];
+      } else if (url.includes('youtu.be/')) {
+        return url.split('youtu.be/')[1].split('?')[0];
+      }
+      return '';
+    })
+    .filter(Boolean);
 
   return (
     <div className='flex max-w-[400px] flex-col items-center gap-4 rounded-md border-2 bg-primary-kp/30 p-4'>

@@ -1,4 +1,4 @@
-import { ReadonlyURLSearchParams } from 'next/navigation';
+import { DEFAULT_RECENT_BUFFER_DAYS } from './query';
 
 export function dateStringIsToday(dateString: string) {
   const today = new Date();
@@ -7,7 +7,7 @@ export function dateStringIsToday(dateString: string) {
   return todayString === targetDateString;
 }
 
-export function recentDate(pastDays: number = 3) {
+export function recentDate(pastDays: number = DEFAULT_RECENT_BUFFER_DAYS) {
   const today = new Date();
   today.setDate(today.getDate() - pastDays);
   return today.toISOString().split('T')[0];
@@ -36,21 +36,6 @@ export const namesAndPlaceHolders = [
   },
 ];
 export const formKeys = namesAndPlaceHolders.map(({ name }) => name);
-
-export function searchParamsAreEmpty(searchParams: ReadonlyURLSearchParams) {
-  for (const key of formKeys) {
-    if (searchParams.has(key)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-export function getRecentDateParams(searchParams: ReadonlyURLSearchParams) {
-  const newSearchParams = new URLSearchParams(searchParams.toString());
-  newSearchParams.set('start-date', recentDate().replaceAll('-', '').slice(2));
-  return newSearchParams;
-}
 export function clearFormInputs(form: HTMLFormElement | null) {
   if (!form) return;
   for (const input of form) {

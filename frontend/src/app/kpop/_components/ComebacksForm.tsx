@@ -1,27 +1,20 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import useDebounce from '@/hooks/useDebounce';
 import useURLState from '@/hooks/useUrlState';
-import { MEDIUM_ICON } from '@/lib/consts/kpop';
-import { searchParamsToFormData } from '@/lib/utils';
-import { clearFormInputs } from '@/lib/kpop';
+import { formKeys, namesAndPlaceHolders } from '@/lib/kpop';
 import {
-  formKeys,
-  getRecentDateParams,
-  namesAndPlaceHolders,
-  recentDate,
-  searchParamsAreEmpty,
-} from '@/lib/kpop';
-import {
-  getNextPageURL,
-  getPreviousPageURL,
-  hasNextPage,
-  hasPreviousPage,
-} from '@/lib/kpop/page-handlers';
+  buildClearSearchParams,
+  buildRecentSearchParams,
+  buildTimelineShiftSearchParams,
+  buildTodaySearchParams,
+  getTimelineLabel,
+  searchParamsToKpopQueryState,
+} from '@/lib/kpop/query';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { ReadonlyURLSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 
 import ComebackFormInput from './ComebackFormInput';
 
@@ -31,133 +24,149 @@ type FormDataToURLState = (
   searchParams?: URLSearchParams | undefined
 ) => void;
 
-export default function ComebacksForm({ totalPages }: { totalPages: number }) {
-  const DEBOUNCE_TIME = 350;
-  const { router, pathname, searchParams, formDataToURLState, clearURLState } =
-    useURLState({ formKeys });
-  const debounce = useDebounce(DEBOUNCE_TIME);
-  const defaultFormData = searchParamsToFormData(searchParams);
+export default function ComebacksForm() {
+  const debounce = useDebounce(350);
+  const { router, pathname, searchParams, formDataToURLState } = useURLState({
+    formKeys,
+  });
 
-  useEffect(() => {
-    if (!searchParamsAreEmpty(searchParams)) {
-      return;
-    }
-    const newSearchParams = getRecentDateParams(searchParams);
-    router.replace(`${pathname}?${newSearchParams.toString()}`);
-  }, []);
-  const previousIsDisabled = !hasPreviousPage(searchParams);
-  const nextIsDisabled = !hasNextPage(searchParams, totalPages);
+  const queryState = useMemo(
+    () => searchParamsToKpopQueryState(searchParams),
+    [searchParams]
+  );
+  const timelineLabel = useMemo(
+    () => getTimelineLabel(queryState),
+    [queryState]
+  );
 
   return (
-    <form onSubmit={(e) => e.preventDefault()}>
-      {!previousIsDisabled && (
-        <Button
-          variant='ghost'
-          className='fixed left-0 top-[45%] ml-1 h-36 bg-gray-500/10 active:bg-gray-500/10 dark:bg-gray-50/5 dark:active:bg-gray-50/5'
-          size='icon'
-          onClick={onPreviousClick(searchParams, pathname, router)}
-        >
-          <ChevronLeft size={MEDIUM_ICON} />
-        </Button>
-      )}
-      {!nextIsDisabled && (
-        <Button
-          variant='ghost'
-          className='fixed right-0 top-[45%] mr-1 h-36 bg-gray-500/10 active:bg-gray-500/10 dark:bg-gray-50/5 dark:active:bg-gray-50/5'
-          size='icon'
-          disabled={nextIsDisabled}
-          onClick={onNextClick(searchParams, pathname, totalPages, router)}
-        >
-          <ChevronRight size={MEDIUM_ICON} />
-        </Button>
-      )}
-      <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-        {namesAndPlaceHolders
-          .slice(0, namesAndPlaceHolders.length - 1)
-          .map(({ name, placeholder }) => (
-            <ComebackFormInput
-              key={name}
-              name={name}
-              placeholder={placeholder}
-              defaultValue={defaultFormData.get(name)?.toString() || ''}
-              onChange={onInputChange(
-                debounce,
-                searchParams,
-                formDataToURLState
-              )}
-            />
-          ))}
-        <div className='flex items-center'>
-          <Input
-            type='checkbox'
-            name='exact'
-            className='h-5 w-5 border-2'
-            defaultChecked={defaultFormData.get('exact') === 'on'}
-            onChange={toggleExactSearch(
-              debounce,
-              searchParams,
-              formDataToURLState
-            )}
-          />
-          <label className='pl-2'>Exact Match</label>
+    <div className='flex w-full max-w-5xl flex-col gap-5 rounded-sm border border-primary-kp/25 bg-background/40 px-4 py-4 md:px-6'>
+      <div className='flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between'>
+        <div className='flex flex-col gap-1'>
+          <h3 className='mt-2 text-2xl font-semibold'>{timelineLabel}</h3>
+          <p className='text-sm text-muted-foreground'>
+            Browse by week, refine the search with artist or title filters.
+          </p>
         </div>
-        <div className='flex justify-between gap-2'>
+        <div className='grid grid-cols-2 gap-2 sm:grid-cols-4'>
+          <Button
+            variant='outline'
+            className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+            onClick={onTimelineClick(searchParams, pathname, router, 'earlier')}
+          >
+            <ChevronLeft className='mr-2 h-4 w-4' />
+            Earlier
+          </Button>
+          <Button
+            variant='outline'
+            className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+            onClick={onTimelineClick(searchParams, pathname, router, 'later')}
+          >
+            Later
+            <ChevronRight className='ml-2 h-4 w-4' />
+          </Button>
           <Button
             className='bg-primary-kp/80 hover:bg-primary-kp'
-            onClick={onRecentClick(formDataToURLState, searchParams)}
+            onClick={onPresetClick(searchParams, pathname, router, 'recent')}
           >
             Recent
           </Button>
           <Button
             className='bg-primary-kp/80 hover:bg-primary-kp'
-            onClick={onTodayClick(formDataToURLState, searchParams)}
+            onClick={onPresetClick(searchParams, pathname, router, 'today')}
           >
             Today
           </Button>
+        </div>
+      </div>
+
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className='flex flex-col gap-4'
+      >
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5'>
+          {namesAndPlaceHolders
+            .slice(0, namesAndPlaceHolders.length - 1)
+            .map(({ name, placeholder }) => (
+              <ComebackFormInput
+                key={`${name}:${searchParams.get(name) || ''}`}
+                name={name}
+                placeholder={placeholder}
+                defaultValue={searchParams.get(name) || ''}
+                onChange={onInputChange(
+                  debounce,
+                  searchParams,
+                  formDataToURLState
+                )}
+              />
+            ))}
+          <label className='flex items-center gap-3 rounded-sm border border-primary-kp/35 px-3 py-2 text-sm'>
+            <Input
+              key={`exact:${queryState.exact ? 'on' : 'off'}`}
+              type='checkbox'
+              name='exact'
+              className='h-5 w-5 border-2'
+              defaultChecked={queryState.exact}
+              onChange={toggleExactSearch(
+                debounce,
+                searchParams,
+                formDataToURLState
+              )}
+            />
+            <span>Exact Match</span>
+          </label>
+        </div>
+        <div className='flex flex-wrap justify-end gap-2'>
           <Button
-            className='bg-primary-kp/80 hover:bg-primary-kp'
-            onClick={onClearClick(clearURLState)}
+            variant='outline'
+            className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+            onClick={onClearClick(pathname, router)}
           >
             Clear
           </Button>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }
 
-function onNextClick(
-  searchParams: ReadonlyURLSearchParams,
+function onTimelineClick(
+  searchParams:
+    | URLSearchParams
+    | ReturnType<typeof useURLState>['searchParams'],
   pathname: string,
-  totalPages: number,
-  router: AppRouterInstance
+  router: ReturnType<typeof useURLState>['router'],
+  direction: 'earlier' | 'later'
 ) {
   return () => {
-    const newURL = getNextPageURL(searchParams, pathname, totalPages);
-    if (newURL) {
-      router.replace(newURL);
-      router.refresh();
-    }
+    const nextSearchParams = buildTimelineShiftSearchParams(
+      searchParams,
+      direction
+    );
+    router.replace(`${pathname}?${nextSearchParams.toString()}`);
   };
 }
 
-function onPreviousClick(
-  searchParams: ReadonlyURLSearchParams,
+function onPresetClick(
+  searchParams:
+    | URLSearchParams
+    | ReturnType<typeof useURLState>['searchParams'],
   pathname: string,
-  router: AppRouterInstance
+  router: ReturnType<typeof useURLState>['router'],
+  preset: 'recent' | 'today'
 ) {
   return () => {
-    const newURL = getPreviousPageURL(searchParams, pathname);
-    if (newURL) {
-      router.replace(newURL);
-      router.refresh();
-    }
+    const nextSearchParams =
+      preset === 'recent'
+        ? buildRecentSearchParams(searchParams)
+        : buildTodaySearchParams(searchParams);
+    router.replace(`${pathname}?${nextSearchParams.toString()}`);
   };
 }
 
 function onInputChange(
   debounce: Debounce,
-  searchParams: ReadonlyURLSearchParams,
+  searchParams: ReturnType<typeof useURLState>['searchParams'],
   formDataToURLState: FormDataToURLState
 ) {
   return (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,83 +179,12 @@ function onInputChange(
       }
       formDataToURLState(formData, oldSearchParams);
     });
-  };
-}
-
-function onClearClick(clearURLState: () => void) {
-  return (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    clearURLState();
-    clearFormInputs(e.currentTarget.form);
-  };
-}
-
-function onTodayClick(
-  formDataToURLState: FormDataToURLState,
-  searchParams: ReadonlyURLSearchParams
-) {
-  return (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    const form = e.currentTarget.form;
-    if (!form) {
-      return;
-    }
-    const startDateInput = form.querySelector<HTMLInputElement>(
-      'input[name="start-date"]'
-    );
-    if (!startDateInput) {
-      return;
-    }
-    const endDateInput = form.querySelector<HTMLInputElement>(
-      'input[name="end-date"]'
-    );
-    if (!endDateInput) {
-      return;
-    }
-    startDateInput.value = recentDate(0);
-    endDateInput.value = recentDate(0);
-    const formData = new FormData(form);
-    const oldSearchParams = new URLSearchParams(searchParams.toString());
-    if (oldSearchParams.has('page')) {
-      oldSearchParams.delete('page');
-    }
-    formDataToURLState(formData, oldSearchParams);
-  };
-}
-
-function onRecentClick(
-  formDataToURLState: FormDataToURLState,
-  searchParams: ReadonlyURLSearchParams
-) {
-  return (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    const form = e.currentTarget.form;
-    if (!form) {
-      return;
-    }
-    const startDateInput = form.querySelector<HTMLInputElement>(
-      'input[name="start-date"]'
-    );
-    if (!startDateInput) {
-      return;
-    }
-    const endDateInput = form.querySelector<HTMLInputElement>(
-      'input[name="end-date"]'
-    );
-    if (!endDateInput) {
-      return;
-    }
-    startDateInput.value = recentDate();
-    endDateInput.value = '';
-    const formData = new FormData(form);
-    const oldSearchParams = new URLSearchParams(searchParams.toString());
-    if (oldSearchParams.has('page')) {
-      oldSearchParams.delete('page');
-    }
-    formDataToURLState(formData, oldSearchParams);
   };
 }
 
 function toggleExactSearch(
   debounce: Debounce,
-  searchParams: ReadonlyURLSearchParams,
+  searchParams: ReturnType<typeof useURLState>['searchParams'],
   formDataToURLState: FormDataToURLState
 ) {
   return (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,18 +192,26 @@ function toggleExactSearch(
     if (!form) {
       return;
     }
-    const formData = new FormData(form || undefined);
+    const formData = new FormData(form);
     if (e.currentTarget.checked) {
       formData.set('exact', 'on');
     } else {
-      formData.set('exact', '');
+      formData.delete('exact');
     }
     debounce(() => {
       const oldSearchParams = new URLSearchParams(searchParams.toString());
-      if (oldSearchParams.has('page')) {
-        oldSearchParams.delete('page');
-      }
+      oldSearchParams.delete('page');
       formDataToURLState(formData, oldSearchParams);
     });
+  };
+}
+
+function onClearClick(
+  pathname: string,
+  router: ReturnType<typeof useURLState>['router']
+) {
+  return () => {
+    const searchParams = buildClearSearchParams(new URLSearchParams());
+    router.replace(`${pathname}?${searchParams.toString()}`);
   };
 }
