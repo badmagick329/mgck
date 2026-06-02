@@ -1,4 +1,5 @@
 const allowedDevOrigins = process.env.ALLOWED_DEV_ORIGINS?.split(',') ?? [];
+const shouldUseStandaloneOutput = process.env.NEXT_OUTPUT_STANDALONE === '1';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -17,7 +18,7 @@ const nextConfig = {
       fullUrl: true,
     },
   },
-  output: 'standalone',
+  output: shouldUseStandaloneOutput ? 'standalone' : undefined,
   allowedDevOrigins,
   async headers() {
     return [
