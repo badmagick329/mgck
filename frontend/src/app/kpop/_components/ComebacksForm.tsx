@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import useDebounce from '@/hooks/useDebounce';
 import useURLState from '@/hooks/useUrlState';
 import { formKeys, namesAndPlaceHolders } from '@/lib/kpop';
 import {
@@ -18,14 +17,7 @@ import { useMemo } from 'react';
 
 import ComebackFormInput from './ComebackFormInput';
 
-type Debounce = ReturnType<typeof useDebounce>;
-type FormDataToURLState = (
-  formData: FormData,
-  searchParams?: URLSearchParams | undefined
-) => void;
-
 export default function ComebacksForm() {
-  const debounce = useDebounce(350);
   const { router, pathname, searchParams, formDataToURLState } = useURLState({
     formKeys,
   });
@@ -81,7 +73,7 @@ export default function ComebacksForm() {
       </div>
 
       <form
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={onSearchSubmit(searchParams, formDataToURLState)}
         className='flex flex-col gap-4'
       >
         <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5'>
@@ -93,11 +85,6 @@ export default function ComebacksForm() {
                 name={name}
                 placeholder={placeholder}
                 defaultValue={searchParams.get(name) || ''}
-                onChange={onInputChange(
-                  debounce,
-                  searchParams,
-                  formDataToURLState
-                )}
               />
             ))}
           <label className='flex items-center gap-3 rounded-sm border border-primary-kp/35 px-3 py-2 text-sm'>
@@ -107,17 +94,19 @@ export default function ComebacksForm() {
               name='exact'
               className='h-5 w-5 border-2'
               defaultChecked={queryState.exact}
-              onChange={toggleExactSearch(
-                debounce,
-                searchParams,
-                formDataToURLState
-              )}
             />
             <span>Exact Match</span>
           </label>
         </div>
         <div className='flex flex-wrap justify-end gap-2'>
           <Button
+            type='submit'
+            className='bg-primary-kp/80 hover:bg-primary-kp'
+          >
+            Search
+          </Button>
+          <Button
+            type='button'
             variant='outline'
             className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
             onClick={onClearClick(pathname, router)}
@@ -164,45 +153,18 @@ function onPresetClick(
   };
 }
 
-function onInputChange(
-  debounce: Debounce,
+function onSearchSubmit(
   searchParams: ReturnType<typeof useURLState>['searchParams'],
-  formDataToURLState: FormDataToURLState
+  formDataToURLState: ReturnType<typeof useURLState>['formDataToURLState']
 ) {
-  return (e: React.ChangeEvent<HTMLInputElement>) => {
-    const form = e.currentTarget.form;
-    const formData = new FormData(form || undefined);
-    debounce(() => {
-      const oldSearchParams = new URLSearchParams(searchParams.toString());
-      if (oldSearchParams.has('page')) {
-        oldSearchParams.delete('page');
-      }
-      formDataToURLState(formData, oldSearchParams);
-    });
-  };
-}
-
-function toggleExactSearch(
-  debounce: Debounce,
-  searchParams: ReturnType<typeof useURLState>['searchParams'],
-  formDataToURLState: FormDataToURLState
-) {
-  return (e: React.ChangeEvent<HTMLInputElement>) => {
-    const form = e.currentTarget.form;
-    if (!form) {
-      return;
-    }
-    const formData = new FormData(form);
-    if (e.currentTarget.checked) {
-      formData.set('exact', 'on');
-    } else {
-      formData.delete('exact');
-    }
-    debounce(() => {
-      const oldSearchParams = new URLSearchParams(searchParams.toString());
+  return (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const oldSearchParams = new URLSearchParams(searchParams.toString());
+    if (oldSearchParams.has('page')) {
       oldSearchParams.delete('page');
-      formDataToURLState(formData, oldSearchParams);
-    });
+    }
+    formDataToURLState(formData, oldSearchParams);
   };
 }
 

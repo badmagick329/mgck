@@ -4,12 +4,10 @@ export default function ComebackFormInput({
   name,
   placeholder,
   defaultValue,
-  onChange,
 }: {
   name: string;
   placeholder: string;
   defaultValue: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <Input
@@ -19,7 +17,6 @@ export default function ComebackFormInput({
       autoComplete='off'
       type='search'
       defaultValue={defaultValue}
-      onChange={onChange}
     />
   );
 }
