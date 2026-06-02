@@ -55,6 +55,12 @@ class KpopComebackList(generics.ListAPIView):
                 type=openapi.TYPE_BOOLEAN,
                 description="Filter by exact match",
             ),
+            openapi.Parameter(
+                name="page_size",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+                description="Optional page size override for this result window",
+            ),
         ],
     )
     def get(self, request, *args, **kwargs):

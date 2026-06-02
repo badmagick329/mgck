@@ -1,67 +1,91 @@
-'use client';
-
 import { fetchComebacks } from '@/actions/kpop';
+import Footer from '@/app/_components/Footer';
 import Navbar from '@/app/_components/Navbar';
-import ScrollIndicator from '@/app/kpop/_components/ScrollIndicator';
-import { ComebackResponse, ComebacksResult } from '@/lib/types/kpop';
-import { searchParamsToFormData } from '@/lib/utils';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  searchParamsToKpopQueryState,
+  getCanonicalKpopSearchParams,
+} from '@/lib/kpop/query';
+import { ArrowUp } from 'lucide-react';
+import { redirect } from 'next/navigation';
 
-import ComebackCard from './_components/ComebackCard';
 import ComebacksForm from './_components/ComebacksForm';
 import ErrorResponse from './_components/ErrorResponse';
-import Loading from './loading';
-import Footer from '@/app/_components/Footer';
+import KpopResults from './_components/KpopResults';
+import ScrollIndicator from './_components/ScrollIndicator';
 
-export default function KpopPage() {
-  const [comebacksResult, setComebacksResult] =
-    useState<ComebacksResult | null>(null);
-  const [comebacks, setComebacks] = useState<ComebackResponse[]>([]);
-  const searchParams = useSearchParams();
-  const [serverError, setServerError] = useState<string | null>(null);
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
 
-  useEffect(() => {
-    (async () => {
-      const comebacksResult = await fetchComebacks(
-        searchParamsToFormData(searchParams)
-      );
-      if (typeof comebacksResult === 'string') {
-        setServerError(comebacksResult);
-      } else {
-        setComebacksResult(comebacksResult);
-        setComebacks(comebacksResult.results);
+export default async function KpopPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = (await searchParams) || {};
+  const canonicalSearchParams =
+    getCanonicalKpopSearchParams(resolvedSearchParams);
+  const canonicalUrl = `/kpop?${canonicalSearchParams.toString()}`;
+  const rawSearchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(resolvedSearchParams)) {
+    if (Array.isArray(value)) {
+      if (value[0]) {
+        rawSearchParams.set(key, value[0]);
       }
-    })();
-  }, [searchParams]);
-
-  if (serverError) {
-    return <ErrorResponse serverError={serverError} />;
+      continue;
+    }
+    if (value) {
+      rawSearchParams.set(key, value);
+    }
   }
 
-  if (comebacksResult === null) {
-    return <Loading />;
+  if (rawSearchParams.toString() !== canonicalSearchParams.toString()) {
+    redirect(canonicalUrl);
+  }
+
+  const queryState = searchParamsToKpopQueryState(canonicalSearchParams);
+  const comebacksResult = await fetchComebacks(queryState);
+
+  if (typeof comebacksResult === 'string') {
+    return <ErrorResponse serverError={comebacksResult} />;
   }
 
   return (
-    <main className='flex min-h-screen flex-col items-center gap-4 bg-background-kp'>
+    <main
+      id='kpop-top'
+      className='flex min-h-screen flex-col items-center gap-4 bg-background-kp'
+    >
       <ScrollIndicator colorValue='hsl(224,80%,50%)' />
       <Navbar />
-      <h2 className='text-2xl font-semibold'>Upcoming Comebacks</h2>
-      <ComebacksForm totalPages={comebacksResult.total_pages} />
-      <div className='flex grow flex-col items-center gap-4 pt-4'>
-        <div className='grid grid-cols-1 gap-12 px-4 lg:grid-cols-2 xl:grid-cols-3'>
-          {comebacks.map((comeback) => (
-            <ComebackCard
-              key={comeback.id}
-              title={comeback.title}
-              artist={comeback.artist}
-              album={comeback.album}
-              releaseType={comeback.release_type}
-              releaseDate={comeback.date}
-              urls={comeback.urls}
-            />
-          ))}
+      <div className='flex w-full max-w-6xl flex-col items-center gap-6 px-4 pb-8 pt-2 md:px-6'>
+        <div className='flex w-full flex-col gap-2 text-center'>
+          <h1 className='text-3xl font-semibold tracking-tight md:text-4xl'>
+            Kpop Comebacks
+          </h1>
+          <p className='text-sm text-muted-foreground md:text-base'>
+            Browse recent and upcoming Kpop song releases or search through the
+            archive for specific comebacks.
+          </p>
+        </div>
+        <ComebacksForm />
+        <div className='flex w-full justify-between gap-4 text-sm text-muted-foreground'>
+          <span>
+            {comebacksResult.count} matching release
+            {comebacksResult.count === 1 ? '' : 's'}
+          </span>
+        </div>
+        <div className='flex w-full grow flex-col items-center gap-4 pt-2'>
+          <KpopResults comebacks={comebacksResult.results} />
+        </div>
+        <div className='flex w-full justify-center pt-2'>
+          <Button
+            asChild
+            variant='outline'
+            className='rounded-sm border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+          >
+            <a href='#kpop-top'>
+              <ArrowUp className='mr-2 h-4 w-4' />
+              Back to top
+            </a>
+          </Button>
         </div>
       </div>
       <Footer />

@@ -1,3 +1,5 @@
+'use client';
+
 import useScrollIndicator from '@/hooks/useScrollIndicator';
 
 export default function ScrollIndicator({
