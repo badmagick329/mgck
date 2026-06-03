@@ -11,7 +11,7 @@ import { redirect } from 'next/navigation';
 
 import ComebacksForm from './_components/ComebacksForm';
 import ErrorResponse from './_components/ErrorResponse';
-import KpopResults from './_components/KpopResults';
+import KpopInfiniteResults from './_components/KpopInfiniteResults';
 import ScrollIndicator from './_components/ScrollIndicator';
 
 type PageProps = {
@@ -66,14 +66,11 @@ export default async function KpopPage({ searchParams }: PageProps) {
           </p>
         </div>
         <ComebacksForm />
-        <div className='flex w-full justify-between gap-4 text-sm text-muted-foreground'>
-          <span>
-            {comebacksResult.count} matching release
-            {comebacksResult.count === 1 ? '' : 's'}
-          </span>
-        </div>
         <div className='flex w-full grow flex-col items-center gap-4 pt-2'>
-          <KpopResults comebacks={comebacksResult.results} />
+          <KpopInfiniteResults
+            initialResult={comebacksResult}
+            initialState={queryState}
+          />
         </div>
         <div className='flex w-full justify-center pt-2'>
           <Button
