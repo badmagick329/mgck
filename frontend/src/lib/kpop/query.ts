@@ -5,6 +5,7 @@ export const DEFAULT_RECENT_BUFFER_DAYS = 7;
 export const TIMELINE_JUMP_DAYS = 7;
 export const OPEN_ENDED_PAGE_SIZE = 10;
 export const BOUNDED_WINDOW_PAGE_SIZE = 100;
+export const ARCHIVE_START_DATE_COMPACT = '000101';
 
 export type KpopQueryState = {
   artist: string;
@@ -21,7 +22,9 @@ type SearchParamsInput =
   | Record<string, string | string[] | undefined>;
 
 export function getDefaultStartDateCompact() {
-  return formatCompactDate(addDays(getTodayUtcDate(), -DEFAULT_RECENT_BUFFER_DAYS));
+  return formatCompactDate(
+    addDays(getTodayUtcDate(), -DEFAULT_RECENT_BUFFER_DAYS)
+  );
 }
 
 export function getTodayDateCompact() {
@@ -109,7 +112,8 @@ export function buildTimelineShiftSearchParams(
   const params = getCanonicalKpopSearchParams(searchParams);
   const state = searchParamsToKpopQueryState(params);
   const multiplier = direction === 'earlier' ? -1 : 1;
-  const currentStart = compactDateToUtcDate(state.startDate) || getTodayUtcDate();
+  const currentStart =
+    compactDateToUtcDate(state.startDate) || getTodayUtcDate();
   const currentEnd = compactDateToUtcDate(state.endDate);
 
   let nextStart: Date;
@@ -152,6 +156,14 @@ export function buildTodaySearchParams(searchParams: SearchParamsInput) {
   return params;
 }
 
+export function buildAllSearchParams(searchParams: SearchParamsInput) {
+  const params = getCanonicalKpopSearchParams(searchParams);
+  params.set('start-date', ARCHIVE_START_DATE_COMPACT);
+  params.delete('end-date');
+  params.delete('page');
+  return params;
+}
+
 export function buildClearSearchParams(searchParams: SearchParamsInput) {
   const params = new URLSearchParams();
   params.set('start-date', getDefaultStartDateCompact());
@@ -189,11 +201,14 @@ function canonicalCompactDate(value: string | null) {
   if (!value) {
     return '';
   }
+  const trimmedValue = value.trim();
+  const useFourDigitYear = trimmedValue.replaceAll('-', '').length === 8;
   const validDate = validDateStringOrNull(value);
   if (!validDate) {
     return '';
   }
-  return validDate.replaceAll('-', '').slice(2);
+  const digitsOnly = validDate.replaceAll('-', '');
+  return useFourDigitYear ? digitsOnly : digitsOnly.slice(2);
 }
 
 function compactToApiDate(value: string) {
@@ -251,15 +266,11 @@ function toURLSearchParams(searchParams: SearchParamsInput) {
     return new URLSearchParams(searchParams.toString());
   }
 
-  if (
-    typeof (searchParams as { entries?: unknown }).entries === 'function'
-  ) {
+  if (typeof (searchParams as { entries?: unknown }).entries === 'function') {
     const iterableParams = searchParams as unknown as {
       entries: () => IterableIterator<[string, string]>;
     };
-    const entries = Array.from(
-      iterableParams.entries()
-    );
+    const entries = Array.from(iterableParams.entries());
     return new URLSearchParams(entries);
   }
 

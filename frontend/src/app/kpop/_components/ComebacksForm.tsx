@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import useURLState from '@/hooks/useUrlState';
 import { formKeys, namesAndPlaceHolders } from '@/lib/kpop';
 import {
+  buildAllSearchParams,
   buildClearSearchParams,
   buildRecentSearchParams,
   buildTimelineShiftSearchParams,
@@ -40,7 +41,7 @@ export default function ComebacksForm() {
             Browse by week, refine the search with artist or title filters.
           </p>
         </div>
-        <div className='grid grid-cols-2 gap-2 sm:grid-cols-4'>
+        <div className='grid grid-cols-2 gap-2 sm:grid-cols-5'>
           <Button
             variant='outline'
             className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
@@ -68,6 +69,12 @@ export default function ComebacksForm() {
             onClick={onPresetClick(searchParams, pathname, router, 'today')}
           >
             Today
+          </Button>
+          <Button
+            className='bg-primary-kp/80 hover:bg-primary-kp'
+            onClick={onPresetClick(searchParams, pathname, router, 'all')}
+          >
+            All
           </Button>
         </div>
       </div>
@@ -142,13 +149,15 @@ function onPresetClick(
     | ReturnType<typeof useURLState>['searchParams'],
   pathname: string,
   router: ReturnType<typeof useURLState>['router'],
-  preset: 'recent' | 'today'
+  preset: 'recent' | 'today' | 'all'
 ) {
   return () => {
     const nextSearchParams =
       preset === 'recent'
         ? buildRecentSearchParams(searchParams)
-        : buildTodaySearchParams(searchParams);
+        : preset === 'today'
+          ? buildTodaySearchParams(searchParams)
+          : buildAllSearchParams(searchParams);
     router.replace(`${pathname}?${nextSearchParams.toString()}`);
   };
 }

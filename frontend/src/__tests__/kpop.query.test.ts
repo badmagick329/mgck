@@ -1,4 +1,5 @@
 import {
+  buildAllSearchParams,
   buildClearSearchParams,
   buildRecentSearchParams,
   buildTimelineShiftSearchParams,
@@ -46,7 +47,7 @@ describe('kpop query helpers', () => {
     expect(next.get('end-date')).toBe('250608');
   });
 
-  test('recent, today, and clear strip page and end-date state', () => {
+  test('recent, today, all, and clear strip page and end-date state', () => {
     const source = new URLSearchParams(
       'start-date=250526&end-date=250601&artist=rv&page=3&exact=on'
     );
@@ -54,6 +55,9 @@ describe('kpop query helpers', () => {
     expect(buildRecentSearchParams(source).get('end-date')).toBeNull();
     expect(buildRecentSearchParams(source).get('page')).toBeNull();
     expect(buildTodaySearchParams(source).get('end-date')).toBeNull();
+    expect(buildAllSearchParams(source).get('start-date')).toBe('000101');
+    expect(buildAllSearchParams(source).get('end-date')).toBeNull();
+    expect(buildAllSearchParams(source).get('page')).toBeNull();
     expect(buildClearSearchParams(source).toString()).toMatch(/^start-date=/);
   });
 
