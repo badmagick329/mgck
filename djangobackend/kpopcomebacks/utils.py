@@ -83,12 +83,12 @@ def filter_comebacks(
         return (
             Release.objects.filter(*filters)
             .prefetch_related("artist", "release_type")
-            .order_by("release_date")
+            .order_by("release_date", "id")
         )
     return (
         Release.objects.all()
         .prefetch_related("artist", "release_type")
-        .order_by("release_date")
+        .order_by("release_date", "id")
     )
 
 
