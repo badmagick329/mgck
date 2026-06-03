@@ -9,7 +9,7 @@ export default function KpopResults({
 }) {
   if (comebacks.length === 0) {
     return (
-      <div className='flex min-h-[16rem] w-full items-center justify-center rounded-sm border border-dashed border-primary-kp/35 bg-primary-kp/5 px-6 py-12 text-center text-muted-foreground'>
+      <div className='flex min-h-[16rem] w-full flex-1 items-center justify-center rounded-sm border border-dashed border-primary-kp/35 bg-primary-kp/5 px-6 py-12 text-center text-muted-foreground'>
         No releases matched this timeline and filter combination.
       </div>
     );

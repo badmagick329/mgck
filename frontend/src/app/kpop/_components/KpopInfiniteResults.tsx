@@ -158,7 +158,7 @@ export default function KpopInfiniteResults({
   }
 
   return (
-    <div className='flex w-full flex-col items-center gap-6'>
+    <div className='flex min-h-full w-full flex-1 flex-col items-center gap-6'>
       <div className='flex w-full justify-between gap-4 text-sm text-muted-foreground'>
         <span>
           {totalCount} matching release{totalCount === 1 ? '' : 's'}
