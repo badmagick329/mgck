@@ -7,7 +7,7 @@ const DISCORD_USER = process.env.NEXT_PUBLIC_DISCORD_USER;
 
 export default function Footer() {
   return (
-    <footer className='flex w-full justify-between gap-2 px-4 py-2'>
+    <footer className='mt-auto flex w-full justify-between gap-2 px-4 py-2'>
       <section className='flex items-center gap-2'>
         <DiscordContact />
         <GithubContact />

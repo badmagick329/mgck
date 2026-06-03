@@ -55,7 +55,7 @@ export default async function KpopPage({ searchParams }: PageProps) {
     >
       <ScrollIndicator colorValue='hsl(224,80%,50%)' />
       <Navbar />
-      <div className='flex w-full max-w-6xl flex-col items-center gap-6 px-4 pb-8 pt-2 md:px-6'>
+      <div className='flex w-full max-w-6xl flex-1 flex-col items-center gap-6 px-4 pb-8 pt-2 md:px-6'>
         <div className='flex w-full flex-col gap-2 text-center'>
           <h1 className='text-3xl font-semibold tracking-tight md:text-4xl'>
             Kpop Comebacks
