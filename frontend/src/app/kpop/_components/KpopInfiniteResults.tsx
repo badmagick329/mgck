@@ -28,19 +28,41 @@ export default function KpopInfiniteResults({
   const [page, setPage] = useState(initialState.page);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [hasMore, setHasMore] = useState(initialState.page < initialResult.total_pages);
+  const [hasMore, setHasMore] = useState(
+    initialState.page < initialResult.total_pages
+  );
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const activeRequestRef = useRef<AbortController | null>(null);
+
+  const queryKey = useMemo(() => {
+    const { page, ...queryWithoutPage } = getKpopApiQuery({
+      ...initialState,
+      page: 1,
+    });
+    return JSON.stringify(queryWithoutPage);
+  }, [initialState]);
+  const queryKeyRef = useRef(queryKey);
 
   const loadedCount = comebacks.length;
   const totalCount = initialResult.count;
   const nextPage = page + 1;
 
   useEffect(() => {
+    activeRequestRef.current?.abort();
+    activeRequestRef.current = null;
+    queryKeyRef.current = queryKey;
     setComebacks(initialResult.results);
     setPage(initialState.page);
+    setLoading(false);
     setLoadError('');
     setHasMore(initialState.page < initialResult.total_pages);
-  }, [initialResult, initialState.page]);
+  }, [initialResult, initialState.page, initialResult.total_pages, queryKey]);
+
+  useEffect(() => {
+    return () => {
+      activeRequestRef.current?.abort();
+    };
+  }, []);
 
   const canLoadMore = useMemo(
     () => hasMore && !loading && loadedCount < totalCount,
@@ -77,6 +99,9 @@ export default function KpopInfiniteResults({
     setLoadError('');
 
     try {
+      const requestQueryKey = queryKeyRef.current;
+      const controller = new AbortController();
+      activeRequestRef.current = controller;
       const query = getKpopApiQuery({
         ...initialState,
         page: nextPage,
@@ -94,6 +119,7 @@ export default function KpopInfiniteResults({
           'Content-Type': 'application/json',
         },
         cache: 'no-store',
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -106,6 +132,10 @@ export default function KpopInfiniteResults({
         throw new Error('invalid_response');
       }
 
+      if (requestQueryKey !== queryKeyRef.current) {
+        return;
+      }
+
       setComebacks((current) => [
         ...current,
         ...parsed.data.results.filter(
@@ -115,10 +145,14 @@ export default function KpopInfiniteResults({
       setPage(nextPage);
       setHasMore(nextPage < parsed.data.total_pages);
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       setLoadError(
         error instanceof Error ? error.message : 'unknown_error'
       );
     } finally {
+      activeRequestRef.current = null;
       setLoading(false);
     }
   }
