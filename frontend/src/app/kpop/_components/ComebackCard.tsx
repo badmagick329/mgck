@@ -2,7 +2,7 @@
 
 import ComebackCardAlbum from './ComebackCardAlbum';
 import ComebackCardYoutube from './ComebackCardYoutube';
-import { dateStringIsToday } from '@/lib/kpop';
+import { dayOffsetFromToday, relativeDayLabel } from '@/lib/kpop';
 
 type ComebackProps = {
   title: string;
@@ -62,15 +62,35 @@ export default function ComebackCard({
 }
 
 function ComebackCardDate({ releaseDate }: { releaseDate: string }) {
-  const dateIsToday = dateStringIsToday(releaseDate);
-  const textStyling = dateIsToday
-    ? 'text-gray-900 px-2 py-1 bg-green-600 rounded-md'
-    : 'text-gray-600 dark:text-gray-400';
+  const dayOffset = dayOffsetFromToday(releaseDate);
+  const dateStyling = getDateStripStyling(dayOffset);
+  const labelStyling = getRelativeChipStyling(dayOffset);
+  const relativeLabel = relativeDayLabel(dayOffset);
   return (
-    <span className={`flex justify-end text-sm font-bold ${textStyling}`}>
-      {releaseDate}
-    </span>
+    <div className='flex flex-col items-center gap-1'>
+      <span className={`flex justify-end text-sm font-bold ${dateStyling}`}>
+        {releaseDate}
+      </span>
+      <span className={`text-xs ${labelStyling}`}>{relativeLabel}</span>
+    </div>
   );
+}
+
+function getDateStripStyling(dayOffset: number) {
+  if (dayOffset === 0) {
+    return 'rounded-sm bg-green-500 px-2 py-1 text-slate-950';
+  }
+  return 'text-gray-600 dark:text-gray-400';
+}
+
+function getRelativeChipStyling(dayOffset: number) {
+  if (dayOffset === 0) {
+    return 'rounded-sm border border-green-400/70 bg-green-500/25 px-2 py-0.5 font-bold text-green-200';
+  }
+  if (Math.abs(dayOffset) <= 7) {
+    return 'rounded-sm border border-foreground/25 bg-foreground/14 px-2 py-0.5 font-semibold text-foreground';
+  }
+  return 'rounded-sm border border-foreground/12 bg-foreground/8 px-2 py-0.5 font-medium text-foreground/80';
 }
 
 function ComebackCardDivider() {

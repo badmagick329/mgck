@@ -4,10 +4,12 @@ export default function ComebackFormInput({
   name,
   placeholder,
   defaultValue,
+  disabled = false,
 }: {
   name: string;
   placeholder: string;
   defaultValue: string;
+  disabled?: boolean;
 }) {
   return (
     <Input
@@ -17,6 +19,7 @@ export default function ComebackFormInput({
       autoComplete='off'
       type='search'
       defaultValue={defaultValue}
+      disabled={disabled}
     />
   );
 }
