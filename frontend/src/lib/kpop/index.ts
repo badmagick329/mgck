@@ -7,6 +7,38 @@ export function dateStringIsToday(dateString: string) {
   return todayString === targetDateString;
 }
 
+export function dayOffsetFromToday(dateString: string) {
+  const today = new Date();
+  const utcToday = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate()
+  );
+  const target = new Date(dateString);
+  const utcTarget = Date.UTC(
+    target.getUTCFullYear(),
+    target.getUTCMonth(),
+    target.getUTCDate()
+  );
+  return Math.round((utcTarget - utcToday) / 86400000);
+}
+
+export function relativeDayLabel(dayOffset: number) {
+  if (dayOffset === 0) {
+    return 'Today';
+  }
+  if (dayOffset === -1) {
+    return '1d ago';
+  }
+  if (dayOffset === 1) {
+    return 'Tomorrow';
+  }
+  if (dayOffset < 0) {
+    return `${Math.abs(dayOffset)}d ago`;
+  }
+  return `in ${dayOffset}d`;
+}
+
 export function recentDate(pastDays: number = DEFAULT_RECENT_BUFFER_DAYS) {
   const today = new Date();
   today.setDate(today.getDate() - pastDays);

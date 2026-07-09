@@ -13,12 +13,13 @@ import {
   getTimelineLabel,
   searchParamsToKpopQueryState,
 } from '@/lib/kpop/query';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useMemo, useTransition } from 'react';
 
 import ComebackFormInput from './ComebackFormInput';
 
 export default function ComebacksForm() {
+  const [isSearching, startSearchTransition] = useTransition();
   const { router, pathname, searchParams, formDataToURLState } = useURLState({
     formKeys,
   });
@@ -45,7 +46,14 @@ export default function ComebacksForm() {
           <Button
             variant='outline'
             className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-            onClick={onTimelineClick(searchParams, pathname, router, 'earlier')}
+            onClick={onTimelineClick(
+              searchParams,
+              pathname,
+              router,
+              'earlier',
+              startSearchTransition
+            )}
+            disabled={isSearching}
           >
             <ChevronLeft className='mr-2 h-4 w-4' />
             Earlier
@@ -53,26 +61,54 @@ export default function ComebacksForm() {
           <Button
             variant='outline'
             className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-            onClick={onTimelineClick(searchParams, pathname, router, 'later')}
+            onClick={onTimelineClick(
+              searchParams,
+              pathname,
+              router,
+              'later',
+              startSearchTransition
+            )}
+            disabled={isSearching}
           >
             Later
             <ChevronRight className='ml-2 h-4 w-4' />
           </Button>
           <Button
             className='bg-primary-kp/80 hover:bg-primary-kp'
-            onClick={onPresetClick(searchParams, pathname, router, 'recent')}
+            onClick={onPresetClick(
+              searchParams,
+              pathname,
+              router,
+              'recent',
+              startSearchTransition
+            )}
+            disabled={isSearching}
           >
             Recent
           </Button>
           <Button
             className='bg-primary-kp/80 hover:bg-primary-kp'
-            onClick={onPresetClick(searchParams, pathname, router, 'today')}
+            onClick={onPresetClick(
+              searchParams,
+              pathname,
+              router,
+              'today',
+              startSearchTransition
+            )}
+            disabled={isSearching}
           >
             Today
           </Button>
           <Button
             className='bg-primary-kp/80 hover:bg-primary-kp'
-            onClick={onPresetClick(searchParams, pathname, router, 'all')}
+            onClick={onPresetClick(
+              searchParams,
+              pathname,
+              router,
+              'all',
+              startSearchTransition
+            )}
+            disabled={isSearching}
           >
             All
           </Button>
@@ -80,7 +116,11 @@ export default function ComebacksForm() {
       </div>
 
       <form
-        onSubmit={onSearchSubmit(searchParams, formDataToURLState)}
+        onSubmit={onSearchSubmit(
+          searchParams,
+          formDataToURLState,
+          startSearchTransition
+        )}
         className='flex flex-col gap-4'
       >
         <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5'>
@@ -92,6 +132,7 @@ export default function ComebacksForm() {
                 name={name}
                 placeholder={placeholder}
                 defaultValue={searchParams.get(name) || ''}
+                disabled={isSearching}
               />
             ))}
           <label className='flex items-center gap-3 rounded-sm border border-primary-kp/35 px-3 py-2 text-sm'>
@@ -101,6 +142,7 @@ export default function ComebacksForm() {
               name='exact'
               className='h-5 w-5 border-2'
               defaultChecked={queryState.exact}
+              disabled={isSearching}
             />
             <span>Exact Match</span>
           </label>
@@ -109,14 +151,23 @@ export default function ComebacksForm() {
           <Button
             type='submit'
             className='bg-primary-kp/80 hover:bg-primary-kp'
+            disabled={isSearching}
           >
-            Search
+            {isSearching ? (
+              <>
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                Searching...
+              </>
+            ) : (
+              'Search'
+            )}
           </Button>
           <Button
             type='button'
             variant='outline'
             className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-            onClick={onClearClick(pathname, router)}
+            onClick={onClearClick(pathname, router, startSearchTransition)}
+            disabled={isSearching}
           >
             Clear
           </Button>
@@ -132,14 +183,17 @@ function onTimelineClick(
     | ReturnType<typeof useURLState>['searchParams'],
   pathname: string,
   router: ReturnType<typeof useURLState>['router'],
-  direction: 'earlier' | 'later'
+  direction: 'earlier' | 'later',
+  startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
     const nextSearchParams = buildTimelineShiftSearchParams(
       searchParams,
       direction
     );
-    router.replace(`${pathname}?${nextSearchParams.toString()}`);
+    startSearchTransition(() => {
+      router.replace(`${pathname}?${nextSearchParams.toString()}`);
+    });
   };
 }
 
@@ -149,7 +203,8 @@ function onPresetClick(
     | ReturnType<typeof useURLState>['searchParams'],
   pathname: string,
   router: ReturnType<typeof useURLState>['router'],
-  preset: 'recent' | 'today' | 'all'
+  preset: 'recent' | 'today' | 'all',
+  startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
     const nextSearchParams =
@@ -158,13 +213,16 @@ function onPresetClick(
         : preset === 'today'
           ? buildTodaySearchParams(searchParams)
           : buildAllSearchParams(searchParams);
-    router.replace(`${pathname}?${nextSearchParams.toString()}`);
+    startSearchTransition(() => {
+      router.replace(`${pathname}?${nextSearchParams.toString()}`);
+    });
   };
 }
 
 function onSearchSubmit(
   searchParams: ReturnType<typeof useURLState>['searchParams'],
-  formDataToURLState: ReturnType<typeof useURLState>['formDataToURLState']
+  formDataToURLState: ReturnType<typeof useURLState>['formDataToURLState'],
+  startSearchTransition: (callback: () => void) => void
 ) {
   return (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -173,16 +231,21 @@ function onSearchSubmit(
     if (oldSearchParams.has('page')) {
       oldSearchParams.delete('page');
     }
-    formDataToURLState(formData, oldSearchParams);
+    startSearchTransition(() => {
+      formDataToURLState(formData, oldSearchParams);
+    });
   };
 }
 
 function onClearClick(
   pathname: string,
-  router: ReturnType<typeof useURLState>['router']
+  router: ReturnType<typeof useURLState>['router'],
+  startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
     const searchParams = buildClearSearchParams(new URLSearchParams());
-    router.replace(`${pathname}?${searchParams.toString()}`);
+    startSearchTransition(() => {
+      router.replace(`${pathname}?${searchParams.toString()}`);
+    });
   };
 }
