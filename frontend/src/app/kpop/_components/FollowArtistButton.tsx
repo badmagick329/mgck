@@ -3,10 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Star } from 'lucide-react';
 
-import {
-  MAX_FOLLOWED_ARTISTS,
-  useFollowing,
-} from '../_context/FollowingStore';
+import { MAX_FOLLOWED_ARTISTS, useFollowing } from '../_context/FollowingStore';
 
 export default function FollowArtistButton({
   publicId,
@@ -16,7 +13,7 @@ export default function FollowArtistButton({
   displayName: string;
 }) {
   const { artists, follow, unfollow, isFollowing, isLoaded } = useFollowing();
-  const following = isFollowing(publicId);
+  const following = isFollowing(publicId, displayName);
   const followLimitReached = artists.length >= MAX_FOLLOWED_ARTISTS;
   const label = following
     ? `Unfollow ${displayName}`
@@ -36,7 +33,7 @@ export default function FollowArtistButton({
       className={following ? 'text-yellow-400 hover:text-yellow-300' : ''}
       onClick={() => {
         if (following) {
-          unfollow(publicId);
+          unfollow(publicId, displayName);
           return;
         }
         follow({ publicId, displayName });

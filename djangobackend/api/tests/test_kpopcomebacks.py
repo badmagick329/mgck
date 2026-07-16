@@ -138,6 +138,33 @@ def test_watchlist_query_supports_empty_unknown_and_date_filtered_lists(api_clie
 
 
 @pytest.mark.django_db
+def test_watchlist_query_includes_case_equivalent_artist_records(api_client):
+    canonical_artist = Artist.objects.create(name="ITZY")
+    duplicate_artist = Artist.objects.create(name="itzy")
+    canonical_release = create_release(
+        canonical_artist,
+        "Canonical Release",
+        date(2026, 7, 16),
+    )
+    duplicate_release = create_release(
+        duplicate_artist,
+        "Duplicate Release",
+        date(2026, 7, 17),
+    )
+
+    response = post_json(
+        api_client,
+        {"artist_public_ids": [str(canonical_artist.public_id)]},
+    )
+
+    assert response.status_code == 200
+    assert [release["id"] for release in response.json()["results"]] == [
+        canonical_release.id,
+        duplicate_release.id,
+    ]
+
+
+@pytest.mark.django_db
 def test_watchlist_query_orders_upcoming_before_newest_recent(api_client):
     artist = Artist.objects.create(name="Artist")
     today = timezone.localdate()
@@ -190,6 +217,19 @@ def test_artist_search_is_case_insensitive_limited_and_requires_query(api_client
 
     missing_query_response = api_client.get(ARTIST_SEARCH_URL, {"q": " "})
     assert missing_query_response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_artist_search_collapses_case_equivalent_names(api_client):
+    Artist.objects.create(name="ITZY")
+    Artist.objects.create(name="itzy")
+    Artist.objects.create(name=" ITZY ")
+
+    response = api_client.get(ARTIST_SEARCH_URL, {"q": "itzy"})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
 
 
 @pytest.mark.django_db
