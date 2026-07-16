@@ -6,6 +6,9 @@ export const TIMELINE_JUMP_DAYS = 7;
 export const OPEN_ENDED_PAGE_SIZE = 10;
 export const BOUNDED_WINDOW_PAGE_SIZE = 100;
 export const ARCHIVE_START_DATE_COMPACT = '000101';
+export const FOLLOWING_LOOKBACK_DAYS = 30;
+
+export type KpopView = 'timeline' | 'following';
 
 export type KpopQueryState = {
   artist: string;
@@ -31,6 +34,18 @@ export function getTodayDateCompact() {
   return formatCompactDate(getTodayUtcDate());
 }
 
+export function getFollowingStartDate() {
+  return formatApiDate(
+    addDays(getTodayUtcDate(), -FOLLOWING_LOOKBACK_DAYS)
+  );
+}
+
+export function getKpopView(searchParams: SearchParamsInput): KpopView {
+  return toURLSearchParams(searchParams).get('view') === 'following'
+    ? 'following'
+    : 'timeline';
+}
+
 export function getCanonicalKpopSearchParams(
   searchParams: SearchParamsInput
 ): URLSearchParams {
@@ -41,6 +56,7 @@ export function getCanonicalKpopSearchParams(
   let startDate = canonicalCompactDate(params.get('start-date'));
   let endDate = canonicalCompactDate(params.get('end-date'));
   const page = getValidPageValue(params.get('page'));
+  const view = getKpopView(params);
 
   if (!startDate) {
     startDate = getDefaultStartDateCompact();
@@ -72,6 +88,9 @@ export function getCanonicalKpopSearchParams(
   }
   if (page > 1) {
     canonical.set('page', String(page));
+  }
+  if (view === 'following') {
+    canonical.set('view', view);
   }
   return canonical;
 }
@@ -137,6 +156,7 @@ export function buildTimelineShiftSearchParams(
     params.delete('end-date');
   }
   params.delete('page');
+  params.delete('view');
   return params;
 }
 
@@ -145,6 +165,7 @@ export function buildRecentSearchParams(searchParams: SearchParamsInput) {
   params.set('start-date', getDefaultStartDateCompact());
   params.delete('end-date');
   params.delete('page');
+  params.delete('view');
   return params;
 }
 
@@ -153,6 +174,7 @@ export function buildTodaySearchParams(searchParams: SearchParamsInput) {
   params.set('start-date', getTodayDateCompact());
   params.delete('end-date');
   params.delete('page');
+  params.delete('view');
   return params;
 }
 
@@ -160,6 +182,14 @@ export function buildAllSearchParams(searchParams: SearchParamsInput) {
   const params = getCanonicalKpopSearchParams(searchParams);
   params.set('start-date', ARCHIVE_START_DATE_COMPACT);
   params.delete('end-date');
+  params.delete('page');
+  params.delete('view');
+  return params;
+}
+
+export function buildFollowingSearchParams(searchParams: SearchParamsInput) {
+  const params = getCanonicalKpopSearchParams(searchParams);
+  params.set('view', 'following');
   params.delete('page');
   return params;
 }
@@ -224,6 +254,13 @@ function formatCompactDate(date: Date) {
   const month = String(date.getUTCMonth() + 1).padStart(2, '0');
   const day = String(date.getUTCDate()).padStart(2, '0');
   return `${year}${month}${day}`;
+}
+
+function formatApiDate(date: Date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function getTodayUtcDate() {

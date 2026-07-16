@@ -7,15 +7,18 @@ import { formKeys, namesAndPlaceHolders } from '@/lib/kpop';
 import {
   buildAllSearchParams,
   buildClearSearchParams,
+  buildFollowingSearchParams,
   buildRecentSearchParams,
   buildTimelineShiftSearchParams,
   buildTodaySearchParams,
   getTimelineLabel,
+  getKpopView,
   searchParamsToKpopQueryState,
 } from '@/lib/kpop/query';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Star, Users } from 'lucide-react';
 import { useMemo, useTransition } from 'react';
 
+import { useFollowing } from '../_context/FollowingStore';
 import ComebackFormInput from './ComebackFormInput';
 
 export default function ComebacksForm() {
@@ -32,49 +35,60 @@ export default function ComebacksForm() {
     () => getTimelineLabel(queryState),
     [queryState]
   );
+  const kpopView = getKpopView(searchParams);
+  const isFollowingView = kpopView === 'following';
+  const { artists, isLoaded, openManager } = useFollowing();
 
   return (
     <div className='flex w-full max-w-5xl flex-col gap-5 rounded-sm border border-primary-kp/25 bg-background/40 px-4 py-4 md:px-6'>
       <div className='flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between'>
         <div className='flex flex-col gap-1'>
-          <h3 className='mt-2 text-2xl font-semibold'>{timelineLabel}</h3>
+          <h3 className='mt-2 text-2xl font-semibold'>
+            {isFollowingView ? 'Following' : timelineLabel}
+          </h3>
           <p className='text-sm text-muted-foreground'>
-            Browse by week, refine the search with artist or title filters.
+            {isFollowingView
+              ? 'Upcoming releases first, followed by the latest releases from the past 30 days.'
+              : 'Browse by week, refine the search with artist or title filters.'}
           </p>
         </div>
-        <div className='grid grid-cols-2 gap-2 sm:grid-cols-5'>
+        <div className='flex flex-wrap justify-end gap-2'>
+          {!isFollowingView && (
+            <>
+              <Button
+                variant='outline'
+                className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+                onClick={onTimelineClick(
+                  searchParams,
+                  pathname,
+                  router,
+                  'earlier',
+                  startSearchTransition
+                )}
+                disabled={isSearching}
+              >
+                <ChevronLeft className='mr-2 h-4 w-4' />
+                Earlier
+              </Button>
+              <Button
+                variant='outline'
+                className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+                onClick={onTimelineClick(
+                  searchParams,
+                  pathname,
+                  router,
+                  'later',
+                  startSearchTransition
+                )}
+                disabled={isSearching}
+              >
+                Later
+                <ChevronRight className='ml-2 h-4 w-4' />
+              </Button>
+            </>
+          )}
           <Button
-            variant='outline'
-            className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-            onClick={onTimelineClick(
-              searchParams,
-              pathname,
-              router,
-              'earlier',
-              startSearchTransition
-            )}
-            disabled={isSearching}
-          >
-            <ChevronLeft className='mr-2 h-4 w-4' />
-            Earlier
-          </Button>
-          <Button
-            variant='outline'
-            className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-            onClick={onTimelineClick(
-              searchParams,
-              pathname,
-              router,
-              'later',
-              startSearchTransition
-            )}
-            disabled={isSearching}
-          >
-            Later
-            <ChevronRight className='ml-2 h-4 w-4' />
-          </Button>
-          <Button
-            className='bg-primary-kp/80 hover:bg-primary-kp'
+            className='whitespace-nowrap bg-primary-kp/80 hover:bg-primary-kp'
             onClick={onPresetClick(
               searchParams,
               pathname,
@@ -87,7 +101,7 @@ export default function ComebacksForm() {
             Recent
           </Button>
           <Button
-            className='bg-primary-kp/80 hover:bg-primary-kp'
+            className='whitespace-nowrap bg-primary-kp/80 hover:bg-primary-kp'
             onClick={onPresetClick(
               searchParams,
               pathname,
@@ -100,7 +114,7 @@ export default function ComebacksForm() {
             Today
           </Button>
           <Button
-            className='bg-primary-kp/80 hover:bg-primary-kp'
+            className='whitespace-nowrap bg-primary-kp/80 hover:bg-primary-kp'
             onClick={onPresetClick(
               searchParams,
               pathname,
@@ -112,67 +126,98 @@ export default function ComebacksForm() {
           >
             All
           </Button>
-        </div>
-      </div>
-
-      <form
-        onSubmit={onSearchSubmit(
-          searchParams,
-          formDataToURLState,
-          startSearchTransition
-        )}
-        className='flex flex-col gap-4'
-      >
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5'>
-          {namesAndPlaceHolders
-            .slice(0, namesAndPlaceHolders.length - 1)
-            .map(({ name, placeholder }) => (
-              <ComebackFormInput
-                key={`${name}:${searchParams.get(name) || ''}`}
-                name={name}
-                placeholder={placeholder}
-                defaultValue={searchParams.get(name) || ''}
-                disabled={isSearching}
-              />
-            ))}
-          <label className='flex items-center gap-3 rounded-sm border border-primary-kp/35 px-3 py-2 text-sm'>
-            <Input
-              key={`exact:${queryState.exact ? 'on' : 'off'}`}
-              type='checkbox'
-              name='exact'
-              className='h-5 w-5 border-2'
-              defaultChecked={queryState.exact}
-              disabled={isSearching}
-            />
-            <span>Exact Match</span>
-          </label>
-        </div>
-        <div className='flex flex-wrap justify-end gap-2'>
           <Button
-            type='submit'
-            className='bg-primary-kp/80 hover:bg-primary-kp'
+            variant={isFollowingView ? 'default' : 'outline'}
+            className={
+              isFollowingView
+                ? 'whitespace-nowrap bg-primary-kp hover:bg-primary-kp/90'
+                : 'whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+            }
+            onClick={onFollowingClick(
+              searchParams,
+              pathname,
+              router,
+              startSearchTransition
+            )}
             disabled={isSearching}
           >
-            {isSearching ? (
-              <>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                Searching...
-              </>
-            ) : (
-              'Search'
-            )}
+            <Star className='mr-2 h-4 w-4' />
+            Following
+            {isLoaded && artists.length > 0 ? ` (${artists.length})` : ''}
           </Button>
           <Button
             type='button'
             variant='outline'
-            className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-            onClick={onClearClick(pathname, router, startSearchTransition)}
-            disabled={isSearching}
+            className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+            onClick={openManager}
+            disabled={!isLoaded}
           >
-            Clear
+            <Users className='mr-2 h-4 w-4' />
+            Manage
           </Button>
         </div>
-      </form>
+      </div>
+
+      {!isFollowingView && (
+        <form
+          onSubmit={onSearchSubmit(
+            searchParams,
+            formDataToURLState,
+            startSearchTransition
+          )}
+          className='flex flex-col gap-4'
+        >
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5'>
+            {namesAndPlaceHolders
+              .slice(0, namesAndPlaceHolders.length - 1)
+              .map(({ name, placeholder }) => (
+                <ComebackFormInput
+                  key={`${name}:${searchParams.get(name) || ''}`}
+                  name={name}
+                  placeholder={placeholder}
+                  defaultValue={searchParams.get(name) || ''}
+                  disabled={isSearching}
+                />
+              ))}
+            <label className='flex items-center gap-3 rounded-sm border border-primary-kp/35 px-3 py-2 text-sm'>
+              <Input
+                key={`exact:${queryState.exact ? 'on' : 'off'}`}
+                type='checkbox'
+                name='exact'
+                className='h-5 w-5 border-2'
+                defaultChecked={queryState.exact}
+                disabled={isSearching}
+              />
+              <span>Exact Match</span>
+            </label>
+          </div>
+          <div className='flex flex-wrap justify-end gap-2'>
+            <Button
+              type='submit'
+              className='bg-primary-kp/80 hover:bg-primary-kp'
+              disabled={isSearching}
+            >
+              {isSearching ? (
+                <>
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  Searching...
+                </>
+              ) : (
+                'Search'
+              )}
+            </Button>
+            <Button
+              type='button'
+              variant='outline'
+              className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+              onClick={onClearClick(pathname, router, startSearchTransition)}
+              disabled={isSearching}
+            >
+              Clear
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
@@ -219,6 +264,22 @@ function onPresetClick(
   };
 }
 
+function onFollowingClick(
+  searchParams:
+    | URLSearchParams
+    | ReturnType<typeof useURLState>['searchParams'],
+  pathname: string,
+  router: ReturnType<typeof useURLState>['router'],
+  startSearchTransition: (callback: () => void) => void
+) {
+  return () => {
+    const nextSearchParams = buildFollowingSearchParams(searchParams);
+    startSearchTransition(() => {
+      router.replace(`${pathname}?${nextSearchParams.toString()}`);
+    });
+  };
+}
+
 function onSearchSubmit(
   searchParams: ReturnType<typeof useURLState>['searchParams'],
   formDataToURLState: ReturnType<typeof useURLState>['formDataToURLState'],
@@ -228,6 +289,7 @@ function onSearchSubmit(
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const oldSearchParams = new URLSearchParams(searchParams.toString());
+    oldSearchParams.delete('view');
     if (oldSearchParams.has('page')) {
       oldSearchParams.delete('page');
     }

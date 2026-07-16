@@ -1,11 +1,13 @@
 import {
   buildAllSearchParams,
   buildClearSearchParams,
+  buildFollowingSearchParams,
   buildRecentSearchParams,
   buildTimelineShiftSearchParams,
   buildTodaySearchParams,
   getCanonicalKpopSearchParams,
   getKpopApiQuery,
+  getKpopView,
   searchParamsToKpopQueryState,
 } from '@/lib/kpop/query';
 
@@ -59,6 +61,16 @@ describe('kpop query helpers', () => {
     expect(buildAllSearchParams(source).get('end-date')).toBeNull();
     expect(buildAllSearchParams(source).get('page')).toBeNull();
     expect(buildClearSearchParams(source).toString()).toMatch(/^start-date=/);
+  });
+
+  test('preserves following mode canonically and leaves it for timeline presets', () => {
+    const following = buildFollowingSearchParams(
+      new URLSearchParams('start-date=250526&page=3')
+    );
+
+    expect(getKpopView(following)).toBe('following');
+    expect(getCanonicalKpopSearchParams(following).get('view')).toBe('following');
+    expect(buildRecentSearchParams(following).get('view')).toBeNull();
   });
 
   test('maps frontend timeline state to django api query names', () => {

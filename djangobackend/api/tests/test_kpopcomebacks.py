@@ -1,13 +1,15 @@
-from datetime import date
+from datetime import date, timedelta
 import json
 from uuid import uuid4
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 from kpopcomebacks.models import Artist, Release, ReleaseType
 
 KPOP_URL = "/api/kpopcomebacks"
 WATCHLIST_QUERY_URL = "/api/kpopcomebacks/query"
+ARTIST_SEARCH_URL = "/api/kpopcomebacks/artists"
 
 
 def create_release(
@@ -136,6 +138,61 @@ def test_watchlist_query_supports_empty_unknown_and_date_filtered_lists(api_clie
 
 
 @pytest.mark.django_db
+def test_watchlist_query_orders_upcoming_before_newest_recent(api_client):
+    artist = Artist.objects.create(name="Artist")
+    today = timezone.localdate()
+    past_release = create_release(artist, "Past", today - timedelta(days=5))
+    recent_release = create_release(
+        artist,
+        "Recent",
+        today - timedelta(days=1),
+    )
+    today_release = create_release(artist, "Today", today)
+    future_release = create_release(
+        artist,
+        "Future",
+        today + timedelta(days=3),
+    )
+
+    response = post_json(
+        api_client,
+        {
+            "artist_public_ids": [str(artist.public_id)],
+            "ordering": "upcoming_first",
+            "page_size": 10,
+        },
+    )
+
+    assert response.status_code == 200
+    assert [release["id"] for release in response.json()["results"]] == [
+        today_release.id,
+        future_release.id,
+        recent_release.id,
+        past_release.id,
+    ]
+
+
+@pytest.mark.django_db
+def test_artist_search_is_case_insensitive_limited_and_requires_query(api_client):
+    matching_artists = [
+        Artist.objects.create(name=f"Red Artist {index:02d}") for index in range(21)
+    ]
+    Artist.objects.create(name="Unrelated Artist")
+
+    response = api_client.get(ARTIST_SEARCH_URL, {"q": "rEd aRtIsT"})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 20
+    assert response.json()[0] == {
+        "public_id": str(matching_artists[0].public_id),
+        "name": "Red Artist 00",
+    }
+
+    missing_query_response = api_client.get(ARTIST_SEARCH_URL, {"q": " "})
+    assert missing_query_response.status_code == 400
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     "payload",
     [
@@ -144,6 +201,7 @@ def test_watchlist_query_supports_empty_unknown_and_date_filtered_lists(api_clie
         {"artist_public_ids": [], "page": 0},
         {"artist_public_ids": [], "page": 2},
         {"artist_public_ids": [], "page_size": 101},
+        {"artist_public_ids": [], "ordering": "invalid"},
         {
             "artist_public_ids": [],
             "start_date": "2026-07-17",

@@ -5,14 +5,18 @@ import { Button } from '@/components/ui/button';
 import {
   searchParamsToKpopQueryState,
   getCanonicalKpopSearchParams,
+  getKpopView,
 } from '@/lib/kpop/query';
 import { ArrowUp } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 import ComebacksForm from './_components/ComebacksForm';
 import ErrorResponse from './_components/ErrorResponse';
+import FollowedArtistsDialog from './_components/FollowedArtistsDialog';
+import FollowingKpopResults from './_components/FollowingKpopResults';
 import KpopInfiniteResults from './_components/KpopInfiniteResults';
 import ScrollIndicator from './_components/ScrollIndicator';
+import { FollowingProvider } from './_context/FollowingStore';
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -42,7 +46,9 @@ export default async function KpopPage({ searchParams }: PageProps) {
   }
 
   const queryState = searchParamsToKpopQueryState(canonicalSearchParams);
-  const comebacksResult = await fetchComebacks(queryState);
+  const kpopView = getKpopView(canonicalSearchParams);
+  const comebacksResult =
+    kpopView === 'following' ? null : await fetchComebacks(queryState);
 
   if (typeof comebacksResult === 'string') {
     return <ErrorResponse serverError={comebacksResult} />;
@@ -65,13 +71,20 @@ export default async function KpopPage({ searchParams }: PageProps) {
             archive for specific comebacks.
           </p>
         </div>
-        <ComebacksForm />
-        <div className='flex w-full grow flex-col items-center gap-4 pt-2'>
-          <KpopInfiniteResults
-            initialResult={comebacksResult}
-            initialState={queryState}
-          />
-        </div>
+        <FollowingProvider>
+          <FollowedArtistsDialog />
+          <ComebacksForm />
+          <div className='flex w-full grow flex-col items-center gap-4 pt-2'>
+            {kpopView === 'following' ? (
+              <FollowingKpopResults />
+            ) : (
+              <KpopInfiniteResults
+                initialResult={comebacksResult!}
+                initialState={queryState}
+              />
+            )}
+          </div>
+        </FollowingProvider>
         <div className='flex w-full justify-center pt-2'>
           <Button
             asChild

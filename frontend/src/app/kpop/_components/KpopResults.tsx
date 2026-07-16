@@ -22,6 +22,7 @@ export default function KpopResults({
           key={comeback.id}
           title={comeback.title}
           artist={comeback.artist}
+          artistPublicId={comeback.artist_public_id}
           album={comeback.album}
           releaseType={comeback.release_type}
           releaseDate={comeback.date}

@@ -3,6 +3,7 @@
  */
 
 import { POST } from '@/app/api/kpopcomebacks/route';
+import { GET as GET_ARTISTS } from '@/app/api/kpopcomebacks/artists/route';
 import {
   ComebackResponseSchema,
   WatchlistComebacksQuerySchema,
@@ -39,6 +40,7 @@ describe('kpop watchlist transport', () => {
     expect(
       WatchlistComebacksQuerySchema.safeParse({
         artist_public_ids: ['048c3d72-5c61-4f2c-9707-e06b0cc1f7f5'],
+        ordering: 'upcoming_first',
       }).success
     ).toBe(true);
   });
@@ -91,5 +93,25 @@ describe('kpop watchlist transport', () => {
     await expect(response.json()).resolves.toEqual({
       artist_public_ids: ['Invalid artist'],
     });
+  });
+
+  test('forwards artist searches to Django', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(
+      new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const request = new NextRequest(
+      'http://localhost:5000/api/kpopcomebacks/artists?q=red+velvet'
+    );
+
+    const response = await GET_ARTISTS(request);
+
+    expect(response.status).toBe(200);
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://djangobackend:8002/api/kpopcomebacks/artists?q=red+velvet',
+      expect.objectContaining({ method: 'GET', cache: 'no-store' })
+    );
   });
 });

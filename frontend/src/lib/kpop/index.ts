@@ -1,6 +1,6 @@
 import { DEFAULT_RECENT_BUFFER_DAYS } from './query';
 
-export { fetchWatchlistComebacks } from './watchlist';
+export { fetchKpopArtists, fetchWatchlistComebacks } from './watchlist';
 
 export function dateStringIsToday(dateString: string) {
   const today = new Date();
