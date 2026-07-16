@@ -83,6 +83,11 @@ class KpopComebackListSerializer(serializers.BaseSerializer):
                     description="The artist of the comeback",
                     type=openapi.TYPE_STRING,
                 ),
+                "artist_public_id": openapi.Schema(
+                    description="The stable public id of the artist",
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_UUID,
+                ),
                 "date": openapi.Schema(
                     description="The date of the comeback (YYYY-MM-DD)",
                     type=openapi.TYPE_STRING,
@@ -111,8 +116,35 @@ class KpopComebackListSerializer(serializers.BaseSerializer):
             "id": instance.id,
             "title": instance.title,
             "artist": instance.artist.name,
+            "artist_public_id": str(instance.artist.public_id),
             "date": datetime.strftime(instance.release_date, "%Y-%m-%d"),
             "album": instance.album,
             "release_type": instance.release_type.name,
             "urls": instance.urls,
         }
+
+
+class KpopWatchlistQuerySerializer(serializers.Serializer):
+    artist_public_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        allow_empty=True,
+        max_length=250,
+    )
+    start_date = serializers.DateField(required=False)
+    end_date = serializers.DateField(required=False)
+    page = serializers.IntegerField(required=False, default=1, min_value=1)
+    page_size = serializers.IntegerField(
+        required=False,
+        default=10,
+        min_value=1,
+        max_value=100,
+    )
+
+    def validate(self, attrs):
+        start_date = attrs.get("start_date")
+        end_date = attrs.get("end_date")
+        if start_date and end_date and end_date < start_date:
+            raise serializers.ValidationError(
+                {"end_date": "end_date must be on or after start_date."}
+            )
+        return attrs

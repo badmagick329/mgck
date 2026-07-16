@@ -4,30 +4,45 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const BASE_URL = process.env.BASE_URL;
-
 export async function GET(request: NextRequest) {
-  if (!BASE_URL) {
-    return NextResponse.json(
-      { error: 'missing_base_url' },
-      { status: 500 }
-    );
+  const baseUrl = getBaseUrl();
+  if (!baseUrl) {
+    return missingBaseUrlResponse();
+  }
+  const upstreamUrl = new URL(`${baseUrl}${API_KPOP}`);
+  upstreamUrl.search = request.nextUrl.search;
+  return forwardRequest(upstreamUrl, 'GET');
+}
+
+export async function POST(request: NextRequest) {
+  const baseUrl = getBaseUrl();
+  if (!baseUrl) {
+    return missingBaseUrlResponse();
   }
 
-  const upstreamUrl = new URL(`${BASE_URL}${API_KPOP}`);
-  upstreamUrl.search = request.nextUrl.search;
+  const upstreamUrl = new URL(`${baseUrl}${API_KPOP}/query`);
+  const body = await request.text();
 
-  const response = await fetch(upstreamUrl, {
-    method: 'GET',
+  return forwardRequest(upstreamUrl, 'POST', body);
+}
+
+async function forwardRequest(
+  upstreamUrl: URL,
+  method: 'GET' | 'POST',
+  body?: string
+) {
+  const response = await fetch(upstreamUrl.toString(), {
+    method,
     headers: {
       'Content-Type': 'application/json',
     },
+    body,
     cache: 'no-store',
   });
 
-  const body = await response.text();
+  const responseBody = await response.text();
 
-  return new NextResponse(body, {
+  return new NextResponse(responseBody, {
     status: response.status,
     headers: {
       'Content-Type':
@@ -35,4 +50,12 @@ export async function GET(request: NextRequest) {
       'Cache-Control': 'no-store',
     },
   });
+}
+
+function getBaseUrl() {
+  return process.env.BASE_URL;
+}
+
+function missingBaseUrlResponse() {
+  return NextResponse.json({ error: 'missing_base_url' }, { status: 500 });
 }

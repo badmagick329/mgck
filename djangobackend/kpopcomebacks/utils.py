@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import date, datetime
+from uuid import UUID
 
 from django.core.paginator import Paginator
 from django.db.models import Q, QuerySet
@@ -80,15 +81,26 @@ def filter_comebacks(
     if date := valid_date(end_date.strip()):
         filters.append(Q(release_date__lte=date))
     if filters:
-        return (
-            Release.objects.filter(*filters)
-            .prefetch_related("artist", "release_type")
-            .order_by("release_date", "id")
-        )
-    return (
-        Release.objects.all()
-        .prefetch_related("artist", "release_type")
-        .order_by("release_date", "id")
+        return order_comebacks(Release.objects.filter(*filters))
+    return order_comebacks(Release.objects.all())
+
+
+def filter_comebacks_by_artist_public_ids(
+    artist_public_ids: list[UUID],
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> QuerySet[Release]:
+    comebacks = Release.objects.filter(artist__public_id__in=artist_public_ids)
+    if start_date:
+        comebacks = comebacks.filter(release_date__gte=start_date)
+    if end_date:
+        comebacks = comebacks.filter(release_date__lte=end_date)
+    return order_comebacks(comebacks)
+
+
+def order_comebacks(comebacks: QuerySet[Release]) -> QuerySet[Release]:
+    return comebacks.prefetch_related("artist", "release_type").order_by(
+        "release_date", "id"
     )
 
 
