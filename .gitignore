@@ -13,6 +13,7 @@ logs/
 certbot/
 irene/*
 deploy.sh
+deploy.deprecated.sh
 
 
 # Csharp
