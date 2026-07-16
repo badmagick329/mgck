@@ -4,6 +4,7 @@
 
 import { POST } from '@/app/api/kpopcomebacks/route';
 import { GET as GET_ARTISTS } from '@/app/api/kpopcomebacks/artists/route';
+import { partitionKpopArtistResults } from '@/lib/kpop';
 import {
   ComebackResponseSchema,
   WatchlistComebacksQuerySchema,
@@ -41,6 +42,12 @@ describe('kpop watchlist transport', () => {
       WatchlistComebacksQuerySchema.safeParse({
         artist_public_ids: ['048c3d72-5c61-4f2c-9707-e06b0cc1f7f5'],
         ordering: 'upcoming_first',
+      }).success
+    ).toBe(true);
+    expect(
+      WatchlistComebacksQuerySchema.safeParse({
+        artist_public_ids: ['048c3d72-5c61-4f2c-9707-e06b0cc1f7f5'],
+        ordering: 'recent_first',
       }).success
     ).toBe(true);
   });
@@ -113,5 +120,29 @@ describe('kpop watchlist transport', () => {
       'http://djangobackend:8002/api/kpopcomebacks/artists?q=red+velvet',
       expect.objectContaining({ method: 'GET', cache: 'no-store' })
     );
+  });
+
+  test('separates an exact artist from credits covered by following it', () => {
+    const exact = {
+      public_id: '048c3d72-5c61-4f2c-9707-e06b0cc1f7f5',
+      name: 'ITZY',
+    };
+    const collaboration = {
+      public_id: '148c3d72-5c61-4f2c-9707-e06b0cc1f7f5',
+      name: 'Bebe Rexha feat. Yeji of ITZY',
+    };
+
+    expect(
+      partitionKpopArtistResults([exact, collaboration], ' itzy ')
+    ).toEqual({
+      exact,
+      covered: [collaboration],
+      fallback: [],
+    });
+    expect(partitionKpopArtistResults([collaboration], 'it')).toEqual({
+      exact: undefined,
+      covered: [],
+      fallback: [collaboration],
+    });
   });
 });

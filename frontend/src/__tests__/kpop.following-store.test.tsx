@@ -16,11 +16,20 @@ const caseVariantArtist = {
 };
 
 function FollowingProbe() {
-  const { artists, follow, unfollow, isLoaded } = useFollowing();
+  const {
+    artists,
+    follow,
+    unfollow,
+    isLoaded,
+    preferences,
+    setLookbackDays,
+    setOrdering,
+  } = useFollowing();
   return (
     <div>
       <span data-testid='loaded'>{String(isLoaded)}</span>
       <span data-testid='count'>{artists.length}</span>
+      <span data-testid='preferences'>{JSON.stringify(preferences)}</span>
       <button type='button' onClick={() => follow(artist)}>
         Follow
       </button>
@@ -29,6 +38,12 @@ function FollowingProbe() {
       </button>
       <button type='button' onClick={() => unfollow(artist.publicId)}>
         Unfollow
+      </button>
+      <button type='button' onClick={() => setLookbackDays(90)}>
+        Set 90 days
+      </button>
+      <button type='button' onClick={() => setOrdering('recent_first')}>
+        Set newest first
       </button>
     </div>
   );
@@ -59,7 +74,7 @@ describe('following store', () => {
   });
 
   test('recovers from invalid data and respects the follow limit', async () => {
-    localStorage.setItem('mgck:kpop-following:v2', '{invalid json');
+    localStorage.setItem('mgck:kpop-following:v3', '{invalid json');
     const { unmount } = render(
       <FollowingProvider>
         <FollowingProbe />
@@ -72,9 +87,9 @@ describe('following store', () => {
     unmount();
 
     localStorage.setItem(
-      'mgck:kpop-following:v2',
+      'mgck:kpop-following:v3',
       JSON.stringify({
-        version: 2,
+        version: 3,
         artists: Array.from({ length: MAX_FOLLOWED_ARTISTS }, (_, index) => ({
           publicId: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
           displayName: `Artist ${index}`,
@@ -82,6 +97,7 @@ describe('following store', () => {
         })),
         accountUserId: null,
         pending: { additions: [], removals: [] },
+        preferences: { lookbackDays: 30, ordering: 'upcoming_first' },
       })
     );
     render(
@@ -115,8 +131,41 @@ describe('following store', () => {
       expect(screen.getByTestId('count').textContent).toBe('1')
     );
     expect(localStorage.getItem('mgck:kpop-following:v1')).toBeNull();
-    expect(localStorage.getItem('mgck:kpop-following:v2')).toContain(
-      '"version":2'
+    expect(localStorage.getItem('mgck:kpop-following:v3')).toContain(
+      '"version":3'
+    );
+  });
+
+  test('migrates v2 follows and persists timeline preferences', async () => {
+    localStorage.setItem(
+      'mgck:kpop-following:v2',
+      JSON.stringify({
+        version: 2,
+        artists: [{ ...artist, followedAt: '2026-07-16T12:00:00.000Z' }],
+        accountUserId: null,
+        pending: { additions: [], removals: [] },
+      })
+    );
+    render(
+      <FollowingProvider>
+        <FollowingProbe />
+      </FollowingProvider>
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('preferences').textContent).toBe(
+        '{"lookbackDays":30,"ordering":"upcoming_first"}'
+      )
+    );
+    expect(localStorage.getItem('mgck:kpop-following:v2')).toBeNull();
+
+    fireEvent.click(screen.getByText('Set 90 days'));
+    fireEvent.click(screen.getByText('Set newest first'));
+    expect(screen.getByTestId('preferences').textContent).toBe(
+      '{"lookbackDays":90,"ordering":"recent_first"}'
+    );
+    expect(localStorage.getItem('mgck:kpop-following:v3')).toContain(
+      '"lookbackDays":90'
     );
   });
 });
