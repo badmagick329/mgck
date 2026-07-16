@@ -6,6 +6,7 @@ from api.serializers import (
 )
 from django.conf import settings
 from django.core.paginator import EmptyPage, Paginator
+from django.db.models import Case, IntegerField, Value, When
 from django.db.models.functions import Lower, Trim
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -13,6 +14,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from kpopcomebacks.models import Artist
 from kpopcomebacks.utils import (
+    artist_name_phrase_regex,
     filter_comebacks,
     filter_comebacks_by_artist_public_ids,
 )
@@ -154,9 +156,20 @@ class KpopArtistList(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        artists = Artist.objects.filter(name__icontains=query).annotate(
-            normalized_name=Lower(Trim("name"))
-        ).order_by("normalized_name", "id")
+        artists = Artist.objects.filter(
+            name__iregex=artist_name_phrase_regex(query)
+        )
+        if not artists.exists():
+            artists = Artist.objects.filter(name__icontains=query)
+
+        artists = artists.annotate(
+            normalized_name=Lower(Trim("name")),
+            exact_match=Case(
+                When(name__iexact=query, then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            ),
+        ).order_by("exact_match", "normalized_name", "id")
         unique_artists = []
         seen_names = set()
         for artist in artists:

@@ -28,7 +28,9 @@ export const WatchlistComebacksQuerySchema = z.object({
   end_date: z.string().optional(),
   page: z.number().int().positive().optional(),
   page_size: z.number().int().positive().max(100).optional(),
-  ordering: z.enum(['release_date_asc', 'upcoming_first']).optional(),
+  ordering: z
+    .enum(['release_date_asc', 'upcoming_first', 'recent_first'])
+    .optional(),
 });
 
 export type WatchlistComebacksQuery = z.infer<

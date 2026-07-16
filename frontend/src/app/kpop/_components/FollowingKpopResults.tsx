@@ -12,13 +12,13 @@ import { useFollowing } from '../_context/FollowingStore';
 import KpopResults from './KpopResults';
 
 export default function FollowingKpopResults() {
-  const { artists, isLoaded, openManager } = useFollowing();
+  const { artists, isLoaded, openManager, preferences } = useFollowing();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const artistPublicIds = useMemo(
     () => artists.map((artist) => artist.publicId).sort(),
     [artists]
   );
-  const startDate = getFollowingStartDate();
+  const startDate = getFollowingStartDate(preferences.lookbackDays);
   const loadPage = useCallback(
     (page: number, signal: AbortSignal) =>
       fetchWatchlistComebacks(
@@ -27,11 +27,11 @@ export default function FollowingKpopResults() {
           start_date: startDate,
           page,
           page_size: 10,
-          ordering: 'upcoming_first',
+          ordering: preferences.ordering,
         },
         signal
       ),
-    [artistPublicIds, startDate]
+    [artistPublicIds, preferences.ordering, startDate]
   );
   const {
     comebacks,
@@ -42,7 +42,11 @@ export default function FollowingKpopResults() {
     loadInitial,
     loadMore,
   } = usePaginatedComebacks({
-    queryKey: artistPublicIds.join(','),
+    queryKey: [
+      artistPublicIds.join(','),
+      preferences.lookbackDays,
+      preferences.ordering,
+    ].join(':'),
     enabled: isLoaded && artistPublicIds.length > 0,
     loadPage,
   });
@@ -92,6 +96,16 @@ export default function FollowingKpopResults() {
   }
 
   const [upcoming, recent] = splitByToday(comebacks);
+  const sections =
+    preferences.ordering === 'upcoming_first'
+      ? [
+          { title: 'Upcoming', comebacks: upcoming },
+          { title: 'Recently released', comebacks: recent },
+        ]
+      : [
+          { title: 'Recently released', comebacks: recent },
+          { title: 'Upcoming', comebacks: upcoming },
+        ];
   return (
     <div className='flex min-h-full w-full flex-1 flex-col gap-8'>
       <div className='flex w-full justify-between gap-4 text-sm text-muted-foreground'>
@@ -102,9 +116,11 @@ export default function FollowingKpopResults() {
           {comebacks.length} of {totalCount} loaded
         </span>
       </div>
-      {upcoming.length > 0 && <Section title='Upcoming' comebacks={upcoming} />}
-      {recent.length > 0 && (
-        <Section title='Recently released' comebacks={recent} />
+      {sections.map(
+        ({ title, comebacks: sectionComebacks }) =>
+          sectionComebacks.length > 0 && (
+            <Section key={title} title={title} comebacks={sectionComebacks} />
+          )
       )}
       {(canLoadMore || isLoading || loadError) && (
         <div className='flex w-full flex-col items-center gap-3 pt-2'>

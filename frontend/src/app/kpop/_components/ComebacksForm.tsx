@@ -18,7 +18,10 @@ import {
 import { ChevronLeft, ChevronRight, Loader2, Star, Users } from 'lucide-react';
 import { useMemo, useTransition } from 'react';
 
-import { useFollowing } from '../_context/FollowingStore';
+import {
+  FOLLOWING_LOOKBACK_OPTIONS,
+  useFollowing,
+} from '../_context/FollowingStore';
 import ComebackFormInput from './ComebackFormInput';
 
 export default function ComebacksForm() {
@@ -37,7 +40,14 @@ export default function ComebacksForm() {
   );
   const kpopView = getKpopView(searchParams);
   const isFollowingView = kpopView === 'following';
-  const { artists, isLoaded, openManager } = useFollowing();
+  const {
+    artists,
+    isLoaded,
+    openManager,
+    preferences,
+    setLookbackDays,
+    setOrdering,
+  } = useFollowing();
 
   return (
     <div className='flex w-full max-w-5xl flex-col gap-5 rounded-sm border border-primary-kp/25 bg-background/40 px-4 py-4 md:px-6'>
@@ -48,7 +58,10 @@ export default function ComebacksForm() {
           </h3>
           <p className='text-sm text-muted-foreground'>
             {isFollowingView
-              ? 'Upcoming releases first, followed by the latest releases from the past 30 days.'
+              ? followingDescription(
+                  preferences.lookbackDays,
+                  preferences.ordering
+                )
               : 'Browse by week, refine the search with artist or title filters.'}
           </p>
         </div>
@@ -158,6 +171,59 @@ export default function ComebacksForm() {
         </div>
       </div>
 
+      {isFollowingView && (
+        <div className='flex flex-col gap-3 border-t border-primary-kp/20 pt-4 sm:flex-row sm:items-center sm:justify-between'>
+          <div className='flex flex-wrap items-center gap-2'>
+            <span className='mr-1 text-sm text-muted-foreground'>
+              Past releases
+            </span>
+            {FOLLOWING_LOOKBACK_OPTIONS.map((lookbackDays) => (
+              <Button
+                key={lookbackDays}
+                type='button'
+                size='sm'
+                variant={
+                  preferences.lookbackDays === lookbackDays
+                    ? 'default'
+                    : 'outline'
+                }
+                onClick={() => setLookbackDays(lookbackDays)}
+                disabled={!isLoaded}
+              >
+                {lookbackDays} days
+              </Button>
+            ))}
+          </div>
+          <div className='flex flex-wrap items-center gap-2'>
+            <span className='mr-1 text-sm text-muted-foreground'>Order</span>
+            <Button
+              type='button'
+              size='sm'
+              variant={
+                preferences.ordering === 'upcoming_first'
+                  ? 'default'
+                  : 'outline'
+              }
+              onClick={() => setOrdering('upcoming_first')}
+              disabled={!isLoaded}
+            >
+              Upcoming first
+            </Button>
+            <Button
+              type='button'
+              size='sm'
+              variant={
+                preferences.ordering === 'recent_first' ? 'default' : 'outline'
+              }
+              onClick={() => setOrdering('recent_first')}
+              disabled={!isLoaded}
+            >
+              Newest released
+            </Button>
+          </div>
+        </div>
+      )}
+
       {!isFollowingView && (
         <form
           onSubmit={onSearchSubmit(
@@ -220,6 +286,16 @@ export default function ComebacksForm() {
       )}
     </div>
   );
+}
+
+function followingDescription(
+  lookbackDays: number,
+  ordering: 'upcoming_first' | 'recent_first'
+) {
+  if (ordering === 'recent_first') {
+    return `Latest releases from the past ${lookbackDays} days first, followed by upcoming releases.`;
+  }
+  return `Upcoming releases first, followed by the latest releases from the past ${lookbackDays} days.`;
 }
 
 function onTimelineClick(

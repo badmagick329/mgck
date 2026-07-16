@@ -8,6 +8,25 @@ import {
   WatchlistComebacksQuerySchema,
 } from '@/lib/types/kpop';
 
+export function partitionKpopArtistResults(
+  artists: KpopArtist[],
+  query: string
+) {
+  const normalizedQuery = query.trim().normalize('NFKC').toLowerCase();
+  const exact = artists.find(
+    (artist) =>
+      artist.name.trim().normalize('NFKC').toLowerCase() === normalizedQuery
+  );
+
+  return {
+    exact,
+    covered: exact
+      ? artists.filter((artist) => artist.public_id !== exact.public_id)
+      : [],
+    fallback: exact ? [] : artists,
+  };
+}
+
 export async function fetchWatchlistComebacks(
   query: WatchlistComebacksQuery,
   signal?: AbortSignal

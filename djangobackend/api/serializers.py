@@ -140,7 +140,7 @@ class KpopWatchlistQuerySerializer(serializers.Serializer):
         max_value=100,
     )
     ordering = serializers.ChoiceField(
-        choices=["release_date_asc", "upcoming_first"],
+        choices=["release_date_asc", "upcoming_first", "recent_first"],
         required=False,
         default="release_date_asc",
     )

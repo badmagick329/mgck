@@ -1,13 +1,18 @@
+import re
 from datetime import date, datetime
 from uuid import UUID
 
 from django.core.paginator import Paginator
 from django.db.models import Case, DateField, F, IntegerField, Q, QuerySet, Value, When
-from django.db.models.functions import Lower, Trim
 from django.utils import timezone
 from kpopcomebacks.models import Artist, Release
 
 PAGE_SIZE = 6
+
+
+def artist_name_phrase_regex(name: str) -> str:
+    """Match an artist phrase without matching it inside another word."""
+    return rf"(^|[^[:alnum:]]){re.escape(name.strip())}([^[:alnum:]]|$)"
 
 
 def format_comebacks(
@@ -95,14 +100,23 @@ def filter_comebacks_by_artist_public_ids(
 ) -> QuerySet[Release]:
     selected_artist_names = Artist.objects.filter(
         public_id__in=artist_public_ids
-    ).annotate(normalized_name=Lower(Trim("name"))).values_list(
-        "normalized_name",
-        flat=True,
-    )
-    matching_artist_ids = Artist.objects.annotate(
-        normalized_name=Lower(Trim("name"))
-    ).filter(normalized_name__in=selected_artist_names).values("id")
-    comebacks = Release.objects.filter(artist_id__in=matching_artist_ids)
+    ).values_list("name", flat=True)
+    matching_names: Q | None = None
+    for artist_name in selected_artist_names:
+        if artist_name.strip():
+            phrase_match = Q(
+                name__iregex=artist_name_phrase_regex(artist_name)
+            )
+            matching_names = (
+                phrase_match
+                if matching_names is None
+                else matching_names | phrase_match
+            )
+    if matching_names is None:
+        comebacks = Release.objects.none()
+    else:
+        matching_artist_ids = Artist.objects.filter(matching_names).values("id")
+        comebacks = Release.objects.filter(artist_id__in=matching_artist_ids)
     if start_date:
         comebacks = comebacks.filter(release_date__gte=start_date)
     if end_date:
@@ -115,14 +129,15 @@ def order_comebacks(
     ordering: str = "release_date_asc",
 ) -> QuerySet[Release]:
     comebacks = comebacks.prefetch_related("artist", "release_type")
-    if ordering != "upcoming_first":
+    if ordering not in {"upcoming_first", "recent_first"}:
         return comebacks.order_by("release_date", "id")
 
     today = timezone.localdate()
+    upcoming_first = ordering == "upcoming_first"
     return comebacks.annotate(
         release_window=Case(
-            When(release_date__gte=today, then=Value(0)),
-            default=Value(1),
+            When(release_date__gte=today, then=Value(0 if upcoming_first else 1)),
+            default=Value(1 if upcoming_first else 0),
             output_field=IntegerField(),
         ),
         upcoming_release_date=Case(
@@ -137,8 +152,17 @@ def order_comebacks(
         ),
     ).order_by(
         "release_window",
-        F("upcoming_release_date").asc(nulls_last=True),
-        F("recent_release_date").desc(nulls_last=True),
+        *(
+            [
+                F("upcoming_release_date").asc(nulls_last=True),
+                F("recent_release_date").desc(nulls_last=True),
+            ]
+            if upcoming_first
+            else [
+                F("recent_release_date").desc(nulls_last=True),
+                F("upcoming_release_date").asc(nulls_last=True),
+            ]
+        ),
         "id",
     )
 

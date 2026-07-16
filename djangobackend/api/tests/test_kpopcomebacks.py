@@ -165,6 +165,52 @@ def test_watchlist_query_includes_case_equivalent_artist_records(api_client):
 
 
 @pytest.mark.django_db
+def test_watchlist_query_includes_phrase_matches_but_not_substrings(api_client):
+    followed_artist = Artist.objects.create(name="IVE")
+    collaboration_artist = Artist.objects.create(name="Rei (IVE) x DEAN")
+    possessive_artist = Artist.objects.create(name="IVE's Liz")
+    unrelated_artist = Artist.objects.create(name="DIVE")
+    another_unrelated_artist = Artist.objects.create(name="FIVE")
+
+    followed_release = create_release(
+        followed_artist,
+        "IVE Release",
+        date(2026, 7, 16),
+    )
+    collaboration_release = create_release(
+        collaboration_artist,
+        "Collaboration",
+        date(2026, 7, 17),
+    )
+    possessive_release = create_release(
+        possessive_artist,
+        "Possessive",
+        date(2026, 7, 18),
+    )
+    create_release(unrelated_artist, "DIVE Release", date(2026, 7, 19))
+    create_release(
+        another_unrelated_artist,
+        "FIVE Release",
+        date(2026, 7, 20),
+    )
+
+    response = post_json(
+        api_client,
+        {
+            "artist_public_ids": [str(followed_artist.public_id)],
+            "page_size": 10,
+        },
+    )
+
+    assert response.status_code == 200
+    assert [release["id"] for release in response.json()["results"]] == [
+        followed_release.id,
+        collaboration_release.id,
+        possessive_release.id,
+    ]
+
+
+@pytest.mark.django_db
 def test_watchlist_query_orders_upcoming_before_newest_recent(api_client):
     artist = Artist.objects.create(name="Artist")
     today = timezone.localdate()
@@ -200,6 +246,72 @@ def test_watchlist_query_orders_upcoming_before_newest_recent(api_client):
 
 
 @pytest.mark.django_db
+def test_watchlist_query_orders_newest_recent_before_upcoming_with_pagination(
+    api_client,
+):
+    artist = Artist.objects.create(name="Artist")
+    today = timezone.localdate()
+    older_release = create_release(artist, "Older", today - timedelta(days=5))
+    first_recent_release = create_release(
+        artist,
+        "First Recent",
+        today - timedelta(days=1),
+    )
+    second_recent_release = create_release(
+        artist,
+        "Second Recent",
+        today - timedelta(days=1),
+    )
+    today_release = create_release(artist, "Today", today)
+    future_release = create_release(
+        artist,
+        "Future",
+        today + timedelta(days=3),
+    )
+
+    first_page = post_json(
+        api_client,
+        {
+            "artist_public_ids": [str(artist.public_id)],
+            "ordering": "recent_first",
+            "page_size": 2,
+        },
+    )
+    second_page = post_json(
+        api_client,
+        {
+            "artist_public_ids": [str(artist.public_id)],
+            "ordering": "recent_first",
+            "page": 2,
+            "page_size": 2,
+        },
+    )
+    third_page = post_json(
+        api_client,
+        {
+            "artist_public_ids": [str(artist.public_id)],
+            "ordering": "recent_first",
+            "page": 3,
+            "page_size": 2,
+        },
+    )
+
+    assert first_page.status_code == 200
+    assert first_page.json()["count"] == 5
+    assert [release["id"] for release in first_page.json()["results"]] == [
+        first_recent_release.id,
+        second_recent_release.id,
+    ]
+    assert [release["id"] for release in second_page.json()["results"]] == [
+        older_release.id,
+        today_release.id,
+    ]
+    assert [release["id"] for release in third_page.json()["results"]] == [
+        future_release.id,
+    ]
+
+
+@pytest.mark.django_db
 def test_artist_search_is_case_insensitive_limited_and_requires_query(api_client):
     matching_artists = [
         Artist.objects.create(name=f"Red Artist {index:02d}") for index in range(21)
@@ -229,6 +341,42 @@ def test_artist_search_collapses_case_equivalent_names(api_client):
 
     assert response.status_code == 200
     assert len(response.json()) == 1
+
+
+@pytest.mark.django_db
+def test_artist_search_ranks_exact_match_and_excludes_substrings(api_client):
+    compound_artist = Artist.objects.create(name="Bebe Rexha feat. ITZY")
+    Artist.objects.create(name="BLITZY")
+    exact_artist = Artist.objects.create(name="ITZY")
+
+    response = api_client.get(ARTIST_SEARCH_URL, {"q": "itzy"})
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "public_id": str(exact_artist.public_id),
+            "name": exact_artist.name,
+        },
+        {
+            "public_id": str(compound_artist.public_id),
+            "name": compound_artist.name,
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_artist_search_keeps_partial_search_as_a_fallback(api_client):
+    artist = Artist.objects.create(name="Red Velvet")
+
+    response = api_client.get(ARTIST_SEARCH_URL, {"q": "red vel"})
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "public_id": str(artist.public_id),
+            "name": artist.name,
+        }
+    ]
 
 
 

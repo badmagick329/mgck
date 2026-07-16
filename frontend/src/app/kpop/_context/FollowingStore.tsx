@@ -20,9 +20,14 @@ import {
   useState,
 } from 'react';
 
-const STORAGE_KEY = 'mgck:kpop-following:v2';
+const STORAGE_KEY = 'mgck:kpop-following:v3';
+const V2_STORAGE_KEY = 'mgck:kpop-following:v2';
 const LEGACY_STORAGE_KEY = 'mgck:kpop-following:v1';
 export const MAX_FOLLOWED_ARTISTS = 250;
+export const FOLLOWING_LOOKBACK_OPTIONS = [30, 90, 180] as const;
+
+export type FollowingLookbackDays = (typeof FOLLOWING_LOOKBACK_OPTIONS)[number];
+export type FollowingOrdering = 'upcoming_first' | 'recent_first';
 
 const FollowedArtistSchema = z.object({
   publicId: z.string().uuid(),
@@ -33,7 +38,18 @@ const PendingChangesSchema = z.object({
   additions: z.array(z.string().uuid()).max(MAX_FOLLOWED_ARTISTS),
   removals: z.array(z.string().uuid()).max(MAX_FOLLOWED_ARTISTS),
 });
+const FollowingPreferencesSchema = z.object({
+  lookbackDays: z.union([z.literal(30), z.literal(90), z.literal(180)]),
+  ordering: z.enum(['upcoming_first', 'recent_first']),
+});
 const FollowingStoreSchema = z.object({
+  version: z.literal(3),
+  artists: z.array(FollowedArtistSchema).max(MAX_FOLLOWED_ARTISTS),
+  accountUserId: z.string().min(1).nullable(),
+  pending: PendingChangesSchema,
+  preferences: FollowingPreferencesSchema,
+});
+const V2FollowingStoreSchema = z.object({
   version: z.literal(2),
   artists: z.array(FollowedArtistSchema).max(MAX_FOLLOWED_ARTISTS),
   accountUserId: z.string().min(1).nullable(),
@@ -47,14 +63,21 @@ const LegacyFollowingStoreSchema = z.object({
 export type FollowedArtist = z.infer<typeof FollowedArtistSchema>;
 type FollowingStore = z.infer<typeof FollowingStoreSchema>;
 type FollowResult = 'added' | 'already-following' | 'limit-reached';
+const defaultPreferences: z.infer<typeof FollowingPreferencesSchema> = {
+  lookbackDays: 30,
+  ordering: 'upcoming_first',
+};
 
 type FollowingContextValue = {
   artists: FollowedArtist[];
   isLoaded: boolean;
   isManagerOpen: boolean;
+  preferences: z.infer<typeof FollowingPreferencesSchema>;
   follow: (artist: { publicId: string; displayName: string }) => FollowResult;
   unfollow: (publicId: string, displayName?: string) => void;
   isFollowing: (publicId: string, displayName?: string) => boolean;
+  setLookbackDays: (lookbackDays: FollowingLookbackDays) => void;
+  setOrdering: (ordering: FollowingOrdering) => void;
   openManager: () => void;
   setManagerOpen: (open: boolean) => void;
 };
@@ -63,10 +86,11 @@ const FollowingContext = createContext<FollowingContextValue | undefined>(
   undefined
 );
 const initialStore: FollowingStore = {
-  version: 2,
+  version: 3,
   artists: [],
   accountUserId: null,
   pending: { additions: [], removals: [] },
+  preferences: defaultPreferences,
 };
 
 export function FollowingProvider({ children }: { children: ReactNode }) {
@@ -111,20 +135,38 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       if (parsedStore?.success) {
         persistStore(parsedStore.data);
       } else {
-        const legacyStore = localStorage.getItem(LEGACY_STORAGE_KEY);
-        const parsedLegacy = legacyStore
-          ? LegacyFollowingStoreSchema.safeParse(JSON.parse(legacyStore))
+        const v2Store = localStorage.getItem(V2_STORAGE_KEY);
+        const parsedV2 = v2Store
+          ? V2FollowingStoreSchema.safeParse(JSON.parse(v2Store))
           : null;
-        if (parsedLegacy?.success) {
-          persistStore({ ...initialStore, artists: parsedLegacy.data.artists });
-          localStorage.removeItem(LEGACY_STORAGE_KEY);
-        } else if (savedStore || legacyStore) {
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.removeItem(LEGACY_STORAGE_KEY);
+        if (parsedV2?.success) {
+          persistStore({
+            ...parsedV2.data,
+            version: 3,
+            preferences: defaultPreferences,
+          });
+          localStorage.removeItem(V2_STORAGE_KEY);
+        } else {
+          const legacyStore = localStorage.getItem(LEGACY_STORAGE_KEY);
+          const parsedLegacy = legacyStore
+            ? LegacyFollowingStoreSchema.safeParse(JSON.parse(legacyStore))
+            : null;
+          if (parsedLegacy?.success) {
+            persistStore({
+              ...initialStore,
+              artists: parsedLegacy.data.artists,
+            });
+            localStorage.removeItem(LEGACY_STORAGE_KEY);
+          } else if (savedStore || v2Store || legacyStore) {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(V2_STORAGE_KEY);
+            localStorage.removeItem(LEGACY_STORAGE_KEY);
+          }
         }
       }
     } catch {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(V2_STORAGE_KEY);
       localStorage.removeItem(LEGACY_STORAGE_KEY);
     } finally {
       setIsLoaded(true);
@@ -149,10 +191,11 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
         ...pendingArtists,
       ]).filter((artist) => !pending.removals.includes(artist.publicId));
       persistStore({
-        version: 2,
+        version: 3,
         artists,
         accountUserId: account.userId,
         pending,
+        preferences: storeRef.current.preferences,
       });
     },
     [persistStore]
@@ -320,6 +363,31 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
     [store.artists]
   );
 
+  const setLookbackDays = useCallback(
+    (lookbackDays: FollowingLookbackDays) => {
+      if (!FOLLOWING_LOOKBACK_OPTIONS.includes(lookbackDays)) {
+        return;
+      }
+      const current = storeRef.current;
+      persistStore({
+        ...current,
+        preferences: { ...current.preferences, lookbackDays },
+      });
+    },
+    [persistStore]
+  );
+
+  const setOrdering = useCallback(
+    (ordering: FollowingOrdering) => {
+      const current = storeRef.current;
+      persistStore({
+        ...current,
+        preferences: { ...current.preferences, ordering },
+      });
+    },
+    [persistStore]
+  );
+
   const artists = useMemo(() => dedupeArtists(store.artists), [store.artists]);
 
   const value = useMemo(
@@ -327,13 +395,26 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       artists,
       isLoaded,
       isManagerOpen,
+      preferences: store.preferences,
       follow,
       unfollow,
       isFollowing,
+      setLookbackDays,
+      setOrdering,
       openManager: () => setManagerOpen(true),
       setManagerOpen,
     }),
-    [artists, follow, isFollowing, isLoaded, isManagerOpen, unfollow]
+    [
+      artists,
+      follow,
+      isFollowing,
+      isLoaded,
+      isManagerOpen,
+      setLookbackDays,
+      setOrdering,
+      store.preferences,
+      unfollow,
+    ]
   );
 
   return (

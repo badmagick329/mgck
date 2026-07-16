@@ -34,10 +34,8 @@ export function getTodayDateCompact() {
   return formatCompactDate(getTodayUtcDate());
 }
 
-export function getFollowingStartDate() {
-  return formatApiDate(
-    addDays(getTodayUtcDate(), -FOLLOWING_LOOKBACK_DAYS)
-  );
+export function getFollowingStartDate(lookbackDays = FOLLOWING_LOOKBACK_DAYS) {
+  return formatApiDate(addDays(getTodayUtcDate(), -lookbackDays));
 }
 
 export function getKpopView(searchParams: SearchParamsInput): KpopView {
