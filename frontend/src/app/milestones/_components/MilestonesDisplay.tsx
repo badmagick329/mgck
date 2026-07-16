@@ -4,7 +4,7 @@ import {
   getLocalDateDisplay,
   getLocalDatetimeDisplay,
 } from '@/lib/milestones';
-import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
+import { DiffPeriod, StoredMilestone } from '@/lib/types/milestones';
 import React, { useEffect, useState } from 'react';
 import {
   Table,
@@ -20,7 +20,7 @@ import useMilestones from '@/hooks/milestones/useMilestones';
 import MilestoneActions from '@/app/milestones/_components/MilestoneActions';
 
 type Props = {
-  milestones: ClientMilestone[];
+  milestones: StoredMilestone[];
   isSyncing: boolean;
   deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
   updateMilestone: ReturnType<typeof useMilestones>['updateMilestone'];
@@ -56,9 +56,9 @@ export default function MilestonesDisplay({
       <TableBody>
         {milestones.map((m) => {
           const date = new Date(m.timestamp);
-          const isHidden = store.isMilestoneHidden(m.name);
+          const isHidden = store.isMilestoneHidden(m.publicId);
           return (
-            <TableRow key={m.name}>
+            <TableRow key={m.publicId}>
               <TableCell className='font-medium'>
                 <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
                   <div

@@ -38,19 +38,7 @@ export default function useMilestoneSyncAdaptor(
       if (!foundMilestone) {
         return { ok: false, error: 'Milestone not found' };
       }
-      if (newMilestone.name) {
-        foundMilestone.name = newMilestone.name;
-      }
-      if (newMilestone.timestamp) {
-        foundMilestone.timestamp = newMilestone.timestamp;
-      }
-      if (newMilestone.timezone) {
-        foundMilestone.timezone = newMilestone.timezone;
-      }
-      if (newMilestone.color) {
-        foundMilestone.color = newMilestone.color;
-      }
-      return { ok: true, data: foundMilestone };
+      return { ok: true, data: { ...foundMilestone, ...newMilestone } };
     },
   };
 }

@@ -1,7 +1,7 @@
 import useMilestones from '@/hooks/milestones/useMilestones';
 import useDebounceInput from '@/hooks/useDebounceInput';
 import useKeyboardOffset from '@/hooks/useKeyboardOffset';
-import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
+import { clientMilestoneSchema, StoredMilestone } from '@/lib/types/milestones';
 import { useState } from 'react';
 import {
   Dialog,
@@ -26,7 +26,7 @@ export default function UpdateModal({
   updateMilestone,
   trigger,
 }: {
-  existingMilestone: ClientMilestone;
+  existingMilestone: StoredMilestone;
   isSyncing: boolean;
   updateMilestone: ReturnType<typeof useMilestones>['updateMilestone'];
   trigger?: React.ReactNode;
@@ -89,7 +89,7 @@ export default function UpdateModal({
                 });
               }
               const result = await updateMilestone(
-                existingMilestone.name,
+                existingMilestone.publicId,
                 parsed.data
               );
               if (!result.ok) {

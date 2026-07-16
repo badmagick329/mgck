@@ -5,16 +5,18 @@ import useFeatureFlag from '@/hooks/useFeatureFlag';
 type Props = {
   isSyncing: boolean;
   isUsingServer: boolean;
+  isAuthenticated: boolean;
   server: ReturnType<typeof useMilestonesServer>;
 };
 export default function MilestonesSync({
   isSyncing,
   isUsingServer,
+  isAuthenticated,
   server,
 }: Props) {
   const { getBooleanFlag } = useFeatureFlag();
   const showComponent = getBooleanFlag('sync');
-  if (!showComponent) {
+  if (!showComponent || !isAuthenticated) {
     return null;
   }
 

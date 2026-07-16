@@ -14,11 +14,13 @@ import useKeyboardOffset from '@/hooks/useKeyboardOffset';
 import { useState } from 'react';
 
 export default function DeleteMilestoneModal({
+  milestonePublicId,
   milestoneName,
   deleteMilestone,
   isSyncing,
   trigger,
 }: {
+  milestonePublicId: string;
   milestoneName: string;
   deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
   isSyncing: boolean;
@@ -45,7 +47,7 @@ export default function DeleteMilestoneModal({
           onSubmit={(e) => {
             e.preventDefault();
             (async () => {
-              deleteMilestone(milestoneName);
+              await deleteMilestone(milestonePublicId);
               setOpen(false);
             })();
           }}

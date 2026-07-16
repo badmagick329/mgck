@@ -12,16 +12,40 @@ import TimePeriodButtonGroup from '@/app/milestones/_components/TimePeriodButton
 import MilestonesHeading from '@/app/milestones/_components/MilestonesHeading';
 import Footer from '@/app/_components/Footer';
 import BackupRestore from '@/app/milestones/_components/BackupRestore';
+import { useToast } from '@/components/ui/use-toast';
+import { MilestoneAccount } from '@/lib/types/milestones';
+import { useEffect, useRef } from 'react';
 
-export default function MilestonesClient({ username }: { username: string }) {
+export default function MilestonesClient({
+  account,
+}: {
+  account: MilestoneAccount | null;
+}) {
   const {
     store,
     server,
     isSyncing,
+    isUsingServer,
     createMilestone,
     updateMilestone,
     deleteMilestone,
-  } = useMilestones(username);
+  } = useMilestones(account);
+  const { toast } = useToast();
+  const shownWarning = useRef<string | null>(null);
+
+  useEffect(() => {
+    const warningKey = store.loadWarning
+      ? `${store.storageKey}:${store.loadWarning}`
+      : null;
+    if (warningKey && shownWarning.current !== warningKey) {
+      shownWarning.current = warningKey;
+      toast({
+        title: 'Some milestone data could not be loaded',
+        description: store.loadWarning,
+        variant: 'destructive',
+      });
+    }
+  }, [store.loadWarning, store.storageKey, toast]);
 
   if (!store.isLoaded) {
     return <Loading />;
@@ -36,7 +60,7 @@ export default function MilestonesClient({ username }: { username: string }) {
           <MilestonesChart
             milestones={store.milestones}
             diffPeriod={store.config.diffPeriod}
-            hiddenMilestones={store.hiddenMilestones}
+            hiddenMilestoneIds={store.hiddenMilestoneIds}
           />
           {store.milestones.length > 0 && (
             <TimePeriodButtonGroup
@@ -60,7 +84,8 @@ export default function MilestonesClient({ username }: { username: string }) {
         </section>
         <MilestonesSync
           isSyncing={isSyncing}
-          isUsingServer={store.config.milestonesOnServer}
+          isUsingServer={isUsingServer}
+          isAuthenticated={Boolean(account)}
           server={server}
         />
       </article>

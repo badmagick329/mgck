@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import 'server-only';
 
 export type JWTPayload = {
+  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier': string;
   'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': string;
   role: string;
   exp: number;
@@ -11,6 +12,7 @@ export type JWTPayload = {
 export class ParsedToken {
   private _token: string = '';
   private _name: string = '';
+  private _userId: string = '';
   private _role: string = '';
   private _exp: number = 0;
   private _success: boolean = false;
@@ -28,6 +30,10 @@ export class ParsedToken {
     this._success = true;
     this._name =
       parsed['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
+    this._userId =
+      parsed[
+        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+      ];
     this._role = parsed.role;
     this._exp = parsed.exp;
   }
@@ -47,6 +53,7 @@ export class ParsedToken {
   };
 
   name = () => this._name;
+  userId = () => this._userId;
   role = () => this._role;
   exp = () => this._exp;
   success = () => this._success;

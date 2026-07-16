@@ -1,5 +1,5 @@
 import { getDiffIn } from '@/lib/milestones';
-import { ClientMilestone, DiffPeriod } from '@/lib/types/milestones';
+import { DiffPeriod, StoredMilestone } from '@/lib/types/milestones';
 import { formatNumberWithCommas } from '@/lib/utils';
 import { memo, useEffect, useState } from 'react';
 import {
@@ -13,27 +13,27 @@ import {
 } from 'recharts';
 
 type Props = {
-  milestones: ClientMilestone[];
+  milestones: StoredMilestone[];
   diffPeriod: DiffPeriod;
-  hiddenMilestones: string[] | undefined;
+  hiddenMilestoneIds: string[] | undefined;
 };
 
 const MilestonesChart = memo(function MilestonesChart({
   milestones,
   diffPeriod,
-  hiddenMilestones,
+  hiddenMilestoneIds,
 }: Props) {
   const [chartData, setChartData] = useState(
-    transformMilestonesForChart(milestones, diffPeriod, hiddenMilestones)
+    transformMilestonesForChart(milestones, diffPeriod, hiddenMilestoneIds)
   );
   const maxLabelLength = Math.max(...chartData.map((d) => d.name.length));
   const yAxisWidth = maxLabelLength * 10;
   const chartHeight = Math.max(200, chartData.length * 65);
   useEffect(() => {
     setChartData(
-      transformMilestonesForChart(milestones, diffPeriod, hiddenMilestones)
+      transformMilestonesForChart(milestones, diffPeriod, hiddenMilestoneIds)
     );
-  }, [diffPeriod, milestones, hiddenMilestones]);
+  }, [diffPeriod, milestones, hiddenMilestoneIds]);
 
   if (milestones.length === 0) {
     return (
@@ -83,7 +83,7 @@ const MilestonesChart = memo(function MilestonesChart({
             )}
           >
             {chartData.map((item) => (
-              <Cell key={`${item.name}`} fill={`${item.color}`} />
+              <Cell key={item.publicId} fill={`${item.color}`} />
             ))}
           </Bar>
         </BarChart>
@@ -93,17 +93,18 @@ const MilestonesChart = memo(function MilestonesChart({
 });
 
 const transformMilestonesForChart = (
-  milestones: ClientMilestone[],
+  milestones: StoredMilestone[],
   diffPeriod: DiffPeriod,
-  hiddenMilestones: string[] | undefined
+  hiddenMilestoneIds: string[] | undefined
 ) => {
   const visibleMilestones = milestones.filter(
     (m) =>
-      hiddenMilestones === undefined ||
-      hiddenMilestones.length === 0 ||
-      !hiddenMilestones.includes(m.name)
+      hiddenMilestoneIds === undefined ||
+      hiddenMilestoneIds.length === 0 ||
+      !hiddenMilestoneIds.includes(m.publicId)
   );
   return visibleMilestones.map((m) => ({
+    publicId: m.publicId,
     name: m.name,
     timestamp: m.timestamp,
     period: getDiffIn(new Date(m.timestamp), diffPeriod),
