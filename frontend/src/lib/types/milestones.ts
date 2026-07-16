@@ -44,6 +44,57 @@ export const storedMilestoneSchema = clientMilestoneSchema.extend({
 
 export type StoredMilestone = z.infer<typeof storedMilestoneSchema>;
 
+const validateStoredMilestoneRecords = (
+  records: StoredMilestone[],
+  context: z.RefinementCtx
+) => {
+  const ids = new Set<string>();
+  records.forEach((record, index) => {
+    if (ids.has(record.publicId)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Duplicate milestone publicId',
+        path: [index, 'publicId'],
+      });
+    }
+    ids.add(record.publicId);
+    if (record.deletedAt !== null && record.deletedAt !== record.updatedAt) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'deletedAt must equal updatedAt for tombstones',
+        path: [index, 'deletedAt'],
+      });
+    }
+  });
+};
+
+export const storedMilestoneSnapshotSchema = z
+  .array(storedMilestoneSchema)
+  .max(1000)
+  .superRefine(validateStoredMilestoneRecords);
+
+export const storedMilestoneResponseSchema = z
+  .array(storedMilestoneSchema)
+  .superRefine(validateStoredMilestoneRecords);
+
+export const milestoneSyncWireRecordSchema = z.object({
+  public_id: z.string().uuid(),
+  name: clientMilestoneSchema.shape.name,
+  timestamp: z.number().int(),
+  timezone: clientMilestoneSchema.shape.timezone,
+  color: clientMilestoneSchema.shape.color,
+  updated_at: z.number().int().nonnegative(),
+  deleted_at: z.number().int().nonnegative().nullable(),
+});
+
+export const milestoneSyncResponseSchema = z.object({
+  records: z.array(milestoneSyncWireRecordSchema),
+});
+
+export type MilestoneSyncWireRecord = z.infer<
+  typeof milestoneSyncWireRecordSchema
+>;
+
 export const diffPeriodEnum = z.enum([
   'seconds',
   'minutes',
