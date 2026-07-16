@@ -25,6 +25,9 @@ REDDIT_SECRET = os.environ.get("REDDIT_SECRET", "")
 REDDIT_ID = os.environ.get("REDDIT_ID", "")
 REDDIT_AGENT = os.environ.get("REDDIT_AGENT", "")
 TOKEN = os.environ.get("TOKEN", "")
+CORE_JWT_SIGNING_KEY = os.environ.get("JWT__SigningKey", "")
+CORE_JWT_ISSUER = os.environ.get("JWT__Issuer", "")
+CORE_JWT_AUDIENCE = os.environ.get("JWT__Audience", "")
 CONTAINERED = os.environ.get("DB_HOST", "") != "localhost"
 BASE_URL = os.environ["BASE_URL"] if CONTAINERED else os.environ["NEXT_URL"]
 SECRET_KEY = os.environ["SECRET_KEY"]
@@ -36,7 +39,9 @@ ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(" ") or None
 csrf_trusted_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "").replace(
     ",", " "
 )
-CSRF_TRUSTED_ORIGINS = [origin for origin in csrf_trusted_origins.split() if origin]
+CSRF_TRUSTED_ORIGINS = [
+    origin for origin in csrf_trusted_origins.split() if origin
+]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
@@ -72,7 +77,7 @@ ROOT_URLCONF = "djangobackend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [(BASE_DIR / "templates")],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -149,7 +154,9 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/uploads/"
-MEDIA_ROOT = os.environ["UPLOADS_STATIC"] if CONTAINERED else os.environ["UPLOADS"]
+MEDIA_ROOT = (
+    os.environ["UPLOADS_STATIC"] if CONTAINERED else os.environ["UPLOADS"]
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

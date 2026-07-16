@@ -9,6 +9,8 @@ class MilestoneAdmin(admin.ModelAdmin):
         "event_datetime_utc",
         "event_timezone",
         "created",
+        "updated_at",
+        "deleted_at",
         "created_by",
     )
     search_fields = [
@@ -20,9 +22,10 @@ class MilestoneAdmin(admin.ModelAdmin):
 
 
 class MilestoneUserAdmin(admin.ModelAdmin):
-    list_display = ("username",)
+    list_display = ("username", "core_user_id")
     search_fields = [
         "username",
+        "core_user_id",
     ]
 
 

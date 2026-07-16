@@ -6,6 +6,7 @@ from milestones.apps import MilestonesConfig
 app_name = MilestonesConfig.name
 
 urlpatterns = [
+    path("sync", views.sync_milestones, name="sync_milestones"),
     path("", views.milestones, name="milestones"),
     path("<str:event_name>", views.modify_milestone, name="modify_milestone"),
 ]

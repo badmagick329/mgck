@@ -55,7 +55,9 @@ describe('/healthz route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPgClients.length = 0;
-    Object.keys(mockPgFailureByHost).forEach((k) => delete mockPgFailureByHost[k]);
+    Object.keys(mockPgFailureByHost).forEach(
+      (k) => delete mockPgFailureByHost[k]
+    );
 
     process.env = { ...originalEnv };
     process.env.BASE_URL = 'http://djangobackend:8002';
@@ -105,6 +107,11 @@ describe('/healthz route', () => {
     expect(data.services.postgresDjango.result).toBe('SELECT 1 ok');
     expect(data.services.postgresCore.result).toBe('SELECT 1 ok');
     expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      1,
+      new URL('http://djangobackend:8002/health/'),
+      expect.objectContaining({ method: 'GET', cache: 'no-store' })
+    );
     expect(mockPgClients.length).toBe(2);
   });
 

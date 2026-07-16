@@ -2,10 +2,10 @@ import json
 from datetime import datetime, timezone
 
 import pytest
-from django.test import Client
 from django.urls import reverse
 
 from milestones.models import Milestone, MilestoneUser
+from milestones.tests.helpers import MilestoneClient
 
 TEST_TIMESTAMP = 1766248695000
 MILESTONES_ENDPOINT = "milestones:milestones"
@@ -15,7 +15,7 @@ MODIFY_MILESTONES_ENDPOINT = "milestones:modify_milestone"
 @pytest.mark.django_db
 class TestMilestoneCreateEndpoint:
     def setup_method(self):
-        self.client = Client()
+        self.client = MilestoneClient()
 
     def test_create_milestone_success(self):
         """Test successfully creating a milestone"""
@@ -38,8 +38,8 @@ class TestMilestoneCreateEndpoint:
         assert response_data["color"] == Milestone.DEFAULT_COLOR
         assert Milestone.objects.count() == 1
 
-    def test_create_milestone_missing_username(self):
-        """Test creating milestone without username"""
+    def test_create_milestone_ignores_missing_username(self):
+        """The token identity owns the milestone when username is omitted."""
         data = {
             "timestamp": TEST_TIMESTAMP,
             "timezone": "UTC",
@@ -52,9 +52,9 @@ class TestMilestoneCreateEndpoint:
             content_type="application/json",
         )
 
-        assert response.status_code == 400
+        assert response.status_code == 201
         response_data = json.loads(response.content)
-        assert "Username is required" in response_data["error"]
+        assert response_data["created_by"] == "authenticated-user"
 
     def test_create_milestone_missing_timezone(self):
         """Test creating milestone without timezone"""
@@ -150,11 +150,13 @@ class TestMilestoneCreateEndpoint:
 @pytest.mark.django_db
 class TestMilestoneListEndpoint:
     def setup_method(self):
-        self.client = Client()
+        self.client = MilestoneClient()
 
     def test_list_milestones_empty(self):
         """Test listing milestones when none exist"""
-        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user1"})
+        response = self.client.get(
+            reverse(MILESTONES_ENDPOINT), {"username": "user1"}
+        )
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -171,7 +173,9 @@ class TestMilestoneListEndpoint:
             created_by=user,
         )
 
-        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user1"})
+        response = self.client.get(
+            reverse(MILESTONES_ENDPOINT), {"username": "user1"}
+        )
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -197,7 +201,9 @@ class TestMilestoneListEndpoint:
             created_by=user2,
         )
 
-        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user1"})
+        response = self.client.get(
+            reverse(MILESTONES_ENDPOINT), {"username": "user1"}
+        )
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -215,7 +221,9 @@ class TestMilestoneListEndpoint:
             created_by=user,
         )
 
-        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user1"})
+        response = self.client.get(
+            reverse(MILESTONES_ENDPOINT), {"username": "user1"}
+        )
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -239,7 +247,9 @@ class TestMilestoneListEndpoint:
             created_by=user1,
         )
 
-        response = self.client.get(reverse(MILESTONES_ENDPOINT), {"username": "user2"})
+        response = self.client.get(
+            reverse(MILESTONES_ENDPOINT), {"username": "user2"}
+        )
 
         assert response.status_code == 200
         response_data = json.loads(response.content)
@@ -249,7 +259,7 @@ class TestMilestoneListEndpoint:
 @pytest.mark.django_db
 class TestMilestoneUpdateEndpoint:
     def setup_method(self):
-        self.client = Client()
+        self.client = MilestoneClient()
 
     def test_update_milestone_event_name(self):
         """Test updating just the event name"""
@@ -475,7 +485,7 @@ class TestMilestoneUpdateEndpoint:
 @pytest.mark.django_db
 class TestMilestoneDeleteEndpoint:
     def setup_method(self):
-        self.client = Client()
+        self.client = MilestoneClient()
 
     def test_delete_milestone_success(self):
         """Test successfully deleting a milestone"""
@@ -498,10 +508,44 @@ class TestMilestoneDeleteEndpoint:
         )
 
         assert response.status_code == 204
-        assert Milestone.objects.count() == 0
+        milestone = Milestone.objects.get()
+        assert milestone.deleted_at is not None
+        assert milestone.deleted_at == milestone.updated_at
+        assert milestone.server_received_at == milestone.updated_at
 
-    def test_delete_milestone_missing_username(self):
-        """Test delete without username"""
+        create_data = {
+            "timestamp": TEST_TIMESTAMP,
+            "timezone": "UTC",
+            "username": "user1",
+            "event_name": "Event",
+        }
+        recreated = self.client.post(
+            reverse(MILESTONES_ENDPOINT),
+            data=json.dumps(create_data),
+            content_type="application/json",
+        )
+        assert recreated.status_code == 201
+        assert (
+            Milestone.objects.filter(
+                event_name="Event", deleted_at__isnull=True
+            ).count()
+            == 1
+        )
+
+    def test_delete_milestone_ignores_missing_username(self):
+        """The token identity owns the delete when username is omitted."""
+        owner = MilestoneUser.objects.create(
+            username="authenticated-user",
+            core_user_id="core-authenticated-user",
+        )
+        Milestone.objects.create(
+            event_timezone="UTC",
+            event_datetime_utc=datetime.fromtimestamp(
+                TEST_TIMESTAMP / 1000, tz=timezone.utc
+            ),
+            event_name="Event",
+            created_by=owner,
+        )
         data = {
             "username": None,
         }
@@ -511,9 +555,7 @@ class TestMilestoneDeleteEndpoint:
             content_type="application/json",
         )
 
-        assert response.status_code == 400
-        response_data = json.loads(response.content)
-        assert "Username is required" in response_data["error"]
+        assert response.status_code == 204
 
     def test_delete_milestone_nonexistent_user(self):
         """Test deleting milestone for nonexistent user"""
@@ -596,7 +638,7 @@ class TestMilestoneDeleteEndpoint:
 @pytest.mark.django_db
 class TestMilestoneEndpointIntegration:
     def setup_method(self):
-        self.client = Client()
+        self.client = MilestoneClient()
 
     def test_full_crud_workflow(self):
         """Test complete create-read-update-delete workflow"""

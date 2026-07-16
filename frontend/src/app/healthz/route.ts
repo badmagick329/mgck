@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const CHECK_TIMEOUT_MS = 2000;
-const DJANGO_HEALTH_PATH = '/milestones_api/?username=__healthz__';
+const DJANGO_HEALTH_PATH = '/health/';
 const CORE_API_HEALTH_PATH = '/api/feedback';
 
 type ServiceStatus = 'up' | 'down';
@@ -55,23 +55,23 @@ type PostgresConfig = {
 export async function GET() {
   const [django, coreapi, redis, postgresDjango, postgresCore] =
     await Promise.all([
-    checkHttpService(process.env.BASE_URL, DJANGO_HEALTH_PATH),
-    checkHttpService(process.env.CORE_API_BASE_URL, CORE_API_HEALTH_PATH),
-    checkRedis(process.env.REDIS_URL),
-    checkPostgres({
-      host: process.env.HEALTH_DJANGO_DB_HOST,
-      port: process.env.HEALTH_DJANGO_DB_PORT,
-      database: process.env.HEALTH_DJANGO_DB_NAME,
-      user: process.env.HEALTH_DJANGO_DB_USER,
-      password: process.env.HEALTH_DJANGO_DB_PASSWORD,
-    }),
-    checkPostgres({
-      host: process.env.HEALTH_CORE_DB_HOST,
-      port: process.env.HEALTH_CORE_DB_PORT,
-      database: process.env.HEALTH_CORE_DB_NAME,
-      user: process.env.HEALTH_CORE_DB_USER,
-      password: process.env.HEALTH_CORE_DB_PASSWORD,
-    }),
+      checkHttpService(process.env.BASE_URL, DJANGO_HEALTH_PATH),
+      checkHttpService(process.env.CORE_API_BASE_URL, CORE_API_HEALTH_PATH),
+      checkRedis(process.env.REDIS_URL),
+      checkPostgres({
+        host: process.env.HEALTH_DJANGO_DB_HOST,
+        port: process.env.HEALTH_DJANGO_DB_PORT,
+        database: process.env.HEALTH_DJANGO_DB_NAME,
+        user: process.env.HEALTH_DJANGO_DB_USER,
+        password: process.env.HEALTH_DJANGO_DB_PASSWORD,
+      }),
+      checkPostgres({
+        host: process.env.HEALTH_CORE_DB_HOST,
+        port: process.env.HEALTH_CORE_DB_PORT,
+        database: process.env.HEALTH_CORE_DB_NAME,
+        user: process.env.HEALTH_CORE_DB_USER,
+        password: process.env.HEALTH_CORE_DB_PASSWORD,
+      }),
     ]);
 
   const allHealthy =
@@ -137,7 +137,9 @@ async function checkHttpService(
   }
 }
 
-async function checkRedis(redisUrl: string | undefined): Promise<RedisServiceHealth> {
+async function checkRedis(
+  redisUrl: string | undefined
+): Promise<RedisServiceHealth> {
   if (!redisUrl) {
     return {
       status: 'down',
@@ -189,7 +191,9 @@ async function checkRedis(redisUrl: string | undefined): Promise<RedisServiceHea
   }
 }
 
-async function checkPostgres(config: PostgresConfig): Promise<DataServiceHealth> {
+async function checkPostgres(
+  config: PostgresConfig
+): Promise<DataServiceHealth> {
   const hasAllFields =
     !!config.host &&
     !!config.port &&
@@ -237,7 +241,10 @@ async function checkPostgres(config: PostgresConfig): Promise<DataServiceHealth>
   }
 }
 
-async function withTimeout<T>(fn: () => Promise<T>, timeoutMs: number): Promise<T> {
+async function withTimeout<T>(
+  fn: () => Promise<T>,
+  timeoutMs: number
+): Promise<T> {
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeout = setTimeout(() => reject(new Error('timeout')), timeoutMs);
@@ -266,5 +273,10 @@ function asErrorMessage(error: unknown): string {
 }
 
 function isAbortError(error: unknown) {
-  return !!error && typeof error === 'object' && 'name' in error && error.name === 'AbortError';
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    'name' in error &&
+    error.name === 'AbortError'
+  );
 }
