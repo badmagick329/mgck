@@ -139,6 +139,11 @@ class KpopWatchlistQuerySerializer(serializers.Serializer):
         min_value=1,
         max_value=100,
     )
+    ordering = serializers.ChoiceField(
+        choices=["release_date_asc", "upcoming_first"],
+        required=False,
+        default="release_date_asc",
+    )
 
     def validate(self, attrs):
         start_date = attrs.get("start_date")
@@ -148,3 +153,8 @@ class KpopWatchlistQuerySerializer(serializers.Serializer):
                 {"end_date": "end_date must be on or after start_date."}
             )
         return attrs
+
+
+class KpopArtistSerializer(serializers.Serializer):
+    public_id = serializers.UUIDField(read_only=True)
+    name = serializers.CharField(read_only=True)

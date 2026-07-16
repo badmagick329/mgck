@@ -2,7 +2,8 @@ from datetime import date, datetime
 from uuid import UUID
 
 from django.core.paginator import Paginator
-from django.db.models import Q, QuerySet
+from django.db.models import Case, DateField, F, IntegerField, Q, QuerySet, Value, When
+from django.utils import timezone
 from kpopcomebacks.models import Release
 
 PAGE_SIZE = 6
@@ -89,18 +90,46 @@ def filter_comebacks_by_artist_public_ids(
     artist_public_ids: list[UUID],
     start_date: date | None = None,
     end_date: date | None = None,
+    ordering: str = "release_date_asc",
 ) -> QuerySet[Release]:
     comebacks = Release.objects.filter(artist__public_id__in=artist_public_ids)
     if start_date:
         comebacks = comebacks.filter(release_date__gte=start_date)
     if end_date:
         comebacks = comebacks.filter(release_date__lte=end_date)
-    return order_comebacks(comebacks)
+    return order_comebacks(comebacks, ordering)
 
 
-def order_comebacks(comebacks: QuerySet[Release]) -> QuerySet[Release]:
-    return comebacks.prefetch_related("artist", "release_type").order_by(
-        "release_date", "id"
+def order_comebacks(
+    comebacks: QuerySet[Release],
+    ordering: str = "release_date_asc",
+) -> QuerySet[Release]:
+    comebacks = comebacks.prefetch_related("artist", "release_type")
+    if ordering != "upcoming_first":
+        return comebacks.order_by("release_date", "id")
+
+    today = timezone.localdate()
+    return comebacks.annotate(
+        release_window=Case(
+            When(release_date__gte=today, then=Value(0)),
+            default=Value(1),
+            output_field=IntegerField(),
+        ),
+        upcoming_release_date=Case(
+            When(release_date__gte=today, then=F("release_date")),
+            default=Value(None, output_field=DateField()),
+            output_field=DateField(),
+        ),
+        recent_release_date=Case(
+            When(release_date__lt=today, then=F("release_date")),
+            default=Value(None, output_field=DateField()),
+            output_field=DateField(),
+        ),
+    ).order_by(
+        "release_window",
+        F("upcoming_release_date").asc(nulls_last=True),
+        F("recent_release_date").desc(nulls_last=True),
+        "id",
     )
 
 

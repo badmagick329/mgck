@@ -28,8 +28,18 @@ export const WatchlistComebacksQuerySchema = z.object({
   end_date: z.string().optional(),
   page: z.number().int().positive().optional(),
   page_size: z.number().int().positive().max(100).optional(),
+  ordering: z.enum(['release_date_asc', 'upcoming_first']).optional(),
 });
 
 export type WatchlistComebacksQuery = z.infer<
   typeof WatchlistComebacksQuerySchema
 >;
+
+export const KpopArtistSchema = z.object({
+  public_id: z.string().uuid(),
+  name: z.string(),
+});
+
+export const KpopArtistsResultSchema = z.array(KpopArtistSchema);
+
+export type KpopArtist = z.infer<typeof KpopArtistSchema>;

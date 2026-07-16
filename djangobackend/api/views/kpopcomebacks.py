@@ -1,11 +1,16 @@
 from api.apps import ApiConfig
-from api.serializers import KpopComebackListSerializer, KpopWatchlistQuerySerializer
+from api.serializers import (
+    KpopArtistSerializer,
+    KpopComebackListSerializer,
+    KpopWatchlistQuerySerializer,
+)
 from django.conf import settings
 from django.core.paginator import EmptyPage, Paginator
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from kpopcomebacks.models import Artist
 from kpopcomebacks.utils import (
     filter_comebacks,
     filter_comebacks_by_artist_public_ids,
@@ -98,6 +103,7 @@ class KpopWatchlistQuery(APIView):
             query["artist_public_ids"],
             query.get("start_date"),
             query.get("end_date"),
+            query["ordering"],
         )
         paginator = Paginator(comebacks, query["page_size"])
 
@@ -122,3 +128,30 @@ class KpopWatchlistQuery(APIView):
                 "results": serialized_comebacks.data,
             }
         )
+
+
+class KpopArtistList(APIView):
+    throttle_classes = [KpopComebackListThrottle]
+
+    @swagger_auto_schema(
+        operation_description="Search K-pop artists by name.",
+        manual_parameters=[
+            openapi.Parameter(
+                name="q",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                description="Artist name search text.",
+                required=True,
+            ),
+        ],
+    )
+    def get(self, request):
+        query = request.query_params.get("q", "").strip()
+        if not query:
+            return Response(
+                {"q": ["A non-empty artist search query is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        artists = Artist.objects.filter(name__icontains=query).order_by("name")[:20]
+        return Response(KpopArtistSerializer(artists, many=True).data)

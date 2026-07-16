@@ -4,9 +4,12 @@ import ComebackCardAlbum from './ComebackCardAlbum';
 import ComebackCardYoutube from './ComebackCardYoutube';
 import { dayOffsetFromToday, relativeDayLabel } from '@/lib/kpop';
 
+import FollowArtistButton from './FollowArtistButton';
+
 type ComebackProps = {
   title: string;
   artist: string;
+  artistPublicId: string;
   album: string;
   releaseType: string;
   releaseDate: string;
@@ -16,6 +19,7 @@ type ComebackProps = {
 export default function ComebackCard({
   title,
   artist,
+  artistPublicId,
   album,
   releaseType,
   releaseDate,
@@ -39,7 +43,10 @@ export default function ComebackCard({
           <div className='flex w-full flex-col items-center gap-4'>
             <ComebackCardDate releaseDate={releaseDate} />
             <ComebackCardDivider />
-            <ComebackCardArtist artist={artist} />
+            <div className='flex w-full items-center justify-center gap-1'>
+              <ComebackCardArtist artist={artist} />
+              <FollowArtistButton publicId={artistPublicId} displayName={artist} />
+            </div>
             <ComebackCardTitle title={title} />
           </div>
         </div>
