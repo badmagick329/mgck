@@ -121,7 +121,7 @@ export default function FollowedArtistsDialog() {
           {!isSearching && !searchError && searchText.trim() && (
             <CommandGroup heading='Search results'>
               {results.map((artist) => {
-                const following = isFollowing(artist.public_id);
+                const following = isFollowing(artist.public_id, artist.name);
                 return (
                   <CommandItem
                     key={artist.public_id}
@@ -129,7 +129,7 @@ export default function FollowedArtistsDialog() {
                     disabled={!following && followLimitReached}
                     onSelect={() => {
                       if (following) {
-                        unfollow(artist.public_id);
+                        unfollow(artist.public_id, artist.name);
                       } else {
                         follow({
                           publicId: artist.public_id,

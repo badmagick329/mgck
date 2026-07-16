@@ -6,6 +6,7 @@ from api.serializers import (
 )
 from django.conf import settings
 from django.core.paginator import EmptyPage, Paginator
+from django.db.models.functions import Lower, Trim
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
@@ -153,5 +154,17 @@ class KpopArtistList(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        artists = Artist.objects.filter(name__icontains=query).order_by("name")[:20]
-        return Response(KpopArtistSerializer(artists, many=True).data)
+        artists = Artist.objects.filter(name__icontains=query).annotate(
+            normalized_name=Lower(Trim("name"))
+        ).order_by("normalized_name", "id")
+        unique_artists = []
+        seen_names = set()
+        for artist in artists:
+            if artist.normalized_name in seen_names:
+                continue
+            seen_names.add(artist.normalized_name)
+            unique_artists.append(artist)
+            if len(unique_artists) == 20:
+                break
+
+        return Response(KpopArtistSerializer(unique_artists, many=True).data)

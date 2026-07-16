@@ -3,8 +3,9 @@ from uuid import UUID
 
 from django.core.paginator import Paginator
 from django.db.models import Case, DateField, F, IntegerField, Q, QuerySet, Value, When
+from django.db.models.functions import Lower, Trim
 from django.utils import timezone
-from kpopcomebacks.models import Release
+from kpopcomebacks.models import Artist, Release
 
 PAGE_SIZE = 6
 
@@ -92,7 +93,16 @@ def filter_comebacks_by_artist_public_ids(
     end_date: date | None = None,
     ordering: str = "release_date_asc",
 ) -> QuerySet[Release]:
-    comebacks = Release.objects.filter(artist__public_id__in=artist_public_ids)
+    selected_artist_names = Artist.objects.filter(
+        public_id__in=artist_public_ids
+    ).annotate(normalized_name=Lower(Trim("name"))).values_list(
+        "normalized_name",
+        flat=True,
+    )
+    matching_artist_ids = Artist.objects.annotate(
+        normalized_name=Lower(Trim("name"))
+    ).filter(normalized_name__in=selected_artist_names).values("id")
+    comebacks = Release.objects.filter(artist_id__in=matching_artist_ids)
     if start_date:
         comebacks = comebacks.filter(release_date__gte=start_date)
     if end_date:

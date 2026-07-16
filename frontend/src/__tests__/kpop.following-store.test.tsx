@@ -10,6 +10,10 @@ const artist = {
   publicId: '048c3d72-5c61-4f2c-9707-e06b0cc1f7f5',
   displayName: 'Example Artist',
 };
+const caseVariantArtist = {
+  publicId: '148c3d72-5c61-4f2c-9707-e06b0cc1f7f5',
+  displayName: 'example artist',
+};
 
 function FollowingProbe() {
   const { artists, follow, unfollow, isLoaded } = useFollowing();
@@ -19,6 +23,9 @@ function FollowingProbe() {
       <span data-testid='count'>{artists.length}</span>
       <button type='button' onClick={() => follow(artist)}>
         Follow
+      </button>
+      <button type='button' onClick={() => follow(caseVariantArtist)}>
+        Follow case variant
       </button>
       <button type='button' onClick={() => unfollow(artist.publicId)}>
         Unfollow
@@ -44,6 +51,7 @@ describe('following store', () => {
     );
     fireEvent.click(screen.getByText('Follow'));
     fireEvent.click(screen.getByText('Follow'));
+    fireEvent.click(screen.getByText('Follow case variant'));
     expect(screen.getByTestId('count').textContent).toBe('1');
 
     fireEvent.click(screen.getByText('Unfollow'));

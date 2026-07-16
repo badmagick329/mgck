@@ -53,8 +53,8 @@ type FollowingContextValue = {
   isLoaded: boolean;
   isManagerOpen: boolean;
   follow: (artist: { publicId: string; displayName: string }) => FollowResult;
-  unfollow: (publicId: string) => void;
-  isFollowing: (publicId: string) => boolean;
+  unfollow: (publicId: string, displayName?: string) => void;
+  isFollowing: (publicId: string, displayName?: string) => boolean;
   openManager: () => void;
   setManagerOpen: (open: boolean) => void;
 };
@@ -245,7 +245,12 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       }
       const current = storeRef.current;
       if (
-        current.artists.some(({ publicId }) => publicId === artist.publicId)
+        current.artists.some(
+          (followedArtist) =>
+            followedArtist.publicId === artist.publicId ||
+            artistIdentityKey(followedArtist.displayName) ===
+              artistIdentityKey(artist.displayName)
+        )
       ) {
         return 'already-following';
       }
@@ -273,16 +278,29 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
   );
 
   const unfollow = useCallback(
-    (publicId: string) => {
+    (publicId: string, displayName?: string) => {
       const current = storeRef.current;
+      const matchingIds = new Set(
+        current.artists
+          .filter(
+            (artist) =>
+              artist.publicId === publicId ||
+              (displayName !== undefined &&
+                artistIdentityKey(artist.displayName) ===
+                  artistIdentityKey(displayName))
+          )
+          .map((artist) => artist.publicId)
+      );
       persistStore({
         ...current,
         artists: current.artists.filter(
-          (artist) => artist.publicId !== publicId
+          (artist) => !matchingIds.has(artist.publicId)
         ),
         pending: {
-          additions: current.pending.additions.filter((id) => id !== publicId),
-          removals: unique([...current.pending.removals, publicId]),
+          additions: current.pending.additions.filter(
+            (id) => !matchingIds.has(id)
+          ),
+          removals: unique([...current.pending.removals, ...matchingIds]),
         },
       });
       void syncAccount();
@@ -291,14 +309,22 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
   );
 
   const isFollowing = useCallback(
-    (publicId: string) =>
-      store.artists.some((artist) => artist.publicId === publicId),
+    (publicId: string, displayName?: string) =>
+      store.artists.some(
+        (artist) =>
+          artist.publicId === publicId ||
+          (displayName !== undefined &&
+            artistIdentityKey(artist.displayName) ===
+              artistIdentityKey(displayName))
+      ),
     [store.artists]
   );
 
+  const artists = useMemo(() => dedupeArtists(store.artists), [store.artists]);
+
   const value = useMemo(
     () => ({
-      artists: store.artists,
+      artists,
       isLoaded,
       isManagerOpen,
       follow,
@@ -307,7 +333,7 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       openManager: () => setManagerOpen(true),
       setManagerOpen,
     }),
-    [follow, isFollowing, isLoaded, isManagerOpen, store.artists, unfollow]
+    [artists, follow, isFollowing, isLoaded, isManagerOpen, unfollow]
   );
 
   return (
@@ -334,8 +360,14 @@ function toAccountRequests(artists: FollowedArtist[]) {
 
 function dedupeArtists(artists: FollowedArtist[]) {
   return Array.from(
-    new Map(artists.map((artist) => [artist.publicId, artist])).values()
+    new Map(
+      artists.map((artist) => [artistIdentityKey(artist.displayName), artist])
+    ).values()
   );
+}
+
+function artistIdentityKey(displayName: string) {
+  return displayName.trim().toLowerCase();
 }
 
 function unique(values: string[]) {
