@@ -1,5 +1,5 @@
 'use client';
-import { ClientMilestone } from '@/lib/types/milestones';
+import { StoredMilestone } from '@/lib/types/milestones';
 import React from 'react';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import UpdateModal from '@/app/milestones/_components/UpdateMilestoneModal';
@@ -21,7 +21,7 @@ export default function MilestoneActions({
   store,
   milestone,
 }: {
-  milestone: ClientMilestone;
+  milestone: StoredMilestone;
   isHidden: boolean;
   isSyncing: boolean;
   deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
@@ -42,8 +42,8 @@ export default function MilestoneActions({
               onSelect={(e) => e.preventDefault()}
               onClick={(e) =>
                 isHidden
-                  ? store.unhideMilestone(milestone.name)
-                  : store.hideMilestone(milestone.name)
+                  ? store.unhideMilestone(milestone.publicId)
+                  : store.hideMilestone(milestone.publicId)
               }
               className='py-2'
             >
@@ -63,6 +63,7 @@ export default function MilestoneActions({
               }
             />
             <DeleteMilestoneModal
+              milestonePublicId={milestone.publicId}
               milestoneName={milestone.name}
               isSyncing={isSyncing}
               deleteMilestone={deleteMilestone}
@@ -85,8 +86,8 @@ export default function MilestoneActions({
           type='button'
           onClick={(e) =>
             isHidden
-              ? store.unhideMilestone(milestone.name)
-              : store.hideMilestone(milestone.name)
+              ? store.unhideMilestone(milestone.publicId)
+              : store.hideMilestone(milestone.publicId)
           }
         >
           {isHidden ? <EyeOffIcon /> : <EyeIcon />}
@@ -97,6 +98,7 @@ export default function MilestoneActions({
           updateMilestone={updateMilestone}
         />
         <DeleteMilestoneModal
+          milestonePublicId={milestone.publicId}
           milestoneName={milestone.name}
           isSyncing={isSyncing}
           deleteMilestone={deleteMilestone}

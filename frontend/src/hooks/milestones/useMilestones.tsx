@@ -1,26 +1,31 @@
 'use client';
 
-import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
-import useSyncOperation from '@/hooks/milestones/useSyncOperation';
+import useMilestoneStore from '@/hooks/milestones/useMilestoneStore';
 import useMilestoneSyncAdaptor from '@/hooks/milestones/useMilestonesSync';
 import useMilestonesServer from '@/hooks/milestones/useMilestonesServer';
-import useMilestoneStore from '@/hooks/milestones/useMilestoneStore';
 import useOperationToast from '@/hooks/milestones/useOperationToast';
+import useSyncOperation from '@/hooks/milestones/useSyncOperation';
+import {
+  ClientMilestone,
+  clientMilestoneSchema,
+  MilestoneAccount,
+} from '@/lib/types/milestones';
 
-export default function useMilestones(username: string) {
-  const store = useMilestoneStore();
+export default function useMilestones(account: MilestoneAccount | null) {
+  const store = useMilestoneStore(account);
   const { showError, showSuccess } = useOperationToast();
   const { isSyncing, execute } = useSyncOperation();
 
   const server = useMilestonesServer({
     execute,
     milestones: store.milestones,
-    setMilestones: store.setMilestones,
+    replaceActiveFromServer: store.replaceActiveFromServer,
     setServerLinked: store.setServerLinked,
   });
 
+  const isUsingServer = Boolean(account && store.config.milestonesOnServer);
   const { create, delete_, update } = useMilestoneSyncAdaptor(
-    store.config.milestonesOnServer,
+    isUsingServer,
     store.milestones
   );
 
@@ -40,8 +45,10 @@ export default function useMilestones(username: string) {
         error: 'Please provide both a name and a date.',
       };
     }
-    const exists =
-      store.milestones.filter((m) => m.name === name.trim()).length > 0;
+    const normalizedName = name.trim();
+    const exists = store.milestones.some(
+      (milestone) => milestone.name === normalizedName
+    );
     if (exists) {
       showError(
         'Duplicate milestone',
@@ -55,18 +62,17 @@ export default function useMilestones(username: string) {
 
     const fn = async () => {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const currentMilestone = {
-        name,
+      const parsed = clientMilestoneSchema.safeParse({
+        name: normalizedName,
         timestamp: date.getTime(),
         timezone,
         color,
-      };
-      const parsed = clientMilestoneSchema.safeParse(currentMilestone);
-      if (parsed.error) {
-        showError('Invalid milestone', `${parsed.error.errors[0].message}`);
+      });
+      if (!parsed.success) {
+        showError('Invalid milestone', parsed.error.errors[0].message);
         return {
           ok: false as const,
-          error: `${parsed.error.errors[0].message}`,
+          error: parsed.error.errors[0].message,
         };
       }
       const result = await create(parsed.data);
@@ -75,56 +81,79 @@ export default function useMilestones(username: string) {
         return { ok: false as const, error: `${result.error}` };
       }
 
-      const clientMilestone = result.data;
-      store.addMilestone(clientMilestone);
-
+      const storedMilestone = store.addMilestone(result.data);
       showSuccess(
         'Milestone added',
-        `Milestone "${clientMilestone.name}" added for ${new Date(clientMilestone.timestamp).toLocaleDateString()}.`
+        `Milestone "${storedMilestone.name}" added for ${new Date(storedMilestone.timestamp).toLocaleDateString()}.`
       );
       return { ok: true as const };
     };
     return execute(fn);
   };
 
-  const deleteMilestone = async (milestoneName: string) => {
-    execute(async () => {
-      const result = await delete_(milestoneName);
+  const deleteMilestone = async (publicId: string) => {
+    return execute(async () => {
+      const milestone = store.milestones.find(
+        (current) => current.publicId === publicId
+      );
+      if (!milestone) {
+        showError('Error removing milestone', 'Milestone not found');
+        return { ok: false as const, error: 'Milestone not found' };
+      }
+      const result = await delete_(milestone.name);
       if (!result.ok) {
         showError('Error removing milestone', `${result.error}`);
-        return;
+        return { ok: false as const, error: `${result.error}` };
       }
-      store.removeMilestone(milestoneName);
-      store.unhideMilestone(milestoneName);
+      store.removeMilestone(publicId);
+      return { ok: true as const };
     });
   };
 
   const updateMilestone = async (
-    milestoneName: string,
+    publicId: string,
     newMilestone: Partial<ClientMilestone>
   ) => {
+    const existing = store.milestones.find(
+      (milestone) => milestone.publicId === publicId
+    );
+    if (!existing) {
+      showError('Error updating milestone', 'Milestone not found');
+      return { ok: false as const, error: 'Milestone not found' };
+    }
+    const merged = clientMilestoneSchema.safeParse({
+      name: newMilestone.name ?? existing.name,
+      timestamp: newMilestone.timestamp ?? existing.timestamp,
+      timezone: newMilestone.timezone ?? existing.timezone,
+      color: newMilestone.color ?? existing.color,
+    });
+    if (!merged.success) {
+      showError('Invalid milestone', merged.error.errors[0].message);
+      return { ok: false as const, error: merged.error.errors[0].message };
+    }
+    const duplicate = store.milestones.some(
+      (milestone) =>
+        milestone.publicId !== publicId && milestone.name === merged.data.name
+    );
+    if (duplicate) {
+      showError(
+        'Duplicate milestone',
+        'A milestone with this name already exists.'
+      );
+      return {
+        ok: false as const,
+        error: 'A milestone with this name already exists.',
+      };
+    }
+
     return execute(async () => {
-      const result = await update(milestoneName, newMilestone);
+      const result = await update(existing.name, merged.data);
       if (!result.ok) {
         showError('Error updating milestone', `${result.error}`);
-        return {
-          ok: false,
-          error: result.error,
-        };
+        return { ok: false as const, error: `${result.error}` };
       }
-
-      store.updateMilestone(milestoneName, result.data);
-      if (
-        newMilestone.name &&
-        milestoneName !== newMilestone.name &&
-        store.isMilestoneHidden(milestoneName)
-      ) {
-        store.unhideMilestone(milestoneName);
-        store.hideMilestone(newMilestone.name);
-      }
-      return {
-        ok: true,
-      };
+      store.updateMilestone(publicId, result.data);
+      return { ok: true as const };
     });
   };
 
@@ -132,6 +161,7 @@ export default function useMilestones(username: string) {
     store,
     server,
     isSyncing,
+    isUsingServer,
     createMilestone,
     updateMilestone,
     deleteMilestone,

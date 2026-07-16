@@ -2,6 +2,7 @@
 import { MilestonesButton } from '@/components/ui/MilestonesButton';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import useOperationToast from '@/hooks/milestones/useOperationToast';
+import { milestoneBackupFromStore } from '@/lib/milestones/storage';
 import { milestonesBackupSchema } from '@/lib/types/milestones';
 import { useRef } from 'react';
 
@@ -14,22 +15,13 @@ export default function BackupRestore({ store }: Props) {
   const toast = useOperationToast();
 
   const downloadBackup = () => {
-    const rawData = Object.fromEntries(
-      Object.keys(milestonesBackupSchema.shape).map((key) => [
-        key,
-        JSON.parse(localStorage.getItem(key) || ''),
-      ])
-    );
-
-    const parsed = milestonesBackupSchema.safeParse(rawData);
-    if (parsed.error) {
-      toast.showError(
-        'Error creating backup',
-        'Could not create a valid backup file.'
-      );
-      return;
-    }
-    const data = parsed.data;
+    const data = milestoneBackupFromStore({
+      version: 2,
+      accountUserId: store.accountUserId,
+      records: store.records,
+      config: store.config,
+      hiddenMilestoneIds: store.hiddenMilestoneIds,
+    });
 
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -59,11 +51,11 @@ export default function BackupRestore({ store }: Props) {
           );
           return;
         }
-        const data = parsed.data;
-        store.setMilestones(data.milestones);
-        store.setDiffPeriod(data.milestonesConfig.diffPeriod);
-        store.setServerLinked(data.milestonesConfig.milestonesOnServer);
-        store.setHiddenMilestones(data.hiddenMilestones);
+        store.restoreBackup(parsed.data);
+        toast.showSuccess(
+          'Backup restored',
+          'Your milestones were restored successfully.'
+        );
       } catch (err) {
         toast.showError(
           'Error restoring backup',

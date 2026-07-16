@@ -11,12 +11,14 @@ import { ClientMilestone, clientMilestoneSchema } from '@/lib/types/milestones';
 export default function useMilestonesServer({
   execute,
   milestones,
-  setMilestones,
+  replaceActiveFromServer,
   setServerLinked,
 }: {
   execute: ReturnType<typeof useSyncOperation>['execute'];
   milestones: ClientMilestone[];
-  setMilestones: ReturnType<typeof useMilestoneStore>['setMilestones'];
+  replaceActiveFromServer: ReturnType<
+    typeof useMilestoneStore
+  >['replaceActiveFromServer'];
   setServerLinked: ReturnType<typeof useMilestoneStore>['setServerLinked'];
 }) {
   const { showError, withErrorToast } = useOperationToast();
@@ -83,7 +85,7 @@ export default function useMilestonesServer({
 
       const refreshResult = await listMilestonesAction();
       if (refreshResult.ok) {
-        setMilestones(refreshResult.data);
+        replaceActiveFromServer(refreshResult.data);
         setServerLinked(true);
       } else {
         setServerLinked(false);
@@ -101,7 +103,7 @@ export default function useMilestonesServer({
         return;
       }
 
-      setMilestones(result.data);
+      replaceActiveFromServer(result.data);
       setServerLinked(true);
     });
   };

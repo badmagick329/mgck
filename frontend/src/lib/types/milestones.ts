@@ -36,6 +36,14 @@ export type ClientMilestone = z.infer<typeof clientMilestoneSchema>;
 
 export const clientMilestoneListSchema = z.array(clientMilestoneSchema);
 
+export const storedMilestoneSchema = clientMilestoneSchema.extend({
+  publicId: z.string().uuid(),
+  updatedAt: z.number().int().nonnegative(),
+  deletedAt: z.number().int().nonnegative().nullable(),
+});
+
+export type StoredMilestone = z.infer<typeof storedMilestoneSchema>;
+
 export const diffPeriodEnum = z.enum([
   'seconds',
   'minutes',
@@ -52,6 +60,21 @@ export const milestonesConfig = z.object({
 export type MilestonesConfig = z.infer<typeof milestonesConfig>;
 
 export type DiffPeriod = z.infer<typeof diffPeriodEnum>;
+
+export const milestoneLocalStoreSchema = z.object({
+  version: z.literal(2),
+  accountUserId: z.string().min(1).nullable(),
+  records: z.array(storedMilestoneSchema),
+  config: milestonesConfig,
+  hiddenMilestoneIds: z.array(z.string().uuid()),
+});
+
+export type MilestoneLocalStore = z.infer<typeof milestoneLocalStoreSchema>;
+
+export type MilestoneAccount = {
+  userId: string;
+  username: string;
+};
 
 export const milestonesBackupSchema = z.object({
   hiddenMilestones: z
