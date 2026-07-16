@@ -39,7 +39,9 @@ describe('following store', () => {
       </FollowingProvider>
     );
 
-    await waitFor(() => expect(screen.getByTestId('loaded').textContent).toBe('true'));
+    await waitFor(() =>
+      expect(screen.getByTestId('loaded').textContent).toBe('true')
+    );
     fireEvent.click(screen.getByText('Follow'));
     fireEvent.click(screen.getByText('Follow'));
     expect(screen.getByTestId('count').textContent).toBe('1');
@@ -49,25 +51,29 @@ describe('following store', () => {
   });
 
   test('recovers from invalid data and respects the follow limit', async () => {
-    localStorage.setItem('mgck:kpop-following:v1', '{invalid json');
+    localStorage.setItem('mgck:kpop-following:v2', '{invalid json');
     const { unmount } = render(
       <FollowingProvider>
         <FollowingProbe />
       </FollowingProvider>
     );
-    await waitFor(() => expect(screen.getByTestId('loaded').textContent).toBe('true'));
+    await waitFor(() =>
+      expect(screen.getByTestId('loaded').textContent).toBe('true')
+    );
     expect(screen.getByTestId('count').textContent).toBe('0');
     unmount();
 
     localStorage.setItem(
-      'mgck:kpop-following:v1',
+      'mgck:kpop-following:v2',
       JSON.stringify({
-        version: 1,
+        version: 2,
         artists: Array.from({ length: MAX_FOLLOWED_ARTISTS }, (_, index) => ({
           publicId: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
           displayName: `Artist ${index}`,
           followedAt: '2026-07-16T12:00:00.000Z',
         })),
+        accountUserId: null,
+        pending: { additions: [], removals: [] },
       })
     );
     render(
@@ -76,8 +82,33 @@ describe('following store', () => {
       </FollowingProvider>
     );
 
-    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('250'));
+    await waitFor(() =>
+      expect(screen.getByTestId('count').textContent).toBe('250')
+    );
     fireEvent.click(screen.getByText('Follow'));
     expect(screen.getByTestId('count').textContent).toBe('250');
+  });
+
+  test('migrates v1 local follows without losing artists', async () => {
+    localStorage.setItem(
+      'mgck:kpop-following:v1',
+      JSON.stringify({
+        version: 1,
+        artists: [{ ...artist, followedAt: '2026-07-16T12:00:00.000Z' }],
+      })
+    );
+    render(
+      <FollowingProvider>
+        <FollowingProbe />
+      </FollowingProvider>
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('count').textContent).toBe('1')
+    );
+    expect(localStorage.getItem('mgck:kpop-following:v1')).toBeNull();
+    expect(localStorage.getItem('mgck:kpop-following:v2')).toContain(
+      '"version":2'
+    );
   });
 });
