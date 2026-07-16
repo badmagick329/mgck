@@ -34,4 +34,9 @@ urlpatterns = [
         kpopcomebacks.KpopComebackList.as_view(),
         name="kpopcomebacks",
     ),
+    path(
+        "kpopcomebacks/query",
+        kpopcomebacks.KpopWatchlistQuery.as_view(),
+        name="kpopcomebacks-query",
+    ),
 ]

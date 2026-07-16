@@ -1,10 +1,12 @@
 from datetime import datetime
+import uuid
 
 from django.db import models
 
 
 class Artist(models.Model):
     name = models.CharField(max_length=510)
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     def __repr__(self):
         return f"<Artist(id={self.id}, name={self.name})>"  # type: ignore

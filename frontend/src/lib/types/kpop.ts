@@ -4,6 +4,7 @@ export const ComebackResponseSchema = z.object({
   id: z.number(),
   title: z.string(),
   artist: z.string(),
+  artist_public_id: z.string().uuid(),
   album: z.string(),
   date: z.string(),
   release_type: z.string(),
@@ -20,3 +21,15 @@ export const ComebacksResultSchema = z.object({
 
 export type ComebacksResult = z.infer<typeof ComebacksResultSchema>;
 export type ComebackResponse = z.infer<typeof ComebackResponseSchema>;
+
+export const WatchlistComebacksQuerySchema = z.object({
+  artist_public_ids: z.array(z.string().uuid()).max(250),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  page: z.number().int().positive().optional(),
+  page_size: z.number().int().positive().max(100).optional(),
+});
+
+export type WatchlistComebacksQuery = z.infer<
+  typeof WatchlistComebacksQuerySchema
+>;
