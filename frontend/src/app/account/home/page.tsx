@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 import { ACCOUNT_LOGIN } from '@/lib/consts/urls';
 import AdminHome from '@/app/account/home/_components/AdminHome';
 import UserHome from '@/app/account/home/_components/UserHome';
-import { ParsedToken } from '@/lib/account/parsed-token';
+import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import { CgSpinnerTwo } from 'react-icons/cg';
 
 const EMOJIS = [
@@ -33,12 +33,11 @@ export type UserHomeProps = {
 };
 
 export default async function Home() {
-  const parsed = await ParsedToken.createFromCookie();
-  const role = parsed.role();
-  const username = parsed.name();
-  if (!parsed) {
+  const session = await getVerifiedCoreSession();
+  if (!session) {
     redirect(ACCOUNT_LOGIN);
   }
+  const { role, username } = session;
 
   if (role === ADMIN_ROLE) {
     return <AdminHome username={username} />;

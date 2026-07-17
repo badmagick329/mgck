@@ -9,7 +9,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from milestones.apps import MilestonesConfig
-from milestones.authentication import CoreJWTAuthentication, CorePrincipal
+from djangobackend.internal_authentication import NextServiceAuthentication
 from milestones.ownership import OwnerConflict, get_or_claim_owner
 from milestones.serializers import SyncSnapshotSerializer
 from milestones.sync import SyncConflict, merge_snapshot
@@ -24,7 +24,7 @@ app_name = MilestonesConfig.name
 
 
 @api_view(["GET", "POST"])
-@authentication_classes([CoreJWTAuthentication])
+@authentication_classes([NextServiceAuthentication])
 @permission_classes([IsAuthenticated])
 def milestones(request: Request):
     if request.method == "GET":
@@ -36,7 +36,7 @@ def milestones(request: Request):
 
 
 @api_view(["PATCH", "DELETE"])
-@authentication_classes([CoreJWTAuthentication])
+@authentication_classes([NextServiceAuthentication])
 @permission_classes([IsAuthenticated])
 def modify_milestone(request, event_name):
     if request.method == "PATCH":
@@ -49,7 +49,7 @@ def modify_milestone(request, event_name):
 
 
 @api_view(["POST"])
-@authentication_classes([CoreJWTAuthentication])
+@authentication_classes([NextServiceAuthentication])
 @permission_classes([IsAuthenticated])
 def sync_milestones(request: Request):
     serializer = SyncSnapshotSerializer(data=request.data)

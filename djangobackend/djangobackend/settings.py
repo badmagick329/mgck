@@ -25,9 +25,9 @@ REDDIT_SECRET = os.environ.get("REDDIT_SECRET", "")
 REDDIT_ID = os.environ.get("REDDIT_ID", "")
 REDDIT_AGENT = os.environ.get("REDDIT_AGENT", "")
 TOKEN = os.environ.get("TOKEN", "")
-CORE_JWT_SIGNING_KEY = os.environ.get("JWT__SigningKey", "")
-CORE_JWT_ISSUER = os.environ.get("JWT__Issuer", "")
-CORE_JWT_AUDIENCE = os.environ.get("JWT__Audience", "")
+NEXT_DJANGO_INTERNAL_API_KEY = os.environ.get(
+    "NEXT_DJANGO_INTERNAL_API_KEY", ""
+)
 CONTAINERED = os.environ.get("DB_HOST", "") != "localhost"
 BASE_URL = os.environ["BASE_URL"] if CONTAINERED else os.environ["NEXT_URL"]
 SECRET_KEY = os.environ["SECRET_KEY"]

@@ -1,6 +1,6 @@
 from django.db import IntegrityError
 
-from milestones.authentication import CorePrincipal
+from djangobackend.internal_authentication import CorePrincipal
 from milestones.models import MilestoneUser
 
 
