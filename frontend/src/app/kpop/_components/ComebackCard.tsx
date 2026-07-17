@@ -37,7 +37,7 @@ export default function ComebackCard({
     .filter(Boolean);
 
   return (
-    <div className='flex max-w-[400px] flex-col items-center gap-4 rounded-md border-2 bg-primary-kp/30 p-4'>
+    <div className='flex w-full flex-col items-center gap-4 rounded-md border-2 bg-primary-kp/30 p-4 sm:w-[400px]'>
       <div className='flex h-full w-full flex-col items-center justify-between gap-6'>
         <div className='flex w-full flex-col gap-2'>
           <div className='flex w-full flex-col items-center gap-4'>
@@ -45,7 +45,10 @@ export default function ComebackCard({
             <ComebackCardDivider />
             <div className='flex w-full items-center justify-center gap-1'>
               <ComebackCardArtist artist={artist} />
-              <FollowArtistButton publicId={artistPublicId} displayName={artist} />
+              <FollowArtistButton
+                publicId={artistPublicId}
+                displayName={artist}
+              />
             </div>
             <ComebackCardTitle title={title} />
           </div>

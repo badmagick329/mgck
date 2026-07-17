@@ -16,7 +16,7 @@ export default function KpopResults({
   }
 
   return (
-    <div className='grid grid-cols-1 gap-12 px-4 lg:grid-cols-2 xl:grid-cols-3'>
+    <div className='grid w-full grid-cols-1 justify-items-center gap-12 px-4 lg:grid-cols-2 2xl:grid-cols-3'>
       {comebacks.map((comeback) => (
         <ComebackCard
           key={comeback.id}
