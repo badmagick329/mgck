@@ -11,6 +11,8 @@ import {
   buildRecentSearchParams,
   buildTimelineShiftSearchParams,
   buildTodaySearchParams,
+  canShiftTimelineEarlier,
+  getActiveKpopPreset,
   getTimelineLabel,
   getKpopView,
   searchParamsToKpopQueryState,
@@ -40,6 +42,8 @@ export default function ComebacksForm() {
   );
   const kpopView = getKpopView(searchParams);
   const isFollowingView = kpopView === 'following';
+  const activePreset = getActiveKpopPreset(searchParams);
+  const canGoEarlier = canShiftTimelineEarlier(queryState);
   const {
     artists,
     isLoaded,
@@ -78,7 +82,7 @@ export default function ComebacksForm() {
                   'earlier',
                   startSearchTransition
                 )}
-                disabled={isSearching}
+                disabled={isSearching || !canGoEarlier}
               >
                 <ChevronLeft className='mr-2 h-4 w-4' />
                 Earlier
@@ -101,7 +105,8 @@ export default function ComebacksForm() {
             </>
           )}
           <Button
-            className='whitespace-nowrap bg-primary-kp/80 hover:bg-primary-kp'
+            variant={activePreset === 'recent' ? 'default' : 'outline'}
+            className={presetButtonClass(activePreset === 'recent')}
             onClick={onPresetClick(
               searchParams,
               pathname,
@@ -110,11 +115,13 @@ export default function ComebacksForm() {
               startSearchTransition
             )}
             disabled={isSearching}
+            aria-pressed={activePreset === 'recent'}
           >
             Recent
           </Button>
           <Button
-            className='whitespace-nowrap bg-primary-kp/80 hover:bg-primary-kp'
+            variant={activePreset === 'today' ? 'default' : 'outline'}
+            className={presetButtonClass(activePreset === 'today')}
             onClick={onPresetClick(
               searchParams,
               pathname,
@@ -123,11 +130,13 @@ export default function ComebacksForm() {
               startSearchTransition
             )}
             disabled={isSearching}
+            aria-pressed={activePreset === 'today'}
           >
             Today
           </Button>
           <Button
-            className='whitespace-nowrap bg-primary-kp/80 hover:bg-primary-kp'
+            variant={activePreset === 'all' ? 'default' : 'outline'}
+            className={presetButtonClass(activePreset === 'all')}
             onClick={onPresetClick(
               searchParams,
               pathname,
@@ -136,16 +145,13 @@ export default function ComebacksForm() {
               startSearchTransition
             )}
             disabled={isSearching}
+            aria-pressed={activePreset === 'all'}
           >
             All
           </Button>
           <Button
-            variant={isFollowingView ? 'default' : 'outline'}
-            className={
-              isFollowingView
-                ? 'whitespace-nowrap bg-primary-kp hover:bg-primary-kp/90'
-                : 'whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-            }
+            variant={activePreset === 'following' ? 'default' : 'outline'}
+            className={presetButtonClass(activePreset === 'following')}
             onClick={onFollowingClick(
               searchParams,
               pathname,
@@ -153,6 +159,7 @@ export default function ComebacksForm() {
               startSearchTransition
             )}
             disabled={isSearching}
+            aria-pressed={activePreset === 'following'}
           >
             <Star className='mr-2 h-4 w-4' />
             Following
@@ -286,6 +293,12 @@ export default function ComebacksForm() {
       )}
     </div>
   );
+}
+
+function presetButtonClass(isActive: boolean) {
+  return isActive
+    ? 'whitespace-nowrap bg-primary-kp hover:bg-primary-kp/90'
+    : 'whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10';
 }
 
 function followingDescription(

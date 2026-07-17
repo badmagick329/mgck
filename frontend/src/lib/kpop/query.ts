@@ -9,6 +9,7 @@ export const ARCHIVE_START_DATE_COMPACT = '000101';
 export const FOLLOWING_LOOKBACK_DAYS = 30;
 
 export type KpopView = 'timeline' | 'following';
+export type KpopPreset = 'recent' | 'today' | 'all' | 'following' | null;
 
 export type KpopQueryState = {
   artist: string;
@@ -44,6 +45,30 @@ export function getKpopView(searchParams: SearchParamsInput): KpopView {
     : 'timeline';
 }
 
+export function getActiveKpopPreset(
+  searchParams: SearchParamsInput
+): KpopPreset {
+  const params = getCanonicalKpopSearchParams(searchParams);
+  if (getKpopView(params) === 'following') {
+    return 'following';
+  }
+
+  const state = searchParamsToKpopQueryState(params);
+  if (state.endDate) {
+    return null;
+  }
+  if (state.startDate === getDefaultStartDateCompact()) {
+    return 'recent';
+  }
+  if (state.startDate === getTodayDateCompact()) {
+    return 'today';
+  }
+  if (state.startDate === ARCHIVE_START_DATE_COMPACT) {
+    return 'all';
+  }
+  return null;
+}
+
 export function getCanonicalKpopSearchParams(
   searchParams: SearchParamsInput
 ): URLSearchParams {
@@ -51,8 +76,12 @@ export function getCanonicalKpopSearchParams(
   const artist = params.get('artist')?.trim() || '';
   const title = params.get('title')?.trim() || '';
   const exact = params.get('exact') ? 'on' : '';
-  let startDate = canonicalCompactDate(params.get('start-date'));
-  let endDate = canonicalCompactDate(params.get('end-date'));
+  let startDate = clampCompactDateToArchiveStart(
+    canonicalCompactDate(params.get('start-date'))
+  );
+  let endDate = clampCompactDateToArchiveStart(
+    canonicalCompactDate(params.get('end-date'))
+  );
   const page = getValidPageValue(params.get('page'));
   const view = getKpopView(params);
 
@@ -132,6 +161,13 @@ export function buildTimelineShiftSearchParams(
   const currentStart =
     compactDateToUtcDate(state.startDate) || getTodayUtcDate();
   const currentEnd = compactDateToUtcDate(state.endDate);
+  const archiveStart = getArchiveStartUtcDate();
+
+  if (direction === 'earlier' && currentStart <= archiveStart) {
+    params.delete('page');
+    params.delete('view');
+    return params;
+  }
 
   let nextStart: Date;
   let nextEnd: Date | null;
@@ -147,6 +183,10 @@ export function buildTimelineShiftSearchParams(
     nextEnd = addDays(nextStart, TIMELINE_JUMP_DAYS - 1);
   }
 
+  if (nextStart < archiveStart) {
+    nextStart = archiveStart;
+  }
+
   params.set('start-date', formatCompactDate(nextStart));
   if (nextEnd) {
     params.set('end-date', formatCompactDate(nextEnd));
@@ -156,6 +196,11 @@ export function buildTimelineShiftSearchParams(
   params.delete('page');
   params.delete('view');
   return params;
+}
+
+export function canShiftTimelineEarlier(state: KpopQueryState) {
+  const start = compactDateToUtcDate(state.startDate);
+  return Boolean(start && start > getArchiveStartUtcDate());
 }
 
 export function buildRecentSearchParams(searchParams: SearchParamsInput) {
@@ -239,6 +284,16 @@ function canonicalCompactDate(value: string | null) {
   return useFourDigitYear ? digitsOnly : digitsOnly.slice(2);
 }
 
+function clampCompactDateToArchiveStart(value: string) {
+  if (!value) {
+    return '';
+  }
+  const date = compactDateToUtcDate(value);
+  return date && date < getArchiveStartUtcDate()
+    ? ARCHIVE_START_DATE_COMPACT
+    : value;
+}
+
 function compactToApiDate(value: string) {
   if (!value) {
     return '';
@@ -266,6 +321,10 @@ function getTodayUtcDate() {
   return new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
   );
+}
+
+function getArchiveStartUtcDate() {
+  return new Date(Date.UTC(2000, 0, 1));
 }
 
 function addDays(date: Date, days: number) {
