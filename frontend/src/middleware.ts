@@ -5,13 +5,13 @@ import {
   isCoreSessionExpiring,
   verifyCoreAccessToken,
 } from '@/lib/account/core-token';
+import { accessCookieOptions } from '@/lib/account/auth-cookies';
 
 const BASE_URL = process.env.CORE_API_BASE_URL;
-const IS_PROD = process.env.NODE_ENV === 'production';
 
 async function refreshTokens(refreshToken: string): Promise<{
   token: string;
-  refreshToken: string;
+  expiresAt: number;
 } | null> {
   try {
     const response = await fetch(`${BASE_URL}${API_REFRESH}`, {
@@ -33,8 +33,8 @@ async function refreshTokens(refreshToken: string): Promise<{
       return null;
     }
     const verified = await verifyCoreAccessToken(data.token);
-    return verified.ok
-      ? { token: data.token, refreshToken: data.refreshToken }
+    return verified.ok && data.refreshToken === refreshToken
+      ? { token: data.token, expiresAt: verified.session.expiresAt }
       : null;
   } catch {
     return null;
@@ -63,11 +63,14 @@ export async function middleware(request: NextRequest) {
     const newTokens = await refreshTokens(currentRefreshToken);
     if (newTokens !== null) {
       request.cookies.set('token', newTokens.token);
-      request.cookies.set('refreshToken', newTokens.refreshToken);
       const response = NextResponse.next({
         request: { headers: request.headers },
       });
-      setAuthenticationCookies(response, newTokens);
+      response.cookies.set(
+        'token',
+        newTokens.token,
+        accessCookieOptions(newTokens.expiresAt)
+      );
       return response;
     }
 
@@ -90,26 +93,6 @@ function clearAuthentication(request: NextRequest, protectedRoute: boolean) {
   response.cookies.delete('token');
   response.cookies.delete('refreshToken');
   return response;
-}
-
-function setAuthenticationCookies(
-  response: NextResponse,
-  tokens: { token: string; refreshToken: string }
-) {
-  response.cookies.set('token', tokens.token, {
-    httpOnly: true,
-    path: '/',
-    maxAge: 60 * 60 * 24,
-    secure: IS_PROD,
-    sameSite: 'lax',
-  });
-  response.cookies.set('refreshToken', tokens.refreshToken, {
-    httpOnly: true,
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-    secure: IS_PROD,
-    sameSite: 'lax',
-  });
 }
 
 export const config = {

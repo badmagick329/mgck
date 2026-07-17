@@ -114,16 +114,39 @@ public class AuthController : ControllerBase
         var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "";
         var token = GenerateJwtToken(user, userRole);
         var refreshToken = GenerateRefreshToken();
-        user.RefreshToken = refreshToken.Token;
-        user.RefreshTokenExpiryTime = refreshToken.ExpiryTime;
-        await _userManager.UpdateAsync(user);
 
-        return Ok(new { token, refreshToken = user.RefreshToken });
+        var now = DateTime.UtcNow;
+        await _context.RefreshSessions
+            .Where(session =>
+                session.UserId == user.Id
+                && (session.ExpiresAt <= now || session.RevokedAt != null)
+            )
+            .ExecuteDeleteAsync();
+        if (
+            user.RefreshToken is not null
+            && (user.RefreshTokenExpiryTime is null || user.RefreshTokenExpiryTime <= now)
+        )
+        {
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+        }
+        _context.RefreshSessions.Add(
+            new RefreshSession
+            {
+                UserId = user.Id,
+                TokenHash = HashRefreshToken(refreshToken.Token),
+                CreatedAt = now,
+                ExpiresAt = refreshToken.ExpiryTime,
+            }
+        );
+        await _context.SaveChangesAsync();
+
+        return Ok(new { token, refreshToken = refreshToken.Token });
     }
 
     [HttpPost("logout")]
     [Authorize]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout([FromBody] RefreshTokenDto model)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user is null)
@@ -131,11 +154,16 @@ public class AuthController : ControllerBase
             return BadRequest("User not found");
         }
 
-        Console.WriteLine("Logging out user: " + user.UserName);
-        user.RefreshToken = null;
-        user.RefreshTokenExpiryTime = null;
-        await _userManager.UpdateAsync(user);
-        Console.WriteLine("User logged out: " + user.UserName);
+        var tokenHash = HashRefreshToken(model.RefreshToken);
+        var session = await _context.RefreshSessions.FirstOrDefaultAsync(session =>
+            session.UserId == user.Id && session.TokenHash == tokenHash
+        );
+        if (session is not null && session.RevokedAt is null)
+        {
+            session.RevokedAt = DateTime.UtcNow;
+        }
+        ClearMatchingLegacyRefreshToken(user, tokenHash);
+        await _context.SaveChangesAsync();
 
         return Ok(new { message = "User logged out" });
     }
@@ -177,46 +205,58 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenDto model)
     {
         var modelRefreshToken = model.RefreshToken;
-
-        var user = await _userManager.Users.FirstOrDefaultAsync(u =>
-            u.RefreshToken == modelRefreshToken
-        );
-
-        if (user?.RefreshToken == null || (await IsRefreshTokenExpired(user.RefreshToken)))
+        var tokenHash = HashRefreshToken(modelRefreshToken);
+        var session = await _context.RefreshSessions
+            .Include(refreshSession => refreshSession.User)
+            .FirstOrDefaultAsync(refreshSession => refreshSession.TokenHash == tokenHash);
+        if (session is null)
         {
             return Unauthorized(new { message = "Invalid refresh token." });
         }
 
-        var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "";
-        var newJwtToken = GenerateJwtToken(user, userRole);
-        var refreshToken = GenerateRefreshToken();
-        user.RefreshToken = refreshToken.Token;
-        user.RefreshTokenExpiryTime = refreshToken.ExpiryTime;
-        await _userManager.UpdateAsync(user);
-
-        return Ok(new { token = newJwtToken, refreshToken = user.RefreshToken });
-    }
-
-    private async Task<bool> IsRefreshTokenExpired(string refreshToken)
-    {
-        var user = await _userManager.Users.FirstOrDefaultAsync(u =>
-            u.RefreshToken == refreshToken
-        );
-        if (user?.RefreshTokenExpiryTime == null)
+        var now = DateTime.UtcNow;
+        if (session.RevokedAt is not null || session.ExpiresAt <= now || session.User is null)
         {
-            return true;
+            if (session.User is not null)
+            {
+                ClearMatchingLegacyRefreshToken(session.User, tokenHash);
+            }
+            _context.RefreshSessions.Remove(session);
+            await _context.SaveChangesAsync();
+            return Unauthorized(new { message = "Invalid refresh token." });
         }
 
-        return user.RefreshTokenExpiryTime < DateTime.UtcNow;
+        session.LastUsedAt = now;
+        await _context.SaveChangesAsync();
+
+        var userRole =
+            (await _userManager.GetRolesAsync(session.User)).FirstOrDefault() ?? "";
+        var newJwtToken = GenerateJwtToken(session.User, userRole);
+
+        return Ok(new { token = newJwtToken, refreshToken = modelRefreshToken });
+    }
+
+    private static string HashRefreshToken(string refreshToken)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    private static void ClearMatchingLegacyRefreshToken(AppUser user, string tokenHash)
+    {
+        if (
+            user.RefreshToken is not null
+            && HashRefreshToken(user.RefreshToken) == tokenHash
+        )
+        {
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+        }
     }
 
     private RefreshToken GenerateRefreshToken()
     {
-        var randomNumber = new byte[64];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(randomNumber);
-        }
+        var randomNumber = RandomNumberGenerator.GetBytes(64);
 
         return new RefreshToken
         {

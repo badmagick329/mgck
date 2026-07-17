@@ -2,6 +2,7 @@
 
 import {
   AspAuthResponse,
+  coreAuthTokensSchema,
   ErrorResponse,
   errorResponseSchema,
   MessageResponse,
@@ -9,6 +10,11 @@ import {
   RoleResponse,
   roleResponseSchema,
 } from '@/lib/types/account';
+import {
+  accessCookieOptions,
+  refreshCookieOptions,
+} from '@/lib/account/auth-cookies';
+import { verifyCoreAccessToken } from '@/lib/account/core-token';
 import { parsedServerResponse } from '@/lib/account/parsed-server-response';
 import {
   API_APPROVE_USER,
@@ -48,24 +54,76 @@ export async function loginUserAction(payload: {
     },
     body: JSON.stringify(payload),
   });
-  return await asMessageOrErrorResponse(response);
+  if (!response.ok) {
+    return await asMessageOrErrorResponse(response);
+  }
+
+  try {
+    const tokens = coreAuthTokensSchema.safeParse(await response.json());
+    if (!tokens.success) {
+      return invalidAuthenticationResponse();
+    }
+    const verification = await verifyCoreAccessToken(tokens.data.token);
+    if (!verification.ok) {
+      return invalidAuthenticationResponse();
+    }
+
+    const cookieStore = await cookies();
+    cookieStore.set(
+      'token',
+      tokens.data.token,
+      accessCookieOptions(verification.session.expiresAt)
+    );
+    cookieStore.set(
+      'refreshToken',
+      tokens.data.refreshToken,
+      refreshCookieOptions()
+    );
+    return {
+      type: 'success',
+      status: response.status,
+      data: { message: 'Received new tokens' },
+    };
+  } catch {
+    return invalidAuthenticationResponse();
+  }
 }
 
 export async function logoutUserAction() {
   const cookieStore = await cookies();
-  if (!cookieStore.get('token') && !cookieStore.get('refreshToken')) {
-    return;
+  const token = cookieStore.get('token')?.value;
+  const refreshToken = cookieStore.get('refreshToken')?.value;
+
+  try {
+    if (!token || !refreshToken) {
+      return;
+    }
+    const response = await fetchWithAuthHeader({
+      url: `${BASE_URL}${API_LOGOUT}`,
+      method: 'POST',
+      data: { refreshToken },
+    });
+    return await asMessageOrErrorResponse(response);
+  } catch (error) {
+    console.error('Failed to revoke Core refresh session', error);
+    return createErrorResponse();
+  } finally {
+    cookieStore.delete('token');
+    cookieStore.delete('refreshToken');
   }
+}
 
-  const response = await fetchWithAuthHeader({
-    url: `${BASE_URL}${API_LOGOUT}`,
-    method: 'POST',
-  });
-
-  cookieStore.delete('token');
-  cookieStore.delete('refreshToken');
-
-  return await asMessageOrErrorResponse(response);
+function invalidAuthenticationResponse(): ErrorResponse {
+  return {
+    type: 'error',
+    status: 502,
+    errors: [
+      {
+        code: '502',
+        description: 'Invalid authentication response',
+      },
+    ],
+  };
 }
 
 export async function registerUserAction(payload: {

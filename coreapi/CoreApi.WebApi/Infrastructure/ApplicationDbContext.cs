@@ -11,6 +11,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser>
 
     public DbSet<FeedbackComment> FeedbackComments { get; set; }
     public DbSet<FollowedArtist> FollowedArtists { get; set; }
+    public DbSet<RefreshSession> RefreshSessions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -27,6 +28,16 @@ public class ApplicationDbContext : IdentityDbContext<AppUser>
             entity.HasOne(followedArtist => followedArtist.User)
                 .WithMany()
                 .HasForeignKey(followedArtist => followedArtist.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<RefreshSession>(entity =>
+        {
+            entity.Property(session => session.TokenHash).HasMaxLength(64).IsFixedLength();
+            entity.HasIndex(session => session.TokenHash).IsUnique();
+            entity.HasOne(session => session.User)
+                .WithMany(user => user.RefreshSessions)
+                .HasForeignKey(session => session.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

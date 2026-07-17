@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import {
   AspAuthResponse,
   credentialsErrorResponseSchema,
@@ -20,28 +19,10 @@ export async function parsedServerResponse(
 
   try {
     const data = await response.json();
-    let cleanedData;
-    if (data?.token && data?.refreshToken) {
-      const cookieStore = await cookies();
-      cookieStore.set({
-        name: 'token',
-        value: data.token,
-        httpOnly: true,
-      });
-      cookieStore.set({
-        name: 'refreshToken',
-        value: data.refreshToken,
-        httpOnly: true,
-      });
-      cleanedData = { message: 'Received new tokens' };
-    } else {
-      cleanedData = data;
-    }
-
     return {
       type: 'success',
       status: response.status,
-      data: cleanedData,
+      data,
     };
   } catch (error) {
     if (response.status < 400) {

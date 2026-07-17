@@ -5,6 +5,11 @@ import {
   ACCEPTED_USER_ROLE,
 } from '@/lib/consts/account';
 
+export const coreAuthTokensSchema = z.object({
+  token: z.string().min(1),
+  refreshToken: z.string().min(1).max(256),
+});
+
 const credentialsErrorSchema = z.object({
   code: z.string(),
   description: z.string(),

@@ -76,7 +76,7 @@ describe('authentication middleware', () => {
         new Response(
           JSON.stringify({
             token: refreshedToken,
-            refreshToken: 'rotated-refresh-token',
+            refreshToken: 'refresh-token',
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
         )
@@ -88,11 +88,12 @@ describe('authentication middleware', () => {
 
       expect(response.status).toBe(200);
       expect(response.cookies.get('token')?.value).toBe(refreshedToken);
-      expect(response.cookies.get('refreshToken')?.value).toBe(
-        'rotated-refresh-token'
-      );
+      expect(response.cookies.get('refreshToken')).toBeUndefined();
       expect(response.headers.get('x-middleware-request-cookie')).toContain(
         `token=${refreshedToken}`
+      );
+      expect(response.headers.get('x-middleware-request-cookie')).toContain(
+        'refreshToken=refresh-token'
       );
     }
   );
@@ -105,7 +106,7 @@ describe('authentication middleware', () => {
             '5m',
             'wrong-key-at-least-32-characters-long'
           ),
-          refreshToken: 'rotated-refresh-token',
+          refreshToken: 'refresh-token',
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       )
@@ -120,6 +121,25 @@ describe('authentication middleware', () => {
     expect(response.headers.get('x-middleware-request-cookie')).not.toContain(
       'token='
     );
+  });
+
+  test('rejects unexpected refresh-token replacement', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          token: await createToken('5m'),
+          refreshToken: 'unexpected-replacement',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
+    );
+
+    const response = await middleware(
+      request('/milestones', 'invalid-token', 'refresh-token')
+    );
+
+    expect(response.cookies.get('token')?.value).toBe('');
+    expect(response.cookies.get('refreshToken')?.value).toBe('');
   });
 
   test('clears stale cookies and redirects a protected route after refresh failure', async () => {
