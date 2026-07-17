@@ -125,7 +125,11 @@ describe('milestone server actions', () => {
 
     const result = await syncMilestonesAction([invalid]);
 
-    expect(result).toEqual({ ok: false, error: 'Invalid milestone snapshot' });
+    expect(result).toEqual({
+      ok: false,
+      kind: 'invalid',
+      error: 'Invalid milestone snapshot',
+    });
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
@@ -156,7 +160,38 @@ describe('milestone server actions', () => {
 
     expect(result).toEqual({
       ok: false,
+      kind: 'invalid',
       error: 'Invalid milestone sync response',
+    });
+  });
+
+  test.each([
+    [401, 'unauthenticated'],
+    [400, 'invalid'],
+    [409, 'conflict'],
+    [500, 'transient'],
+  ] as const)(
+    'classifies sync HTTP %s failures as %s',
+    async (status, kind) => {
+      (global.fetch as jest.Mock).mockResolvedValue(
+        new Response('{}', { status, statusText: 'failed' })
+      );
+
+      const result = await syncMilestonesAction([stored]);
+
+      expect(result).toEqual({ ok: false, kind, error: 'failed' });
+    }
+  );
+
+  test('classifies sync network failures as transient', async () => {
+    (global.fetch as jest.Mock).mockRejectedValue(new Error('offline'));
+
+    const result = await syncMilestonesAction([stored]);
+
+    expect(result).toEqual({
+      ok: false,
+      kind: 'transient',
+      error: 'Milestone sync request failed',
     });
   });
 });

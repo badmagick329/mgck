@@ -8,9 +8,10 @@ import { useRef } from 'react';
 
 type Props = {
   store: ReturnType<typeof useMilestones>['store'];
+  restoreBackup: ReturnType<typeof useMilestones>['restoreBackup'];
 };
 
-export default function BackupRestore({ store }: Props) {
+export default function BackupRestore({ store, restoreBackup }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const toast = useOperationToast();
 
@@ -21,6 +22,7 @@ export default function BackupRestore({ store }: Props) {
       records: store.records,
       config: store.config,
       hiddenMilestoneIds: store.hiddenMilestoneIds,
+      sync: store.sync,
     });
 
     const json = JSON.stringify(data, null, 2);
@@ -51,7 +53,7 @@ export default function BackupRestore({ store }: Props) {
           );
           return;
         }
-        store.restoreBackup(parsed.data);
+        restoreBackup(parsed.data);
         toast.showSuccess(
           'Backup restored',
           'Your milestones were restored successfully.'

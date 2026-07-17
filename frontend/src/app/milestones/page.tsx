@@ -7,5 +7,11 @@ export default async function MilestonesHome() {
   const userId = parsed.userId();
   const account =
     parsed.success() && username && userId ? { username, userId } : null;
-  return <MilestonesClient account={account} />;
+  const automaticSyncEnabled = process.env.MILESTONES_AUTO_SYNC === '1';
+  return (
+    <MilestonesClient
+      account={account}
+      automaticSyncEnabled={automaticSyncEnabled}
+    />
+  );
 }

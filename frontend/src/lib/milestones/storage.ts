@@ -11,6 +11,7 @@ import {
 export const ANONYMOUS_STORE_KEY = 'mgck:milestones:anonymous:v2';
 export const LAST_ACCOUNT_KEY = 'mgck:milestones:last-account:v1';
 export const ANONYMOUS_CONSUMED_KEY = 'mgck:milestones:anonymous-consumed:v1';
+export const ANONYMOUS_OWNER_KEY = 'mgck:milestones:anonymous-owner:v1';
 export const LEGACY_BACKUP_KEY = 'mgck:milestones:legacy-backup:v1';
 export const RECOVERY_KEY_PREFIX = 'mgck:milestones:recovery:';
 
@@ -40,6 +41,10 @@ export function createEmptyMilestoneStore(
       diffPeriod: 'days',
     },
     hiddenMilestoneIds: [],
+    sync: {
+      bootstrapCompleted: false,
+      lastSuccessfulSyncAt: null,
+    },
   };
 }
 
@@ -98,14 +103,146 @@ export function loadMilestoneStore(
 
   if (authenticatedUserId && !storage.getItem(ANONYMOUS_CONSUMED_KEY)) {
     const anonymous = parseStore(storage.getItem(ANONYMOUS_STORE_KEY));
-    if (anonymous.success) {
+    let anonymousOwner = storage.getItem(ANONYMOUS_OWNER_KEY);
+    if (anonymous.success && !anonymousOwner) {
+      anonymousOwner = authenticatedUserId;
+      storage.setItem(ANONYMOUS_OWNER_KEY, authenticatedUserId);
+    }
+    if (anonymous.success && anonymousOwner === authenticatedUserId) {
       store = mergeAnonymousIntoAccount(store, anonymous.data, targetExisted);
-      storage.setItem(ANONYMOUS_CONSUMED_KEY, authenticatedUserId);
     }
   }
 
   storage.setItem(storageKey, JSON.stringify(store));
   return { store, storageKey, warning };
+}
+
+export function markAnonymousConsumed(storage: Storage, userId: string) {
+  const owner = storage.getItem(ANONYMOUS_OWNER_KEY);
+  if (!owner || owner === userId) {
+    storage.setItem(ANONYMOUS_OWNER_KEY, userId);
+    storage.setItem(ANONYMOUS_CONSUMED_KEY, userId);
+  }
+}
+
+export function bootstrapMilestoneStore(
+  current: MilestoneLocalStore,
+  serverRecords: StoredMilestone[],
+  now = Date.now()
+): MilestoneLocalStore {
+  const serverById = new Map(
+    serverRecords.map((record) => [record.publicId, record])
+  );
+  const activeServerByName = new Map(
+    serverRecords
+      .filter((record) => record.deletedAt === null)
+      .map((record) => [record.name, record])
+  );
+  const localIntentByName = new Map<string, StoredMilestone>();
+  for (const record of current.records) {
+    const existing = localIntentByName.get(record.name);
+    const activeBeatsTombstone =
+      record.deletedAt === null && existing?.deletedAt !== null;
+    const sameStateIsNewer =
+      existing !== undefined &&
+      (existing.deletedAt === null) === (record.deletedAt === null) &&
+      record.updatedAt > existing.updatedAt;
+    if (!existing || activeBeatsTombstone || sameStateIsNewer) {
+      localIntentByName.set(record.name, record);
+    }
+  }
+
+  const replacedLocalIds = new Set<string>();
+  const transferredHiddenIds = new Set(current.hiddenMilestoneIds);
+  for (const local of localIntentByName.values()) {
+    const server = activeServerByName.get(local.name);
+    if (!server) {
+      continue;
+    }
+    replacedLocalIds.add(local.publicId);
+    const updatedAt = Math.max(now, local.updatedAt, server.updatedAt + 1);
+    const merged = current.config.milestonesOnServer
+      ? server
+      : {
+          ...local,
+          publicId: server.publicId,
+          updatedAt,
+          deletedAt: local.deletedAt === null ? null : updatedAt,
+        };
+    serverById.set(server.publicId, merged);
+    if (transferredHiddenIds.delete(local.publicId)) {
+      transferredHiddenIds.add(server.publicId);
+    }
+  }
+
+  for (const local of current.records) {
+    if (
+      !replacedLocalIds.has(local.publicId) &&
+      !serverById.has(local.publicId)
+    ) {
+      serverById.set(local.publicId, local);
+    }
+  }
+  const records = Array.from(serverById.values());
+  const activeIds = new Set(
+    records
+      .filter((record) => record.deletedAt === null)
+      .map((record) => record.publicId)
+  );
+  return {
+    ...current,
+    records,
+    config: { ...current.config, milestonesOnServer: false },
+    hiddenMilestoneIds: Array.from(transferredHiddenIds).filter((id) =>
+      activeIds.has(id)
+    ),
+    sync: { ...current.sync, bootstrapCompleted: true },
+  };
+}
+
+export function applyMilestoneSyncResponse(
+  current: MilestoneLocalStore,
+  requestSnapshot: StoredMilestone[],
+  response: StoredMilestone[]
+): { store: MilestoneLocalStore; hasPendingLocalChanges: boolean } {
+  const requestById = new Map(
+    requestSnapshot.map((record) => [record.publicId, record])
+  );
+  const responseById = new Map(
+    response.map((record) => [record.publicId, record])
+  );
+  let hasPendingLocalChanges = false;
+  for (const currentRecord of current.records) {
+    const requested = requestById.get(currentRecord.publicId);
+    if (!requested || !storedMilestonesEqual(currentRecord, requested)) {
+      responseById.set(currentRecord.publicId, currentRecord);
+      hasPendingLocalChanges = true;
+    }
+  }
+
+  const records = Array.from(responseById.values());
+  const hiddenNames = new Set(
+    current.hiddenMilestoneIds
+      .map(
+        (id) => current.records.find((record) => record.publicId === id)?.name
+      )
+      .filter((name): name is string => Boolean(name))
+  );
+  return {
+    store: {
+      ...current,
+      records,
+      hiddenMilestoneIds: records
+        .filter(
+          (record) =>
+            record.deletedAt === null &&
+            (current.hiddenMilestoneIds.includes(record.publicId) ||
+              hiddenNames.has(record.name))
+        )
+        .map((record) => record.publicId),
+    },
+    hasPendingLocalChanges,
+  };
 }
 
 export function reconcileServerMilestones(
@@ -151,7 +288,8 @@ export function restoreMilestonesBackup(
   current: MilestoneLocalStore,
   backup: MilestonesBackup,
   authenticated: boolean,
-  now = Date.now()
+  now = Date.now(),
+  tombstoneOmitted = false
 ): MilestoneLocalStore {
   const currentByName = new Map(
     current.records.map((record) => [record.name, record])
@@ -167,16 +305,30 @@ export function restoreMilestonesBackup(
   const retainedTombstones = current.records.filter(
     (record) => record.deletedAt !== null && !restoredNames.has(record.name)
   );
+  const omittedTombstones = tombstoneOmitted
+    ? current.records
+        .filter(
+          (record) =>
+            record.deletedAt === null && !restoredNames.has(record.name)
+        )
+        .map((record) => ({
+          ...record,
+          updatedAt: now,
+          deletedAt: now,
+        }))
+    : [];
   const restoredByName = new Map(
     restored.map((record) => [record.name, record.publicId])
   );
   return {
     ...current,
-    records: [...restored, ...retainedTombstones],
+    records: [...restored, ...retainedTombstones, ...omittedTombstones],
     config: {
       diffPeriod: backup.milestonesConfig.diffPeriod,
       milestonesOnServer:
-        authenticated && backup.milestonesConfig.milestonesOnServer,
+        !tombstoneOmitted &&
+        authenticated &&
+        backup.milestonesConfig.milestonesOnServer,
     },
     hiddenMilestoneIds: backup.hiddenMilestones
       .map((name) => restoredByName.get(name))
@@ -280,6 +432,10 @@ function migrateLegacyStore(
       hiddenMilestoneIds: hiddenNames
         .map((name) => idsByName.get(name.trim()))
         .filter((id): id is string => Boolean(id)),
+      sync: {
+        bootstrapCompleted: false,
+        lastSuccessfulSyncAt: null,
+      },
     },
     warning,
   };
@@ -324,7 +480,23 @@ function mergeAnonymousIntoAccount(
         (record) => record.deletedAt === null && hiddenNames.has(record.name)
       )
       .map((record) => record.publicId),
+    sync: account.sync,
   };
+}
+
+function storedMilestonesEqual(
+  first: StoredMilestone,
+  second: StoredMilestone
+) {
+  return (
+    first.publicId === second.publicId &&
+    first.name === second.name &&
+    first.timestamp === second.timestamp &&
+    first.timezone === second.timezone &&
+    first.color === second.color &&
+    first.updatedAt === second.updatedAt &&
+    first.deletedAt === second.deletedAt
+  );
 }
 
 function milestoneFieldsDiffer(

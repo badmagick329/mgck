@@ -6,17 +6,19 @@ type Props = {
   isSyncing: boolean;
   isUsingServer: boolean;
   isAuthenticated: boolean;
+  automaticSyncEnabled: boolean;
   server: ReturnType<typeof useMilestonesServer>;
 };
 export default function MilestonesSync({
   isSyncing,
   isUsingServer,
   isAuthenticated,
+  automaticSyncEnabled,
   server,
 }: Props) {
   const { getBooleanFlag } = useFeatureFlag();
   const showComponent = getBooleanFlag('sync');
-  if (!showComponent || !isAuthenticated) {
+  if (automaticSyncEnabled || !showComponent || !isAuthenticated) {
     return null;
   }
 

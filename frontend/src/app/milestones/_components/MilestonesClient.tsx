@@ -18,18 +18,22 @@ import { useEffect, useRef } from 'react';
 
 export default function MilestonesClient({
   account,
+  automaticSyncEnabled,
 }: {
   account: MilestoneAccount | null;
+  automaticSyncEnabled: boolean;
 }) {
   const {
     store,
     server,
     isSyncing,
+    syncStatus,
     isUsingServer,
     createMilestone,
     updateMilestone,
     deleteMilestone,
-  } = useMilestones(account);
+    restoreBackup,
+  } = useMilestones(account, automaticSyncEnabled);
   const { toast } = useToast();
   const shownWarning = useRef<string | null>(null);
 
@@ -56,7 +60,7 @@ export default function MilestonesClient({
       <Navbar className='bg-background-lighter-ml' />
       <article className='flex w-full grow flex-col justify-between gap-4 px-2 md:px-4'>
         <section className='flex flex-col gap-4 pt-8'>
-          <MilestonesHeading />
+          <MilestonesHeading syncStatus={syncStatus} />
           <MilestonesChart
             milestones={store.milestones}
             diffPeriod={store.config.diffPeriod}
@@ -86,10 +90,11 @@ export default function MilestonesClient({
           isSyncing={isSyncing}
           isUsingServer={isUsingServer}
           isAuthenticated={Boolean(account)}
+          automaticSyncEnabled={automaticSyncEnabled}
           server={server}
         />
       </article>
-      <BackupRestore store={store} />
+      <BackupRestore store={store} restoreBackup={restoreBackup} />
       <Footer />
     </main>
   );

@@ -3,6 +3,7 @@
 import useMilestoneStore from '@/hooks/milestones/useMilestoneStore';
 import useMilestoneSyncAdaptor from '@/hooks/milestones/useMilestonesSync';
 import useMilestonesServer from '@/hooks/milestones/useMilestonesServer';
+import useMilestonesAutomaticSync from '@/hooks/milestones/useMilestonesAutomaticSync';
 import useOperationToast from '@/hooks/milestones/useOperationToast';
 import useSyncOperation from '@/hooks/milestones/useSyncOperation';
 import {
@@ -11,7 +12,10 @@ import {
   MilestoneAccount,
 } from '@/lib/types/milestones';
 
-export default function useMilestones(account: MilestoneAccount | null) {
+export default function useMilestones(
+  account: MilestoneAccount | null,
+  automaticSyncEnabled = false
+) {
   const store = useMilestoneStore(account);
   const { showError, showSuccess } = useOperationToast();
   const { isSyncing, execute } = useSyncOperation();
@@ -23,7 +27,15 @@ export default function useMilestones(account: MilestoneAccount | null) {
     setServerLinked: store.setServerLinked,
   });
 
-  const isUsingServer = Boolean(account && store.config.milestonesOnServer);
+  const automaticSync = useMilestonesAutomaticSync({
+    enabled: automaticSyncEnabled,
+    account,
+    store,
+  });
+
+  const isUsingServer = Boolean(
+    !automaticSyncEnabled && account && store.config.milestonesOnServer
+  );
   const { create, delete_, update } = useMilestoneSyncAdaptor(
     isUsingServer,
     store.milestones
@@ -75,24 +87,32 @@ export default function useMilestones(account: MilestoneAccount | null) {
           error: parsed.error.errors[0].message,
         };
       }
-      const result = await create(parsed.data);
+      const result = automaticSyncEnabled
+        ? { ok: true as const, data: parsed.data }
+        : await create(parsed.data);
       if (!result.ok) {
         showError('Error adding milestone', `${result.error}`);
         return { ok: false as const, error: `${result.error}` };
       }
 
-      const storedMilestone = store.addMilestone(result.data);
+      const storedMilestone = store.addMilestone(
+        result.data,
+        automaticSyncEnabled
+      );
+      if (automaticSyncEnabled) {
+        automaticSync.requestSync();
+      }
       showSuccess(
         'Milestone added',
         `Milestone "${storedMilestone.name}" added for ${new Date(storedMilestone.timestamp).toLocaleDateString()}.`
       );
       return { ok: true as const };
     };
-    return execute(fn);
+    return automaticSyncEnabled ? await fn() : execute(fn);
   };
 
   const deleteMilestone = async (publicId: string) => {
-    return execute(async () => {
+    const operation = async () => {
       const milestone = store.milestones.find(
         (current) => current.publicId === publicId
       );
@@ -100,14 +120,20 @@ export default function useMilestones(account: MilestoneAccount | null) {
         showError('Error removing milestone', 'Milestone not found');
         return { ok: false as const, error: 'Milestone not found' };
       }
-      const result = await delete_(milestone.name);
+      const result = automaticSyncEnabled
+        ? { ok: true as const, data: 'success' as const }
+        : await delete_(milestone.name);
       if (!result.ok) {
         showError('Error removing milestone', `${result.error}`);
         return { ok: false as const, error: `${result.error}` };
       }
-      store.removeMilestone(publicId);
+      store.removeMilestone(publicId, automaticSyncEnabled);
+      if (automaticSyncEnabled) {
+        automaticSync.requestSync();
+      }
       return { ok: true as const };
-    });
+    };
+    return automaticSyncEnabled ? operation() : execute(operation);
   };
 
   const updateMilestone = async (
@@ -146,24 +172,39 @@ export default function useMilestones(account: MilestoneAccount | null) {
       };
     }
 
-    return execute(async () => {
-      const result = await update(existing.name, merged.data);
+    const operation = async () => {
+      const result = automaticSyncEnabled
+        ? { ok: true as const, data: merged.data }
+        : await update(existing.name, merged.data);
       if (!result.ok) {
         showError('Error updating milestone', `${result.error}`);
         return { ok: false as const, error: `${result.error}` };
       }
-      store.updateMilestone(publicId, result.data);
+      store.updateMilestone(publicId, result.data, automaticSyncEnabled);
+      if (automaticSyncEnabled) {
+        automaticSync.requestSync();
+      }
       return { ok: true as const };
-    });
+    };
+    return automaticSyncEnabled ? operation() : execute(operation);
+  };
+
+  const restoreBackup = (backup: Parameters<typeof store.restoreBackup>[0]) => {
+    store.restoreBackup(backup, automaticSyncEnabled);
+    if (automaticSyncEnabled) {
+      automaticSync.requestSync();
+    }
   };
 
   return {
     store,
     server,
     isSyncing,
+    syncStatus: automaticSync.status,
     isUsingServer,
     createMilestone,
     updateMilestone,
     deleteMilestone,
+    restoreBackup,
   };
 }

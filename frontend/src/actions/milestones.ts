@@ -7,6 +7,7 @@ import {
   ClientMilestone,
   milestoneSyncResponseSchema,
   MilestoneSyncWireRecord,
+  MilestoneSyncResult,
   ServerMilestone,
   serverMilestoneListSchema,
   serverMilestoneSchema,
@@ -149,21 +150,27 @@ export async function updateMilestoneAction(
 
 export async function syncMilestonesAction(
   records: StoredMilestone[]
-): Promise<ApiResponse<StoredMilestone[]>> {
+): Promise<MilestoneSyncResult> {
   const parsedRecords = storedMilestoneSnapshotSchema.safeParse(records);
   if (!parsedRecords.success) {
-    return { ok: false, error: 'Invalid milestone snapshot' };
+    return {
+      ok: false,
+      kind: 'invalid',
+      error: 'Invalid milestone snapshot',
+    };
   }
   const authResult = await getAuthenticationToken();
   if (!authResult.ok) {
-    return authResult;
+    return {
+      ok: false,
+      kind: 'unauthenticated',
+      error: authResult.error,
+    };
   }
 
   const url = milestoneApiUrl('sync');
-  const result = await fetchAndParse<{ records: MilestoneSyncWireRecord[] }>(
-    url,
-    milestoneSyncResponseSchema,
-    {
+  try {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -173,16 +180,48 @@ export async function syncMilestonesAction(
         records: parsedRecords.data.map(storedMilestoneToWire),
       }),
       cache: 'no-store',
+    });
+    if (!response.ok) {
+      const kind =
+        response.status === 401 || response.status === 403
+          ? 'unauthenticated'
+          : response.status === 409
+            ? 'conflict'
+            : response.status === 408 ||
+                response.status === 429 ||
+                response.status >= 500
+              ? 'transient'
+              : 'invalid';
+      return {
+        ok: false,
+        kind,
+        error: response.statusText || 'Milestone sync failed',
+      };
     }
-  );
-  if (!result.ok) {
-    return { ok: false, error: result.error };
+    const result = milestoneSyncResponseSchema.safeParse(await response.json());
+    if (!result.success) {
+      return {
+        ok: false,
+        kind: 'invalid',
+        error: 'Invalid milestone sync response',
+      };
+    }
+    const converted = result.data.records.map(wireToStoredMilestone);
+    const parsedResponse = storedMilestoneResponseSchema.safeParse(converted);
+    return parsedResponse.success
+      ? { ok: true, data: parsedResponse.data }
+      : {
+          ok: false,
+          kind: 'invalid',
+          error: 'Invalid milestone sync response',
+        };
+  } catch {
+    return {
+      ok: false,
+      kind: 'transient',
+      error: 'Milestone sync request failed',
+    };
   }
-  const converted = result.data.records.map(wireToStoredMilestone);
-  const parsedResponse = storedMilestoneResponseSchema.safeParse(converted);
-  return parsedResponse.success
-    ? { ok: true, data: parsedResponse.data }
-    : { ok: false, error: 'Invalid milestone sync response' };
 }
 
 async function getAuthenticationToken(): Promise<ApiResponse<string>> {
