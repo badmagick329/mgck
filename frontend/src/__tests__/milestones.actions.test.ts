@@ -6,11 +6,7 @@ jest.mock('../lib/account/verified-session', () => ({
   getVerifiedCoreSession: jest.fn(),
 }));
 
-import {
-  createMilestoneAction,
-  listMilestonesAction,
-  syncMilestonesAction,
-} from '@/actions/milestones';
+import { syncMilestonesAction } from '@/actions/milestones';
 import { getVerifiedCoreSession } from '../lib/account/verified-session';
 
 const mockVerifiedSession = getVerifiedCoreSession as jest.Mock;
@@ -40,50 +36,6 @@ describe('milestone server actions', () => {
       expiresAt: 4_000_000_000,
     });
     global.fetch = jest.fn();
-  });
-
-  test('legacy actions forward verified internal identity without a Core JWT', async () => {
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify([]), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            id: 1,
-            event_name: 'Launch',
-            event_datetime_utc: '2027-01-15T08:00:00Z',
-            event_timezone: 'Europe/London',
-            created: '2026-07-16T10:00:00Z',
-            color: '#123456',
-          }),
-          {
-            status: 201,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      );
-
-    await listMilestonesAction();
-    await createMilestoneAction(stored);
-
-    const listCall = (global.fetch as jest.Mock).mock.calls[0];
-    expect(listCall[0].searchParams.has('username')).toBe(false);
-    expect(listCall[1].headers).toMatchObject({
-      Authorization: `Bearer ${internalKey}`,
-      'X-MGCK-Core-User-Id': 'core-user-123',
-      'X-MGCK-Core-Username': 'Alice%20Smith',
-    });
-    const createCall = (global.fetch as jest.Mock).mock.calls[1];
-    expect(createCall[1].headers).toMatchObject({
-      Authorization: `Bearer ${internalKey}`,
-      'X-MGCK-Core-User-Id': 'core-user-123',
-      'X-MGCK-Core-Username': 'Alice%20Smith',
-    });
-    expect(JSON.parse(createCall[1].body)).not.toHaveProperty('username');
   });
 
   test('sync converts between local and authenticated wire contracts', async () => {

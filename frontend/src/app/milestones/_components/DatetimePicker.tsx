@@ -11,11 +11,11 @@ import { ChevronDownIcon } from 'lucide-react';
 export default function DatetimePicker({
   date,
   setDate,
-  disabled,
+  disabled = false,
 }: {
   date: Date | undefined;
   setDate: React.Dispatch<React.SetStateAction<undefined | Date>>;
-  disabled: boolean;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 

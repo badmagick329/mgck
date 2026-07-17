@@ -1,23 +1,58 @@
 import {
   ClientMilestone,
   clientMilestoneSchema,
+  diffPeriodEnum,
   MilestoneLocalStore,
   milestoneLocalStoreSchema,
-  MilestonesBackup,
-  milestonesConfig,
   StoredMilestone,
+  storedMilestoneSchema,
 } from '@/lib/types/milestones';
+import { z } from 'zod';
 
-export const ANONYMOUS_STORE_KEY = 'mgck:milestones:anonymous:v2';
+export const ANONYMOUS_STORE_KEY = 'mgck:milestones:anonymous:v3';
 export const LAST_ACCOUNT_KEY = 'mgck:milestones:last-account:v1';
 export const ANONYMOUS_CONSUMED_KEY = 'mgck:milestones:anonymous-consumed:v1';
 export const ANONYMOUS_OWNER_KEY = 'mgck:milestones:anonymous-owner:v1';
-export const LEGACY_BACKUP_KEY = 'mgck:milestones:legacy-backup:v1';
 export const RECOVERY_KEY_PREFIX = 'mgck:milestones:recovery:';
 
+const V2_ANONYMOUS_STORE_KEY = 'mgck:milestones:anonymous:v2';
+const LEGACY_BACKUP_KEY = 'mgck:milestones:legacy-backup:v1';
 const LEGACY_MILESTONES_KEY = 'milestones';
 const LEGACY_CONFIG_KEY = 'milestonesConfig';
 const LEGACY_HIDDEN_KEY = 'hiddenMilestones';
+
+const v2ConfigSchema = z.object({
+  milestonesOnServer: z.boolean(),
+  diffPeriod: diffPeriodEnum,
+});
+
+const v2SyncMetadataSchema = z
+  .object({
+    bootstrapCompleted: z.boolean(),
+    lastSuccessfulSyncAt: z.number().int().nonnegative().nullable(),
+  })
+  .default({
+    bootstrapCompleted: false,
+    lastSuccessfulSyncAt: null,
+  });
+
+const milestoneLocalStoreV2Schema = z.object({
+  version: z.literal(2),
+  accountUserId: z.string().min(1).nullable(),
+  records: z.array(storedMilestoneSchema),
+  config: v2ConfigSchema,
+  hiddenMilestoneIds: z.array(z.string().uuid()),
+  sync: v2SyncMetadataSchema,
+});
+
+type MilestoneLocalStoreV2 = z.infer<typeof milestoneLocalStoreV2Schema>;
+
+type StoreMigration = {
+  store: MilestoneLocalStore;
+  warning: string | null;
+  sourceKeys: string[];
+  targetExisted: boolean;
+};
 
 export type StorageLoadResult = {
   store: MilestoneLocalStore;
@@ -26,6 +61,10 @@ export type StorageLoadResult = {
 };
 
 export function accountStoreKey(userId: string) {
+  return `mgck:milestones:account:${encodeURIComponent(userId)}:v3`;
+}
+
+export function v2AccountStoreKey(userId: string) {
   return `mgck:milestones:account:${encodeURIComponent(userId)}:v2`;
 }
 
@@ -33,17 +72,17 @@ export function createEmptyMilestoneStore(
   accountUserId: string | null
 ): MilestoneLocalStore {
   return {
-    version: 2,
+    version: 3,
     accountUserId,
     records: [],
     config: {
-      milestonesOnServer: false,
       diffPeriod: 'days',
     },
     hiddenMilestoneIds: [],
     sync: {
       bootstrapCompleted: false,
       lastSuccessfulSyncAt: null,
+      bootstrapPreference: 'local',
     },
   };
 }
@@ -78,43 +117,166 @@ export function loadMilestoneStore(
   const ownerId =
     authenticatedUserId || storage.getItem(LAST_ACCOUNT_KEY) || null;
   const storageKey = ownerId ? accountStoreKey(ownerId) : ANONYMOUS_STORE_KEY;
-  let warning: string | null = null;
-  const existingRaw = storage.getItem(storageKey);
-  const parsedExisting = parseStore(existingRaw);
-  const existing =
-    parsedExisting.success && parsedExisting.data.accountUserId === ownerId
-      ? parsedExisting
-      : milestoneLocalStoreSchema.safeParse(null);
-
-  let store: MilestoneLocalStore;
-  let targetExisted = false;
-  if (existing.success) {
-    store = existing.data;
-    targetExisted = true;
-  } else {
-    if (existingRaw) {
-      preserveRecovery(storage, existingRaw, now);
-      warning = 'Some saved milestone data could not be loaded.';
-    }
-    const migration = migrateLegacyStore(storage, ownerId, now);
-    store = migration.store;
-    warning = warning || migration.warning;
-  }
+  const migration = loadOrMigrateOwnerStore(storage, ownerId, now, true);
+  let store = migration.store;
+  let warning = migration.warning;
 
   if (authenticatedUserId && !storage.getItem(ANONYMOUS_CONSUMED_KEY)) {
-    const anonymous = parseStore(storage.getItem(ANONYMOUS_STORE_KEY));
+    const anonymousMigration = loadOrMigrateOwnerStore(
+      storage,
+      null,
+      now,
+      false
+    );
+    warning = warning || anonymousMigration.warning;
+    const anonymousSaved = persistMigratedStore(
+      storage,
+      ANONYMOUS_STORE_KEY,
+      anonymousMigration.store
+    );
+    if (anonymousSaved) {
+      for (const sourceKey of anonymousMigration.sourceKeys) {
+        storage.removeItem(sourceKey);
+      }
+    } else {
+      warning =
+        warning ||
+        'Your anonymous milestone data could not be migrated safely.';
+    }
+    const anonymous = milestoneLocalStoreSchema.safeParse(
+      anonymousMigration.store
+    );
     let anonymousOwner = storage.getItem(ANONYMOUS_OWNER_KEY);
-    if (anonymous.success && !anonymousOwner) {
+    if (
+      anonymous.success &&
+      anonymousMigration.targetExisted &&
+      !anonymousOwner
+    ) {
       anonymousOwner = authenticatedUserId;
       storage.setItem(ANONYMOUS_OWNER_KEY, authenticatedUserId);
     }
-    if (anonymous.success && anonymousOwner === authenticatedUserId) {
-      store = mergeAnonymousIntoAccount(store, anonymous.data, targetExisted);
+    if (
+      anonymous.success &&
+      anonymousMigration.targetExisted &&
+      anonymousOwner === authenticatedUserId
+    ) {
+      store = mergeAnonymousIntoAccount(
+        store,
+        anonymous.data,
+        migration.targetExisted
+      );
     }
   }
 
-  storage.setItem(storageKey, JSON.stringify(store));
+  const saved = persistMigratedStore(storage, storageKey, store);
+  if (saved) {
+    for (const sourceKey of migration.sourceKeys) {
+      storage.removeItem(sourceKey);
+    }
+    storage.removeItem(LEGACY_BACKUP_KEY);
+  } else {
+    warning = warning || 'Your milestone data could not be migrated safely.';
+  }
   return { store, storageKey, warning };
+}
+
+function loadOrMigrateOwnerStore(
+  storage: Storage,
+  ownerId: string | null,
+  now: number,
+  allowUnscopedLegacy: boolean
+): StoreMigration {
+  const storageKey = ownerId ? accountStoreKey(ownerId) : ANONYMOUS_STORE_KEY;
+  const existingRaw = storage.getItem(storageKey);
+  const existing = parseStore(existingRaw);
+  if (existing.success && existing.data.accountUserId === ownerId) {
+    return {
+      store: existing.data,
+      warning: null,
+      sourceKeys: [],
+      targetExisted: true,
+    };
+  }
+
+  let warning: string | null = null;
+  if (existingRaw !== null) {
+    preserveRecovery(storage, existingRaw, now);
+    warning = 'Some saved milestone data could not be loaded.';
+  }
+
+  const v2Key = ownerId ? v2AccountStoreKey(ownerId) : V2_ANONYMOUS_STORE_KEY;
+  const v2Raw = storage.getItem(v2Key);
+  const v2 = parseV2Store(v2Raw);
+  if (v2.success && v2.data.accountUserId === ownerId) {
+    return {
+      store: migrateV2Store(v2.data),
+      warning,
+      sourceKeys: [v2Key],
+      targetExisted: true,
+    };
+  }
+  if (v2Raw !== null) {
+    preserveRecovery(storage, v2Raw, now);
+    warning = warning || 'Some saved milestone data could not be loaded.';
+  }
+
+  if (allowUnscopedLegacy) {
+    const legacy = migrateLegacyStore(storage, ownerId, now);
+    if (legacy) {
+      return {
+        ...legacy,
+        warning: warning || legacy.warning,
+        sourceKeys: [...(v2Raw !== null ? [v2Key] : []), ...legacy.sourceKeys],
+      };
+    }
+  }
+
+  return {
+    store: createEmptyMilestoneStore(ownerId),
+    warning,
+    sourceKeys: [...(v2Raw !== null ? [v2Key] : [])],
+    targetExisted: false,
+  };
+}
+
+function migrateV2Store(store: MilestoneLocalStoreV2): MilestoneLocalStore {
+  return {
+    version: 3,
+    accountUserId: store.accountUserId,
+    records: store.records,
+    config: { diffPeriod: store.config.diffPeriod },
+    hiddenMilestoneIds: store.hiddenMilestoneIds,
+    sync: {
+      bootstrapCompleted: store.sync.bootstrapCompleted,
+      lastSuccessfulSyncAt: store.sync.lastSuccessfulSyncAt,
+      bootstrapPreference: store.sync.bootstrapCompleted
+        ? null
+        : store.accountUserId !== null && store.config.milestonesOnServer
+          ? 'server'
+          : 'local',
+    },
+  };
+}
+
+function persistMigratedStore(
+  storage: Storage,
+  storageKey: string,
+  store: MilestoneLocalStore
+) {
+  const parsed = milestoneLocalStoreSchema.safeParse(store);
+  if (!parsed.success) {
+    return false;
+  }
+  try {
+    storage.setItem(storageKey, JSON.stringify(parsed.data));
+    const persisted = parseStore(storage.getItem(storageKey));
+    return (
+      persisted.success &&
+      persisted.data.accountUserId === parsed.data.accountUserId
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function markAnonymousConsumed(storage: Storage, userId: string) {
@@ -161,14 +323,15 @@ export function bootstrapMilestoneStore(
     }
     replacedLocalIds.add(local.publicId);
     const updatedAt = Math.max(now, local.updatedAt, server.updatedAt + 1);
-    const merged = current.config.milestonesOnServer
-      ? server
-      : {
-          ...local,
-          publicId: server.publicId,
-          updatedAt,
-          deletedAt: local.deletedAt === null ? null : updatedAt,
-        };
+    const merged =
+      current.sync.bootstrapPreference === 'server'
+        ? server
+        : {
+            ...local,
+            publicId: server.publicId,
+            updatedAt,
+            deletedAt: local.deletedAt === null ? null : updatedAt,
+          };
     serverById.set(server.publicId, merged);
     if (transferredHiddenIds.delete(local.publicId)) {
       transferredHiddenIds.add(server.publicId);
@@ -192,11 +355,14 @@ export function bootstrapMilestoneStore(
   return {
     ...current,
     records,
-    config: { ...current.config, milestonesOnServer: false },
     hiddenMilestoneIds: Array.from(transferredHiddenIds).filter((id) =>
       activeIds.has(id)
     ),
-    sync: { ...current.sync, bootstrapCompleted: true },
+    sync: {
+      ...current.sync,
+      bootstrapCompleted: true,
+      bootstrapPreference: null,
+    },
   };
 }
 
@@ -245,139 +411,21 @@ export function applyMilestoneSyncResponse(
   };
 }
 
-export function reconcileServerMilestones(
-  current: MilestoneLocalStore,
-  rows: ClientMilestone[],
-  now = Date.now()
-): MilestoneLocalStore {
-  const currentByName = new Map(
-    current.records.map((record) => [record.name, record])
-  );
-  const serverNames = new Set(rows.map((row) => row.name));
-  const records = rows.map((row) => {
-    const existing = currentByName.get(row.name);
-    if (!existing) {
-      return createStoredMilestone(row, now);
-    }
-    const changed = milestoneFieldsDiffer(existing, row) || existing.deletedAt;
-    return {
-      ...row,
-      publicId: existing.publicId,
-      updatedAt: changed ? now : existing.updatedAt,
-      deletedAt: null,
-    };
-  });
-  records.push(
-    ...current.records.filter(
-      (record) => record.deletedAt !== null && !serverNames.has(record.name)
-    )
-  );
-  const activeIds = new Set(
-    activeMilestones(records).map((record) => record.publicId)
-  );
-  return {
-    ...current,
-    records,
-    hiddenMilestoneIds: current.hiddenMilestoneIds.filter((id) =>
-      activeIds.has(id)
-    ),
-  };
-}
-
-export function restoreMilestonesBackup(
-  current: MilestoneLocalStore,
-  backup: MilestonesBackup,
-  authenticated: boolean,
-  now = Date.now(),
-  tombstoneOmitted = false
-): MilestoneLocalStore {
-  const currentByName = new Map(
-    current.records.map((record) => [record.name, record])
-  );
-  const restored = backup.milestones.map((milestone) =>
-    createStoredMilestone(
-      milestone,
-      now,
-      currentByName.get(milestone.name)?.publicId
-    )
-  );
-  const restoredNames = new Set(restored.map((record) => record.name));
-  const retainedTombstones = current.records.filter(
-    (record) => record.deletedAt !== null && !restoredNames.has(record.name)
-  );
-  const omittedTombstones = tombstoneOmitted
-    ? current.records
-        .filter(
-          (record) =>
-            record.deletedAt === null && !restoredNames.has(record.name)
-        )
-        .map((record) => ({
-          ...record,
-          updatedAt: now,
-          deletedAt: now,
-        }))
-    : [];
-  const restoredByName = new Map(
-    restored.map((record) => [record.name, record.publicId])
-  );
-  return {
-    ...current,
-    records: [...restored, ...retainedTombstones, ...omittedTombstones],
-    config: {
-      diffPeriod: backup.milestonesConfig.diffPeriod,
-      milestonesOnServer:
-        !tombstoneOmitted &&
-        authenticated &&
-        backup.milestonesConfig.milestonesOnServer,
-    },
-    hiddenMilestoneIds: backup.hiddenMilestones
-      .map((name) => restoredByName.get(name))
-      .filter((id): id is string => Boolean(id)),
-  };
-}
-
-export function milestoneBackupFromStore(
-  store: MilestoneLocalStore
-): MilestonesBackup {
-  const active = activeMilestones(store.records);
-  const hiddenIds = new Set(store.hiddenMilestoneIds);
-  return {
-    milestones: active.map(toClientMilestone),
-    milestonesConfig: store.config,
-    hiddenMilestones: active
-      .filter((milestone) => hiddenIds.has(milestone.publicId))
-      .map((milestone) => milestone.name),
-  };
-}
-
-export function toClientMilestone(record: StoredMilestone): ClientMilestone {
-  return {
-    name: record.name,
-    timestamp: record.timestamp,
-    timezone: record.timezone,
-    color: record.color,
-  };
-}
-
 function migrateLegacyStore(
   storage: Storage,
   accountUserId: string | null,
   now: number
-) {
+): StoreMigration | null {
   const raw = {
     milestones: storage.getItem(LEGACY_MILESTONES_KEY),
     milestonesConfig: storage.getItem(LEGACY_CONFIG_KEY),
     hiddenMilestones: storage.getItem(LEGACY_HIDDEN_KEY),
   };
   const hasLegacy = Object.values(raw).some((value) => value !== null);
-  if (!hasLegacy || storage.getItem(LEGACY_BACKUP_KEY)) {
-    return {
-      store: createEmptyMilestoneStore(accountUserId),
-      warning: null,
-    };
+  if (!hasLegacy) {
+    return null;
   }
 
-  storage.setItem(LEGACY_BACKUP_KEY, JSON.stringify(raw));
   let warning: string | null = null;
   const legacyMilestones = parseJson(raw.milestones);
   const validMilestones: ClientMilestone[] = [];
@@ -394,7 +442,7 @@ function migrateLegacyStore(
     warning = 'Some saved milestone data could not be loaded.';
   }
 
-  const parsedConfig = milestonesConfig.safeParse(
+  const parsedConfig = v2ConfigSchema.safeParse(
     parseJson(raw.milestonesConfig)
   );
   if (raw.milestonesConfig !== null && !parsedConfig.success) {
@@ -402,7 +450,7 @@ function migrateLegacyStore(
   }
   const config = parsedConfig.success
     ? parsedConfig.data
-    : createEmptyMilestoneStore(accountUserId).config;
+    : { milestonesOnServer: false, diffPeriod: 'days' as const };
   const hidden = parseJson(raw.hiddenMilestones);
   const hiddenNames = Array.isArray(hidden)
     ? hidden.filter((name): name is string => typeof name === 'string')
@@ -422,12 +470,11 @@ function migrateLegacyStore(
   );
   return {
     store: {
-      version: 2 as const,
+      version: 3 as const,
       accountUserId,
       records,
       config: {
-        ...config,
-        milestonesOnServer: accountUserId ? config.milestonesOnServer : false,
+        diffPeriod: config.diffPeriod,
       },
       hiddenMilestoneIds: hiddenNames
         .map((name) => idsByName.get(name.trim()))
@@ -435,9 +482,17 @@ function migrateLegacyStore(
       sync: {
         bootstrapCompleted: false,
         lastSuccessfulSyncAt: null,
+        bootstrapPreference:
+          accountUserId && config.milestonesOnServer ? 'server' : 'local',
       },
     },
     warning,
+    sourceKeys: [
+      LEGACY_MILESTONES_KEY,
+      LEGACY_CONFIG_KEY,
+      LEGACY_HIDDEN_KEY,
+    ].filter((key) => storage.getItem(key) !== null),
+    targetExisted: false,
   };
 }
 
@@ -466,21 +521,18 @@ function mergeAnonymousIntoAccount(
       .filter((name): name is string => Boolean(name))
   );
   return {
-    version: 2,
+    version: 3,
     accountUserId: account.accountUserId,
     records,
-    config: accountExisted
-      ? account.config
-      : {
-          ...anonymous.config,
-          milestonesOnServer: false,
-        },
+    config: accountExisted ? account.config : anonymous.config,
     hiddenMilestoneIds: records
       .filter(
         (record) => record.deletedAt === null && hiddenNames.has(record.name)
       )
       .map((record) => record.publicId),
-    sync: account.sync,
+    sync: accountExisted
+      ? account.sync
+      : { ...account.sync, bootstrapPreference: 'local' },
   };
 }
 
@@ -499,20 +551,12 @@ function storedMilestonesEqual(
   );
 }
 
-function milestoneFieldsDiffer(
-  stored: StoredMilestone,
-  milestone: ClientMilestone
-) {
-  return (
-    stored.name !== milestone.name ||
-    stored.timestamp !== milestone.timestamp ||
-    stored.timezone !== milestone.timezone ||
-    stored.color !== milestone.color
-  );
-}
-
 function parseStore(raw: string | null) {
   return milestoneLocalStoreSchema.safeParse(parseJson(raw));
+}
+
+function parseV2Store(raw: string | null) {
+  return milestoneLocalStoreV2Schema.safeParse(parseJson(raw));
 }
 
 function parseJson(raw: string | null): unknown {

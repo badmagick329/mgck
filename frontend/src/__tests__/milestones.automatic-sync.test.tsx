@@ -13,6 +13,7 @@ import {
   ANONYMOUS_STORE_KEY,
   createEmptyMilestoneStore,
   createStoredMilestone,
+  LAST_ACCOUNT_KEY,
 } from '@/lib/milestones/storage';
 import { MilestoneLocalStore, StoredMilestone } from '@/lib/types/milestones';
 
@@ -31,7 +32,11 @@ function readyStore(records: StoredMilestone[] = []): MilestoneLocalStore {
   return {
     ...createEmptyMilestoneStore('alice'),
     records,
-    sync: { bootstrapCompleted: true, lastSuccessfulSyncAt: null },
+    sync: {
+      bootstrapCompleted: true,
+      lastSuccessfulSyncAt: null,
+      bootstrapPreference: null,
+    },
   };
 }
 
@@ -47,7 +52,11 @@ function fakeStore(local: MilestoneLocalStore, userId = 'alice') {
       current = {
         ...current,
         records,
-        sync: { ...current.sync, bootstrapCompleted: true },
+        sync: {
+          ...current.sync,
+          bootstrapCompleted: true,
+          bootstrapPreference: null,
+        },
       };
       return current;
     }),
@@ -99,9 +108,7 @@ describe('milestone automatic sync coordinator', () => {
       .mockResolvedValueOnce({ ok: true, data: [server] })
       .mockResolvedValueOnce({ ok: true, data: [local, server] });
 
-    renderHook(() =>
-      useMilestonesAutomaticSync({ enabled: true, account, store })
-    );
+    renderHook(() => useMilestonesAutomaticSync({ account, store }));
 
     await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(2));
     expect(mockSync.mock.calls[0][0]).toEqual([]);
@@ -118,7 +125,7 @@ describe('milestone automatic sync coordinator', () => {
     mockSync.mockReturnValueOnce(first).mockReturnValueOnce(second);
     const store = fakeStore(readyStore());
     const { result } = renderHook(() =>
-      useMilestonesAutomaticSync({ enabled: true, account, store })
+      useMilestonesAutomaticSync({ account, store })
     );
     await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(1));
 
@@ -148,14 +155,18 @@ describe('milestone automatic sync coordinator', () => {
     const bobStore = fakeStore(
       {
         ...createEmptyMilestoneStore('bob'),
-        sync: { bootstrapCompleted: true, lastSuccessfulSyncAt: null },
+        sync: {
+          bootstrapCompleted: true,
+          lastSuccessfulSyncAt: null,
+          bootstrapPreference: null,
+        },
       },
       'bob'
     );
     const bob = { userId: 'bob', username: 'Bob' };
     const { rerender } = renderHook(
       ({ owner, store }) =>
-        useMilestonesAutomaticSync({ enabled: true, account: owner, store }),
+        useMilestonesAutomaticSync({ account: owner, store }),
       { initialProps: { owner: account, store: aliceStore } }
     );
     await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(1));
@@ -177,7 +188,7 @@ describe('milestone automatic sync coordinator', () => {
     });
     const store = fakeStore(readyStore());
     const { result } = renderHook(() =>
-      useMilestonesAutomaticSync({ enabled: true, account, store })
+      useMilestonesAutomaticSync({ account, store })
     );
     await act(async () => Promise.resolve());
     expect(result.current.status).toBe('retrying');
@@ -210,7 +221,7 @@ describe('milestone automatic sync coordinator', () => {
     });
     const store = fakeStore(readyStore());
     const { result } = renderHook(() =>
-      useMilestonesAutomaticSync({ enabled: true, account, store })
+      useMilestonesAutomaticSync({ account, store })
     );
     await act(async () => Promise.resolve());
     expect(result.current.status).toBe('not-synced');
@@ -235,9 +246,7 @@ describe('milestone automatic sync coordinator', () => {
       })
       .mockResolvedValueOnce({ ok: true, data: [] });
     const store = fakeStore(readyStore());
-    renderHook(() =>
-      useMilestonesAutomaticSync({ enabled: true, account, store })
-    );
+    renderHook(() => useMilestonesAutomaticSync({ account, store }));
     await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(1));
 
     Object.defineProperty(navigator, 'onLine', {
@@ -265,7 +274,7 @@ describe('milestone automatic sync coordinator', () => {
       accountStoreKey('alice'),
       JSON.stringify(readyStore())
     );
-    const { result } = renderHook(() => useMilestones(account, true));
+    const { result } = renderHook(() => useMilestones(account));
     await waitFor(() => expect(result.current.store.isLoaded).toBe(true));
     await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(1));
 
@@ -281,7 +290,7 @@ describe('milestone automatic sync coordinator', () => {
     expect(result.current.store.milestones).toEqual([
       expect.objectContaining({ name: 'Local first' }),
     ]);
-    expect(result.current.store.config.milestonesOnServer).toBe(false);
+    expect(result.current.store.config).toEqual({ diffPeriod: 'days' });
 
     await act(async () => resolveInitial({ ok: true, data: [] }));
     await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(2));
@@ -311,7 +320,7 @@ describe('milestone automatic sync coordinator', () => {
         readyStore([createStoredMilestone(fields(), 100, FIRST_ID)])
       )
     );
-    const { result } = renderHook(() => useMilestones(account, true));
+    const { result } = renderHook(() => useMilestones(account));
     await waitFor(() => expect(result.current.store.isLoaded).toBe(true));
     await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(1));
 
@@ -337,6 +346,39 @@ describe('milestone automatic sync coordinator', () => {
     ]);
   });
 
+  test('keeps logged-out changes local until the owning account returns', async () => {
+    localStorage.setItem(
+      accountStoreKey('alice'),
+      JSON.stringify(readyStore())
+    );
+    localStorage.setItem(LAST_ACCOUNT_KEY, 'alice');
+    mockSync.mockImplementation(async (records: StoredMilestone[]) => ({
+      ok: true,
+      data: records,
+    }));
+    const { result, rerender } = renderHook(
+      ({ owner }) => useMilestones(owner),
+      { initialProps: { owner: null as typeof account | null } }
+    );
+    await waitFor(() => expect(result.current.store.isLoaded).toBe(true));
+
+    await act(async () => {
+      await result.current.createMilestone({
+        name: 'Logged out change',
+        date: new Date(1_800_000_000_000),
+        color: '#123456',
+      });
+    });
+    expect(mockSync).not.toHaveBeenCalled();
+
+    rerender({ owner: account });
+
+    await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(1));
+    expect(mockSync.mock.calls[0][0]).toEqual([
+      expect.objectContaining({ name: 'Logged out change' }),
+    ]);
+  });
+
   test('consumes a reserved anonymous handoff only after full sync succeeds', async () => {
     const anonymous = {
       ...createEmptyMilestoneStore(null),
@@ -348,7 +390,7 @@ describe('milestone automatic sync coordinator', () => {
       data: records,
     }));
 
-    const { result } = renderHook(() => useMilestones(account, true));
+    const { result } = renderHook(() => useMilestones(account));
     await waitFor(() => expect(result.current.store.isLoaded).toBe(true));
     await waitFor(() =>
       expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBe('alice')

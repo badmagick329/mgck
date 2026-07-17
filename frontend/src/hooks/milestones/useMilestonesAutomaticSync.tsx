@@ -15,16 +15,14 @@ const TRANSIENT_WARNING_THRESHOLD = 3;
 type Store = ReturnType<typeof useMilestoneStore>;
 
 export default function useMilestonesAutomaticSync({
-  enabled,
   account,
   store,
 }: {
-  enabled: boolean;
   account: MilestoneAccount | null;
   store: Store;
 }) {
   const [status, setStatus] = useState<MilestoneSyncStatus>('idle');
-  const latest = useRef({ enabled, account, store });
+  const latest = useRef({ account, store });
   const mounted = useRef(true);
   const generation = useRef(0);
   const inFlight = useRef(false);
@@ -32,7 +30,7 @@ export default function useMilestonesAutomaticSync({
   const failureCount = useRef(0);
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestSyncRef = useRef<() => void>(() => undefined);
-  latest.current = { enabled, account, store };
+  latest.current = { account, store };
 
   const clearRetry = useCallback(() => {
     if (retryTimer.current !== null) {
@@ -54,7 +52,6 @@ export default function useMilestonesAutomaticSync({
     const current = latest.current;
     return Boolean(
       mounted.current &&
-        current.enabled &&
         current.account &&
         current.store.isLoaded &&
         current.store.storageKey
@@ -206,7 +203,6 @@ export default function useMilestonesAutomaticSync({
     account?.userId,
     clearRetry,
     eligible,
-    enabled,
     requestSync,
     store.isLoaded,
     store.storageKey,
@@ -230,6 +226,5 @@ export default function useMilestonesAutomaticSync({
   return {
     status,
     requestSync,
-    isSyncing: status === 'syncing',
   };
 }

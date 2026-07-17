@@ -15,7 +15,6 @@ import {
 
 export default function MilestoneActions({
   isHidden,
-  isSyncing,
   deleteMilestone,
   updateMilestone,
   store,
@@ -23,7 +22,6 @@ export default function MilestoneActions({
 }: {
   milestone: StoredMilestone;
   isHidden: boolean;
-  isSyncing: boolean;
   deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
   updateMilestone: ReturnType<typeof useMilestones>['updateMilestone'];
   store: ReturnType<typeof useMilestones>['store'];
@@ -51,7 +49,6 @@ export default function MilestoneActions({
             </DropdownMenuItem>
             <UpdateModal
               existingMilestone={milestone}
-              isSyncing={isSyncing}
               updateMilestone={updateMilestone}
               trigger={
                 <DropdownMenuItem
@@ -65,7 +62,6 @@ export default function MilestoneActions({
             <DeleteMilestoneModal
               milestonePublicId={milestone.publicId}
               milestoneName={milestone.name}
-              isSyncing={isSyncing}
               deleteMilestone={deleteMilestone}
               trigger={
                 <DropdownMenuItem
@@ -94,13 +90,11 @@ export default function MilestoneActions({
         </Button>
         <UpdateModal
           existingMilestone={milestone}
-          isSyncing={isSyncing}
           updateMilestone={updateMilestone}
         />
         <DeleteMilestoneModal
           milestonePublicId={milestone.publicId}
           milestoneName={milestone.name}
-          isSyncing={isSyncing}
           deleteMilestone={deleteMilestone}
         />
       </div>

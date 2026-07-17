@@ -1,11 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 
 jest.mock('../actions/milestones', () => ({
-  createMilestoneAction: jest.fn(),
-  deleteMilestoneAction: jest.fn(),
-  listMilestonesAction: jest.fn(),
   syncMilestonesAction: jest.fn(),
-  updateMilestoneAction: jest.fn(),
 }));
 
 import useMilestoneStore from '@/hooks/milestones/useMilestoneStore';
@@ -87,11 +83,10 @@ describe('milestone owner store hook', () => {
     expect(result.current.hiddenMilestoneIds).toEqual([]);
   });
 
-  test('logged out continues the last account locally and marks it unlinked', async () => {
+  test('logged out continues the last account locally', async () => {
     const stored = {
       ...createEmptyMilestoneStore('alice'),
       records: [createStoredMilestone(fields(), 100, FIRST_ID)],
-      config: { milestonesOnServer: true, diffPeriod: 'days' as const },
     };
     localStorage.setItem(accountStoreKey('alice'), JSON.stringify(stored));
     localStorage.setItem(LAST_ACCOUNT_KEY, 'alice');
@@ -102,7 +97,7 @@ describe('milestone owner store hook', () => {
 
     act(() => result.current.addMilestone(fields('Offline')));
 
-    expect(result.current.config.milestonesOnServer).toBe(false);
+    expect(result.current.config).toEqual({ diffPeriod: 'days' });
     expect(
       JSON.parse(localStorage.getItem(accountStoreKey('alice'))!).records
     ).toHaveLength(2);
@@ -129,7 +124,7 @@ describe('milestone owner store hook', () => {
     );
     await waitFor(() => expect(result.current.isLoaded).toBe(true));
     expect(result.current.milestones[0].name).toBe('Alice');
-    const lateAliceServerResponse = result.current.replaceActiveFromServer;
+    const lateAliceMutation = result.current.addMilestone;
 
     rerender({ owner: { userId: 'bob', username: 'Bob' } });
 
@@ -140,7 +135,7 @@ describe('milestone owner store hook', () => {
       'Bob',
     ]);
 
-    act(() => lateAliceServerResponse([fields('Late Alice response')]));
+    act(() => lateAliceMutation(fields('Late Alice mutation')));
     expect(result.current.milestones.map((record) => record.name)).toEqual([
       'Bob',
     ]);

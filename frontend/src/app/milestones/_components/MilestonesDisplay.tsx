@@ -21,7 +21,6 @@ import MilestoneActions from '@/app/milestones/_components/MilestoneActions';
 
 type Props = {
   milestones: StoredMilestone[];
-  isSyncing: boolean;
   deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
   updateMilestone: ReturnType<typeof useMilestones>['updateMilestone'];
   store: ReturnType<typeof useMilestones>['store'];
@@ -29,7 +28,6 @@ type Props = {
 
 export default function MilestonesDisplay({
   milestones,
-  isSyncing,
   deleteMilestone,
   updateMilestone,
   store,
@@ -77,7 +75,6 @@ export default function MilestonesDisplay({
               <TableCell className='text-right'>
                 <MilestoneActions
                   isHidden={isHidden}
-                  isSyncing={isSyncing}
                   deleteMilestone={deleteMilestone}
                   updateMilestone={updateMilestone}
                   store={store}
