@@ -95,6 +95,22 @@ export type MilestoneSyncWireRecord = z.infer<
   typeof milestoneSyncWireRecordSchema
 >;
 
+export type MilestoneSyncErrorKind =
+  | 'unauthenticated'
+  | 'invalid'
+  | 'conflict'
+  | 'transient';
+
+export type MilestoneSyncResult =
+  | { ok: true; data: StoredMilestone[] }
+  | { ok: false; kind: MilestoneSyncErrorKind; error: string };
+
+export type MilestoneSyncStatus =
+  | 'idle'
+  | 'syncing'
+  | 'retrying'
+  | 'not-synced';
+
 export const diffPeriodEnum = z.enum([
   'seconds',
   'minutes',
@@ -112,12 +128,23 @@ export type MilestonesConfig = z.infer<typeof milestonesConfig>;
 
 export type DiffPeriod = z.infer<typeof diffPeriodEnum>;
 
+export const milestoneAutomaticSyncMetadataSchema = z
+  .object({
+    bootstrapCompleted: z.boolean(),
+    lastSuccessfulSyncAt: z.number().int().nonnegative().nullable(),
+  })
+  .default({
+    bootstrapCompleted: false,
+    lastSuccessfulSyncAt: null,
+  });
+
 export const milestoneLocalStoreSchema = z.object({
   version: z.literal(2),
   accountUserId: z.string().min(1).nullable(),
   records: z.array(storedMilestoneSchema),
   config: milestonesConfig,
   hiddenMilestoneIds: z.array(z.string().uuid()),
+  sync: milestoneAutomaticSyncMetadataSchema,
 });
 
 export type MilestoneLocalStore = z.infer<typeof milestoneLocalStoreSchema>;

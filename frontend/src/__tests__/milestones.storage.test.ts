@@ -1,11 +1,15 @@
 import {
   accountStoreKey,
+  applyMilestoneSyncResponse,
   ANONYMOUS_CONSUMED_KEY,
+  ANONYMOUS_OWNER_KEY,
   ANONYMOUS_STORE_KEY,
+  bootstrapMilestoneStore,
   createEmptyMilestoneStore,
   createStoredMilestone,
   LEGACY_BACKUP_KEY,
   loadMilestoneStore,
+  markAnonymousConsumed,
   milestoneBackupFromStore,
   RECOVERY_KEY_PREFIX,
   reconcileServerMilestones,
@@ -15,6 +19,7 @@ import { MilestoneLocalStore } from '@/lib/types/milestones';
 
 const FIRST_ID = '048c3d72-5c61-4f2c-9707-e06b0cc1f7f5';
 const SECOND_ID = '148c3d72-5c61-4f2c-9707-e06b0cc1f7f5';
+const THIRD_ID = '248c3d72-5c61-4f2c-9707-e06b0cc1f7f5';
 
 const milestone = (name = 'Launch') => ({
   name,
@@ -104,6 +109,26 @@ describe('milestone local storage', () => {
     expect(wrongOwner.store.records).toEqual([]);
   });
 
+  test('hydrates pre-Phase-3 v2 stores with default sync metadata', () => {
+    localStorage.setItem(
+      accountStoreKey('alice'),
+      JSON.stringify({
+        version: 2,
+        accountUserId: 'alice',
+        records: [],
+        config: { milestonesOnServer: false, diffPeriod: 'days' },
+        hiddenMilestoneIds: [],
+      })
+    );
+
+    const loaded = loadMilestoneStore(localStorage, 'alice', 1_000);
+
+    expect(loaded.store.sync).toEqual({
+      bootstrapCompleted: false,
+      lastSuccessfulSyncAt: null,
+    });
+  });
+
   test('anonymous data seeds only the first authenticated account', () => {
     const anonymous: MilestoneLocalStore = {
       ...createEmptyMilestoneStore(null),
@@ -119,11 +144,104 @@ describe('milestone local storage', () => {
       'Launch',
     ]);
     expect(alice.store.hiddenMilestoneIds).toEqual([FIRST_ID]);
-    expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBe('alice');
+    expect(localStorage.getItem(ANONYMOUS_OWNER_KEY)).toBe('alice');
+    expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBeNull();
     expect(bob.store.records).toEqual([]);
     expect(JSON.parse(localStorage.getItem(ANONYMOUS_STORE_KEY)!)).toEqual(
       anonymous
     );
+
+    markAnonymousConsumed(localStorage, 'alice');
+    expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBe('alice');
+  });
+
+  test('bootstraps exact-name UUIDs with linked and unlinked precedence', () => {
+    const local = createStoredMilestone(milestone(), 100, FIRST_ID);
+    const server = {
+      ...createStoredMilestone(
+        { ...milestone(), color: '#abcdef' },
+        500,
+        SECOND_ID
+      ),
+    };
+    const serverOnly = createStoredMilestone(
+      milestone('Server only'),
+      400,
+      THIRD_ID
+    );
+    const linked = bootstrapMilestoneStore(
+      {
+        ...createEmptyMilestoneStore('alice'),
+        records: [local],
+        config: { milestonesOnServer: true, diffPeriod: 'days' },
+        hiddenMilestoneIds: [FIRST_ID],
+      },
+      [server, serverOnly],
+      1_000
+    );
+
+    expect(linked.records).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          publicId: SECOND_ID,
+          color: '#abcdef',
+          updatedAt: 500,
+        }),
+        expect.objectContaining({ publicId: THIRD_ID }),
+      ])
+    );
+    expect(linked.records).toHaveLength(2);
+    expect(linked.hiddenMilestoneIds).toEqual([SECOND_ID]);
+    expect(linked.sync.bootstrapCompleted).toBe(true);
+
+    const unlinked = bootstrapMilestoneStore(
+      {
+        ...createEmptyMilestoneStore('alice'),
+        records: [{ ...local, deletedAt: 100 }],
+      },
+      [server],
+      1_000
+    );
+    expect(unlinked.records).toEqual([
+      expect.objectContaining({
+        publicId: SECOND_ID,
+        color: '#123456',
+        updatedAt: 1_000,
+        deletedAt: 1_000,
+      }),
+    ]);
+  });
+
+  test('reapplies post-request local edits over a stale sync response', () => {
+    const requested = createStoredMilestone(milestone(), 100, FIRST_ID);
+    const current = {
+      ...createEmptyMilestoneStore('alice'),
+      records: [{ ...requested, name: 'Edited locally' }],
+      hiddenMilestoneIds: [FIRST_ID],
+    };
+    const serverOnly = createStoredMilestone(
+      milestone('Server only'),
+      150,
+      SECOND_ID
+    );
+    const merged = applyMilestoneSyncResponse(
+      current,
+      [requested],
+      [{ ...requested, name: 'Server value', updatedAt: 150 }, serverOnly]
+    );
+
+    expect(merged.hasPendingLocalChanges).toBe(true);
+    expect(merged.store.records).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          publicId: FIRST_ID,
+          name: 'Edited locally',
+          updatedAt: 100,
+        }),
+        expect.objectContaining({ publicId: SECOND_ID }),
+      ])
+    );
+    expect(merged.store.hiddenMilestoneIds).toEqual([FIRST_ID]);
   });
 
   test('server refresh preserves matching UUIDs and unrelated tombstones', () => {
@@ -189,5 +307,20 @@ describe('milestone local storage', () => {
       ])
     );
     expect(restored.hiddenMilestoneIds).toEqual([FIRST_ID]);
+
+    const emptied = restoreMilestonesBackup(
+      current,
+      { ...backup, milestones: [], hiddenMilestones: [] },
+      true,
+      2_000,
+      true
+    );
+    expect(
+      emptied.records.find((record) => record.publicId === FIRST_ID)
+    ).toMatchObject({
+      updatedAt: 2_000,
+      deletedAt: 2_000,
+    });
+    expect(emptied.config.milestonesOnServer).toBe(false);
   });
 });
