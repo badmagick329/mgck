@@ -2,21 +2,14 @@
 
 import { API_MILESTONES } from '@/lib/consts/urls';
 import { getVerifiedCoreSession } from '@/lib/account/verified-session';
-import { serverMilestoneToClient } from '@/lib/milestones';
-import { ApiResponse } from '@/lib/types';
 import {
-  ClientMilestone,
   milestoneSyncResponseSchema,
   MilestoneSyncWireRecord,
   MilestoneSyncResult,
-  ServerMilestone,
-  serverMilestoneListSchema,
-  serverMilestoneSchema,
   StoredMilestone,
   storedMilestoneResponseSchema,
   storedMilestoneSnapshotSchema,
 } from '@/lib/types/milestones';
-import { Schema } from 'zod';
 
 type MilestoneAuthenticationResult =
   | { ok: true; data: Record<string, string> }
@@ -25,136 +18,6 @@ type MilestoneAuthenticationResult =
       kind: 'unauthenticated' | 'transient';
       error: string;
     };
-
-export async function listMilestonesAction(): Promise<
-  ApiResponse<ClientMilestone[]>
-> {
-  const authResult = await getMilestoneAuthenticationHeaders();
-  if (!authResult.ok) {
-    return authResult;
-  }
-
-  const url = milestoneApiUrl();
-  const result = await fetchAndParse<ServerMilestone[]>(
-    url,
-    serverMilestoneListSchema,
-    { headers: authResult.data }
-  );
-
-  return result.ok
-    ? {
-        ok: true,
-        data: result.data.map(serverMilestoneToClient),
-      }
-    : {
-        ok: false,
-        error: 'Failed to fetch milestones',
-      };
-}
-
-export async function createMilestoneAction(
-  milestone: ClientMilestone
-): Promise<ApiResponse<ClientMilestone>> {
-  const authResult = await getMilestoneAuthenticationHeaders();
-  if (!authResult.ok) {
-    return authResult;
-  }
-
-  const url = milestoneApiUrl();
-  const result = await fetchAndParse<ServerMilestone>(
-    url,
-    serverMilestoneSchema,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authResult.data,
-      },
-      body: JSON.stringify({
-        timestamp: milestone.timestamp,
-        timezone: milestone.timezone,
-        event_name: milestone.name,
-        color: milestone.color,
-      }),
-    }
-  );
-
-  return result.ok
-    ? {
-        ok: true,
-        data: serverMilestoneToClient(result.data),
-      }
-    : {
-        ok: false,
-        error: 'Failed to create milestone',
-      };
-}
-
-export async function deleteMilestoneAction(
-  milestoneName: string
-): Promise<ApiResponse<'success'>> {
-  const authResult = await getMilestoneAuthenticationHeaders();
-  if (!authResult.ok) {
-    return authResult;
-  }
-
-  const url = milestoneApiUrl(milestoneName);
-
-  try {
-    const res = await fetch(url, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authResult.data,
-      },
-    });
-
-    return res.ok
-      ? { ok: true, data: 'success' }
-      : { ok: false, error: 'Failed to delete milestone' };
-  } catch (e) {
-    return { ok: false, error: 'Failed to delete milestone' };
-  }
-}
-
-export async function updateMilestoneAction(
-  milestoneName: string,
-  newMilestone: Partial<ClientMilestone>
-): Promise<ApiResponse<ClientMilestone>> {
-  const authResult = await getMilestoneAuthenticationHeaders();
-  if (!authResult.ok) {
-    return authResult;
-  }
-
-  const url = milestoneApiUrl(milestoneName);
-  const result = await fetchAndParse<ServerMilestone>(
-    url,
-    serverMilestoneSchema,
-    {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authResult.data,
-      },
-      body: JSON.stringify({
-        new_event_name: newMilestone.name || null,
-        new_timestamp: newMilestone.timestamp || null,
-        new_timezone: newMilestone.timezone || null,
-        new_color: newMilestone.color || null,
-      }),
-    }
-  );
-
-  return result.ok
-    ? {
-        ok: true,
-        data: serverMilestoneToClient(result.data),
-      }
-    : {
-        ok: false,
-        error: 'Failed to update milestone',
-      };
-}
 
 export async function syncMilestonesAction(
   records: StoredMilestone[]
@@ -294,31 +157,3 @@ const wireToStoredMilestone = (
   updatedAt: milestone.updated_at,
   deletedAt: milestone.deleted_at,
 });
-
-async function fetchAndParse<T>(
-  url: URL,
-  schema: Schema,
-  options?: RequestInit
-): Promise<ApiResponse<T>> {
-  try {
-    const res = await fetch(url, options);
-    if (!res.ok) {
-      return { ok: false, error: res.statusText };
-    }
-
-    const data = await res.json();
-
-    const parsed = schema.safeParse(data);
-    return parsed.success
-      ? { ok: true, data: parsed.data as T }
-      : {
-          ok: false,
-          error: parsed.error.message,
-        };
-  } catch (error) {
-    return {
-      ok: false,
-      error: String(error),
-    };
-  }
-}

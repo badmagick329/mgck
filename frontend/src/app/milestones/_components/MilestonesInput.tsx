@@ -8,11 +8,10 @@ import { useState } from 'react';
 import useDebounceInput from '@/hooks/useDebounceInput';
 
 type Props = {
-  isSyncing: boolean;
   createMilestone: ReturnType<typeof useMilestones>['createMilestone'];
 };
 
-export default function MilestonesInput({ isSyncing, createMilestone }: Props) {
+export default function MilestonesInput({ createMilestone }: Props) {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [name, setName] = useState('');
   const { value: color, handleChange: handleColorChange } = useDebounceInput({
@@ -26,12 +25,11 @@ export default function MilestonesInput({ isSyncing, createMilestone }: Props) {
         type='text'
         onChange={(e) => setName(e.target.value || '')}
         value={name}
-        disabled={isSyncing}
         placeholder='Enter milestone name... e.g Birthday'
         className='focus-visible:ring-0 focus-visible:ring-offset-0'
       />
       <div className='flex w-full flex-col items-start gap-2 sm:flex-row sm:items-center'>
-        <DatetimePicker date={date} setDate={setDate} disabled={isSyncing} />
+        <DatetimePicker date={date} setDate={setDate} />
         <div className='flex w-full items-center justify-between gap-4 px-1'>
           <ColorPicker color={color} handleColorChange={handleColorChange} />
           <MilestonesButton
@@ -46,7 +44,6 @@ export default function MilestonesInput({ isSyncing, createMilestone }: Props) {
                 }
               })();
             }}
-            disabled={isSyncing}
           >
             Add
           </MilestonesButton>

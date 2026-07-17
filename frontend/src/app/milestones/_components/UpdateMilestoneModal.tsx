@@ -22,12 +22,10 @@ import { useToast } from '@/components/ui/use-toast';
 
 export default function UpdateModal({
   existingMilestone,
-  isSyncing,
   updateMilestone,
   trigger,
 }: {
   existingMilestone: StoredMilestone;
-  isSyncing: boolean;
   updateMilestone: ReturnType<typeof useMilestones>['updateMilestone'];
   trigger?: React.ReactNode;
 }) {
@@ -112,38 +110,27 @@ export default function UpdateModal({
                 type='text'
                 onChange={(e) => setName(e.target.value || '')}
                 value={name}
-                disabled={isSyncing}
                 placeholder='Enter milestone name... e.g Birthday'
                 className='focus-visible:ring-0 focus-visible:ring-offset-0'
               />
-              <DatetimePicker
-                date={date}
-                setDate={setDate}
-                disabled={isSyncing}
-              />
+              <DatetimePicker date={date} setDate={setDate} />
               <div className='ml-auto'>
                 <ColorPicker
                   color={color}
                   handleColorChange={handleColorChange}
-                  disabled={isSyncing}
                 />
               </div>
             </div>
             <DialogFooter>
               <div className='flex w-full justify-between gap-4'>
                 <DialogClose asChild>
-                  <Button
-                    variant='outline'
-                    disabled={isSyncing}
-                    className='max-w-[100px]'
-                  >
+                  <Button variant='outline' className='max-w-[100px]'>
                     Cancel
                   </Button>
                 </DialogClose>
                 <MilestonesButton
                   type='submit'
                   appVariant='milestonesPrimary'
-                  disabled={isSyncing}
                   className='max-w-[100px]'
                 >
                   Update

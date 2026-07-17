@@ -7,33 +7,25 @@ import Navbar from '@/app/_components/Navbar';
 import MilestonesDisplay from '@/app/milestones/_components/MilestonesDisplay';
 import MilestonesChart from '@/app/milestones/_components/MilestonesChart';
 import MilestonesInput from '@/app/milestones/_components/MilestonesInput';
-import MilestonesSync from '@/app/milestones/_components/MilestonesSync';
 import TimePeriodButtonGroup from '@/app/milestones/_components/TimePeriodButtonGroup';
 import MilestonesHeading from '@/app/milestones/_components/MilestonesHeading';
 import Footer from '@/app/_components/Footer';
-import BackupRestore from '@/app/milestones/_components/BackupRestore';
 import { useToast } from '@/components/ui/use-toast';
 import { MilestoneAccount } from '@/lib/types/milestones';
 import { useEffect, useRef } from 'react';
 
 export default function MilestonesClient({
   account,
-  automaticSyncEnabled,
 }: {
   account: MilestoneAccount | null;
-  automaticSyncEnabled: boolean;
 }) {
   const {
     store,
-    server,
-    isSyncing,
     syncStatus,
-    isUsingServer,
     createMilestone,
     updateMilestone,
     deleteMilestone,
-    restoreBackup,
-  } = useMilestones(account, automaticSyncEnabled);
+  } = useMilestones(account);
   const { toast } = useToast();
   const shownWarning = useRef<string | null>(null);
 
@@ -75,26 +67,14 @@ export default function MilestonesClient({
           <section className='flex flex-col justify-center gap-12'>
             <MilestonesDisplay
               milestones={store.milestones}
-              isSyncing={isSyncing}
               updateMilestone={updateMilestone}
               deleteMilestone={deleteMilestone}
               store={store}
             />
-            <MilestonesInput
-              isSyncing={isSyncing}
-              createMilestone={createMilestone}
-            />
+            <MilestonesInput createMilestone={createMilestone} />
           </section>
         </section>
-        <MilestonesSync
-          isSyncing={isSyncing}
-          isUsingServer={isUsingServer}
-          isAuthenticated={Boolean(account)}
-          automaticSyncEnabled={automaticSyncEnabled}
-          server={server}
-        />
       </article>
-      <BackupRestore store={store} restoreBackup={restoreBackup} />
       <Footer />
     </main>
   );

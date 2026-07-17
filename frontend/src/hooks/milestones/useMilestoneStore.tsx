@@ -7,15 +7,12 @@ import {
   createStoredMilestone,
   loadMilestoneStore,
   markAnonymousConsumed,
-  reconcileServerMilestones,
-  restoreMilestonesBackup,
 } from '@/lib/milestones/storage';
 import {
   ClientMilestone,
   DiffPeriod,
   MilestoneAccount,
   MilestoneLocalStore,
-  MilestonesBackup,
   StoredMilestone,
 } from '@/lib/types/milestones';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -92,78 +89,49 @@ export default function useMilestoneStore(account: MilestoneAccount | null) {
     [persist, storageKey]
   );
 
-  const markRecordChange = useCallback(
-    (
-      store: MilestoneLocalStore,
-      automaticSync: boolean
-    ): MilestoneLocalStore =>
-      account && !automaticSync
-        ? store
-        : {
-            ...store,
-            config: { ...store.config, milestonesOnServer: false },
-          },
-    [account]
-  );
-
   const addMilestone = useCallback(
-    (milestone: ClientMilestone, automaticSync = false) => {
+    (milestone: ClientMilestone) => {
       const stored = createStoredMilestone(milestone);
-      persistForOwner((current) =>
-        markRecordChange(
-          {
-            ...current,
-            records: [...current.records, stored],
-          },
-          automaticSync
-        )
-      );
+      persistForOwner((current) => ({
+        ...current,
+        records: [...current.records, stored],
+      }));
       return stored;
     },
-    [markRecordChange, persistForOwner]
+    [persistForOwner]
   );
 
   const removeMilestone = useCallback(
-    (publicId: string, automaticSync = false) => {
+    (publicId: string) => {
       const now = Date.now();
-      persistForOwner((current) =>
-        markRecordChange(
-          {
-            ...current,
-            records: current.records.map((milestone) =>
-              milestone.publicId === publicId
-                ? { ...milestone, updatedAt: now, deletedAt: now }
-                : milestone
-            ),
-            hiddenMilestoneIds: current.hiddenMilestoneIds.filter(
-              (id) => id !== publicId
-            ),
-          },
-          automaticSync
-        )
-      );
+      persistForOwner((current) => ({
+        ...current,
+        records: current.records.map((milestone) =>
+          milestone.publicId === publicId
+            ? { ...milestone, updatedAt: now, deletedAt: now }
+            : milestone
+        ),
+        hiddenMilestoneIds: current.hiddenMilestoneIds.filter(
+          (id) => id !== publicId
+        ),
+      }));
     },
-    [markRecordChange, persistForOwner]
+    [persistForOwner]
   );
 
   const updateMilestone = useCallback(
-    (publicId: string, milestone: ClientMilestone, automaticSync = false) => {
+    (publicId: string, milestone: ClientMilestone) => {
       const now = Date.now();
-      persistForOwner((current) =>
-        markRecordChange(
-          {
-            ...current,
-            records: current.records.map((stored) =>
-              stored.publicId === publicId
-                ? { ...stored, ...milestone, updatedAt: now, deletedAt: null }
-                : stored
-            ),
-          },
-          automaticSync
-        )
-      );
+      persistForOwner((current) => ({
+        ...current,
+        records: current.records.map((stored) =>
+          stored.publicId === publicId
+            ? { ...stored, ...milestone, updatedAt: now, deletedAt: null }
+            : stored
+        ),
+      }));
     },
-    [markRecordChange, persistForOwner]
+    [persistForOwner]
   );
 
   const setDiffPeriod = useCallback(
@@ -171,16 +139,6 @@ export default function useMilestoneStore(account: MilestoneAccount | null) {
       persistForOwner((current) => ({
         ...current,
         config: { ...current.config, diffPeriod },
-      }));
-    },
-    [persistForOwner]
-  );
-
-  const setServerLinked = useCallback(
-    (milestonesOnServer: boolean) => {
-      persistForOwner((current) => ({
-        ...current,
-        config: { ...current.config, milestonesOnServer },
       }));
     },
     [persistForOwner]
@@ -208,15 +166,6 @@ export default function useMilestoneStore(account: MilestoneAccount | null) {
           (id) => id !== publicId
         ),
       }));
-    },
-    [persistForOwner]
-  );
-
-  const replaceActiveFromServer = useCallback(
-    (milestones: ClientMilestone[]) => {
-      persistForOwner((current) =>
-        reconcileServerMilestones(current, milestones)
-      );
     },
     [persistForOwner]
   );
@@ -259,7 +208,6 @@ export default function useMilestoneStore(account: MilestoneAccount | null) {
       const saved = persist(
         (current) => ({
           ...current,
-          config: { ...current.config, milestonesOnServer: true },
           sync: {
             ...current.sync,
             lastSuccessfulSyncAt: timestamp,
@@ -275,21 +223,6 @@ export default function useMilestoneStore(account: MilestoneAccount | null) {
     [account?.userId, persist]
   );
 
-  const restoreBackup = useCallback(
-    (backup: MilestonesBackup, automaticSync = false) => {
-      persistForOwner((current) =>
-        restoreMilestonesBackup(
-          current,
-          backup,
-          Boolean(account),
-          Date.now(),
-          automaticSync
-        )
-      );
-    },
-    [account, persistForOwner]
-  );
-
   const records = localStore?.records || [];
   const milestones = useMemo(() => activeMilestones(records), [records]);
   const hiddenMilestoneIds = localStore?.hiddenMilestoneIds || [];
@@ -303,12 +236,12 @@ export default function useMilestoneStore(account: MilestoneAccount | null) {
     milestones,
     records,
     config: localStore?.config || {
-      milestonesOnServer: false,
       diffPeriod: 'days' as const,
     },
     sync: localStore?.sync || {
       bootstrapCompleted: false,
       lastSuccessfulSyncAt: null,
+      bootstrapPreference: 'local' as const,
     },
     storageKey,
     accountUserId: localStore?.accountUserId || null,
@@ -320,16 +253,13 @@ export default function useMilestoneStore(account: MilestoneAccount | null) {
     removeMilestone,
     updateMilestone,
     setDiffPeriod,
-    setServerLinked,
     hiddenMilestoneIds,
     hideMilestone,
     unhideMilestone,
     isMilestoneHidden: (publicId: string) => hiddenSet.has(publicId),
-    replaceActiveFromServer,
     bootstrapFromServer,
     applySyncResponse,
     markAutomaticSyncSuccess,
-    restoreBackup,
   };
 }
 

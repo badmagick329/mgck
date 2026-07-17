@@ -7,25 +7,41 @@ import {
   bootstrapMilestoneStore,
   createEmptyMilestoneStore,
   createStoredMilestone,
-  LEGACY_BACKUP_KEY,
+  LAST_ACCOUNT_KEY,
   loadMilestoneStore,
   markAnonymousConsumed,
-  milestoneBackupFromStore,
   RECOVERY_KEY_PREFIX,
-  reconcileServerMilestones,
-  restoreMilestonesBackup,
+  v2AccountStoreKey,
 } from '@/lib/milestones/storage';
-import { MilestoneLocalStore } from '@/lib/types/milestones';
+import { MilestoneLocalStore, StoredMilestone } from '@/lib/types/milestones';
 
 const FIRST_ID = '048c3d72-5c61-4f2c-9707-e06b0cc1f7f5';
 const SECOND_ID = '148c3d72-5c61-4f2c-9707-e06b0cc1f7f5';
 const THIRD_ID = '248c3d72-5c61-4f2c-9707-e06b0cc1f7f5';
+const V2_ANONYMOUS_STORE_KEY = 'mgck:milestones:anonymous:v2';
+const LEGACY_BACKUP_KEY = 'mgck:milestones:legacy-backup:v1';
 
 const milestone = (name = 'Launch') => ({
   name,
   timestamp: 1_800_000_000_000,
   timezone: 'Europe/London',
   color: '#123456',
+});
+
+const v2Store = ({
+  owner = 'alice' as string | null,
+  linked = false,
+  bootstrapCompleted = false,
+  records = [] as StoredMilestone[],
+  hiddenMilestoneIds = [] as string[],
+  lastSuccessfulSyncAt = null as number | null,
+} = {}) => ({
+  version: 2 as const,
+  accountUserId: owner,
+  records,
+  config: { milestonesOnServer: linked, diffPeriod: 'weeks' as const },
+  hiddenMilestoneIds,
+  sync: { bootstrapCompleted, lastSuccessfulSyncAt },
 });
 
 describe('milestone local storage', () => {
@@ -37,7 +53,7 @@ describe('milestone local storage', () => {
     });
   });
 
-  test('migrates valid legacy account data and quarantines corrupt entries', () => {
+  test('migrates original linked keys directly to v3 and quarantines corrupt entries', () => {
     localStorage.setItem(
       'milestones',
       JSON.stringify([milestone(), { name: '', timestamp: 'invalid' }])
@@ -47,25 +63,35 @@ describe('milestone local storage', () => {
       JSON.stringify({ milestonesOnServer: true, diffPeriod: 'weeks' })
     );
     localStorage.setItem('hiddenMilestones', JSON.stringify([' Launch ']));
+    localStorage.setItem(LEGACY_BACKUP_KEY, 'obsolete backup');
 
     const loaded = loadMilestoneStore(localStorage, 'alice', 1_000);
 
     expect(loaded.warning).not.toBeNull();
-    expect(loaded.store.accountUserId).toBe('alice');
+    expect(loaded.storageKey).toBe(accountStoreKey('alice'));
+    expect(loaded.store).toMatchObject({
+      version: 3,
+      accountUserId: 'alice',
+      config: { diffPeriod: 'weeks' },
+      sync: {
+        bootstrapCompleted: false,
+        lastSuccessfulSyncAt: null,
+        bootstrapPreference: 'server',
+      },
+    });
     expect(loaded.store.records).toHaveLength(1);
     expect(loaded.store.records[0]).toMatchObject({
       name: 'Launch',
       updatedAt: 1_000,
       deletedAt: null,
     });
-    expect(loaded.store.config).toEqual({
-      milestonesOnServer: true,
-      diffPeriod: 'weeks',
-    });
     expect(loaded.store.hiddenMilestoneIds).toEqual([
       loaded.store.records[0].publicId,
     ]);
-    expect(localStorage.getItem(LEGACY_BACKUP_KEY)).not.toBeNull();
+    expect(localStorage.getItem('milestones')).toBeNull();
+    expect(localStorage.getItem('milestonesConfig')).toBeNull();
+    expect(localStorage.getItem('hiddenMilestones')).toBeNull();
+    expect(localStorage.getItem(LEGACY_BACKUP_KEY)).toBeNull();
     expect(
       Object.keys(localStorage).some((key) =>
         key.startsWith(RECOVERY_KEY_PREFIX)
@@ -73,60 +99,122 @@ describe('milestone local storage', () => {
     ).toBe(true);
   });
 
-  test('forces migrated anonymous data to remain unlinked', () => {
-    localStorage.setItem('milestones', JSON.stringify([milestone()]));
+  test('migrates linked and unlinked v2 stores with one-time bootstrap intent', () => {
+    const active = createStoredMilestone(milestone(), 100, FIRST_ID);
+    const deleted = {
+      ...createStoredMilestone(milestone('Deleted'), 200, SECOND_ID),
+      updatedAt: 300,
+      deletedAt: 300,
+    };
     localStorage.setItem(
-      'milestonesConfig',
-      JSON.stringify({ milestonesOnServer: true, diffPeriod: 'days' })
+      v2AccountStoreKey('alice'),
+      JSON.stringify(
+        v2Store({
+          linked: true,
+          records: [active, deleted],
+          hiddenMilestoneIds: [FIRST_ID],
+        })
+      )
+    );
+    localStorage.setItem(
+      v2AccountStoreKey('bob'),
+      JSON.stringify(v2Store({ owner: 'bob', linked: false }))
     );
 
-    const loaded = loadMilestoneStore(localStorage, null, 1_000);
+    const alice = loadMilestoneStore(localStorage, 'alice');
+    const bob = loadMilestoneStore(localStorage, 'bob');
 
-    expect(loaded.storageKey).toBe(ANONYMOUS_STORE_KEY);
-    expect(loaded.store.records).toHaveLength(1);
-    expect(loaded.store.config.milestonesOnServer).toBe(false);
+    expect(alice.store).toMatchObject({
+      version: 3,
+      records: [active, deleted],
+      config: { diffPeriod: 'weeks' },
+      hiddenMilestoneIds: [FIRST_ID],
+      sync: { bootstrapPreference: 'server' },
+    });
+    expect(bob.store.sync.bootstrapPreference).toBe('local');
+    expect(localStorage.getItem(v2AccountStoreKey('alice'))).toBeNull();
+    expect(localStorage.getItem(v2AccountStoreKey('bob'))).toBeNull();
   });
 
-  test('quarantines corrupt and wrong-owner scoped stores', () => {
+  test('preserves completed sync metadata without bootstrapping again', () => {
+    localStorage.setItem(
+      v2AccountStoreKey('alice'),
+      JSON.stringify(
+        v2Store({
+          linked: true,
+          bootstrapCompleted: true,
+          lastSuccessfulSyncAt: 5_000,
+        })
+      )
+    );
+
+    const loaded = loadMilestoneStore(localStorage, 'alice');
+
+    expect(loaded.store.sync).toEqual({
+      bootstrapCompleted: true,
+      lastSuccessfulSyncAt: 5_000,
+      bootstrapPreference: null,
+    });
+  });
+
+  test('migrates anonymous and last-account v2 stores to the correct owner', () => {
+    const anonymous = v2Store({
+      owner: null,
+      linked: true,
+      records: [createStoredMilestone(milestone('Anonymous'), 100, FIRST_ID)],
+    });
+    localStorage.setItem(V2_ANONYMOUS_STORE_KEY, JSON.stringify(anonymous));
+
+    const anonymousLoaded = loadMilestoneStore(localStorage, null);
+
+    expect(anonymousLoaded.storageKey).toBe(ANONYMOUS_STORE_KEY);
+    expect(anonymousLoaded.store.sync.bootstrapPreference).toBe('local');
+    expect(localStorage.getItem(V2_ANONYMOUS_STORE_KEY)).toBeNull();
+
+    localStorage.clear();
+    localStorage.setItem(LAST_ACCOUNT_KEY, 'alice');
+    localStorage.setItem(
+      v2AccountStoreKey('alice'),
+      JSON.stringify(
+        v2Store({
+          records: [createStoredMilestone(milestone('Offline'), 100, FIRST_ID)],
+        })
+      )
+    );
+
+    const loggedOut = loadMilestoneStore(localStorage, null);
+
+    expect(loggedOut.storageKey).toBe(accountStoreKey('alice'));
+    expect(loggedOut.store.accountUserId).toBe('alice');
+    expect(loggedOut.store.records[0].name).toBe('Offline');
+  });
+
+  test('quarantines corrupt and wrong-owner scoped stores without leaking data', () => {
     localStorage.setItem(accountStoreKey('alice'), '{invalid json');
     const corrupt = loadMilestoneStore(localStorage, 'alice', 2_000);
 
     expect(corrupt.warning).not.toBeNull();
     expect(corrupt.store.records).toEqual([]);
+    expect(JSON.parse(localStorage.getItem(accountStoreKey('alice'))!)).toEqual(
+      corrupt.store
+    );
 
     localStorage.clear();
     localStorage.setItem(
-      accountStoreKey('bob'),
-      JSON.stringify({
-        ...createEmptyMilestoneStore('alice'),
-        records: [createStoredMilestone(milestone(), 100, FIRST_ID)],
-      })
+      v2AccountStoreKey('bob'),
+      JSON.stringify(
+        v2Store({
+          owner: 'alice',
+          records: [createStoredMilestone(milestone(), 100, FIRST_ID)],
+        })
+      )
     );
     const wrongOwner = loadMilestoneStore(localStorage, 'bob', 3_000);
 
     expect(wrongOwner.warning).not.toBeNull();
     expect(wrongOwner.store.accountUserId).toBe('bob');
     expect(wrongOwner.store.records).toEqual([]);
-  });
-
-  test('hydrates pre-Phase-3 v2 stores with default sync metadata', () => {
-    localStorage.setItem(
-      accountStoreKey('alice'),
-      JSON.stringify({
-        version: 2,
-        accountUserId: 'alice',
-        records: [],
-        config: { milestonesOnServer: false, diffPeriod: 'days' },
-        hiddenMilestoneIds: [],
-      })
-    );
-
-    const loaded = loadMilestoneStore(localStorage, 'alice', 1_000);
-
-    expect(loaded.store.sync).toEqual({
-      bootstrapCompleted: false,
-      lastSuccessfulSyncAt: null,
-    });
+    expect(localStorage.getItem(v2AccountStoreKey('bob'))).toBeNull();
   });
 
   test('anonymous data seeds only the first authenticated account', () => {
@@ -147,40 +235,39 @@ describe('milestone local storage', () => {
     expect(localStorage.getItem(ANONYMOUS_OWNER_KEY)).toBe('alice');
     expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBeNull();
     expect(bob.store.records).toEqual([]);
-    expect(JSON.parse(localStorage.getItem(ANONYMOUS_STORE_KEY)!)).toEqual(
-      anonymous
-    );
 
     markAnonymousConsumed(localStorage, 'alice');
     expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBe('alice');
   });
 
-  test('bootstraps exact-name UUIDs with linked and unlinked precedence', () => {
+  test('bootstraps exact-name UUIDs with server and local precedence', () => {
     const local = createStoredMilestone(milestone(), 100, FIRST_ID);
-    const server = {
-      ...createStoredMilestone(
-        { ...milestone(), color: '#abcdef' },
-        500,
-        SECOND_ID
-      ),
-    };
+    const server = createStoredMilestone(
+      { ...milestone(), color: '#abcdef' },
+      500,
+      SECOND_ID
+    );
     const serverOnly = createStoredMilestone(
       milestone('Server only'),
       400,
       THIRD_ID
     );
-    const linked = bootstrapMilestoneStore(
+    const serverPreferred = bootstrapMilestoneStore(
       {
         ...createEmptyMilestoneStore('alice'),
         records: [local],
-        config: { milestonesOnServer: true, diffPeriod: 'days' },
         hiddenMilestoneIds: [FIRST_ID],
+        sync: {
+          bootstrapCompleted: false,
+          lastSuccessfulSyncAt: null,
+          bootstrapPreference: 'server',
+        },
       },
       [server, serverOnly],
       1_000
     );
 
-    expect(linked.records).toEqual(
+    expect(serverPreferred.records).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           publicId: SECOND_ID,
@@ -190,11 +277,13 @@ describe('milestone local storage', () => {
         expect.objectContaining({ publicId: THIRD_ID }),
       ])
     );
-    expect(linked.records).toHaveLength(2);
-    expect(linked.hiddenMilestoneIds).toEqual([SECOND_ID]);
-    expect(linked.sync.bootstrapCompleted).toBe(true);
+    expect(serverPreferred.hiddenMilestoneIds).toEqual([SECOND_ID]);
+    expect(serverPreferred.sync).toMatchObject({
+      bootstrapCompleted: true,
+      bootstrapPreference: null,
+    });
 
-    const unlinked = bootstrapMilestoneStore(
+    const localPreferred = bootstrapMilestoneStore(
       {
         ...createEmptyMilestoneStore('alice'),
         records: [{ ...local, deletedAt: 100 }],
@@ -202,7 +291,7 @@ describe('milestone local storage', () => {
       [server],
       1_000
     );
-    expect(unlinked.records).toEqual([
+    expect(localPreferred.records).toEqual([
       expect.objectContaining({
         publicId: SECOND_ID,
         color: '#123456',
@@ -242,85 +331,5 @@ describe('milestone local storage', () => {
       ])
     );
     expect(merged.store.hiddenMilestoneIds).toEqual([FIRST_ID]);
-  });
-
-  test('server refresh preserves matching UUIDs and unrelated tombstones', () => {
-    const current: MilestoneLocalStore = {
-      ...createEmptyMilestoneStore('alice'),
-      records: [
-        createStoredMilestone(milestone(), 100, FIRST_ID),
-        {
-          ...createStoredMilestone(milestone('Deleted'), 200, SECOND_ID),
-          deletedAt: 300,
-          updatedAt: 300,
-        },
-      ],
-      hiddenMilestoneIds: [FIRST_ID],
-    };
-
-    const reconciled = reconcileServerMilestones(
-      current,
-      [{ ...milestone(), color: '#abcdef' }],
-      1_000
-    );
-
-    expect(reconciled.records).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          publicId: FIRST_ID,
-          color: '#abcdef',
-          updatedAt: 1_000,
-          deletedAt: null,
-        }),
-        expect.objectContaining({
-          publicId: SECOND_ID,
-          deletedAt: 300,
-        }),
-      ])
-    );
-    expect(reconciled.hiddenMilestoneIds).toEqual([FIRST_ID]);
-  });
-
-  test('backup excludes tombstones and restore rebuilds UUID visibility', () => {
-    const current: MilestoneLocalStore = {
-      ...createEmptyMilestoneStore('alice'),
-      records: [
-        createStoredMilestone(milestone(), 100, FIRST_ID),
-        {
-          ...createStoredMilestone(milestone('Deleted'), 200, SECOND_ID),
-          deletedAt: 300,
-          updatedAt: 300,
-        },
-      ],
-      hiddenMilestoneIds: [FIRST_ID, SECOND_ID],
-    };
-
-    const backup = milestoneBackupFromStore(current);
-    const restored = restoreMilestonesBackup(current, backup, true, 1_000);
-
-    expect(backup.milestones.map((record) => record.name)).toEqual(['Launch']);
-    expect(backup.hiddenMilestones).toEqual(['Launch']);
-    expect(restored.records).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ publicId: FIRST_ID, deletedAt: null }),
-        expect.objectContaining({ publicId: SECOND_ID, deletedAt: 300 }),
-      ])
-    );
-    expect(restored.hiddenMilestoneIds).toEqual([FIRST_ID]);
-
-    const emptied = restoreMilestonesBackup(
-      current,
-      { ...backup, milestones: [], hiddenMilestones: [] },
-      true,
-      2_000,
-      true
-    );
-    expect(
-      emptied.records.find((record) => record.publicId === FIRST_ID)
-    ).toMatchObject({
-      updatedAt: 2_000,
-      deletedAt: 2_000,
-    });
-    expect(emptied.config.milestonesOnServer).toBe(false);
   });
 });

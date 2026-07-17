@@ -17,13 +17,11 @@ export default function DeleteMilestoneModal({
   milestonePublicId,
   milestoneName,
   deleteMilestone,
-  isSyncing,
   trigger,
 }: {
   milestonePublicId: string;
   milestoneName: string;
   deleteMilestone: ReturnType<typeof useMilestones>['deleteMilestone'];
-  isSyncing: boolean;
   trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -62,15 +60,9 @@ export default function DeleteMilestoneModal({
             <DialogFooter>
               <div className='flex w-full justify-between gap-4'>
                 <DialogClose asChild>
-                  <Button variant='outline' disabled={isSyncing}>
-                    Cancel
-                  </Button>
+                  <Button variant='outline'>Cancel</Button>
                 </DialogClose>
-                <Button
-                  type='submit'
-                  variant='destructive'
-                  disabled={isSyncing}
-                >
+                <Button type='submit' variant='destructive'>
                   Delete
                 </Button>
               </div>
