@@ -1,6 +1,6 @@
 'use server';
 
-import { ParsedToken } from '@/lib/account/parsed-token';
+import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import { canUseShortener } from '@/lib/account/permissions';
 import { API_SHORTENER_URL, API_SHORTENER_URLS } from '@/lib/consts/urls';
 import {
@@ -18,8 +18,8 @@ export async function createShortenedUrl({
   url: string;
   customCode: string;
 }): Promise<{ url?: string; error?: string }> {
-  const token = await ParsedToken.createFromCookie();
-  if (!canUseShortener(token)) {
+  const session = await getVerifiedCoreSession();
+  if (!canUseShortener(session)) {
     return {
       error: 'You do not have permission to use the URL shortener',
     };
@@ -29,7 +29,7 @@ export async function createShortenedUrl({
   const body = JSON.stringify({
     source_url: url,
     custom_id: customCode,
-    username: token.name(),
+    username: session!.username,
   });
   const res = await fetch(apiUrl, {
     method: 'POST',
@@ -70,14 +70,14 @@ export async function getAllShortenedUrls(): Promise<{
   urls?: ShortenedUrl[];
   error?: string;
 }> {
-  const token = await ParsedToken.createFromCookie();
-  if (!canUseShortener(token)) {
+  const session = await getVerifiedCoreSession();
+  if (!canUseShortener(session)) {
     return {
       error: 'You do not have permission to use the URL shortener',
     };
   }
   const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URLS}`);
-  apiUrl.searchParams.append('username', token.name());
+  apiUrl.searchParams.append('username', session!.username);
 
   let res = await fetch(apiUrl, { next: { tags: ['shortened-urls'] } });
   try {
@@ -103,14 +103,14 @@ export async function deleteShortenedUrl({
 }: {
   code: string;
 }): Promise<{ error?: string }> {
-  const token = await ParsedToken.createFromCookie();
-  if (!canUseShortener(token)) {
+  const session = await getVerifiedCoreSession();
+  if (!canUseShortener(session)) {
     return {
       error: 'You do not have permission to use the URL shortener',
     };
   }
   const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URL}${code}`);
-  apiUrl.searchParams.append('username', token.name());
+  apiUrl.searchParams.append('username', session!.username);
 
   const res = await fetch(apiUrl, { method: 'DELETE' });
   if (!res.ok) {

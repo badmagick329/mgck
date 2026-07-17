@@ -1,5 +1,13 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 
+jest.mock('../actions/milestones', () => ({
+  createMilestoneAction: jest.fn(),
+  deleteMilestoneAction: jest.fn(),
+  listMilestonesAction: jest.fn(),
+  syncMilestonesAction: jest.fn(),
+  updateMilestoneAction: jest.fn(),
+}));
+
 import useMilestoneStore from '@/hooks/milestones/useMilestoneStore';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import {

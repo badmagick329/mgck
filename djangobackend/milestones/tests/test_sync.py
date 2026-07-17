@@ -10,7 +10,7 @@ from django.utils import timezone as django_timezone
 
 from milestones.models import Milestone, MilestoneUser
 from milestones.serializers import SyncSnapshotSerializer
-from milestones.tests.helpers import create_token
+from milestones.tests.helpers import internal_auth_headers
 
 EVENT_TIMESTAMP = 1_800_000_000_000
 
@@ -45,7 +45,7 @@ class TestMilestoneSync:
             self.url,
             data=json.dumps({"records": records}),
             content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {create_token(username, user_id)}",
+            **internal_auth_headers(username, user_id),
         )
 
     def test_replay_is_idempotent_and_empty_snapshot_does_not_delete(self):

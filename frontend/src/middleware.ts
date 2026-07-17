@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { API_REFRESH } from '@/lib/consts/urls';
-import { ParsedToken } from '@/lib/account/parsed-token';
+import {
+  isCoreSessionExpiring,
+  verifyCoreAccessToken,
+} from '@/lib/account/core-token';
 
 const BASE_URL = process.env.CORE_API_BASE_URL;
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -10,28 +13,32 @@ async function refreshTokens(refreshToken: string): Promise<{
   token: string;
   refreshToken: string;
 } | null> {
-  const response = await fetch(`${BASE_URL}${API_REFRESH}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ refreshToken }),
-  });
-
   try {
-    console.log('[refreshTokens] parsed response:');
-    const data = await response.json();
-    if (data.token && data.refreshToken) {
-      return {
-        token: data.token,
-        refreshToken: data.refreshToken,
-      };
+    const response = await fetch(`${BASE_URL}${API_REFRESH}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+      cache: 'no-store',
+    });
+    if (!response.ok) {
+      return null;
     }
+    const data = await response.json();
+    if (
+      typeof data.token !== 'string' ||
+      typeof data.refreshToken !== 'string'
+    ) {
+      return null;
+    }
+    const verified = await verifyCoreAccessToken(data.token);
+    return verified.ok
+      ? { token: data.token, refreshToken: data.refreshToken }
+      : null;
   } catch {
     return null;
   }
-
-  return null;
 }
 
 function isProtectedRoute(pathname: string) {
@@ -43,64 +50,66 @@ function isProtectedRoute(pathname: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  console.log(`[Middleware] current route is: ${request.url}`);
   const token = request.cookies.get('token')?.value;
   const currentRefreshToken = request.cookies.get('refreshToken')?.value;
-  const parsedToken = new ParsedToken(token);
+  const verification = await verifyCoreAccessToken(token);
   const pathname = request.nextUrl.pathname;
   const protectedRoute = isProtectedRoute(pathname);
 
-  if (parsedToken.isExpiring()) {
-    if (!currentRefreshToken) {
-      if (protectedRoute) {
-        console.log(
-          '[Middleware] No refresh token found. Redirecting to login page.'
-        );
-        return NextResponse.redirect(new URL('/account/login', request.url));
-      }
-
-      console.log('[Middleware] No refresh token found. Skipping refresh.');
-      return NextResponse.next();
-    }
-
+  if (
+    currentRefreshToken &&
+    (!verification.ok || isCoreSessionExpiring(verification.session))
+  ) {
     const newTokens = await refreshTokens(currentRefreshToken);
-    if (newTokens === null) {
-      if (protectedRoute) {
-        console.log(
-          '[Middleware] Failed to refresh tokens. Redirecting to login page.'
-        );
-        return NextResponse.redirect(new URL('/account/login', request.url));
-      }
-
-      console.log('[Middleware] Failed to refresh tokens. Skipping refresh.');
-      return NextResponse.next();
+    if (newTokens !== null) {
+      request.cookies.set('token', newTokens.token);
+      request.cookies.set('refreshToken', newTokens.refreshToken);
+      const response = NextResponse.next({
+        request: { headers: request.headers },
+      });
+      setAuthenticationCookies(response, newTokens);
+      return response;
     }
 
-    console.log(
-      `[Middleware] got token ${newTokens.token.slice(
-        -10
-      )} refreshToken ${newTokens.refreshToken.slice(-10)}`
-    );
-    console.log('[Middleware] setting new tokens in cookies');
-    const response = NextResponse.next();
-    response.cookies.set('token', newTokens.token, {
-      httpOnly: true,
-      path: '/',
-      maxAge: 60 * 60 * 24,
-      secure: IS_PROD,
-    });
-    response.cookies.set('refreshToken', newTokens.refreshToken, {
-      httpOnly: true,
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-      secure: IS_PROD,
-    });
-    console.log('[Middleware] returning response');
-    return response;
+    return clearAuthentication(request, protectedRoute);
   }
 
-  console.log('[Middleware] token is valid');
+  if (!verification.ok) {
+    return clearAuthentication(request, protectedRoute);
+  }
+
   return NextResponse.next();
+}
+
+function clearAuthentication(request: NextRequest, protectedRoute: boolean) {
+  request.cookies.delete('token');
+  request.cookies.delete('refreshToken');
+  const response = protectedRoute
+    ? NextResponse.redirect(new URL('/account/login', request.url))
+    : NextResponse.next({ request: { headers: request.headers } });
+  response.cookies.delete('token');
+  response.cookies.delete('refreshToken');
+  return response;
+}
+
+function setAuthenticationCookies(
+  response: NextResponse,
+  tokens: { token: string; refreshToken: string }
+) {
+  response.cookies.set('token', tokens.token, {
+    httpOnly: true,
+    path: '/',
+    maxAge: 60 * 60 * 24,
+    secure: IS_PROD,
+    sameSite: 'lax',
+  });
+  response.cookies.set('refreshToken', tokens.refreshToken, {
+    httpOnly: true,
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+    secure: IS_PROD,
+    sameSite: 'lax',
+  });
 }
 
 export const config = {

@@ -1,6 +1,6 @@
 'use server';
 
-import { ParsedToken } from '@/lib/account/parsed-token';
+import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import { ADMIN_ROLE } from '@/lib/consts/account';
 import { API_DELETE_FEEDBACK, API_FEEDBACK } from '@/lib/consts/urls';
 import {
@@ -21,8 +21,8 @@ const rateLimit = new RateLimit(3, 60 * 30);
 export async function getFeedbacksAction(): Promise<
   FeedbacksSuccess | FeedbackError
 > {
-  const token = await ParsedToken.createFromCookie();
-  if (token.role() !== ADMIN_ROLE) {
+  const session = await getVerifiedCoreSession();
+  if (session?.role !== ADMIN_ROLE) {
     return createError({
       status: 403,
       error: 'Unauthorized',
@@ -63,8 +63,8 @@ export async function deleteFeedbackAction({
 }: {
   feedbackId: number;
 }): Promise<{ success: boolean } | FeedbackError> {
-  const token = await ParsedToken.createFromCookie();
-  if (token.role() !== ADMIN_ROLE) {
+  const session = await getVerifiedCoreSession();
+  if (session?.role !== ADMIN_ROLE) {
     return createError({
       status: 403,
       error: 'Unauthorized',

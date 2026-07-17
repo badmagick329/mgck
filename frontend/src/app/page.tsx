@@ -6,15 +6,15 @@ import GfysIntro from './_components/GfysIntro';
 import KpopComebacksIntro from './_components/KpopComebacksIntro';
 import Footer from './_components/Footer';
 import UrlShortenerIntro from './_components/UrlShortenerIntro';
-import { ParsedToken } from '@/lib/account/parsed-token';
+import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import { canUseShortener } from '@/lib/account/permissions';
 import clsx from 'clsx';
 import ImageEditIntro from '@/app/_components/ImageEditIntro';
 import MilestonesIntro from '@/app/_components/MilestonesIntro';
 
 export default async function Index() {
-  const token = await ParsedToken.createFromCookie();
-  const shortenerAllowed = canUseShortener(token);
+  const session = await getVerifiedCoreSession();
+  const shortenerAllowed = canUseShortener(session);
   return (
     <main className='flex min-h-dvh flex-col justify-center'>
       <Navbar />

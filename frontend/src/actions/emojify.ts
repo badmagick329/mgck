@@ -1,5 +1,5 @@
 'use server';
-import { ParsedToken } from '@/lib/account/parsed-token';
+import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import { canUseAiEmojis } from '@/lib/account/permissions';
 import { emojifyPrompt, generativeModel } from '@/lib/emojify';
 import { RateLimit } from '@/lib/utils/rate-limit';
@@ -9,12 +9,12 @@ const rateLimit = new RateLimit(20, 60);
 const model = generativeModel();
 
 export async function emojifyWithAi(
-  username: string,
+  _username: string,
   text: string,
   frequent: boolean
 ) {
-  const token = await ParsedToken.createFromCookie();
-  if (!canUseAiEmojis(token)) {
+  const session = await getVerifiedCoreSession();
+  if (!canUseAiEmojis(session)) {
     return 'You need to be logged in to use this feature.';
   }
 
@@ -25,7 +25,9 @@ export async function emojifyWithAi(
     text = 'You have to give me some text to emojify';
   }
 
-  const { success } = await rateLimit.tryIncrementAndGetCount(username);
+  const { success } = await rateLimit.tryIncrementAndGetCount(
+    session!.username
+  );
 
   if (!success) {
     return 'Rate limit exceeded. Please try again later.';

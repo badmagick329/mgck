@@ -21,7 +21,6 @@ dependencies = [
     "djangorestframework-stubs>=3.14.4,<4",
     "django-cors-headers>=4.3.1,<5",
     "drf-yasg>=1.21.7,<2",
-    "PyJWT>=2.9.0,<3",
 ]
 
 [tool.hatch.build.targets.wheel]

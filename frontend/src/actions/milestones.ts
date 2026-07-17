@@ -1,6 +1,7 @@
 'use server';
 
 import { API_MILESTONES } from '@/lib/consts/urls';
+import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import { serverMilestoneToClient } from '@/lib/milestones';
 import { ApiResponse } from '@/lib/types';
 import {
@@ -15,13 +16,20 @@ import {
   storedMilestoneResponseSchema,
   storedMilestoneSnapshotSchema,
 } from '@/lib/types/milestones';
-import { cookies } from 'next/headers';
 import { Schema } from 'zod';
+
+type MilestoneAuthenticationResult =
+  | { ok: true; data: Record<string, string> }
+  | {
+      ok: false;
+      kind: 'unauthenticated' | 'transient';
+      error: string;
+    };
 
 export async function listMilestonesAction(): Promise<
   ApiResponse<ClientMilestone[]>
 > {
-  const authResult = await getAuthenticationToken();
+  const authResult = await getMilestoneAuthenticationHeaders();
   if (!authResult.ok) {
     return authResult;
   }
@@ -30,7 +38,7 @@ export async function listMilestonesAction(): Promise<
   const result = await fetchAndParse<ServerMilestone[]>(
     url,
     serverMilestoneListSchema,
-    { headers: authorizationHeaders(authResult.data) }
+    { headers: authResult.data }
   );
 
   return result.ok
@@ -47,7 +55,7 @@ export async function listMilestonesAction(): Promise<
 export async function createMilestoneAction(
   milestone: ClientMilestone
 ): Promise<ApiResponse<ClientMilestone>> {
-  const authResult = await getAuthenticationToken();
+  const authResult = await getMilestoneAuthenticationHeaders();
   if (!authResult.ok) {
     return authResult;
   }
@@ -60,7 +68,7 @@ export async function createMilestoneAction(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authorizationHeaders(authResult.data),
+        ...authResult.data,
       },
       body: JSON.stringify({
         timestamp: milestone.timestamp,
@@ -85,7 +93,7 @@ export async function createMilestoneAction(
 export async function deleteMilestoneAction(
   milestoneName: string
 ): Promise<ApiResponse<'success'>> {
-  const authResult = await getAuthenticationToken();
+  const authResult = await getMilestoneAuthenticationHeaders();
   if (!authResult.ok) {
     return authResult;
   }
@@ -97,7 +105,7 @@ export async function deleteMilestoneAction(
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        ...authorizationHeaders(authResult.data),
+        ...authResult.data,
       },
     });
 
@@ -113,7 +121,7 @@ export async function updateMilestoneAction(
   milestoneName: string,
   newMilestone: Partial<ClientMilestone>
 ): Promise<ApiResponse<ClientMilestone>> {
-  const authResult = await getAuthenticationToken();
+  const authResult = await getMilestoneAuthenticationHeaders();
   if (!authResult.ok) {
     return authResult;
   }
@@ -126,7 +134,7 @@ export async function updateMilestoneAction(
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        ...authorizationHeaders(authResult.data),
+        ...authResult.data,
       },
       body: JSON.stringify({
         new_event_name: newMilestone.name || null,
@@ -159,11 +167,11 @@ export async function syncMilestonesAction(
       error: 'Invalid milestone snapshot',
     };
   }
-  const authResult = await getAuthenticationToken();
+  const authResult = await getMilestoneAuthenticationHeaders();
   if (!authResult.ok) {
     return {
       ok: false,
-      kind: 'unauthenticated',
+      kind: authResult.kind,
       error: authResult.error,
     };
   }
@@ -174,7 +182,7 @@ export async function syncMilestonesAction(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authorizationHeaders(authResult.data),
+        ...authResult.data,
       },
       body: JSON.stringify({
         records: parsedRecords.data.map(storedMilestoneToWire),
@@ -183,15 +191,15 @@ export async function syncMilestonesAction(
     });
     if (!response.ok) {
       const kind =
-        response.status === 401 || response.status === 403
-          ? 'unauthenticated'
-          : response.status === 409
-            ? 'conflict'
-            : response.status === 408 ||
-                response.status === 429 ||
-                response.status >= 500
-              ? 'transient'
-              : 'invalid';
+        response.status === 409
+          ? 'conflict'
+          : response.status === 401 ||
+              response.status === 403 ||
+              response.status === 408 ||
+              response.status === 429 ||
+              response.status >= 500
+            ? 'transient'
+            : 'invalid';
       return {
         ok: false,
         kind,
@@ -224,17 +232,41 @@ export async function syncMilestonesAction(
   }
 }
 
-async function getAuthenticationToken(): Promise<ApiResponse<string>> {
-  const token = (await cookies()).get('token')?.value;
-  if (!token) {
-    return { ok: false, error: 'User not logged in' };
+async function getMilestoneAuthenticationHeaders(): Promise<MilestoneAuthenticationResult> {
+  const session = await getVerifiedCoreSession();
+  if (!session) {
+    return {
+      ok: false,
+      kind: 'unauthenticated',
+      error: 'User not logged in',
+    };
   }
-  return { ok: true, data: token };
+  const internalKey = process.env.NEXT_DJANGO_INTERNAL_API_KEY;
+  if (!internalKey || internalKey.length < 32) {
+    console.error('Milestone internal authentication is not configured');
+    return {
+      ok: false,
+      kind: 'transient',
+      error: 'Milestone service unavailable',
+    };
+  }
+  try {
+    return {
+      ok: true,
+      data: {
+        Authorization: `Bearer ${internalKey}`,
+        'X-MGCK-Core-User-Id': encodeURIComponent(session.userId),
+        'X-MGCK-Core-Username': encodeURIComponent(session.username),
+      },
+    };
+  } catch {
+    return {
+      ok: false,
+      kind: 'unauthenticated',
+      error: 'Invalid account identity',
+    };
+  }
 }
-
-const authorizationHeaders = (token: string) => ({
-  Authorization: `Bearer ${token}`,
-});
 
 const milestoneApiUrl = (suffix = '') =>
   new URL(`${process.env.BASE_URL}${API_MILESTONES}${suffix}`);
