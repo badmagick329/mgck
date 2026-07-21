@@ -3,9 +3,12 @@ import json
 from uuid import uuid4
 
 import pytest
+from django.core.management import call_command
 from django.test import Client
 from django.utils import timezone
-from kpopcomebacks.models import Artist, Release, ReleaseType
+from kpopcomebacks.models import Artist, ArtistCreditMatch, Release, ReleaseType
+from scripts.scraper.database import Database
+from scripts.scraper.release_data import ReleaseData
 
 KPOP_URL = "/api/kpopcomebacks"
 WATCHLIST_QUERY_URL = "/api/kpopcomebacks/query"
@@ -31,6 +34,11 @@ def create_release(
 @pytest.fixture
 def api_client():
     return Client()
+
+
+@pytest.fixture(autouse=True)
+def use_materialized_watchlist_matches(monkeypatch):
+    monkeypatch.setenv("KPOP_WATCHLIST_USE_MATERIALIZED_MATCHES", "1")
 
 
 def post_json(api_client: Client, payload: dict):
@@ -208,6 +216,88 @@ def test_watchlist_query_includes_phrase_matches_but_not_substrings(api_client):
         collaboration_release.id,
         possessive_release.id,
     ]
+
+
+@pytest.mark.django_db
+def test_artist_credit_matches_refresh_for_create_rename_and_delete():
+    followed_artist = Artist.objects.create(name="IVE")
+    collaboration_artist = Artist.objects.create(name="Rei (IVE) x DEAN")
+    unrelated_artist = Artist.objects.create(name="DIVE")
+
+    assert set(
+        ArtistCreditMatch.objects.filter(
+            followed_artist=followed_artist
+        ).values_list("credited_artist_id", flat=True)
+    ) == {followed_artist.id, collaboration_artist.id}
+
+    collaboration_artist.name = "DIVE collaboration"
+    collaboration_artist.save()
+
+    assert set(
+        ArtistCreditMatch.objects.filter(
+            followed_artist=followed_artist
+        ).values_list("credited_artist_id", flat=True)
+    ) == {followed_artist.id}
+
+    unrelated_artist.delete()
+    assert not ArtistCreditMatch.objects.filter(
+        credited_artist_id=unrelated_artist.id
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_backfill_artist_credit_matches_is_idempotent():
+    followed_artist = Artist.objects.create(name="ITZY")
+    collaboration_artist = Artist.objects.create(name="Bebe Rexha feat. ITZY")
+    ArtistCreditMatch.objects.all().delete()
+
+    call_command("backfill_artist_credit_matches", batch_size=1)
+    call_command("backfill_artist_credit_matches", batch_size=1)
+
+    assert list(
+        ArtistCreditMatch.objects.filter(
+            followed_artist=followed_artist
+        ).order_by("credited_artist_id").values_list("credited_artist_id", flat=True)
+    ) == sorted([followed_artist.id, collaboration_artist.id])
+
+
+@pytest.mark.django_db
+def test_scraper_created_credit_refreshes_existing_followed_artist(api_client):
+    followed_artist = Artist.objects.create(name="IVE")
+
+    Database.save_to_db(
+        [
+            ReleaseData(
+                release_date="2026-07-17",
+                artist="Rei (IVE) x DEAN",
+                title="Collaboration",
+                album="Collaboration Album",
+                release_type="Single",
+                reddit_urls=[],
+                urls=[],
+            )
+        ]
+    )
+
+    response = post_json(
+        api_client,
+        {"artist_public_ids": [str(followed_artist.public_id)]},
+    )
+
+    assert response.status_code == 200
+    assert [release["artist"] for release in response.json()["results"]] == [
+        "Rei (IVE) x DEAN"
+    ]
+
+
+@pytest.mark.django_db
+def test_artist_credit_match_and_release_indexes_are_declared():
+    assert "artist_credit_followed_idx" in {
+        index.name for index in ArtistCreditMatch._meta.indexes
+    }
+    assert "release_artist_date_id_idx" in {
+        index.name for index in Release._meta.indexes
+    }
 
 
 @pytest.mark.django_db

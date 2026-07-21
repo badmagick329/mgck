@@ -14,9 +14,13 @@ import KpopResults from './KpopResults';
 export default function FollowingKpopResults() {
   const { artists, isLoaded, openManager, preferences } = useFollowing();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const artistPublicIds = useMemo(
-    () => artists.map((artist) => artist.publicId).sort(),
+  const artistPublicIdsKey = useMemo(
+    () => artists.map((artist) => artist.publicId).sort().join(','),
     [artists]
+  );
+  const artistPublicIds = useMemo(
+    () => (artistPublicIdsKey ? artistPublicIdsKey.split(',') : []),
+    [artistPublicIdsKey]
   );
   const startDate = getFollowingStartDate(preferences.lookbackDays);
   const loadPage = useCallback(
@@ -43,7 +47,7 @@ export default function FollowingKpopResults() {
     loadMore,
   } = usePaginatedComebacks({
     queryKey: [
-      artistPublicIds.join(','),
+      artistPublicIdsKey,
       preferences.lookbackDays,
       preferences.ordering,
     ].join(':'),

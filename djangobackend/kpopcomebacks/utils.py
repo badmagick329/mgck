@@ -1,3 +1,4 @@
+import os
 import re
 from datetime import date, datetime
 from uuid import UUID
@@ -5,7 +6,7 @@ from uuid import UUID
 from django.core.paginator import Paginator
 from django.db.models import Case, DateField, F, IntegerField, Q, QuerySet, Value, When
 from django.utils import timezone
-from kpopcomebacks.models import Artist, Release
+from kpopcomebacks.models import Artist, ArtistCreditMatch, Release
 
 PAGE_SIZE = 6
 
@@ -98,25 +99,29 @@ def filter_comebacks_by_artist_public_ids(
     end_date: date | None = None,
     ordering: str = "release_date_asc",
 ) -> QuerySet[Release]:
-    selected_artist_names = Artist.objects.filter(
-        public_id__in=artist_public_ids
-    ).values_list("name", flat=True)
-    matching_names: Q | None = None
-    for artist_name in selected_artist_names:
-        if artist_name.strip():
-            phrase_match = Q(
-                name__iregex=artist_name_phrase_regex(artist_name)
-            )
-            matching_names = (
-                phrase_match
-                if matching_names is None
-                else matching_names | phrase_match
-            )
-    if matching_names is None:
-        comebacks = Release.objects.none()
+    if os.environ.get("KPOP_WATCHLIST_USE_MATERIALIZED_MATCHES") == "1":
+        matching_artist_ids = ArtistCreditMatch.objects.filter(
+            followed_artist__public_id__in=artist_public_ids
+        ).values("credited_artist_id")
     else:
+        selected_artist_names = Artist.objects.filter(
+            public_id__in=artist_public_ids
+        ).values_list("name", flat=True)
+        matching_names: Q | None = None
+        for artist_name in selected_artist_names:
+            if artist_name.strip():
+                phrase_match = Q(
+                    name__iregex=artist_name_phrase_regex(artist_name)
+                )
+                matching_names = (
+                    phrase_match
+                    if matching_names is None
+                    else matching_names | phrase_match
+                )
+        if matching_names is None:
+            return Release.objects.none()
         matching_artist_ids = Artist.objects.filter(matching_names).values("id")
-        comebacks = Release.objects.filter(artist_id__in=matching_artist_ids)
+    comebacks = Release.objects.filter(artist_id__in=matching_artist_ids)
     if start_date:
         comebacks = comebacks.filter(release_date__gte=start_date)
     if end_date:
@@ -128,7 +133,7 @@ def order_comebacks(
     comebacks: QuerySet[Release],
     ordering: str = "release_date_asc",
 ) -> QuerySet[Release]:
-    comebacks = comebacks.prefetch_related("artist", "release_type")
+    comebacks = comebacks.select_related("artist", "release_type")
     if ordering not in {"upcoming_first", "recent_first"}:
         return comebacks.order_by("release_date", "id")
 

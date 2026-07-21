@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     "urlshortener",
     "redditvideo",
     "fileuploader",
-    "kpopcomebacks",
+    "kpopcomebacks.apps.KpopcomebacksConfig",
     "gfys",
     "emojify",
     "milestones",
