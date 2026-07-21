@@ -15,6 +15,35 @@ class Artist(models.Model):
         return self.name
 
 
+class ArtistCreditMatch(models.Model):
+    """A precomputed complete-phrase match from a followed artist to a credit."""
+
+    followed_artist = models.ForeignKey(
+        Artist,
+        on_delete=models.CASCADE,
+        related_name="credit_matches",
+    )
+    credited_artist = models.ForeignKey(
+        Artist,
+        on_delete=models.CASCADE,
+        related_name="followed_by_matches",
+    )
+
+    class Meta:  # type: ignore
+        constraints = [
+            models.UniqueConstraint(
+                fields=["followed_artist", "credited_artist"],
+                name="unique_artist_credit_match",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=["followed_artist"],
+                name="artist_credit_followed_idx",
+            )
+        ]
+
+
 class Release(models.Model):
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
     album = models.CharField(max_length=510)
@@ -31,6 +60,12 @@ class Release(models.Model):
             "title",
             "release_date",
             "release_type",
+        ]
+        indexes = [
+            models.Index(
+                fields=["artist", "release_date", "id"],
+                name="release_artist_date_id_idx",
+            )
         ]
 
     def __str__(self):
