@@ -105,10 +105,9 @@ def filter_gfys(
 
 
 def order_gfys(queryset: QuerySet[Gfy], sort: str, ordering) -> QuerySet[Gfy]:
+    queryset = queryset.annotate(view_total=Count("gfyview", distinct=True))
     if sort == "most_viewed":
-        return queryset.annotate(view_total=Count("gfyview")).order_by(
-            "-view_total", "-id"
-        )
+        return queryset.order_by("-view_total", "-id")
     return queryset.order_by(*ordering)
 
 

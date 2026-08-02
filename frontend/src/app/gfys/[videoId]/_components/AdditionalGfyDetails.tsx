@@ -1,6 +1,7 @@
 import Navbar from '@/app/_components/Navbar';
 import { GFYS_BASE } from '@/lib/consts/urls';
 import { GfyDetailResponse } from '@/lib/types/gfys';
+import { formatGfyViewCount } from '@/lib/gfys';
 import Link from 'next/link';
 
 export default function AdditionalGfyDetails({
@@ -43,6 +44,9 @@ export default function AdditionalGfyDetails({
         )}
         <span className='text-sm lg:text-base xl:text-xl'>
           <strong>Account:</strong> {gfyDetail.account}
+        </span>
+        <span className='text-sm lg:text-base xl:text-xl'>
+          <strong>Views:</strong> {formatGfyViewCount(gfyDetail.view_count)}
         </span>
       </div>
     </>

@@ -26,6 +26,7 @@ export default function GfyList() {
           index={key}
           width={d.width}
           height={d.height}
+          viewCount={d.viewCount}
         />
       ))}
     </div>

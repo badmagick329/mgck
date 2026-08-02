@@ -9,6 +9,7 @@ export const GfyDataSchema = z.object({
   account: z.string(),
   width: z.number().nullable(),
   height: z.number().nullable(),
+  viewCount: z.number(),
 });
 export type GfyData = z.infer<typeof GfyDataSchema>;
 
@@ -31,6 +32,7 @@ export const GfyResultSchema = z.object({
   tags: z.array(z.string()),
   width: z.number().nullable(),
   height: z.number().nullable(),
+  view_count: z.number(),
 });
 export type GfyResult = z.infer<typeof GfyResultSchema>;
 
@@ -52,6 +54,7 @@ export const GfyDetailResponseSchema = z.object({
   width: z.number().nullable(),
   height: z.number().nullable(),
   video_url: z.string(),
+  view_count: z.number(),
 });
 export type GfyDetailResponse = z.infer<typeof GfyDetailResponseSchema>;
 
