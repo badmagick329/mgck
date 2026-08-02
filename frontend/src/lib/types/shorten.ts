@@ -1,5 +1,5 @@
 import { z } from 'zod';
-const shortenedUrlSchema = z.object({
+export const shortenedUrlSchema = z.object({
   url: z.string(),
   short_id: z.string(),
   created: z

@@ -2,6 +2,7 @@ import random
 import re
 import string
 from datetime import datetime
+from urllib.parse import urlparse
 
 from django.db import models
 from djangobackend.settings import BASE_URL
@@ -64,8 +65,9 @@ class ShortURL(models.Model):
 
     @staticmethod
     def validate_url(url: str) -> str | None:
-        if url == "" or "." not in url or " " in url:
-            return "Please enter a valid URL"
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            return "Please enter a valid http or https URL"
         return None
 
     @classmethod

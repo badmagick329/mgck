@@ -17,6 +17,7 @@ export default function UrlShortenerPage({
 }) {
   const [error, setError] = useState('');
   const [output, setOutput] = useState('');
+  const [urls, setUrls] = useState(shortenedUrls || []);
 
   return (
     <main className='flex min-h-screen flex-col'>
@@ -26,12 +27,19 @@ export default function UrlShortenerPage({
       <article className='flex grow flex-col flex-wrap items-center gap-4 px-4 pt-6'>
         <h1 className='text-xl font-semibold md:text-2xl'>URL Shortener</h1>
         <span className='text-red-500'>{error}</span>
-        <CreateUrlForm setError={setError} setOutput={setOutput} />
+        <CreateUrlForm
+          setError={setError}
+          setOutput={setOutput}
+          onCreated={(record) => setUrls((current) => [record, ...current])}
+        />
         {output && <ResponseOutput output={output} />}
         <ShortenedUrlsDisplay
-          urlsResponse={shortenedUrls}
+          urlsResponse={urls}
           createdUrlOutput={output}
           setCreatedUrlOutput={setOutput}
+          onDeleted={(shortCode) =>
+            setUrls((current) => current.filter((url) => url.short_id !== shortCode))
+          }
         />
       </article>
       <Footer />
@@ -42,9 +50,11 @@ export default function UrlShortenerPage({
 function CreateUrlForm({
   setError,
   setOutput,
+  onCreated,
 }: {
   setError: React.Dispatch<React.SetStateAction<string>>;
   setOutput: React.Dispatch<React.SetStateAction<string>>;
+  onCreated: (record: import('@/lib/types/shorten').ShortenedUrl) => void;
 }) {
   const {
     submitForm,
@@ -56,6 +66,7 @@ function CreateUrlForm({
   } = useCreateUrlForm({
     setError,
     setOutput,
+    onCreated,
   });
 
   return (

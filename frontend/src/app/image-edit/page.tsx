@@ -17,6 +17,7 @@ export default function ImageEditPage() {
     []
   );
   const [isCropping, setIsCropping] = useState(false);
+  const [error, setError] = useState('');
 
   const onDrop = useCallback((accepted: File[]) => {
     setFiles((f) => [...f, ...accepted]);
@@ -80,14 +81,10 @@ export default function ImageEditPage() {
           {previews.length > 0 && (
             <div className='mt-6 flex flex-wrap justify-center gap-4'>
               {previews.map((preview, index) => (
-                <NextImage
-                  key={index}
-                  src={preview.url}
-                  width={96}
-                  height={96}
-                  className='h-24 w-24 rounded object-cover'
-                  alt={preview.filename}
-                />
+                <div key={preview.url} className='relative'>
+                  <NextImage src={preview.url} width={96} height={96} className='h-24 w-24 rounded object-cover' alt={preview.filename} />
+                  <button type='button' aria-label={`Remove ${preview.filename}`} className='absolute -right-2 -top-2 rounded-full bg-destructive px-2 text-destructive-foreground' onClick={() => { setFiles((current) => current.filter((_, fileIndex) => fileIndex !== index)); setCropped([]); }}>×</button>
+                </div>
               ))}
             </div>
           )}
@@ -106,13 +103,15 @@ export default function ImageEditPage() {
                   previews,
                   setFiles,
                   setCropped,
+                  setError,
                 })
               }
               className='bg-primary-dg font-semibold text-primary-foreground shadow-glow-primary-dg hover:bg-primary-dg/90'
               disabled={isCropping || cropped.length > 0}
             >
-              Crop Images
+              {isCropping ? `Cropping ${previews.length} image${previews.length === 1 ? '' : 's'}…` : 'Crop Images'}
             </Button>
+            {error && <p role='alert' className='text-sm text-destructive'>{error}</p>}
           </div>
         )}
 
@@ -162,6 +161,7 @@ export default function ImageEditPage() {
                     onClick={() => {
                       setCropped([]);
                       setFiles([]);
+                      setError('');
                     }}
                     className='shadow-glow-destructive bg-destructive font-semibold text-destructive-foreground hover:bg-destructive/90'
                   >
@@ -325,14 +325,17 @@ const handleCrop = async ({
   previews,
   setFiles,
   setCropped,
+  setError,
 }: {
   setIsCropping: (isCropping: boolean) => void;
   previews: { url: string; filename: string }[];
   setFiles: (files: File[]) => void;
   setCropped: (cropped: { url: string; filename: string }[]) => void;
+  setError: (error: string) => void;
 }) => {
   const results: { url: string; filename: string }[] = [];
   try {
+    setError('');
     setIsCropping(true);
     await Promise.all(
       previews.map(
@@ -340,13 +343,16 @@ const handleCrop = async ({
           new Promise<void>((resolve) => {
             const img = new Image();
             img.onload = () => {
-              results.push({
-                url: autoCropImage(img),
-                filename:
-                  preview.filename.replace(/\.[^/.]+$/, '') + '_cropped.png',
-              });
+              try {
+                const url = autoCropImage(img);
+                if (!url) throw new Error('No crop area found');
+                results.push({ url, filename: preview.filename.replace(/\.[^/.]+$/, '') + '_cropped.png' });
+              } catch {
+                setError(`Could not crop ${preview.filename}. Try an image with a clear border.`);
+              }
               resolve();
             };
+            img.onerror = () => { setError(`Could not read ${preview.filename}.`); resolve(); };
             img.src = preview.url;
           })
       )
@@ -354,6 +360,7 @@ const handleCrop = async ({
     setFiles([]);
   } catch (error) {
     console.error('Error cropping images:', error);
+    setError('Cropping failed. Please try again.');
   } finally {
     previews.forEach((p) => URL.revokeObjectURL(p.url));
     setIsCropping(false);

@@ -1,6 +1,6 @@
 'use server';
 
-import { API_GFYS, API_GFY_ACCOUNTS, API_GFY_VIEWS } from '@/lib/consts/urls';
+import { API_GFYS, API_GFYS_RANDOM, API_GFY_ACCOUNTS, API_GFY_VIEWS } from '@/lib/consts/urls';
 import {
   AccountsResponse,
   AccountsResponseSchema,
@@ -23,6 +23,7 @@ export async function searchGfys(formData: FormData) {
     end_date = validDateStringOrNull(end_date) || '';
   }
   const page = formData.get('page')?.toString() || '1';
+  const sort = formData.get('sort')?.toString() || 'recent';
   let account = formData.get('account')?.toString() || '';
   if (account == 'All') {
     account = '';
@@ -34,6 +35,7 @@ export async function searchGfys(formData: FormData) {
   apiUrl.searchParams.append('end_date', end_date);
   apiUrl.searchParams.append('account', account);
   apiUrl.searchParams.append('page', page);
+  apiUrl.searchParams.append('sort', sort);
   let res = await fetch(apiUrl.toString(), {
     method: 'GET',
     headers: {
@@ -51,6 +53,18 @@ export async function searchGfys(formData: FormData) {
   } catch {
     return null;
   }
+}
+
+export async function fetchRandomGfy(params: URLSearchParams) {
+  const apiUrl = new URL(`${BASE_URL}${API_GFYS_RANDOM}`);
+  for (const key of ['title', 'tags', 'start_date', 'end_date', 'account']) {
+    const value = params.get(key);
+    if (value) apiUrl.searchParams.set(key, value);
+  }
+  const response = await fetch(apiUrl, { cache: 'no-store' });
+  if (!response.ok) return null;
+  const data = await response.json();
+  return typeof data.imgur_id === 'string' ? data.imgur_id : null;
 }
 
 export async function fetchGfy(videoId: string) {

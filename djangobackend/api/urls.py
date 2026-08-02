@@ -22,6 +22,7 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     path("gfys", gfys.GfysList.as_view(), name="gfys"),
+    path("gfys/random", gfys.RandomGfy.as_view(), name="gfy-random"),
     path("gfys/<str:id>", gfys.GfyDetails.as_view(), name="gfy"),
     path("accounts", gfys.AccountsList.as_view(), name="accounts"),
     path(

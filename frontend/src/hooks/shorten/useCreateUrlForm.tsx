@@ -6,9 +6,11 @@ const MAX_CODE_CHARS = 255;
 export default function useCreateUrlForm({
   setError,
   setOutput,
+  onCreated,
 }: {
   setError: React.Dispatch<React.SetStateAction<string>>;
   setOutput: React.Dispatch<React.SetStateAction<string>>;
+  onCreated: (record: import('@/lib/types/shorten').ShortenedUrl) => void;
 }) {
   const [url, setUrl] = useState('');
   const [customCode, setCustomCode] = useState('');
@@ -36,7 +38,9 @@ export default function useCreateUrlForm({
     }
     setError('');
     setUrl('');
+    setCustomCode('');
     setOutput(result.url);
+    if (result.record) onCreated(result.record);
   }
 
   return {

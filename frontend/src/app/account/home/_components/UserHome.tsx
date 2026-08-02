@@ -2,6 +2,8 @@ import LogoutButton from './LogoutButton';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import RotatingEmojis from './RotatingEmojis';
+import AppLauncher from '@/app/_components/AppLauncher';
+import { FileImage, Film, ListMusic, Milestone } from 'lucide-react';
 
 export interface UserHomeProps {
   username: string;
@@ -21,6 +23,12 @@ export default function UserHome({
       <UserWelcomeHeader username={username} />
       <main className='flex flex-col gap-8 px-4 py-4'>
         <AccountStatus isApproved={isApproved} />
+        {isApproved && <AppLauncher apps={[
+          { href: '/kpop', name: 'K-pop', description: 'Browse releases and your followed artists.', icon: <ListMusic />, className: 'bg-background-kp' },
+          { href: '/gfys', name: 'Gfys', description: 'Browse the Red Velvet archive.', icon: <Film />, className: 'bg-background-gf' },
+          { href: '/milestones', name: 'Milestones', description: 'Track your important dates.', icon: <Milestone />, className: 'bg-background-ml' },
+          { href: '/image-edit', name: 'AutoCropper', description: 'Crop image borders locally.', icon: <FileImage />, className: 'bg-background-dg' },
+        ]} />}
         <FeaturesShowcase
           isApproved={isApproved}
           features={features}

@@ -2,9 +2,10 @@
 
 import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import { canUseShortener } from '@/lib/account/permissions';
-import { API_SHORTENER_URL, API_SHORTENER_URLS } from '@/lib/consts/urls';
+import { API_SHORTENER_URL, INTERNAL_SHORTENER_URL } from '@/lib/consts/urls';
 import {
   ShortenedUrl,
+  shortenedUrlSchema,
   shortenedUrlsByUsernameSchema,
 } from '@/lib/types/shorten';
 import { revalidateTag } from 'next/cache';
@@ -17,31 +18,33 @@ export async function createShortenedUrl({
 }: {
   url: string;
   customCode: string;
-}): Promise<{ url?: string; error?: string }> {
+}): Promise<{ url?: string; record?: ShortenedUrl; error?: string }> {
   const session = await getVerifiedCoreSession();
   if (!canUseShortener(session)) {
     return {
       error: 'You do not have permission to use the URL shortener',
     };
   }
-  const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URLS}`);
+  const authentication = await getShortenerAuthenticationHeaders();
+  if (!authentication) return { error: 'Shortener service unavailable' };
+  const apiUrl = new URL(`${BASE_URL}${INTERNAL_SHORTENER_URL}urls`);
 
   const body = JSON.stringify({
     source_url: url,
     custom_id: customCode,
-    username: session!.username,
   });
   const res = await fetch(apiUrl, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json', ...authentication,
     },
     body,
   });
   try {
     const data = await res.json();
     revalidateTag('shortened-urls');
-    return data;
+    const record = shortenedUrlSchema.safeParse(data.record);
+    return record.success ? { url: data.url, record: record.data } : { error: 'Invalid shortened URL response' };
   } catch (e) {
     console.error(e);
     return {
@@ -76,10 +79,11 @@ export async function getAllShortenedUrls(): Promise<{
       error: 'You do not have permission to use the URL shortener',
     };
   }
-  const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URLS}`);
-  apiUrl.searchParams.append('username', session!.username);
+  const authentication = await getShortenerAuthenticationHeaders();
+  if (!authentication) return { error: 'Shortener service unavailable' };
+  const apiUrl = new URL(`${BASE_URL}${INTERNAL_SHORTENER_URL}urls`);
 
-  let res = await fetch(apiUrl, { next: { tags: ['shortened-urls'] } });
+  let res = await fetch(apiUrl, { headers: authentication, cache: 'no-store' });
   try {
     const data = await res.json();
     const parsed = shortenedUrlsByUsernameSchema.safeParse(data);
@@ -109,10 +113,11 @@ export async function deleteShortenedUrl({
       error: 'You do not have permission to use the URL shortener',
     };
   }
-  const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URL}${code}`);
-  apiUrl.searchParams.append('username', session!.username);
+  const authentication = await getShortenerAuthenticationHeaders();
+  if (!authentication) return { error: 'Shortener service unavailable' };
+  const apiUrl = new URL(`${BASE_URL}${INTERNAL_SHORTENER_URL}url/${encodeURIComponent(code)}`);
 
-  const res = await fetch(apiUrl, { method: 'DELETE' });
+  const res = await fetch(apiUrl, { method: 'DELETE', headers: authentication });
   if (!res.ok) {
     return {
       error: 'Failed to delete shortened url',
@@ -120,4 +125,15 @@ export async function deleteShortenedUrl({
   }
   revalidateTag('shortened-urls');
   return {};
+}
+
+async function getShortenerAuthenticationHeaders(): Promise<Record<string, string> | null> {
+  const session = await getVerifiedCoreSession();
+  const internalKey = process.env.NEXT_DJANGO_INTERNAL_API_KEY;
+  if (!session || !internalKey || internalKey.length < 32) return null;
+  return {
+    Authorization: `Bearer ${internalKey}`,
+    'X-MGCK-Core-User-Id': encodeURIComponent(session.userId),
+    'X-MGCK-Core-Username': encodeURIComponent(session.username),
+  };
 }

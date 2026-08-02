@@ -22,10 +22,12 @@ export default function UrlCard({
   shortenedUrl,
   createdUrlOutput,
   setCreatedUrlOutput,
+  onDeleted,
 }: {
   shortenedUrl: ShortenedUrl;
   createdUrlOutput: string;
   setCreatedUrlOutput: React.Dispatch<React.SetStateAction<string>>;
+  onDeleted: (shortCode: string) => void;
 }) {
   return (
     <section className='flex max-w-[800px] flex-col rounded-md bg-secondary px-4 py-2'>
@@ -37,6 +39,7 @@ export default function UrlCard({
         shortenedUrl={shortenedUrl}
         createdUrlOutput={createdUrlOutput}
         setCreatedUrlOutput={setCreatedUrlOutput}
+        onDeleted={onDeleted}
       />
       <span className='self-start text-xs'>
         Last Accessed:{' '}
@@ -52,10 +55,12 @@ function UrlCardContent({
   shortenedUrl,
   createdUrlOutput,
   setCreatedUrlOutput,
+  onDeleted,
 }: {
   shortenedUrl: ShortenedUrl;
   createdUrlOutput: string;
   setCreatedUrlOutput: React.Dispatch<React.SetStateAction<string>>;
+  onDeleted: (shortCode: string) => void;
 }) {
   const {
     shortUrl,
@@ -91,6 +96,7 @@ function UrlCardContent({
             shortCode={shortenedUrl.short_id}
             createdUrlOutput={createdUrlOutput}
             setCreatedUrlOutput={setCreatedUrlOutput}
+            onDeleted={onDeleted}
           />
         </div>
       </div>
@@ -119,10 +125,12 @@ function DeleteUrlButton({
   shortCode,
   createdUrlOutput,
   setCreatedUrlOutput,
+  onDeleted,
 }: {
   shortCode: string;
   createdUrlOutput: string;
   setCreatedUrlOutput: React.Dispatch<React.SetStateAction<string>>;
+  onDeleted: (shortCode: string) => void;
 }) {
   const { open, setOpen, keyboardOffset, isDeleteDisabled, handleDelete } =
     useDeleteUrlButton({
@@ -158,7 +166,12 @@ function DeleteUrlButton({
             <Button
               disabled={isDeleteDisabled}
               variant={'destructive'}
-              onClick={handleDelete}
+              onClick={async () => {
+                if (await handleDelete()) {
+                  onDeleted(shortCode);
+                  setOpen(false);
+                }
+              }}
             >
               <div className='flex items-center gap-2'>
                 Submit

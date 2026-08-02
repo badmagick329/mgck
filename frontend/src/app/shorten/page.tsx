@@ -7,7 +7,7 @@ import { getAllShortenedUrls } from '@/actions/urlshortener';
 export default async function UrlShortenerPage() {
   const session = await getVerifiedCoreSession();
   if (!canUseShortener(session)) {
-    redirect('/account');
+    redirect('/account/login?returnTo=%2Fshorten');
   }
   const response = await getAllShortenedUrls();
   return <ShortenClientPage shortenedUrls={response.urls || null} />;

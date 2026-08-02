@@ -44,7 +44,12 @@ def create_shortened_url(
     return Ok(short_url)
 
 
-def create_shortened_url_response(source_url: str, custom_id: str, username: str):
+def create_shortened_url_response(
+    source_url: str,
+    custom_id: str,
+    username: str,
+    include_record: bool = False,
+):
     result = create_shortened_url(
         source_url=source_url, custom_id=custom_id, username=username
     )
@@ -54,11 +59,10 @@ def create_shortened_url_response(source_url: str, custom_id: str, username: str
 
     shortened_url = result.unwrap()
 
-    return Response(
-        {
-            "url": shortened_url.redirect_url,
-        }
-    )
+    response = {"url": shortened_url.redirect_url}
+    if include_record:
+        response["record"] = serialize_short_url(shortened_url)
+    return Response(response, status=201)
 
 
 def get_shortened_url_target(short_id: str) -> Result[str, UrlShortenerError]:
@@ -95,17 +99,18 @@ def get_shortened_urls_list(
     if not username:
         return Err(UrlShortenerError("Username is required", 400))
     short_urls = ShortURL.objects.filter(created_by=username).order_by("-created")
-    urls = [
-        {
-            "url": url.url,
-            "short_id": url.short_id,
-            "created": url.created,
-            "accessed": url.accessed,
-            "number_of_uses": url.number_of_uses,
-        }
-        for url in short_urls
-    ]
+    urls = [serialize_short_url(url) for url in short_urls]
     return Ok(urls)
+
+
+def serialize_short_url(url: ShortURL) -> dict[str, Any]:
+    return {
+        "url": url.url,
+        "short_id": url.short_id,
+        "created": url.created,
+        "accessed": url.accessed,
+        "number_of_uses": url.number_of_uses,
+    }
 
 
 def get_shortened_urls_list_response(username: str):

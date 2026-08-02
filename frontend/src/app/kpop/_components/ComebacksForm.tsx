@@ -18,7 +18,7 @@ import {
   searchParamsToKpopQueryState,
 } from '@/lib/kpop/query';
 import { ChevronLeft, ChevronRight, Loader2, Star, Users } from 'lucide-react';
-import { useMemo, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 
 import {
   FOLLOWING_LOOKBACK_OPTIONS,
@@ -42,6 +42,9 @@ export default function ComebacksForm() {
   );
   const kpopView = getKpopView(searchParams);
   const isFollowingView = kpopView === 'following';
+  const hasSearchFilters = namesAndPlaceHolders.some(({ name }) => searchParams.has(name)) || searchParams.has('exact');
+  const [searchOpen, setSearchOpen] = useState(hasSearchFilters);
+  useEffect(() => setSearchOpen(hasSearchFilters), [hasSearchFilters]);
   const activePreset = getActiveKpopPreset(searchParams);
   const canGoEarlier = canShiftTimelineEarlier(queryState);
   const {
@@ -55,6 +58,11 @@ export default function ComebacksForm() {
 
   return (
     <div className='flex w-full max-w-5xl flex-col gap-5 rounded-sm border border-primary-kp/25 bg-background/40 px-4 py-4 md:px-6'>
+      <div className='flex flex-wrap gap-2 border-b border-primary-kp/20 pb-4' aria-label='K-pop browse mode'>
+        <Button type='button' variant={!isFollowingView && !searchOpen ? 'default' : 'outline'} onClick={() => { setSearchOpen(false); startSearchTransition(() => router.replace(`${pathname}?${buildRecentSearchParams(searchParams).toString()}`)); }}>Timeline</Button>
+        <Button type='button' variant={isFollowingView ? 'default' : 'outline'} onClick={onFollowingClick(searchParams, pathname, router, startSearchTransition)}>Following</Button>
+        <Button type='button' variant={searchOpen && !isFollowingView ? 'default' : 'outline'} onClick={() => { setSearchOpen(true); if (isFollowingView) startSearchTransition(() => router.replace(`${pathname}?${buildRecentSearchParams(searchParams).toString()}`)); }}>Search</Button>
+      </div>
       <div className='flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between'>
         <div className='flex flex-col gap-1'>
           <h3 className='mt-2 text-2xl font-semibold'>
@@ -147,7 +155,7 @@ export default function ComebacksForm() {
             disabled={isSearching}
             aria-pressed={activePreset === 'all'}
           >
-            All
+            Archive
           </Button>
           <Button
             variant={activePreset === 'following' ? 'default' : 'outline'}
@@ -231,7 +239,7 @@ export default function ComebacksForm() {
         </div>
       )}
 
-      {!isFollowingView && (
+      {!isFollowingView && searchOpen && (
         <form
           onSubmit={onSearchSubmit(
             searchParams,
@@ -240,6 +248,7 @@ export default function ComebacksForm() {
           )}
           className='flex flex-col gap-4'
         >
+          <p className='text-sm text-muted-foreground'>Search the archive. Timeline controls remain available above.</p>
           <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5'>
             {namesAndPlaceHolders
               .slice(0, namesAndPlaceHolders.length - 1)
