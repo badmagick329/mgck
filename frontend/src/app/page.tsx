@@ -16,6 +16,26 @@ import {
   Smile,
   Sticker,
 } from 'lucide-react';
+import type { Metadata } from 'next';
+
+const homeTitle = 'mgck — Red Velvet, K-pop comebacks, and side quests';
+const homeDescription =
+  'A Red Velvet GIF archive, K-pop comeback tracker, and a few small web tools.';
+
+export const metadata: Metadata = {
+  title: { absolute: homeTitle },
+  description: homeDescription,
+  alternates: { canonical: '/' },
+  openGraph: {
+    url: '/',
+    title: homeTitle,
+    description: homeDescription,
+  },
+  twitter: {
+    title: homeTitle,
+    description: homeDescription,
+  },
+};
 
 export default async function Index() {
   const session = await getVerifiedCoreSession();

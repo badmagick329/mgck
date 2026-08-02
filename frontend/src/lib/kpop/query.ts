@@ -45,6 +45,13 @@ export function getKpopView(searchParams: SearchParamsInput): KpopView {
   return 'timeline';
 }
 
+export function hasKpopSearchFilters(searchParams: SearchParamsInput) {
+  const params = getCanonicalKpopSearchParams(searchParams);
+  return Boolean(
+    params.get('artist') || params.get('title') || params.get('exact')
+  );
+}
+
 export function getActiveKpopPreset(
   searchParams: SearchParamsInput
 ): KpopPreset {
