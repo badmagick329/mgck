@@ -48,6 +48,22 @@ class FileUploaderTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("fileuploader:login"), response.url)
 
+    def test_session_status_only_reports_users_with_files_access(self):
+        anonymous_response = self.client.get(
+            reverse("fileuploader:session_status")
+        )
+        self.assertEqual(anonymous_response.json(), {"has_access": False})
+
+        self.login()
+        no_access_response = self.client.get(
+            reverse("fileuploader:session_status")
+        )
+        self.assertEqual(no_access_response.json(), {"has_access": False})
+
+        UploadUser.objects.create(user=self.user, storage_quota_bytes=10)
+        access_response = self.client.get(reverse("fileuploader:session_status"))
+        self.assertEqual(access_response.json(), {"has_access": True})
+
     def test_password_change_route_requires_login(self):
         response = self.client.get(reverse("fileuploader:password_change"))
         self.assertEqual(response.status_code, 302)

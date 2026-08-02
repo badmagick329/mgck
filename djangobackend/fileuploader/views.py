@@ -11,6 +11,12 @@ from fileuploader.forms import StyledPasswordChangeForm, UploadedFileForm
 from fileuploader.models import UploadedFile, UploadUser
 
 
+def session_status(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"has_access": False})
+    return JsonResponse({"has_access": get_upload_user(request) is not None})
+
+
 @login_required(login_url=reverse_lazy("fileuploader:login"))
 def upload_file(request):
     upload_user = get_upload_user(request)
