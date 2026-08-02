@@ -1,11 +1,12 @@
-import { fetchWithAuthHeader } from '@/lib/account/requests';
-import { UsersResponseData, usersResponseSchema } from '@/lib/types/account';
-import UserManager from '@/app/account/home/_components/UserManager';
-import { API_USERS_BASE } from '@/lib/consts/urls';
-import LogoutButton from './LogoutButton';
-import FeedbackList from './FeedbackList';
 import AppLauncher from '@/app/_components/AppLauncher';
-import { FileImage, ListMusic, Link2, Milestone } from 'lucide-react';
+import UserManager from '@/app/account/home/_components/UserManager';
+import { fetchWithAuthHeader } from '@/lib/account/requests';
+import { API_USERS_BASE } from '@/lib/consts/urls';
+import { UsersResponseData, usersResponseSchema } from '@/lib/types/account';
+import { Link2, ListMusic, Milestone, Smile } from 'lucide-react';
+
+import FeedbackList from './FeedbackList';
+import LogoutButton from './LogoutButton';
 
 const BASE_URL = process.env.CORE_API_BASE_URL;
 
@@ -21,33 +22,70 @@ export default async function AdminHome({ username }: { username: string }) {
   }
 
   return (
-    <div className='w-full grow bg-background-kp'>
-      <UserWelcomeHeader username={username} />
-      <main className='mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6'>
-        <section>
-          <h2 className='text-xl font-bold'>Quick access</h2>
-          <p className='mb-3 text-sm text-muted-foreground'>Jump back into the apps you maintain.</p>
-          <AppLauncher apps={[
-            { href: '/kpop', name: 'K-pop', description: 'Release timeline and artist following.', icon: <ListMusic />, className: 'bg-background-kp' },
-            { href: '/shorten', name: 'Shortener', description: 'Manage your links.', icon: <Link2 />, className: 'bg-secondary' },
-            { href: '/milestones', name: 'Milestones', description: 'Open the local-first tracker.', icon: <Milestone />, className: 'bg-background-ml' },
-            { href: '/image-edit', name: 'AutoCropper', description: 'Open the local image utility.', icon: <FileImage />, className: 'bg-background-dg' },
-          ]} />
+    <div className='min-h-dvh w-full bg-background'>
+      <header className='border-b border-border bg-background/95'>
+        <div className='mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-5 md:px-6'>
+          <div>
+            <p className='text-sm text-muted-foreground'>Admin workspace</p>
+            <h1 className='text-2xl font-semibold tracking-tight'>
+              Welcome back, {username}
+            </h1>
+          </div>
+          <LogoutButton
+            className='text-muted-foreground hover:bg-muted hover:text-foreground'
+            variant='ghost'
+          />
+        </div>
+      </header>
+      <main className='mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-6'>
+        <section aria-labelledby='continue-heading'>
+          <div className='mb-3'>
+            <h2 id='continue-heading' className='text-lg font-semibold'>
+              Continue to an app
+            </h2>
+          </div>
+          <AppLauncher
+            apps={[
+              {
+                href: '/kpop',
+                name: 'K-pop',
+                description: 'Release timeline and artist following.',
+                icon: <ListMusic />,
+                className:
+                  'border-primary-kp/30 bg-primary-kp/5 hover:border-primary-kp/60 hover:bg-primary-kp/10',
+              },
+              {
+                href: '/shorten',
+                name: 'Shortener',
+                description: 'Manage your links.',
+                icon: <Link2 />,
+                className:
+                  'border-primary-kp/30 bg-primary-kp/5 hover:border-primary-kp/60 hover:bg-primary-kp/10',
+              },
+              {
+                href: '/emojify',
+                name: 'Emojifier',
+                description: 'Use your AI emoji suggestions.',
+                icon: <Smile />,
+                className:
+                  'border-primary-em/30 bg-primary-em/5 hover:border-primary-em/60 hover:bg-primary-em/10',
+              },
+              {
+                href: '/milestones',
+                name: 'Milestones',
+                description: 'Open the local-first tracker.',
+                icon: <Milestone />,
+                className:
+                  'border-primary-ml/30 bg-primary-ml/5 hover:border-primary-ml/60 hover:bg-primary-ml/10',
+              },
+            ]}
+          />
         </section>
+        <div className='grid gap-6 lg:grid-cols-2'>
+          <UserManager users={usersAndRoles} />
+          <FeedbackList />
+        </div>
       </main>
-      <UserManager users={usersAndRoles} />
-      <section className='px-4 pb-8'><h2 className='mb-2 text-center text-xl font-bold'>Feedback queue</h2><FeedbackList /></section>
     </div>
-  );
-}
-
-function UserWelcomeHeader({ username }: { username: string }) {
-  return (
-    <header className='bg-gradient-to-r from-purple-600 to-purple-900 py-8'>
-      <div className='container mx-auto flex items-center justify-between px-4 text-gray-50'>
-        <h1 className='text-3xl font-bold'>Welcome, {username}</h1>
-        <LogoutButton />
-      </div>
-    </header>
   );
 }
