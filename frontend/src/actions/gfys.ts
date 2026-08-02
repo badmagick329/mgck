@@ -55,7 +55,8 @@ export async function searchGfys(formData: FormData) {
   }
 }
 
-export async function fetchRandomGfy(params: URLSearchParams) {
+export async function fetchRandomGfy(paramsString: string) {
+  const params = new URLSearchParams(paramsString);
   const apiUrl = new URL(`${BASE_URL}${API_GFYS_RANDOM}`);
   for (const key of ['title', 'tags', 'start_date', 'end_date', 'account']) {
     const value = params.get(key);
