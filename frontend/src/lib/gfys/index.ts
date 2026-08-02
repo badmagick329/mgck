@@ -17,6 +17,7 @@ export function parseGfyResponse(resp: GfyResponse): GfyParsedResponse {
       account: d.account,
       width: d.width || null,
       height: d.height || null,
+      viewCount: d.view_count,
     });
   });
   return {
@@ -26,6 +27,10 @@ export function parseGfyResponse(resp: GfyResponse): GfyParsedResponse {
     totalPages: resp.total_pages,
     gfys: newData,
   };
+}
+
+export function formatGfyViewCount(viewCount: number) {
+  return new Intl.NumberFormat('en-GB').format(viewCount);
 }
 
 export function imgurIdToImgurVideo(imgurId: string) {
@@ -62,7 +67,15 @@ export function createURL(
 }
 
 function cleanedSearchParams(urlSearchParams: URLSearchParams) {
-  const params = ['title', 'tags', 'account', 'start_date', 'end_date', 'sort', 'page'];
+  const params = [
+    'title',
+    'tags',
+    'account',
+    'start_date',
+    'end_date',
+    'sort',
+    'page',
+  ];
   for (const param of params) {
     if (urlSearchParams.get(param)?.trim() === '') {
       urlSearchParams.delete(param);

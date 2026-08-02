@@ -10,9 +10,11 @@ import {
   imgurIdToImgurVideo,
   imgurIdToThumbnail,
   imgurIdToVideo,
+  formatGfyViewCount,
 } from '@/lib/gfys';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Eye } from 'lucide-react';
 
 export default function GfyPreview({
   title,
@@ -20,12 +22,14 @@ export default function GfyPreview({
   index,
   width,
   height,
+  viewCount,
 }: {
   title: string;
   imgurId: string;
   index: number;
   width: number | null;
   height: number | null;
+  viewCount: number;
 }) {
   const { goToGfyAtIndex } = useGfyContext();
 
@@ -35,10 +39,12 @@ export default function GfyPreview({
         <TooltipTrigger asChild>
           <div>
             <Link
+              className='group relative block h-[150px] w-[150px]'
               href={{
                 pathname: `${GFYS_BASE}/${imgurId}`,
               }}
               onClick={() => goToGfyAtIndex(index)}
+              aria-label={`${title || `Red Velvet Gfy ${imgurId}`} — ${formatGfyViewCount(viewCount)} views`}
             >
               <Image
                 className='hover:ring-bg-primary-gf rounded-md object-cover hover:cursor-pointer hover:ring-2 hover:ring-offset-2'
@@ -49,6 +55,11 @@ export default function GfyPreview({
                 style={{ width: '150px', height: '150px' }}
                 unoptimized
               />
+              <span className='absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-md bg-black/75 px-1.5 py-1 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100'>
+                <Eye aria-hidden='true' className='h-3.5 w-3.5' />
+                {formatGfyViewCount(viewCount)}
+                <span className='sr-only'>views</span>
+              </span>
             </Link>
           </div>
         </TooltipTrigger>

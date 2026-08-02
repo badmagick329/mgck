@@ -42,6 +42,10 @@ class GfysListSerializer(serializers.BaseSerializer):
                     description="The account name belonging to the gfy",
                     type=openapi.TYPE_STRING,
                 ),
+                "view_count": openapi.Schema(
+                    description="The number of recorded views for the gfy",
+                    type=openapi.TYPE_INTEGER,
+                ),
             },
             "example": [
                 {
@@ -52,6 +56,7 @@ class GfysListSerializer(serializers.BaseSerializer):
                     "gfy_title": "gfy_title",
                     "date": "2021-01-01",
                     "account": "account",
+                    "view_count": 42,
                 },
             ],
         }
@@ -67,6 +72,7 @@ class GfysListSerializer(serializers.BaseSerializer):
             "account": instance.account.name if instance.account else None,
             "width": instance.width,
             "height": instance.height,
+            "view_count": getattr(instance, "view_total", instance.view_count),
         }
 
 

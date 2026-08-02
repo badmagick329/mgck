@@ -89,6 +89,10 @@ class GfyDetails(APIView):
                             description="The video url of the gfy",
                             type=openapi.TYPE_STRING,
                         ),
+                        "view_count": openapi.Schema(
+                            description="The number of recorded views for the gfy",
+                            type=openapi.TYPE_INTEGER,
+                        ),
                     },
                     example={
                         "title": "gfy title",
@@ -99,6 +103,7 @@ class GfyDetails(APIView):
                         "width": 1920,
                         "height": 1080,
                         "video_url": "https://i.imgur.com/imgur_id.mp4",
+                        "view_count": 42,
                     },
                 ),
             ),
@@ -119,6 +124,7 @@ class GfyDetails(APIView):
                 "width": gfy.width,
                 "height": gfy.height,
                 "video_url": (gfy.video_url if gfy.video_id else gfy.imgur_mp4_url),
+                "view_count": gfy.view_count,
             }
         )
 

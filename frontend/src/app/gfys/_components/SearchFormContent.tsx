@@ -3,6 +3,13 @@ import { Button } from '@/components/ui/button';
 import { SearchFormParams, SearchParams } from '@/lib/types/gfys';
 import { validDateStringOrNull } from '@/lib/utils';
 import { createURL } from '@/lib/gfys';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { ChevronsUpDown } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
@@ -80,24 +87,36 @@ export default function SearchFormContent() {
           selectedAccount={selectedAccount}
           setSelectedAccount={setSelectedAccount}
         />
-        <label className='flex flex-col gap-1 text-sm'>
-          Sort
-          <select
-            aria-label='Sort Gfys'
-            className='rounded-md border bg-background px-3 py-2'
-            value={searchParams.get('sort') || 'recent'}
-            onChange={(event) => {
-              const params = new URLSearchParams(searchParams.toString());
-              params.set('sort', event.target.value);
-              params.delete('page');
-              router.push(createURL(pathname, params.toString()));
-            }}
-          >
-            <option value='recent'>Most recent</option>
-            <option value='oldest'>Oldest</option>
-            <option value='most_viewed'>Most viewed</option>
-          </select>
-        </label>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className='relative w-[12rem]'>
+                <select
+                  aria-label='Sort Gfys'
+                  className='flex h-10 w-full appearance-none rounded-md border-2 border-black/60 bg-background-gf-dark/15 px-3 py-2 pr-9 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/60 dark:bg-background-gf-dark'
+                  value={searchParams.get('sort') || 'recent'}
+                  onChange={(event) => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set('sort', event.target.value);
+                    params.delete('page');
+                    router.push(createURL(pathname, params.toString()));
+                  }}
+                >
+                  <option value='recent'>Most recent</option>
+                  <option value='oldest'>Oldest</option>
+                  <option value='most_viewed'>Most viewed</option>
+                </select>
+                <ChevronsUpDown
+                  aria-hidden='true'
+                  className='pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-50'
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Sort Gfys</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <SearchTextInput
           name={'start_date'}
           searchParams={searchParams}

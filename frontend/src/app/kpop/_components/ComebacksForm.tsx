@@ -6,7 +6,6 @@ import useURLState from '@/hooks/useUrlState';
 import { formKeys, namesAndPlaceHolders } from '@/lib/kpop';
 import {
   buildAllSearchParams,
-  buildClearSearchParams,
   buildFollowingSearchParams,
   buildRecentSearchParams,
   buildTimelineShiftSearchParams,
@@ -17,7 +16,7 @@ import {
   getKpopView,
   searchParamsToKpopQueryState,
 } from '@/lib/kpop/query';
-import { ChevronLeft, ChevronRight, Loader2, Star, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Users } from 'lucide-react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 
 import {
@@ -42,31 +41,75 @@ export default function ComebacksForm() {
   );
   const kpopView = getKpopView(searchParams);
   const isFollowingView = kpopView === 'following';
-  const hasSearchFilters = namesAndPlaceHolders.some(({ name }) => searchParams.has(name)) || searchParams.has('exact');
+  const hasSearchFilters =
+    namesAndPlaceHolders.some(({ name }) => searchParams.has(name)) ||
+    searchParams.has('exact');
   const [searchOpen, setSearchOpen] = useState(hasSearchFilters);
   useEffect(() => setSearchOpen(hasSearchFilters), [hasSearchFilters]);
+  const isTimelineView = !isFollowingView && !searchOpen;
   const activePreset = getActiveKpopPreset(searchParams);
   const canGoEarlier = canShiftTimelineEarlier(queryState);
-  const {
-    artists,
-    isLoaded,
-    openManager,
-    preferences,
-    setLookbackDays,
-    setOrdering,
-  } = useFollowing();
+  const { isLoaded, openManager, preferences, setLookbackDays, setOrdering } =
+    useFollowing();
 
   return (
     <div className='flex w-full max-w-5xl flex-col gap-5 rounded-sm border border-primary-kp/25 bg-background/40 px-4 py-4 md:px-6'>
-      <div className='flex flex-wrap gap-2 border-b border-primary-kp/20 pb-4' aria-label='K-pop browse mode'>
-        <Button type='button' variant={!isFollowingView && !searchOpen ? 'default' : 'outline'} onClick={() => { setSearchOpen(false); startSearchTransition(() => router.replace(`${pathname}?${buildRecentSearchParams(searchParams).toString()}`)); }}>Timeline</Button>
-        <Button type='button' variant={isFollowingView ? 'default' : 'outline'} onClick={onFollowingClick(searchParams, pathname, router, startSearchTransition)}>Following</Button>
-        <Button type='button' variant={searchOpen && !isFollowingView ? 'default' : 'outline'} onClick={() => { setSearchOpen(true); if (isFollowingView) startSearchTransition(() => router.replace(`${pathname}?${buildRecentSearchParams(searchParams).toString()}`)); }}>Search</Button>
+      <div
+        className='flex flex-wrap gap-2 border-b border-primary-kp/20 pb-4'
+        aria-label='K-pop browse mode'
+      >
+        <Button
+          type='button'
+          variant={!isFollowingView && !searchOpen ? 'default' : 'outline'}
+          className={modeButtonClass(isTimelineView)}
+          onClick={() => {
+            setSearchOpen(false);
+            startSearchTransition(() =>
+              router.replace(
+                `${pathname}?${buildRecentSearchParams(searchParams).toString()}`
+              )
+            );
+          }}
+        >
+          Timeline
+        </Button>
+        <Button
+          type='button'
+          variant={isFollowingView ? 'default' : 'outline'}
+          className={modeButtonClass(isFollowingView)}
+          onClick={onFollowingClick(
+            searchParams,
+            pathname,
+            router,
+            startSearchTransition
+          )}
+        >
+          Following
+        </Button>
+        <Button
+          type='button'
+          variant={searchOpen && !isFollowingView ? 'default' : 'outline'}
+          className={modeButtonClass(searchOpen && !isFollowingView)}
+          onClick={() => {
+            setSearchOpen(true);
+            startSearchTransition(() =>
+              router.replace(
+                `${pathname}?${buildAllSearchParams(searchParams).toString()}`
+              )
+            );
+          }}
+        >
+          Search
+        </Button>
       </div>
       <div className='flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between'>
         <div className='flex flex-col gap-1'>
           <h3 className='mt-2 text-2xl font-semibold'>
-            {isFollowingView ? 'Following' : timelineLabel}
+            {isFollowingView
+              ? 'Following'
+              : searchOpen
+                ? 'Search archive'
+                : timelineLabel}
           </h3>
           <p className='text-sm text-muted-foreground'>
             {isFollowingView
@@ -74,11 +117,13 @@ export default function ComebacksForm() {
                   preferences.lookbackDays,
                   preferences.ordering
                 )
-              : 'Browse by week, refine the search with artist or title filters.'}
+              : searchOpen
+                ? 'Find releases across the full archive.'
+                : 'Browse by week, refine the search with artist or title filters.'}
           </p>
         </div>
         <div className='flex flex-wrap justify-end gap-2'>
-          {!isFollowingView && (
+          {isTimelineView && (
             <>
               <Button
                 variant='outline'
@@ -112,77 +157,52 @@ export default function ComebacksForm() {
               </Button>
             </>
           )}
-          <Button
-            variant={activePreset === 'recent' ? 'default' : 'outline'}
-            className={presetButtonClass(activePreset === 'recent')}
-            onClick={onPresetClick(
-              searchParams,
-              pathname,
-              router,
-              'recent',
-              startSearchTransition
-            )}
-            disabled={isSearching}
-            aria-pressed={activePreset === 'recent'}
-          >
-            Recent
-          </Button>
-          <Button
-            variant={activePreset === 'today' ? 'default' : 'outline'}
-            className={presetButtonClass(activePreset === 'today')}
-            onClick={onPresetClick(
-              searchParams,
-              pathname,
-              router,
-              'today',
-              startSearchTransition
-            )}
-            disabled={isSearching}
-            aria-pressed={activePreset === 'today'}
-          >
-            Today
-          </Button>
-          <Button
-            variant={activePreset === 'all' ? 'default' : 'outline'}
-            className={presetButtonClass(activePreset === 'all')}
-            onClick={onPresetClick(
-              searchParams,
-              pathname,
-              router,
-              'all',
-              startSearchTransition
-            )}
-            disabled={isSearching}
-            aria-pressed={activePreset === 'all'}
-          >
-            Archive
-          </Button>
-          <Button
-            variant={activePreset === 'following' ? 'default' : 'outline'}
-            className={presetButtonClass(activePreset === 'following')}
-            onClick={onFollowingClick(
-              searchParams,
-              pathname,
-              router,
-              startSearchTransition
-            )}
-            disabled={isSearching}
-            aria-pressed={activePreset === 'following'}
-          >
-            <Star className='mr-2 h-4 w-4' />
-            Following
-            {isLoaded && artists.length > 0 ? ` (${artists.length})` : ''}
-          </Button>
-          <Button
-            type='button'
-            variant='outline'
-            className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-            onClick={openManager}
-            disabled={!isLoaded}
-          >
-            <Users className='mr-2 h-4 w-4' />
-            Manage
-          </Button>
+          {isTimelineView && (
+            <>
+              <Button
+                variant={activePreset === 'recent' ? 'default' : 'outline'}
+                className={presetButtonClass(activePreset === 'recent')}
+                onClick={onPresetClick(
+                  searchParams,
+                  pathname,
+                  router,
+                  'recent',
+                  startSearchTransition
+                )}
+                disabled={isSearching}
+                aria-pressed={activePreset === 'recent'}
+              >
+                Recent
+              </Button>
+              <Button
+                variant={activePreset === 'today' ? 'default' : 'outline'}
+                className={presetButtonClass(activePreset === 'today')}
+                onClick={onPresetClick(
+                  searchParams,
+                  pathname,
+                  router,
+                  'today',
+                  startSearchTransition
+                )}
+                disabled={isSearching}
+                aria-pressed={activePreset === 'today'}
+              >
+                Today
+              </Button>
+            </>
+          )}
+          {isFollowingView && (
+            <Button
+              type='button'
+              variant='outline'
+              className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+              onClick={openManager}
+              disabled={!isLoaded}
+            >
+              <Users className='mr-2 h-4 w-4' />
+              Manage
+            </Button>
+          )}
         </div>
       </div>
 
@@ -202,6 +222,9 @@ export default function ComebacksForm() {
                     ? 'default'
                     : 'outline'
                 }
+                className={preferenceButtonClass(
+                  preferences.lookbackDays === lookbackDays
+                )}
                 onClick={() => setLookbackDays(lookbackDays)}
                 disabled={!isLoaded}
               >
@@ -219,6 +242,9 @@ export default function ComebacksForm() {
                   ? 'default'
                   : 'outline'
               }
+              className={preferenceButtonClass(
+                preferences.ordering === 'upcoming_first'
+              )}
               onClick={() => setOrdering('upcoming_first')}
               disabled={!isLoaded}
             >
@@ -230,6 +256,9 @@ export default function ComebacksForm() {
               variant={
                 preferences.ordering === 'recent_first' ? 'default' : 'outline'
               }
+              className={preferenceButtonClass(
+                preferences.ordering === 'recent_first'
+              )}
               onClick={() => setOrdering('recent_first')}
               disabled={!isLoaded}
             >
@@ -248,7 +277,9 @@ export default function ComebacksForm() {
           )}
           className='flex flex-col gap-4'
         >
-          <p className='text-sm text-muted-foreground'>Search the archive. Timeline controls remain available above.</p>
+          <p className='text-sm text-muted-foreground'>
+            Use artist, title, and exact-match filters to narrow the archive.
+          </p>
           <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5'>
             {namesAndPlaceHolders
               .slice(0, namesAndPlaceHolders.length - 1)
@@ -310,6 +341,18 @@ function presetButtonClass(isActive: boolean) {
     : 'whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10';
 }
 
+function modeButtonClass(isActive: boolean) {
+  return isActive
+    ? 'bg-primary-kp text-primary-foreground hover:bg-primary-kp/90'
+    : 'border-primary-kp/40 bg-transparent hover:bg-primary-kp/10';
+}
+
+function preferenceButtonClass(isActive: boolean) {
+  return isActive
+    ? 'bg-primary-kp text-primary-foreground hover:bg-primary-kp/90'
+    : 'border-primary-kp/40 bg-transparent hover:bg-primary-kp/10';
+}
+
 function followingDescription(
   lookbackDays: number,
   ordering: 'upcoming_first' | 'recent_first'
@@ -346,16 +389,14 @@ function onPresetClick(
     | ReturnType<typeof useURLState>['searchParams'],
   pathname: string,
   router: ReturnType<typeof useURLState>['router'],
-  preset: 'recent' | 'today' | 'all',
+  preset: 'recent' | 'today',
   startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
     const nextSearchParams =
       preset === 'recent'
         ? buildRecentSearchParams(searchParams)
-        : preset === 'today'
-          ? buildTodaySearchParams(searchParams)
-          : buildAllSearchParams(searchParams);
+        : buildTodaySearchParams(searchParams);
     startSearchTransition(() => {
       router.replace(`${pathname}?${nextSearchParams.toString()}`);
     });
@@ -403,7 +444,7 @@ function onClearClick(
   startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
-    const searchParams = buildClearSearchParams(new URLSearchParams());
+    const searchParams = buildAllSearchParams(new URLSearchParams());
     startSearchTransition(() => {
       router.replace(`${pathname}?${searchParams.toString()}`);
     });

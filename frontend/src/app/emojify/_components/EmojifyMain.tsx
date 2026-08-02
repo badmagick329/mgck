@@ -5,7 +5,6 @@ import EmojifyHeader from '@/app/emojify/_components/EmojifyHeader';
 import { motion } from 'motion/react';
 import { useEmojifyContext } from '../_context/store';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 export default function EmojifyMain({
   username,
@@ -19,7 +18,7 @@ export default function EmojifyMain({
   const { isLoaded } = useEmojifyContext();
 
   return (
-    <article className='flex w-full min-w-[360px] max-w-[800px] flex-col grow px-2 pt-6'>
+    <article className='flex w-full min-w-[360px] max-w-[800px] grow flex-col px-2 pt-6'>
       <motion.div
         key='content'
         initial={{ opacity: 0, y: 40 }}
@@ -33,12 +32,18 @@ export default function EmojifyMain({
         <EmojifyHeader headerTypingSequence={headerTypingSequence} />
         <InputMessageField />
         <EmojisField aiEnabled={showAi} />
-        {!showAi && (
-          <Button asChild variant='outline' className='mb-3 self-start'>
-            <Link href='/account/login?returnTo=%2Femojify'>Sign in to use AI emoji suggestions</Link>
-          </Button>
-        )}
         <OutputField username={username} showAi={showAi} />
+        {!showAi && (
+          <p className='mt-3 text-right text-sm text-muted-foreground'>
+            AI emoji suggestions are available when signed in.{' '}
+            <Link
+              className='text-foreground underline underline-offset-4 hover:text-primary-em'
+              href='/account/login?returnTo=%2Femojify'
+            >
+              Sign in
+            </Link>
+          </p>
+        )}
       </motion.div>
     </article>
   );
