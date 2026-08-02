@@ -28,7 +28,7 @@ export default function HomeFeatureGrid({ features }: { features: HomeFeature[] 
           <h2 className='text-2xl font-bold'>{feature.title}</h2>
           <p className='mt-3 text-base text-current/80'>{feature.description}</p>
           {feature.status && <span className='mt-4 w-fit rounded-full border border-current/35 bg-black/15 px-3 py-1 text-sm font-semibold'>{feature.status}</span>}
-          <div className='mt-auto flex flex-wrap gap-3 pt-6'>
+          <div className='mt-auto flex flex-col gap-3 pt-6'>
             <FeatureAction action={feature.primary} className={feature.buttonClassName} />
             {feature.secondary && <FeatureAction action={feature.secondary} className='border-current/40 bg-black/15 hover:bg-black/25' />}
           </div>
@@ -40,7 +40,7 @@ export default function HomeFeatureGrid({ features }: { features: HomeFeature[] 
 
 function FeatureAction({ action, className }: { action: Action; className: string }) {
   if (action.external) {
-    return <Button asChild className={`font-semibold shadow-lg ${className}`}><a href={action.href}>{action.label}</a></Button>;
+    return <Button asChild className={`w-full font-semibold shadow-lg ${className}`}><a href={action.href}>{action.label}</a></Button>;
   }
-  return <Button asChild className={`font-semibold shadow-lg ${className}`}><Link href={action.href}>{action.label}</Link></Button>;
+  return <Button asChild className={`w-full font-semibold shadow-lg ${className}`}><Link href={action.href}>{action.label}</Link></Button>;
 }
