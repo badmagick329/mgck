@@ -1,6 +1,7 @@
 from api.apps import ApiConfig
 from api.serializers import GfysListSerializer
 from django.conf import settings
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -176,8 +177,27 @@ class GfysList(generics.ListAPIView):
             self.request.query_params.get("start_date", ""),
             self.request.query_params.get("end_date", ""),
             self.request.query_params.get("account", ""),
+            self.request.query_params.get("sort", "recent"),
         )
         return gfys
+
+
+class RandomGfy(APIView):
+    throttle_classes = [GfysListThrottle]
+
+    def get(self, request, *args, **kwargs):
+        gfys = filter_gfys(
+            request.query_params.get("title", ""),
+            request.query_params.get("tags", ""),
+            request.query_params.get("start_date", ""),
+            request.query_params.get("end_date", ""),
+            request.query_params.get("account", ""),
+        )
+        count = gfys.count()
+        if not count:
+            raise Http404
+        gfy = gfys[random.randrange(count)]
+        return Response({"imgur_id": gfy.imgur_id})
 
 
 class GfyViewCountView(APIView):

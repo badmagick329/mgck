@@ -1,4 +1,4 @@
-import { fetchAccounts } from '@/actions/gfys';
+import { fetchAccounts, fetchRandomGfy } from '@/actions/gfys';
 import { Button } from '@/components/ui/button';
 import { SearchFormParams, SearchParams } from '@/lib/types/gfys';
 import { validDateStringOrNull } from '@/lib/utils';
@@ -80,6 +80,24 @@ export default function SearchFormContent() {
           selectedAccount={selectedAccount}
           setSelectedAccount={setSelectedAccount}
         />
+        <label className='flex flex-col gap-1 text-sm'>
+          Sort
+          <select
+            aria-label='Sort Gfys'
+            className='rounded-md border bg-background px-3 py-2'
+            value={searchParams.get('sort') || 'recent'}
+            onChange={(event) => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('sort', event.target.value);
+              params.delete('page');
+              router.push(createURL(pathname, params.toString()));
+            }}
+          >
+            <option value='recent'>Most recent</option>
+            <option value='oldest'>Oldest</option>
+            <option value='most_viewed'>Most viewed</option>
+          </select>
+        </label>
         <SearchTextInput
           name={'start_date'}
           searchParams={searchParams}
@@ -115,6 +133,17 @@ export default function SearchFormContent() {
           onClick={clearForm}
         >
           Clear
+        </Button>
+        <Button
+          type='button'
+          className='bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
+          variant='secondary'
+          onClick={async () => {
+            const id = await fetchRandomGfy(new URLSearchParams(searchParams.toString()));
+            if (id) router.push(`/gfys/${id}`);
+          }}
+        >
+          Random Gfy
         </Button>
       </div>
     </form>

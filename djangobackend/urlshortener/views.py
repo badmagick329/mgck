@@ -57,12 +57,6 @@ def urls(request):
     return Response({"error": "Method not allowed"}, status=405)
 
 
-@api_view(["GET", "DELETE"])
+@api_view(["GET"])
 def url(request, short_id):
-    if request.method == "GET":
-        return get_shortened_url_target_response(short_id)
-    if request.method == "DELETE":
-        username = request.GET.get("username", "").strip()
-        return delete_shortened_url_response(short_id, username)
-
-    return Response({"error": "Method not allowed"}, status=405)
+    return get_shortened_url_target_response(short_id)

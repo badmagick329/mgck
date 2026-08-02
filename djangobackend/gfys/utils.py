@@ -1,3 +1,4 @@
+import random
 import re
 from datetime import datetime
 
@@ -61,7 +62,8 @@ def format_gfys(
 
 
 def filter_gfys(
-    title: str, tags: str, start_date: str, end_date: str, account: str
+    title: str, tags: str, start_date: str, end_date: str, account: str,
+    sort: str = "recent",
 ) -> QuerySet[Gfy]:
     title = title.strip().lower()
     tags = [tag.strip().lower() for tag in tags.split(",") if tag.strip()]  # type: ignore
@@ -75,12 +77,16 @@ def filter_gfys(
         filters.append(Q(date__lte=end_date))
     if account:
         filters.append(Q(account__name__iexact=account))
+    ordering = (
+        (F("date").asc(nulls_last=True), "id")
+        if sort == "oldest"
+        else (F("date").desc(nulls_last=True), "-id")
+    )
     if filters or tags:
         if not tags:
-            return (
+            return order_gfys(
                 Gfy.objects.filter(*filters)
-                .prefetch_related("tags")
-                .order_by(F("date").desc(nulls_last=True), "-id")
+                .prefetch_related("tags"), sort, ordering
             )
         else:
             results = (
@@ -89,15 +95,21 @@ def filter_gfys(
                 .annotate(num_tags=Count("tags"))
                 .filter(num_tags=len(tags))
                 .prefetch_related("tags")
-                .order_by(F("date").desc(nulls_last=True), "-id")
             )
-            return results
+            return order_gfys(results, sort, ordering)
 
-    return (
+    return order_gfys(
         Gfy.objects.all()
-        .prefetch_related("tags")
-        .order_by(F("date").desc(nulls_last=True), "-id")
+        .prefetch_related("tags"), sort, ordering
     )
+
+
+def order_gfys(queryset: QuerySet[Gfy], sort: str, ordering) -> QuerySet[Gfy]:
+    if sort == "most_viewed":
+        return queryset.annotate(view_total=Count("gfyview")).order_by(
+            "-view_total", "-id"
+        )
+    return queryset.order_by(*ordering)
 
 
 def valid_date(date: str) -> datetime | None:

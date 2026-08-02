@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ACCOUNT_USER_HOME } from '@/lib/consts/urls';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { z } from 'zod';
 import { useAccount } from '@/hooks/useAccount';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { getSafeReturnTo } from '@/lib/account/return-to';
 import { IoIosEye, IoIosEyeOff } from 'react-icons/io';
 
 const FormSchema = z
@@ -33,6 +34,8 @@ export default function useLogin() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const destination = getSafeReturnTo(searchParams.get('returnTo'));
   const { loginUser, registerUser, errorResponse, setErrorResponse } =
     useAccount();
 
@@ -60,7 +63,7 @@ export default function useLogin() {
 
         const loggedIn = await loginUser({ username, password });
         if (loggedIn) {
-          router.push(ACCOUNT_USER_HOME);
+          router.replace(destination);
           router.refresh();
         }
         return;
@@ -68,7 +71,7 @@ export default function useLogin() {
 
       const loggedIn = await loginUser({ username, password });
       if (loggedIn) {
-        router.push(ACCOUNT_USER_HOME);
+        router.replace(destination);
         router.refresh();
       }
     } finally {

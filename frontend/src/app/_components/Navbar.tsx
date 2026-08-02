@@ -2,7 +2,7 @@
 
 import { ThemeToggler } from '@/app/_components/ThemeToggler';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { IoHome } from 'react-icons/io5';
 import { FaUser } from 'react-icons/fa';
 
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 
 export default function Navbar({ className = '' }: { className?: string }) {
   const path = usePathname();
+  const searchParams = useSearchParams();
   const isHome = path === '/';
   const isUserHome = path.startsWith('/account');
 
@@ -24,11 +25,11 @@ export default function Navbar({ className = '' }: { className?: string }) {
             </Button>
           </span>
         ) : (
-          <Link href='/' tabIndex={-1}>
-            <Button className='text-xl' size='icon' variant='outline'>
+          <Button asChild className='text-xl' size='icon' variant='outline'>
+            <Link href='/' aria-label='Home'>
               <IoHome />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
 
         {isUserHome ? (
@@ -38,11 +39,14 @@ export default function Navbar({ className = '' }: { className?: string }) {
             </Button>
           </span>
         ) : (
-          <Link href='/account' tabIndex={-1}>
-            <Button className='text-xl' size='icon' variant='outline'>
+          <Button asChild className='text-xl' size='icon' variant='outline'>
+            <Link
+              href={`/account?returnTo=${encodeURIComponent(`${path}${searchParams.size ? `?${searchParams.toString()}` : ''}`)}`}
+              aria-label='Account and sign in'
+            >
               <FaUser />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
       </div>
       <ThemeToggler />

@@ -10,10 +10,12 @@ export const ACCOUNT_LOGIN = `${ACCOUNT_BASE}/login`;
 export const ACCOUNT_USER_HOME = `${ACCOUNT_BASE}/home`;
 
 export const API_GFYS = '/api/gfys';
+export const API_GFYS_RANDOM = '/api/gfys/random';
 export const API_GFY_ACCOUNTS = '/api/accounts';
 export const API_GFY_VIEWS = '/api/gfy/views';
 export const API_SHORTENER_URLS = '/api/urlshortener/v2/urls';
 export const API_SHORTENER_URL = '/api/urlshortener/v2/url/';
+export const INTERNAL_SHORTENER_URL = '/internal/urlshortener/';
 export const API_KPOP = '/api/kpopcomebacks';
 export const API_KPOP_FOLLOWING = '/api/kpop/following';
 export const API_MILESTONES = '/milestones_api/';

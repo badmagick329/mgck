@@ -2,18 +2,43 @@ import { addGfyView } from '@/actions/gfys';
 import { useGfyContext } from '@/app/gfys/_context/store';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
-  const { videoVolume, setVideoVolume, goToNextGfy, data, loopAll } =
+  const { videoVolume, setVideoVolume, goToNextGfy, goToPreviousGfy, data, loopAll } =
     useGfyContext();
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoading, setVideoLoading] = useState<boolean>(true);
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [viewed, setViewed] = useState<boolean>(false);
   const router = useRouter();
 
+  useEffect(() => {
+    const onKeyDown = async (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.matches('input, textarea, select, button, a, [contenteditable="true"]')) return;
+      const video = videoRef.current;
+      if (!video) return;
+      if (event.key === ' ') {
+        event.preventDefault();
+        video.paused ? await video.play() : video.pause();
+      } else if (event.key.toLowerCase() === 'm') {
+        video.muted = !video.muted;
+      } else if (event.key === 'ArrowRight') {
+        const url = await goToNextGfy();
+        if (url) router.replace(url);
+      } else if (event.key === 'ArrowLeft') {
+        const url = await goToPreviousGfy();
+        if (url) router.replace(url);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [goToNextGfy, goToPreviousGfy, router]);
+
   return (
     <video
+      ref={videoRef}
       className={cn(
         videoLoading ? 'hidden' : 'block',
         'my-auto max-h-[90%] w-full sm:max-h-full'

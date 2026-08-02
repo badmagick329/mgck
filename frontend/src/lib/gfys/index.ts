@@ -62,7 +62,7 @@ export function createURL(
 }
 
 function cleanedSearchParams(urlSearchParams: URLSearchParams) {
-  const params = ['title', 'tags', 'account', 'start_date', 'end_date', 'page'];
+  const params = ['title', 'tags', 'account', 'start_date', 'end_date', 'sort', 'page'];
   for (const param of params) {
     if (urlSearchParams.get(param)?.trim() === '') {
       urlSearchParams.delete(param);
@@ -86,6 +86,7 @@ export function formDataFromSearchParams(
     'account',
     'start_date',
     'end_date',
+    'sort',
   ];
   for (const param of someOrEmptyStringParams) {
     const value = searchParams.get(param) || '';

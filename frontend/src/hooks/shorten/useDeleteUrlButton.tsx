@@ -30,17 +30,19 @@ export default function useDeleteUrlButton({
   const handleDelete = async () => {
     try {
       setIsDeleteDisabled(true);
-      await deleteShortenedUrl({
+      const result = await deleteShortenedUrl({
         code: shortCode,
       });
+      if (result.error) return false;
       const match = createdUrlOutput.match(/(?:.+\/)(.+)/);
       if (!match) {
-        return;
+        return true;
       }
       const idFromUrl = match[1];
       if (idFromUrl === shortCode) {
         setCreatedUrlOutput('');
       }
+      return true;
     } finally {
       setIsDeleteDisabled(false);
     }

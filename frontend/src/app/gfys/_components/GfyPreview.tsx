@@ -43,7 +43,7 @@ export default function GfyPreview({
               <Image
                 className='hover:ring-bg-primary-gf rounded-md object-cover hover:cursor-pointer hover:ring-2 hover:ring-offset-2'
                 src={imgurIdToThumbnail(imgurId)}
-                alt='imgur'
+                alt={title || `Red Velvet Gfy ${imgurId}`}
                 width={150}
                 height={150}
                 style={{ width: '150px', height: '150px' }}

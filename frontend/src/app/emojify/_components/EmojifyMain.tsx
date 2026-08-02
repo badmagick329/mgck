@@ -4,6 +4,8 @@ import OutputField from '@/app/emojify/_components/OutputField';
 import EmojifyHeader from '@/app/emojify/_components/EmojifyHeader';
 import { motion } from 'motion/react';
 import { useEmojifyContext } from '../_context/store';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function EmojifyMain({
   username,
@@ -31,6 +33,11 @@ export default function EmojifyMain({
         <EmojifyHeader headerTypingSequence={headerTypingSequence} />
         <InputMessageField />
         <EmojisField aiEnabled={showAi} />
+        {!showAi && (
+          <Button asChild variant='outline' className='mb-3 self-start'>
+            <Link href='/account/login?returnTo=%2Femojify'>Sign in to use AI emoji suggestions</Link>
+          </Button>
+        )}
         <OutputField username={username} showAi={showAi} />
       </motion.div>
     </article>

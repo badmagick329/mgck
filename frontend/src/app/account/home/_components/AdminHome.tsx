@@ -4,6 +4,8 @@ import UserManager from '@/app/account/home/_components/UserManager';
 import { API_USERS_BASE } from '@/lib/consts/urls';
 import LogoutButton from './LogoutButton';
 import FeedbackList from './FeedbackList';
+import AppLauncher from '@/app/_components/AppLauncher';
+import { FileImage, ListMusic, Link2, Milestone } from 'lucide-react';
 
 const BASE_URL = process.env.CORE_API_BASE_URL;
 
@@ -21,8 +23,20 @@ export default async function AdminHome({ username }: { username: string }) {
   return (
     <div className='w-full grow bg-background-kp'>
       <UserWelcomeHeader username={username} />
+      <main className='mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6'>
+        <section>
+          <h2 className='text-xl font-bold'>Quick access</h2>
+          <p className='mb-3 text-sm text-muted-foreground'>Jump back into the apps you maintain.</p>
+          <AppLauncher apps={[
+            { href: '/kpop', name: 'K-pop', description: 'Release timeline and artist following.', icon: <ListMusic />, className: 'bg-background-kp' },
+            { href: '/shorten', name: 'Shortener', description: 'Manage your links.', icon: <Link2 />, className: 'bg-secondary' },
+            { href: '/milestones', name: 'Milestones', description: 'Open the local-first tracker.', icon: <Milestone />, className: 'bg-background-ml' },
+            { href: '/image-edit', name: 'AutoCropper', description: 'Open the local image utility.', icon: <FileImage />, className: 'bg-background-dg' },
+          ]} />
+        </section>
+      </main>
       <UserManager users={usersAndRoles} />
-      <FeedbackList />
+      <section className='px-4 pb-8'><h2 className='mb-2 text-center text-xl font-bold'>Feedback queue</h2><FeedbackList /></section>
     </div>
   );
 }
