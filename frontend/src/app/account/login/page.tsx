@@ -19,9 +19,18 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'motion/react';
 import { IoIosCloseCircle } from 'react-icons/io';
+import { Suspense } from 'react';
 import useLogin from '@/hooks/account/useLogin';
 
 export default function Login() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const {
     isRegistering,
     handleSubmit,
@@ -167,6 +176,10 @@ export default function Login() {
       </Card>
     </article>
   );
+}
+
+function LoginFallback() {
+  return <article className='grow py-4' aria-label='Loading login form' />;
 }
 
 function ErrorMessages({

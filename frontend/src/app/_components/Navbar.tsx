@@ -3,6 +3,7 @@
 import { ThemeToggler } from '@/app/_components/ThemeToggler';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { IoHome } from 'react-icons/io5';
 import { FaUser } from 'react-icons/fa';
 
@@ -10,6 +11,14 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export default function Navbar({ className = '' }: { className?: string }) {
+  return (
+    <Suspense fallback={<NavbarPlaceholder className={className} />}>
+      <NavbarContent className={className} />
+    </Suspense>
+  );
+}
+
+function NavbarContent({ className }: { className: string }) {
   const path = usePathname();
   const searchParams = useSearchParams();
   const isHome = path === '/';
@@ -52,4 +61,8 @@ export default function Navbar({ className = '' }: { className?: string }) {
       <ThemeToggler />
     </div>
   );
+}
+
+function NavbarPlaceholder({ className }: { className: string }) {
+  return <div className={cn('h-12 w-full', className)} aria-hidden='true' />;
 }
