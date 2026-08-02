@@ -30,7 +30,7 @@ export default function UrlCard({
   onDeleted: (shortCode: string) => void;
 }) {
   return (
-    <section className='flex max-w-[800px] flex-col rounded-md bg-secondary px-4 py-2'>
+    <section className='flex w-full flex-col rounded-md bg-secondary px-4 py-2'>
       <div className='flex justify-between text-xs'>
         <span>Created: {formatDatetime(shortenedUrl.created)}</span>
         <span>Number of Uses: {shortenedUrl.number_of_uses}</span>

@@ -1,3 +1,5 @@
+import random
+
 from api.apps import ApiConfig
 from api.serializers import GfysListSerializer
 from django.conf import settings

@@ -5,9 +5,9 @@ import { Input } from '@/components/ui/input';
 import useURLState from '@/hooks/useUrlState';
 import { formKeys, namesAndPlaceHolders } from '@/lib/kpop';
 import {
-  buildAllSearchParams,
   buildFollowingSearchParams,
   buildRecentSearchParams,
+  buildSearchSearchParams,
   buildTimelineShiftSearchParams,
   buildTodaySearchParams,
   canShiftTimelineEarlier,
@@ -41,16 +41,28 @@ export default function ComebacksForm() {
   );
   const kpopView = getKpopView(searchParams);
   const isFollowingView = kpopView === 'following';
+  const isSearchView = kpopView === 'search';
   const hasSearchFilters =
     namesAndPlaceHolders.some(({ name }) => searchParams.has(name)) ||
     searchParams.has('exact');
-  const [searchOpen, setSearchOpen] = useState(hasSearchFilters);
-  useEffect(() => setSearchOpen(hasSearchFilters), [hasSearchFilters]);
+  const [searchOpen, setSearchOpen] = useState(
+    isSearchView || hasSearchFilters
+  );
+  useEffect(
+    () => setSearchOpen(isSearchView || hasSearchFilters),
+    [hasSearchFilters, isSearchView]
+  );
   const isTimelineView = !isFollowingView && !searchOpen;
   const activePreset = getActiveKpopPreset(searchParams);
   const canGoEarlier = canShiftTimelineEarlier(queryState);
-  const { isLoaded, openManager, preferences, setLookbackDays, setOrdering } =
-    useFollowing();
+  const {
+    artists,
+    isLoaded,
+    openManager,
+    preferences,
+    setLookbackDays,
+    setOrdering,
+  } = useFollowing();
 
   return (
     <div className='flex w-full max-w-5xl flex-col gap-5 rounded-sm border border-primary-kp/25 bg-background/40 px-4 py-4 md:px-6'>
@@ -88,13 +100,13 @@ export default function ComebacksForm() {
         </Button>
         <Button
           type='button'
-          variant={searchOpen && !isFollowingView ? 'default' : 'outline'}
-          className={modeButtonClass(searchOpen && !isFollowingView)}
+          variant={isSearchView ? 'default' : 'outline'}
+          className={modeButtonClass(isSearchView)}
           onClick={() => {
             setSearchOpen(true);
             startSearchTransition(() =>
               router.replace(
-                `${pathname}?${buildAllSearchParams(searchParams).toString()}`
+                `${pathname}?${buildSearchSearchParams(searchParams).toString()}`
               )
             );
           }}
@@ -106,8 +118,8 @@ export default function ComebacksForm() {
         <div className='flex flex-col gap-1'>
           <h3 className='mt-2 text-2xl font-semibold'>
             {isFollowingView
-              ? 'Following'
-              : searchOpen
+              ? `Following (${isLoaded ? artists.length : '…'})`
+              : isSearchView
                 ? 'Search archive'
                 : timelineLabel}
           </h3>
@@ -117,8 +129,8 @@ export default function ComebacksForm() {
                   preferences.lookbackDays,
                   preferences.ordering
                 )
-              : searchOpen
-                ? 'Find releases across the full archive.'
+              : isSearchView
+                ? 'Adjust the date range, then narrow it by artist or title.'
                 : 'Browse by week, refine the search with artist or title filters.'}
           </p>
         </div>
@@ -428,7 +440,7 @@ function onSearchSubmit(
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const oldSearchParams = new URLSearchParams(searchParams.toString());
-    oldSearchParams.delete('view');
+    oldSearchParams.set('view', 'search');
     if (oldSearchParams.has('page')) {
       oldSearchParams.delete('page');
     }
@@ -444,7 +456,7 @@ function onClearClick(
   startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
-    const searchParams = buildAllSearchParams(new URLSearchParams());
+    const searchParams = buildSearchSearchParams(new URLSearchParams());
     startSearchTransition(() => {
       router.replace(`${pathname}?${searchParams.toString()}`);
     });
