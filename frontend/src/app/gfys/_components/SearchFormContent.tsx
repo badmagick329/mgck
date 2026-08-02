@@ -158,7 +158,7 @@ export default function SearchFormContent() {
           className='bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
           variant='secondary'
           onClick={async () => {
-            const id = await fetchRandomGfy(new URLSearchParams(searchParams.toString()));
+            const id = await fetchRandomGfy(searchParams.toString());
             if (id) router.push(`/gfys/${id}`);
           }}
         >
