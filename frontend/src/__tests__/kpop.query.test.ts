@@ -3,6 +3,7 @@ import {
   buildClearSearchParams,
   buildFollowingSearchParams,
   buildRecentSearchParams,
+  buildSearchSearchParams,
   buildTimelineShiftSearchParams,
   buildTodaySearchParams,
   canShiftTimelineEarlier,
@@ -104,6 +105,17 @@ describe('kpop query helpers', () => {
       'following'
     );
     expect(buildRecentSearchParams(following).get('view')).toBeNull();
+  });
+
+  test('opens search without discarding the current date range', () => {
+    const search = buildSearchSearchParams(
+      new URLSearchParams('start-date=250526&end-date=250601&page=3')
+    );
+
+    expect(getKpopView(search)).toBe('search');
+    expect(search.get('start-date')).toBe('250526');
+    expect(search.get('end-date')).toBe('250601');
+    expect(search.get('page')).toBeNull();
   });
 
   test('identifies only the active browse preset', () => {

@@ -8,7 +8,7 @@ export const BOUNDED_WINDOW_PAGE_SIZE = 100;
 export const ARCHIVE_START_DATE_COMPACT = '000101';
 export const FOLLOWING_LOOKBACK_DAYS = 30;
 
-export type KpopView = 'timeline' | 'following';
+export type KpopView = 'timeline' | 'following' | 'search';
 export type KpopPreset = 'recent' | 'today' | 'all' | 'following' | null;
 
 export type KpopQueryState = {
@@ -40,9 +40,9 @@ export function getFollowingStartDate(lookbackDays = FOLLOWING_LOOKBACK_DAYS) {
 }
 
 export function getKpopView(searchParams: SearchParamsInput): KpopView {
-  return toURLSearchParams(searchParams).get('view') === 'following'
-    ? 'following'
-    : 'timeline';
+  const view = toURLSearchParams(searchParams).get('view');
+  if (view === 'following' || view === 'search') return view;
+  return 'timeline';
 }
 
 export function getActiveKpopPreset(
@@ -116,7 +116,7 @@ export function getCanonicalKpopSearchParams(
   if (page > 1) {
     canonical.set('page', String(page));
   }
-  if (view === 'following') {
+  if (view === 'following' || view === 'search') {
     canonical.set('view', view);
   }
   return canonical;
@@ -233,6 +233,13 @@ export function buildAllSearchParams(searchParams: SearchParamsInput) {
 export function buildFollowingSearchParams(searchParams: SearchParamsInput) {
   const params = getCanonicalKpopSearchParams(searchParams);
   params.set('view', 'following');
+  params.delete('page');
+  return params;
+}
+
+export function buildSearchSearchParams(searchParams: SearchParamsInput) {
+  const params = getCanonicalKpopSearchParams(searchParams);
+  params.set('view', 'search');
   params.delete('page');
   return params;
 }
