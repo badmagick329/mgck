@@ -11,10 +11,22 @@ import {
   getCanonicalKpopSearchParams,
   getKpopApiQuery,
   getKpopView,
+  hasKpopSearchFilters,
   searchParamsToKpopQueryState,
 } from '@/lib/kpop/query';
 
 describe('kpop query helpers', () => {
+  test('does not treat timeline dates as search filters', () => {
+    expect(
+      hasKpopSearchFilters(new URLSearchParams('start-date=250525'))
+    ).toBe(false);
+    expect(
+      hasKpopSearchFilters(
+        new URLSearchParams('start-date=250525&artist=Red%20Velvet')
+      )
+    ).toBe(true);
+  });
+
   test('canonicalizes empty state to default recent browse window', () => {
     const params = getCanonicalKpopSearchParams(new URLSearchParams());
 

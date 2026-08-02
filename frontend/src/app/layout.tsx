@@ -11,7 +11,21 @@ const font = Quicksand({
 });
 
 export const metadata: Metadata = {
-  title: 'Mgck.ink',
+  metadataBase: new URL('https://mgck.ink'),
+  title: {
+    default: 'mgck',
+    template: '%s | mgck',
+  },
+  description:
+    'A Red Velvet GIF archive, K-pop comeback tracker, and a few small web tools.',
+  openGraph: {
+    type: 'website',
+    locale: 'en_GB',
+    siteName: 'mgck',
+  },
+  twitter: {
+    card: 'summary',
+  },
   icons: {
     icon: '/favicon.ico',
   },

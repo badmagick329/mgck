@@ -12,6 +12,7 @@ import {
   buildTodaySearchParams,
   canShiftTimelineEarlier,
   getActiveKpopPreset,
+  hasKpopSearchFilters,
   getTimelineLabel,
   getKpopView,
   searchParamsToKpopQueryState,
@@ -42,9 +43,7 @@ export default function ComebacksForm() {
   const kpopView = getKpopView(searchParams);
   const isFollowingView = kpopView === 'following';
   const isSearchView = kpopView === 'search';
-  const hasSearchFilters =
-    namesAndPlaceHolders.some(({ name }) => searchParams.has(name)) ||
-    searchParams.has('exact');
+  const hasSearchFilters = hasKpopSearchFilters(searchParams);
   const [searchOpen, setSearchOpen] = useState(
     isSearchView || hasSearchFilters
   );
