@@ -24,7 +24,7 @@ export default function UrlShortenerPage({
       <header>
         <Navbar />
       </header>
-      <article className='flex grow flex-col flex-wrap items-center gap-4 px-4 pt-6'>
+      <article className='mx-auto flex w-full max-w-6xl grow flex-col flex-wrap items-center gap-4 px-4 pt-6'>
         <h1 className='text-xl font-semibold md:text-2xl'>URL Shortener</h1>
         <span className='text-red-500'>{error}</span>
         <CreateUrlForm
@@ -38,7 +38,9 @@ export default function UrlShortenerPage({
           createdUrlOutput={output}
           setCreatedUrlOutput={setOutput}
           onDeleted={(shortCode) =>
-            setUrls((current) => current.filter((url) => url.short_id !== shortCode))
+            setUrls((current) =>
+              current.filter((url) => url.short_id !== shortCode)
+            )
           }
         />
       </article>
@@ -71,7 +73,7 @@ function CreateUrlForm({
 
   return (
     <form
-      className='grid w-full grid-cols-1 gap-4 px-2 md:px-32 lg:px-64 xl:px-96'
+      className='grid w-full max-w-3xl grid-cols-1 gap-4'
       action={submitForm}
     >
       <abbr
