@@ -5,6 +5,7 @@ from fileuploader.apps import FileuploaderConfig
 app_name = FileuploaderConfig.name
 
 urlpatterns = [
+    path("session-status/", views.session_status, name="session_status"),
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
     path(

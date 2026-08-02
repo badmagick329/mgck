@@ -5,6 +5,7 @@ import HomeFeatureGrid, {
 import Navbar from '@/app/_components/Navbar';
 import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import { shortenerLauncherAccess } from '@/lib/account/launcher-access';
+import { hasFilesAccess } from '@/lib/files/session';
 import { getFilesUrl } from '@/lib/files/url';
 import {
   FileUp,
@@ -19,6 +20,7 @@ import {
 export default async function Index() {
   const session = await getVerifiedCoreSession();
   const shortener = shortenerLauncherAccess(session);
+  const filesAccess = await hasFilesAccess();
   const features: HomeFeature[] = [
     {
       title: 'Milestones',
@@ -92,13 +94,15 @@ export default async function Index() {
         'bg-slate-500 text-white shadow-[0_0_12px_rgba(148,163,184,0.65),0_0_2px_rgba(226,232,240,0.85)_inset] hover:bg-slate-400',
       primary: {
         href: getFilesUrl(),
-        label: 'Sign in to Files',
+        label: filesAccess ? 'Open Files' : 'Sign in to Files',
         external: true,
       },
-      secondary: {
-        href: '/files/request-access',
-        label: 'Request Files access',
-      },
+      secondary: filesAccess
+        ? undefined
+        : {
+            href: '/files/request-access',
+            label: 'Request Files access',
+          },
     },
   ];
 
