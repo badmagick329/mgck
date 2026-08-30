@@ -1,4 +1,8 @@
-import { SizeInfo, sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
+import {
+  ConversionFormat,
+  ConversionPresetId,
+  ConversionTarget,
+} from '@/lib/discordgifs/conversion-target';
 
 export type FFmpegLogEvent = {
   type: string;
@@ -13,6 +17,19 @@ export type FFmpegFileDataOutput = {
   url: string;
   type: string;
   finalSize?: number;
+  targetId?: string;
+  format?: ConversionFormat;
+  mimeType?: ConversionTarget['mimeType'];
+  width?: number;
+};
+export type FFmpegConversionResult = {
+  url: string;
+  outputName: string;
+  finalSize: number;
+  targetId: string;
+  format: ConversionFormat;
+  mimeType: ConversionTarget['mimeType'];
+  width: number;
 };
 export type FFmpegConversionState =
   | 'idle'
@@ -23,9 +40,9 @@ export type FFmpegConversionState =
 export type FFmpegFileData = {
   file: File;
   outputs: Array<FFmpegFileDataOutput>;
-  outputTypes: Array<keyof typeof sizeInfo>;
+  outputTypes: Array<ConversionPresetId>;
   progress: number;
   size: number;
-  currentTarget: SizeInfo;
+  currentTarget: ConversionTarget;
   conversionState: FFmpegConversionState;
 };

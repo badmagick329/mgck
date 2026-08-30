@@ -1,4 +1,5 @@
 import {
+  FFmpegConversionResult,
   FFmpegConversionState,
   FFmpegLogEvent,
   FFmpegProgressEvent,
@@ -6,24 +7,68 @@ import {
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
+import { ConversionTarget } from './conversion-target';
 import {
-  FrameSize,
-  FrameSizeCalculator,
-  SizeInfo,
-  sizeInfo,
-} from './frame-size-calculator';
+  buildDownloadName,
+  buildOptimizedInputCommand,
+  buildOutputCommand,
+} from './ffmpeg-commands';
+import { FrameSizeCalculator } from './frame-size-calculator';
+
+type FFmpegData = Uint8Array | string;
+
+export type FFmpegRuntime = {
+  load(options: { coreURL: string; wasmURL: string }): Promise<boolean>;
+  exec(command: string[]): Promise<number>;
+  writeFile(name: string, data: FFmpegData): Promise<boolean>;
+  readFile(name: string): Promise<FFmpegData>;
+  deleteFile(name: string): Promise<boolean>;
+  on(event: 'log', callback: (event: FFmpegLogEvent) => void): void;
+  on(event: 'progress', callback: (event: FFmpegProgressEvent) => void): void;
+  off(event: 'log', callback: (event: FFmpegLogEvent) => void): void;
+  off(event: 'progress', callback: (event: FFmpegProgressEvent) => void): void;
+  terminate(): void;
+};
+
+type FFmpegManagerDependencies = {
+  createFFmpeg: () => FFmpegRuntime;
+  fetchFile: (file: File) => Promise<Uint8Array>;
+  toBlobURL: (url: string, mimeType: string) => Promise<string>;
+  createObjectURL: (blob: Blob) => string;
+  createId: () => string;
+  retryDelay: (milliseconds: number) => Promise<void>;
+};
 
 type FFmpegFileConfig = {
   file: File;
-  outputNameBase: string;
-  info: SizeInfo;
-  optimizedInput: boolean;
+  target: ConversionTarget;
+  inputName: string;
+  optimizedInputName: string;
+  outputFsName: string;
+  outputName: string;
+  activeInputName: string;
+};
+
+let fallbackId = 0;
+
+const defaultDependencies: FFmpegManagerDependencies = {
+  createFFmpeg: () => new FFmpeg() as FFmpegRuntime,
+  fetchFile,
+  toBlobURL,
+  createObjectURL: (blob) => URL.createObjectURL(blob),
+  createId: () =>
+    globalThis.crypto?.randomUUID?.() ?? `conversion-${++fallbackId}`,
+  retryDelay: (milliseconds) =>
+    new Promise((resolve) => setTimeout(resolve, milliseconds)),
 };
 
 export class FFmpegManager {
-  private ffmpeg: FFmpeg | null;
-  private fileConfig: FFmpegFileConfig | null;
-  private outputType: keyof typeof sizeInfo;
+  private ffmpeg: FFmpegRuntime | null = null;
+  private activeLoadRuntime: FFmpegRuntime | null = null;
+  private loadPromise: Promise<void> | null = null;
+  private loadGeneration = 0;
+  private fileConfig: FFmpegFileConfig | null = null;
+  private readonly dependencies: FFmpegManagerDependencies;
   private logMessageCallback?: (e: FFmpegLogEvent) => void;
   private progressCallback?: (e: FFmpegProgressEvent) => void;
   private newSizeCallback?: (size: number) => void;
@@ -31,57 +76,103 @@ export class FFmpegManager {
     conversionState: FFmpegConversionState
   ) => void;
 
-  constructor() {
-    this.ffmpeg = null;
-    this.fileConfig = null;
-    this.outputType = 'emote';
+  constructor(dependencies: Partial<FFmpegManagerDependencies> = {}) {
+    this.dependencies = { ...defaultDependencies, ...dependencies };
   }
 
-  public async load(retries = 3): Promise<void> {
-    try {
-      this.ffmpeg = new FFmpeg();
-      const baseURL =
-        'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/umd';
-      await this.ffmpeg.load({
-        coreURL: await toBlobURL(
+  public load(retries = 3): Promise<void> {
+    if (this.ffmpeg) {
+      return Promise.resolve();
+    }
+    if (this.loadPromise) {
+      return this.loadPromise;
+    }
+
+    const generation = ++this.loadGeneration;
+    const pendingLoad = this.loadWithRetries(retries, generation).finally(
+      () => {
+        if (this.loadPromise === pendingLoad) {
+          this.loadPromise = null;
+        }
+      }
+    );
+    this.loadPromise = pendingLoad;
+    return pendingLoad;
+  }
+
+  private async loadWithRetries(
+    retries: number,
+    generation: number
+  ): Promise<void> {
+    let attemptsRemaining = retries;
+    while (this.loadGeneration === generation) {
+      const ffmpeg = this.dependencies.createFFmpeg();
+      this.activeLoadRuntime = ffmpeg;
+      try {
+        const baseURL =
+          'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/umd';
+        const coreURL = await this.dependencies.toBlobURL(
           `${baseURL}/ffmpeg-core.js`,
           'text/javascript'
-        ),
-        wasmURL: await toBlobURL(
+        );
+        if (this.loadGeneration !== generation) {
+          return;
+        }
+        const wasmURL = await this.dependencies.toBlobURL(
           `${baseURL}/ffmpeg-core.wasm`,
           'application/wasm'
-        ),
-      });
-    } catch (error) {
-      if (retries > 0) {
-        console.log(`Retrying... Attempts left: ${retries - 1}`);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        return this.load(retries - 1);
+        );
+        if (this.loadGeneration !== generation) {
+          return;
+        }
+        await ffmpeg.load({
+          coreURL,
+          wasmURL,
+        });
+        if (this.loadGeneration !== generation) {
+          return;
+        }
+        if (this.activeLoadRuntime === ffmpeg) {
+          this.activeLoadRuntime = null;
+        }
+        this.ffmpeg = ffmpeg;
+        return;
+      } catch (error) {
+        if (this.loadGeneration !== generation) {
+          return;
+        }
+        if (this.activeLoadRuntime === ffmpeg) {
+          this.activeLoadRuntime = null;
+        }
+        ffmpeg.terminate();
+        if (attemptsRemaining <= 0) {
+          throw error;
+        }
+        attemptsRemaining -= 1;
+        console.log(`Retrying... Attempts left: ${attemptsRemaining}`);
+        await this.dependencies.retryDelay(2000);
       }
-      throw error;
     }
   }
 
   public setFileConfig({
     file,
-    info,
-  }: Pick<FFmpegFileConfig, 'file' | 'info'>): FFmpegManager {
-    let outputType = null;
-    for (const [key, val] of Object.entries(sizeInfo)) {
-      if (val === info) {
-        outputType = key as keyof typeof sizeInfo;
-        break;
-      }
-    }
-    if (!outputType) {
-      throw new Error('Invalid sizeInfo');
-    }
-    this.outputType = outputType;
+    target,
+  }: {
+    file: File;
+    target: ConversionTarget;
+  }): FFmpegManager {
+    const id = this.dependencies.createId();
+    const inputExtension = this.safeInputExtension(file.name);
+    const inputName = `input-${id}${inputExtension}`;
     this.fileConfig = {
       file,
-      outputNameBase: this.getOutputNameBase(file.name),
-      info,
-      optimizedInput: false,
+      target,
+      inputName,
+      optimizedInputName: `optimized-${id}.mp4`,
+      outputFsName: `output-${id}${target.extension}`,
+      outputName: buildDownloadName(file.name, target),
+      activeInputName: inputName,
     };
     return this;
   }
@@ -111,9 +202,17 @@ export class FFmpegManager {
   }
 
   public terminate(): void {
-    if (this.ffmpeg) {
-      this.ffmpeg.terminate();
+    this.loadGeneration += 1;
+    const loadedRuntime = this.ffmpeg;
+    const loadingRuntime = this.activeLoadRuntime;
+    loadingRuntime?.terminate();
+    if (loadedRuntime && loadedRuntime !== loadingRuntime) {
+      loadedRuntime.terminate();
     }
+    this.ffmpeg = null;
+    this.activeLoadRuntime = null;
+    this.loadPromise = null;
+    this.fileConfig = null;
   }
 
   public async deleteFile(name: string): Promise<void> {
@@ -126,222 +225,159 @@ export class FFmpegManager {
     return this.ffmpeg !== null;
   }
 
-  public async optimizeInput() {
-    if (!this.ffmpeg) {
+  public async convert(): Promise<FFmpegConversionResult | null> {
+    const ffmpeg = this.ffmpeg;
+    const config = this.fileConfig;
+    if (!ffmpeg) {
       throw new Error('FFmpeg not loaded');
     }
-    if (!this.fileConfig) {
-      throw new Error('FFmpegContrller config not set');
-    }
-    const { file } = this.fileConfig;
-    if (file.size < 0.6 * 1024 * 1024) {
-      return;
-    }
-    this.updateFileConversionStateCallback &&
-      this.updateFileConversionStateCallback('optimizing');
-    await this.ffmpeg.writeFile(file.name, await fetchFile(file));
-    const newName = this.newInputName();
-    const cmd = this.optimizedInputCommand();
-    const ret = await this.ffmpeg.exec(cmd);
-    if (ret === 1) {
-      throw new Error('Error optimizing input');
-    }
-    this.updateFileConversionStateCallback &&
-      this.updateFileConversionStateCallback('busy');
-    const data = await this.ffmpeg.readFile(newName);
-    const blob = new Blob(
-      [data instanceof Uint8Array ? new Uint8Array(data) : data],
-      { type: 'video/mp4' }
-    );
-    this.fileConfig.file = new File([blob], newName);
-    this.fileConfig.optimizedInput = true;
-  }
-
-  public async convert() {
-    if (!this.ffmpeg) {
-      throw new Error('FFmpeg not loaded');
-    }
-    if (!this.fileConfig) {
-      throw new Error('FFmpegContrller config not set');
-    }
-
-    const { file, info } = this.fileConfig;
-    try {
-      await this.ffmpeg.readFile(file.name);
-    } catch (e) {
-      await this.ffmpeg.writeFile(file.name, await fetchFile(file));
-    }
-    const calculator = new FrameSizeCalculator(info);
-    const outputName = this.fullOutputName();
-    const blob = await this.run(calculator, outputName);
-
-    if (!blob) {
-      return null;
-    }
-
-    const url = URL.createObjectURL(blob);
-    return {
-      url,
-      outputName,
-      finalSize: blob!.size,
-    };
-  }
-
-  private async cleanupOptimizedFile() {
-    if (!this.fileConfig) {
+    if (!config) {
       throw new Error('FFmpegManager config not set');
     }
-    if (!this.fileConfig.optimizedInput) {
-      return;
-    }
+
+    let logListenerAttached = false;
+    let progressListenerAttached = false;
     try {
-      await this.deleteFile(this.fileConfig.file.name);
-    } catch (e) {
-      console.error('Error deleting optimized file', e);
-    }
-  }
+      await ffmpeg.writeFile(
+        config.inputName,
+        await this.dependencies.fetchFile(config.file)
+      );
 
-  private async run(calculator: FrameSizeCalculator, outputName: string) {
-    if (!this.ffmpeg) {
-      throw new Error('FFmpeg not loaded');
-    }
-    if (!this.fileConfig) {
-      throw new Error('FFmpegController config not set');
-    }
-
-    try {
-      await this.optimizeInput();
-    } catch {
-      return null;
-    }
-
-    const { info } = this.fileConfig;
-    let size: FrameSize | null = {
-      width: info.startingWidth,
-      height: info.startingHeight,
-    };
-    let blob = null;
-    let iteration = 0;
-
-    this.logMessageCallback && this.ffmpeg.on('log', this.logMessageCallback);
-    this.progressCallback && this.ffmpeg.on('progress', this.progressCallback);
-    this.updateFileConversionStateCallback &&
-      this.updateFileConversionStateCallback('converting');
-    while (size !== null) {
-      if (calculator.isDone) {
-        break;
-      }
-      const ffmpegCmd = this.outputCommand(size.width);
-      const ret = await this.ffmpeg.exec(ffmpegCmd);
-      if (ret === 1) {
+      try {
+        await this.optimizeInput(config);
+      } catch {
         return null;
       }
-      const data = await this.ffmpeg.readFile(outputName);
+
+      if (this.logMessageCallback) {
+        ffmpeg.on('log', this.logMessageCallback);
+        logListenerAttached = true;
+      }
+      if (this.progressCallback) {
+        ffmpeg.on('progress', this.progressCallback);
+        progressListenerAttached = true;
+      }
+      this.updateFileConversionStateCallback?.('converting');
+
+      const result = await this.runSizeSearch(config);
+      if (!result) {
+        return null;
+      }
+
+      const { blob, width } = result;
+      return {
+        url: this.dependencies.createObjectURL(blob),
+        outputName: config.outputName,
+        finalSize: blob.size,
+        targetId: config.target.id,
+        format: config.target.format,
+        mimeType: config.target.mimeType,
+        width,
+      };
+    } finally {
+      try {
+        if (logListenerAttached && this.logMessageCallback) {
+          ffmpeg.off('log', this.logMessageCallback);
+        }
+      } catch (error) {
+        console.error('Error removing FFmpeg log listener', error);
+      }
+      try {
+        if (progressListenerAttached && this.progressCallback) {
+          ffmpeg.off('progress', this.progressCallback);
+        }
+      } catch (error) {
+        console.error('Error removing FFmpeg progress listener', error);
+      }
+      await this.cleanupFiles(config);
+      if (this.fileConfig === config) {
+        this.fileConfig = null;
+      }
+      this.updateFileConversionStateCallback?.('busy');
+    }
+  }
+
+  private async optimizeInput(config: FFmpegFileConfig): Promise<void> {
+    const ffmpeg = this.ffmpeg;
+    if (!ffmpeg || config.file.size < 0.6 * 1024 * 1024) {
+      return;
+    }
+
+    this.updateFileConversionStateCallback?.('optimizing');
+    const command = buildOptimizedInputCommand({
+      inputName: config.inputName,
+      outputName: config.optimizedInputName,
+      target: config.target,
+    });
+    const returnCode = await ffmpeg.exec(command);
+    if (returnCode === 1) {
+      throw new Error('Error optimizing input');
+    }
+    config.activeInputName = config.optimizedInputName;
+    this.updateFileConversionStateCallback?.('busy');
+  }
+
+  private async runSizeSearch(config: FFmpegFileConfig): Promise<{
+    blob: Blob;
+    width: number;
+  } | null> {
+    const ffmpeg = this.ffmpeg;
+    if (!ffmpeg) {
+      throw new Error('FFmpeg not loaded');
+    }
+
+    const calculator = new FrameSizeCalculator(config.target);
+    let width: number | null = config.target.startingWidth;
+    let lastWidth = width;
+    let blob: Blob | null = null;
+
+    while (width !== null && !calculator.isDone) {
+      lastWidth = width;
+      const command = buildOutputCommand({
+        inputName: config.activeInputName,
+        outputName: config.outputFsName,
+        target: config.target,
+        width,
+      });
+      const returnCode = await ffmpeg.exec(command);
+      if (returnCode === 1) {
+        return null;
+      }
+      const data = await ffmpeg.readFile(config.outputFsName);
       blob = new Blob(
         [data instanceof Uint8Array ? new Uint8Array(data) : data],
-        { type: this.ext().slice(1) }
+        { type: config.target.mimeType }
       );
-      this.newSizeCallback && this.newSizeCallback(blob.size);
-      size = calculator.getNewFrameSize(blob.size);
-      ++iteration;
+      this.newSizeCallback?.(blob.size);
+      width = calculator.getNewWidth(blob.size);
     }
-    this.updateFileConversionStateCallback &&
-      this.updateFileConversionStateCallback('busy');
-    this.logMessageCallback && this.ffmpeg.off('log', this.logMessageCallback);
-    this.progressCallback && this.ffmpeg.off('progress', this.progressCallback);
-    this.cleanupOptimizedFile();
-    this.fileConfig = null;
 
-    return blob;
+    return blob ? { blob, width: lastWidth } : null;
   }
 
-  private ext(): string {
-    if (!this.fileConfig) {
-      throw new Error('FFmpegManager config not set');
-    }
-    return this.outputType === 'sticker' ? '.png' : '.gif';
-  }
-
-  private outputCommand(width: number): Array<string> {
-    if (!this.fileConfig) {
-      throw new Error('FFmpegManager config not set');
-    }
-    if (this.outputType === 'sticker') {
-      return [
-        '-i',
-        this.fileConfig.file.name,
-        '-f',
-        'apng',
-        '-plays',
-        '0',
-        '-vf',
-        `scale=${width}:-1:flags=lanczos,split [a][b];[a] palettegen [p];[b][p] paletteuse=dither=sierra2_4a`,
-        '-compression_level',
-        '9',
-        `${this.fullOutputName()}`,
-      ];
-    }
-    return [
-      '-i',
-      this.fileConfig.file.name,
-      '-filter_complex',
-      `[0:v] scale=${width}:-1:flags=lanczos,split [a][b];[a] palettegen [p];[b][p] paletteuse=dither=sierra2_4a`,
-      `${this.fullOutputName()}`,
+  private async cleanupFiles(config: FFmpegFileConfig): Promise<void> {
+    const names = [
+      config.inputName,
+      config.optimizedInputName,
+      config.outputFsName,
     ];
-  }
-
-  private optimizedInputCommand(): Array<string> {
-    if (!this.fileConfig) {
-      throw new Error('FFmpegManager config not set');
-    }
-    if (this.outputType === 'sticker') {
-      return [
-        '-i',
-        this.fileConfig.file.name,
-        '-b:v',
-        '0.5M',
-        '-an',
-        '-vf',
-        `scale=${sizeInfo.sticker.startingWidth}:-2`,
-        '-preset',
-        'veryfast',
-        `${this.newInputName()}`,
-      ];
-    }
-    return [
-      '-i',
-      this.fileConfig.file.name,
-      '-b:v',
-      '0.5M',
-      '-an',
-      '-vf',
-      `scale=${sizeInfo.emote.startingWidth}:-2`,
-      '-preset',
-      'veryfast',
-      `${this.newInputName()}`,
-    ];
-  }
-
-  private fullOutputName(): string {
-    if (!this.fileConfig) {
-      throw new Error('FFmpegManager config not set');
-    }
-    return `${this.fileConfig.outputNameBase}${this.ext()}`;
-  }
-
-  private newInputName(): string {
-    if (!this.fileConfig) {
-      throw new Error('FFmpegManager config not set');
-    }
-    const baseName = this.fileConfig.file.name.slice(
-      0,
-      this.fileConfig.file.name.lastIndexOf('.')
+    await Promise.all(
+      names.map(async (name) => {
+        try {
+          await this.deleteFile(name);
+        } catch (error) {
+          console.error(`Error deleting temporary FFmpeg file ${name}`, error);
+        }
+      })
     );
-    return `${baseName}_${this.outputType}.mp4`;
   }
 
-  private getOutputNameBase(name: string): string {
-    const nameWithoutExt = name.slice(0, name.lastIndexOf('.'));
-    return `${nameWithoutExt}_${this.outputType}`;
+  private safeInputExtension(name: string): string {
+    const lastDot = name.lastIndexOf('.');
+    if (lastDot < 0) {
+      return '.input';
+    }
+    const extension = name.slice(lastDot).toLowerCase();
+    return /^\.[a-z0-9]{1,10}$/.test(extension) ? extension : '.input';
   }
 }

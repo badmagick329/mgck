@@ -1,4 +1,4 @@
-import { SizeInfo } from '@/lib/discordgifs/frame-size-calculator';
+import { ConversionTarget } from '@/lib/discordgifs/conversion-target';
 import { FFmpegConversionState } from '@/lib/types/discordgifs';
 
 const ballSize = 16;
@@ -12,7 +12,7 @@ export default function ProgressBar({
   iterationProgress,
   conversionState,
 }: {
-  target?: SizeInfo;
+  target?: ConversionTarget;
   current: number;
   iterationProgress: number;
   conversionState: FFmpegConversionState;

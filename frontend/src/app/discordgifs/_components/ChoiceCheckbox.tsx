@@ -1,8 +1,7 @@
 import { Checkbox } from '@/components/ui/checkbox-dg';
-import { sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
+import { ConversionPresetId } from '@/lib/discordgifs/conversion-target';
 import { capitaliseWords } from '@/lib/utils';
 
-type SizeInfoKey = keyof typeof sizeInfo;
 export default function ChoiceCheckbox({
   checkboxId,
   choice,
@@ -11,9 +10,9 @@ export default function ChoiceCheckbox({
   buttonsEnabled,
 }: {
   checkboxId: string;
-  choice: SizeInfoKey;
-  outputTypes: Array<SizeInfoKey>;
-  setOutputTypes: (targets: Array<SizeInfoKey>) => void;
+  choice: ConversionPresetId;
+  outputTypes: Array<ConversionPresetId>;
+  setOutputTypes: (targets: Array<ConversionPresetId>) => void;
   buttonsEnabled: boolean;
 }) {
   return (
