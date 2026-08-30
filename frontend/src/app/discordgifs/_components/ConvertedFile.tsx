@@ -1,4 +1,7 @@
-import { sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
+import {
+  ConversionPresetId,
+  conversionTargetPresets,
+} from '@/lib/discordgifs/conversion-target';
 import { FFmpegFileData } from '@/lib/types/discordgifs';
 import { truncateText } from '@/lib/utils';
 import clsx from 'clsx';
@@ -9,13 +12,13 @@ import OutputPlaceholder from './OutputPlaceholder';
 import ProgressBar from './ProgressBar';
 import { IoIosCloseCircle } from 'react-icons/io';
 
-const targetChoices = Object.keys(sizeInfo) as Array<keyof typeof sizeInfo>;
-
-type SizeInfoKey = keyof typeof sizeInfo;
+const targetChoices = Object.keys(
+  conversionTargetPresets
+) as Array<ConversionPresetId>;
 
 type ConvertedFileProps = {
   fileData: FFmpegFileData;
-  setOutputTypes: (targets: Array<SizeInfoKey>) => void;
+  setOutputTypes: (targets: Array<ConversionPresetId>) => void;
   removeFile: () => void;
   buttonsEnabled: boolean;
 };

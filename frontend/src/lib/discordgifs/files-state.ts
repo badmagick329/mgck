@@ -1,4 +1,8 @@
-import { SizeInfo, sizeInfo } from '@/lib/discordgifs/frame-size-calculator';
+import {
+  ConversionPresetId,
+  ConversionTarget,
+  conversionTargetPresets,
+} from '@/lib/discordgifs/conversion-target';
 import {
   FFmpegConversionState,
   FFmpegFileData,
@@ -24,7 +28,7 @@ export type FileAction =
     }
   | {
       type: 'updateOutputTypes';
-      payload: { name: string; outputTypes: Array<keyof typeof sizeInfo> };
+      payload: { name: string; outputTypes: Array<ConversionPresetId> };
     }
   | {
       type: 'addFile';
@@ -36,7 +40,7 @@ export type FileAction =
     }
   | {
       type: 'updateTarget';
-      payload: { name: string; target: SizeInfo };
+      payload: { name: string; target: ConversionTarget };
     }
   | {
       type: 'updateFileConversionState';
@@ -120,7 +124,7 @@ export const filesStateReducer = (
           outputTypes: ['emote'],
           progress: 0,
           size: 0,
-          currentTarget: sizeInfo.emote,
+          currentTarget: conversionTargetPresets.emote,
           conversionState: 'idle',
         },
       };
@@ -133,7 +137,7 @@ export const filesStateReducer = (
             outputTypes: ['emote'],
             progress: 0,
             size: 0,
-            currentTarget: sizeInfo.emote,
+            currentTarget: conversionTargetPresets.emote,
             conversionState: 'idle',
           };
           return acc;

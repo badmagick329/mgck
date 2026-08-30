@@ -1,98 +1,18 @@
-export const sizeInfo = {
-  emote: {
-    changeSize: 40,
-    minChangeSize: 1,
-    sizeLimit: 256 * 1024,
-    sizeMargin: 0.03,
-    startingWidth: 80,
-    startingHeight: 80,
-    minWidth: 10,
-    minHeight: 10,
-  },
-  sticker: {
-    changeSize: 40,
-    minChangeSize: 1,
-    sizeLimit: 512 * 1024,
-    sizeMargin: 0.08,
-    startingWidth: 140,
-    startingHeight: 140,
-    minWidth: 30,
-    minHeight: 30,
-  },
-  // pfp: {
-  //   changeSize: 120,
-  //   minChangeSize: 5,
-  //   sizeLimit: 10 * 1024 * 1024,
-  //   sizeMargin: 0.1,
-  //   startingWidth: 300,
-  //   startingHeight: 300,
-  //   minWidth: 50,
-  //   minHeight: 50,
-  // },
-};
-
-export type FrameSize = {
-  width: number;
-  height: number;
-};
-
-export type SizeInfoProps = {
-  changeSize: number;
-  minChangeSize: number;
-  sizeLimit: number;
-  sizeMargin: number;
-  startingWidth: number;
-  startingHeight: number;
-  minWidth: number;
-  minHeight: number;
-};
-
-export class SizeInfo {
-  changeSize: number;
-  minChangeSize: number;
-  sizeLimit: number;
-  sizeMargin: number;
-  startingWidth: number;
-  startingHeight: number;
-  minWidth: number;
-  minHeight: number;
-
-  constructor({
-    changeSize,
-    minChangeSize,
-    sizeLimit,
-    sizeMargin,
-    startingWidth,
-    startingHeight,
-    minWidth,
-    minHeight,
-  }: SizeInfoProps) {
-    this.changeSize = changeSize;
-    this.minChangeSize = minChangeSize;
-    this.sizeLimit = sizeLimit;
-    this.sizeMargin = sizeMargin;
-    this.startingWidth = startingWidth;
-    this.startingHeight = startingHeight;
-    this.minWidth = minWidth;
-    this.minHeight = minHeight;
-  }
-}
+import { ScaleCalculationConfig } from './conversion-target';
 
 export class FrameSizeCalculator {
-  info: SizeInfo;
+  info: ScaleCalculationConfig;
   _changeSize: number;
   _width: number;
-  _height: number;
   _sizeComparisons: Array<number>;
   _lastFileSize: number | null;
   _isDone: boolean;
   _lossNormalizer: LossNormalizer;
 
-  constructor(info: SizeInfo) {
+  constructor(info: ScaleCalculationConfig) {
     this.info = info;
     this._changeSize = info.changeSize;
     this._width = info.startingWidth;
-    this._height = info.startingHeight;
     this._sizeComparisons = [0, 0];
     this._lastFileSize = null;
     this._isDone = false;
@@ -118,12 +38,12 @@ export class FrameSizeCalculator {
   }
 
   /**
-   * Calculates the new frame size based on the given file size.
+   * Calculates the new scale width based on the given file size.
    *
    * @param fileSize - The size of the file.
-   * @returns The new frame size or null if frame size was not changed
+   * @returns The new scale width or null if the width was not changed
    */
-  getNewFrameSize(fileSize: number): FrameSize | null {
+  getNewWidth(fileSize: number): number | null {
     if (this.isDone || this._lastFileSize === fileSize) {
       return null;
     }
@@ -144,21 +64,18 @@ export class FrameSizeCalculator {
         this._isDone = true;
         return null;
       }
-      return this._reduceSize() ? this.getWidthAndHeight() : null;
+      return this._reduceSize() ? this.width : null;
     }
 
     if (this._sizeIsUnderLimit()) {
-      return this._increaseSize() ? this.getWidthAndHeight() : null;
+      return this._increaseSize() ? this.width : null;
     } else {
-      return this._reduceSize() ? this.getWidthAndHeight() : null;
+      return this._reduceSize() ? this.width : null;
     }
   }
 
-  getWidthAndHeight(): FrameSize {
-    return {
-      width: this._width,
-      height: this._height,
-    };
+  get width(): number {
+    return this._width;
   }
 
   _changeDirectionFlipped(): boolean {
@@ -174,13 +91,8 @@ export class FrameSizeCalculator {
     }
 
     const oldWidth = this._width;
-    const oldHeight = this._height;
     this._width = Math.max(this._width - this.changeSize, this.info.minWidth);
-    this._height = Math.max(
-      this._height - this.changeSize,
-      this.info.minHeight
-    );
-    if (this._width === oldWidth && this._height === oldHeight) {
+    if (this._width === oldWidth) {
       this._isDone = true;
       return false;
     } else {
@@ -199,17 +111,12 @@ export class FrameSizeCalculator {
     }
 
     const oldWidth = this._width;
-    const oldHeight = this._height;
     this._width = Math.min(
       this._width + this.changeSize,
       this.info.startingWidth
     );
-    this._height = Math.min(
-      this._height + this.changeSize,
-      this.info.startingHeight
-    );
 
-    if (this._width === oldWidth && this._height === oldHeight) {
+    if (this._width === oldWidth) {
       this._isDone = true;
       return false;
     } else {
@@ -284,11 +191,7 @@ export class FrameSizeCalculator {
   }
 
   _maxSizeIsUnderLimit(): boolean {
-    return (
-      this._sizeIsUnderLimit() &&
-      this._width >= this.info.startingWidth &&
-      this._height >= this.info.startingHeight
-    );
+    return this._sizeIsUnderLimit() && this._width >= this.info.startingWidth;
   }
 
   _sizeIsCloseEnough(): boolean {

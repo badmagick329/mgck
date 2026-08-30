@@ -1,7 +1,7 @@
 import { Dispatch } from 'react';
+import { ConversionTarget, conversionTargetPresets } from './conversion-target';
 import { FFmpegManager } from './ffmpeg-manager';
 import { FilesState, FileAction } from './files-state';
-import { SizeInfo, sizeInfo } from './frame-size-calculator';
 import {
   FFmpegProgressEvent,
   FFmpegConversionState,
@@ -33,20 +33,38 @@ export async function convert(
       .setUpdateConversionStateCallback(updateFileConversionStateCallback);
 
     for (const outputType of data.outputTypes) {
+      const target = conversionTargetPresets[outputType];
       ffmpeg.setFileConfig({
         file: data.file,
-        info: sizeInfo[outputType],
+        target,
       });
-      targetCallback(sizeInfo[outputType]);
+      targetCallback(target);
       sizeCallback(0);
       const result = await ffmpeg.convert();
       if (result) {
-        const { url, outputName, finalSize } = result;
+        const {
+          url,
+          outputName,
+          finalSize,
+          targetId,
+          format,
+          mimeType,
+          width,
+        } = result;
         dispatch({
           type: 'addOutput',
           payload: {
             name,
-            output: { name: outputName, url, type: outputType, finalSize },
+            output: {
+              name: outputName,
+              url,
+              type: outputType,
+              finalSize,
+              targetId,
+              format,
+              mimeType,
+              width,
+            },
           },
         });
       } else {
@@ -59,8 +77,6 @@ export async function convert(
         });
       }
     }
-
-    await ffmpeg.deleteFile(data.file.name);
   }
 }
 
@@ -71,7 +87,7 @@ function createCallbacks(name: string, dispatch: Dispatch<FileAction>) {
       payload: { name, progress },
     });
   };
-  const targetCallback = (target: SizeInfo) => {
+  const targetCallback = (target: ConversionTarget) => {
     dispatch({
       type: 'updateTarget',
       payload: { name, target },
