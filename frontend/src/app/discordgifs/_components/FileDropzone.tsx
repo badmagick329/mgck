@@ -5,11 +5,16 @@ import {
   FilesState,
   filesStateReducer,
 } from '@/lib/discordgifs/files-state';
+import {
+  ConversionPresetId,
+  defaultConversionPresetSelection,
+} from '@/lib/discordgifs/conversion-target';
 import clsx from 'clsx';
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import ConvertedFile from './ConvertedFile';
+import PresetSelector from './PresetSelector';
 import { convert } from '@/lib/discordgifs';
 import {
   acceptedImageTypes,
@@ -25,7 +30,10 @@ export default function FileDropzone() {
   const [filesState, dispatch] = useReducer(filesStateReducer, {});
   const [dropError, setDropError] = useState<string | null>(null);
   const [dragEnter, setDragEnter] = useState<boolean>(false);
-  const conversionInProgressRef = useRef(false);
+  const [conversionInProgress, setConversionInProgress] = useState(false);
+  const [selectedOutputTypes, setSelectedOutputTypes] = useState<
+    ConversionPresetId[]
+  >([...defaultConversionPresetSelection]);
 
   const { acceptedFiles, getRootProps, getInputProps, fileRejections } =
     useDropzone({
@@ -45,7 +53,7 @@ export default function FileDropzone() {
         for (const rejection of fileRejections) {
           for (const err of rejection.errors) {
             if (err.code === 'too-many-files') {
-              setDropError(`You can only upload upto ${maxFiles} files`);
+              setDropError(`You can only upload up to ${maxFiles} files`);
               return;
             }
           }
@@ -74,7 +82,7 @@ export default function FileDropzone() {
       const file = acceptedFiles[i];
       dispatch({
         type: 'addFile',
-        payload: { file },
+        payload: { file, outputTypes: selectedOutputTypes },
       });
     }
     setDropError(null);
@@ -95,12 +103,12 @@ export default function FileDropzone() {
       }
       dispatch({
         type: 'addFiles',
-        payload: { files: newFiles },
+        payload: { files: newFiles, outputTypes: selectedOutputTypes },
       });
 
       setDropError(null);
     },
-    [totalFiles]
+    [selectedOutputTypes, totalFiles]
   );
 
   useFilePaste(onFilesPasted);
@@ -114,10 +122,13 @@ export default function FileDropzone() {
   );
 
   const buttonEnabled =
-    !conversionInProgressRef.current &&
+    !conversionInProgress &&
     !anyProcessing &&
     totalFiles > 0 &&
-    hasIdleFiles;
+    hasIdleFiles &&
+    selectedOutputTypes.length > 0;
+
+  const selectorDisabled = conversionInProgress || anyProcessing;
 
   if (isLoaded === false) {
     return (
@@ -130,7 +141,24 @@ export default function FileDropzone() {
   }
 
   return (
-    <div className='flex w-full grow flex-col items-center gap-8 px-2'>
+    <div className='flex w-full grow flex-col items-center gap-5 px-2'>
+      <PresetSelector
+        selectedPresetIds={selectedOutputTypes}
+        disabled={selectorDisabled}
+        onChange={(presetIds) => {
+          setSelectedOutputTypes(presetIds);
+          dispatch({
+            type: 'updateIdleOutputTypes',
+            payload: { outputTypes: presetIds },
+          });
+        }}
+      />
+      <div className='max-w-2xl px-2 text-sm text-foreground-dg/80'>
+        <p>
+          🫣 Stickers have to be 5 seconds or less, or Discord won&apos;t accept
+          them.
+        </p>
+      </div>
       <div
         {...getRootProps({ className: 'dropzone' })}
         className={clsx(
@@ -141,7 +169,7 @@ export default function FileDropzone() {
         )}
       >
         <input {...getInputProps()} />
-        <p>Drag n drop files here, or click to select files.</p>
+        <p>Drag and drop files here, or click to select files.</p>
         <p>You can also paste files from clipboard (Ctrl+V).</p>
         <p className='pb-4'>
           Accepted types are{' '}
@@ -161,16 +189,15 @@ export default function FileDropzone() {
             !buttonEnabled && dragEnter && 'animate-pulse'
           }`
         )}
-        onClick={(e) => {
-          try {
-            conversionInProgressRef.current = true;
-            convert(ffmpegRef, filesState, dispatch).finally(() => {
-              conversionInProgressRef.current = false;
+        onClick={() => {
+          setConversionInProgress(true);
+          void convert(ffmpegRef, filesState, dispatch)
+            .catch((error) => {
+              console.error('Conversion error:', error);
+            })
+            .finally(() => {
+              setConversionInProgress(false);
             });
-          } catch (error) {
-            console.error('Conversion error:', error);
-            conversionInProgressRef.current = false;
-          }
         }}
         disabled={!buttonEnabled}
       >
@@ -180,7 +207,6 @@ export default function FileDropzone() {
       <ConvertedFiles
         filesState={filesState}
         dispatch={dispatch}
-        buttonEnabled={buttonEnabled}
         setDropError={setDropError}
       />
     </div>
@@ -196,7 +222,7 @@ function MoreFilesText({
 }) {
   if (totalFiles === 0) {
     return (
-      <p className='text-xs'>You can add upto {maxFiles} files at a time.</p>
+      <p className='text-xs'>You can add up to {maxFiles} files at a time.</p>
     );
   }
 
@@ -212,22 +238,19 @@ function MoreFilesText({
 function ConvertedFiles({
   filesState,
   dispatch,
-  buttonEnabled,
   setDropError,
 }: {
   filesState: FilesState;
   dispatch: (value: FileAction) => void;
-  buttonEnabled: boolean;
   setDropError: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   return (
     <div className='mt-8 flex flex-wrap justify-center gap-8 px-4 text-center'>
       {Object.keys(filesState).length > 0 &&
-        Object.entries(filesState).map(([name, data], idx) => (
+        Object.entries(filesState).map(([name, data]) => (
           <ConvertedFile
             key={name}
             fileData={data}
-            buttonsEnabled={buttonEnabled}
             removeFile={() => {
               dispatch({
                 type: 'removeFile',
@@ -235,12 +258,6 @@ function ConvertedFiles({
               });
 
               setDropError(null);
-            }}
-            setOutputTypes={(targets) => {
-              dispatch({
-                type: 'updateOutputTypes',
-                payload: { name, outputTypes: targets },
-              });
             }}
           />
         ))}

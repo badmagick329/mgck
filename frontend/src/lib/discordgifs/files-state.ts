@@ -27,16 +27,16 @@ export type FileAction =
       payload: { name: string; output: FFmpegFileDataOutput };
     }
   | {
-      type: 'updateOutputTypes';
-      payload: { name: string; outputTypes: Array<ConversionPresetId> };
+      type: 'updateIdleOutputTypes';
+      payload: { outputTypes: Array<ConversionPresetId> };
     }
   | {
       type: 'addFile';
-      payload: { file: File };
+      payload: { file: File; outputTypes: Array<ConversionPresetId> };
     }
   | {
       type: 'addFiles';
-      payload: { files: File[] };
+      payload: { files: File[]; outputTypes: Array<ConversionPresetId> };
     }
   | {
       type: 'updateTarget';
@@ -106,14 +106,18 @@ export const filesStateReducer = (
         },
       };
     }
-    case 'updateOutputTypes':
-      return {
-        ...state,
-        [action.payload.name]: {
-          ...state[action.payload.name],
-          outputTypes: action.payload.outputTypes,
-        },
-      };
+    case 'updateIdleOutputTypes':
+      return Object.fromEntries(
+        Object.entries(state).map(([name, fileData]) => [
+          name,
+          fileData.conversionState === 'idle'
+            ? {
+                ...fileData,
+                outputTypes: [...action.payload.outputTypes],
+              }
+            : fileData,
+        ])
+      );
 
     case 'addFile':
       return {
@@ -121,10 +125,12 @@ export const filesStateReducer = (
         [action.payload.file.name]: {
           file: action.payload.file,
           outputs: [],
-          outputTypes: ['emote'],
+          outputTypes: [...action.payload.outputTypes],
           progress: 0,
           size: 0,
-          currentTarget: conversionTargetPresets.emote,
+          currentTarget:
+            conversionTargetPresets[action.payload.outputTypes[0]] ??
+            conversionTargetPresets.emote,
           conversionState: 'idle',
         },
       };
@@ -134,10 +140,12 @@ export const filesStateReducer = (
           acc[file.name] = {
             file,
             outputs: [],
-            outputTypes: ['emote'],
+            outputTypes: [...action.payload.outputTypes],
             progress: 0,
             size: 0,
-            currentTarget: conversionTargetPresets.emote,
+            currentTarget:
+              conversionTargetPresets[action.payload.outputTypes[0]] ??
+              conversionTargetPresets.emote,
             conversionState: 'idle',
           };
           return acc;

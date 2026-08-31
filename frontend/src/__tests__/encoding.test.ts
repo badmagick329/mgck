@@ -47,7 +47,7 @@ describe('conversion targets', () => {
     expect(assertNever<ApngWithGifMime>()).toBe(true);
   });
 
-  test('preserves the current Emote and Sticker preset values exactly', () => {
+  test('preserves all Discord preset values exactly', () => {
     expect(conversionTargetPresets).toEqual({
       emote: {
         id: 'emote',
@@ -75,6 +75,19 @@ describe('conversion targets', () => {
         startingWidth: 140,
         minWidth: 30,
       },
+      avatar: {
+        id: 'avatar',
+        format: 'gif',
+        extension: '.gif',
+        mimeType: 'image/gif',
+        filenameSuffix: '_avatar',
+        changeSize: 128,
+        minChangeSize: 1,
+        sizeLimit: 8 * 1024 * 1024,
+        sizeMargin: 0.05,
+        startingWidth: 512,
+        minWidth: 64,
+      },
     });
   });
 
@@ -85,6 +98,9 @@ describe('conversion targets', () => {
     expect(
       buildDownloadName('dance.clip.mp4', conversionTargetPresets.sticker)
     ).toBe('dance.clip_sticker.png');
+    expect(
+      buildDownloadName('dance.clip.mp4', conversionTargetPresets.avatar)
+    ).toBe('dance.clip_avatar.gif');
     expect(buildDownloadName('no-extension', customTarget)).toBe(
       'no-extension_preview.gif'
     );
@@ -142,6 +158,60 @@ describe('FFmpeg command construction', () => {
     ).toContain('scale=111:-2');
   });
 
+  test('builds Avatar as a GIF using its 512-pixel optimized-input scale', () => {
+    const outputCommand = buildOutputCommand({
+      inputName: 'avatar-source.mp4',
+      outputName: 'avatar-output.gif',
+      target: conversionTargetPresets.avatar,
+      width: 512,
+    });
+    const optimizedInputCommand = buildOptimizedInputCommand({
+      inputName: 'avatar-source.mp4',
+      outputName: 'avatar-optimized.mp4',
+      target: conversionTargetPresets.avatar,
+    });
+
+    expect(outputCommand).toEqual([
+      '-i',
+      'avatar-source.mp4',
+      '-filter_complex',
+      '[0:v] scale=512:-1:flags=lanczos,split [a][b];[a] palettegen [p];[b][p] paletteuse=dither=sierra2_4a',
+      'avatar-output.gif',
+    ]);
+    expect(optimizedInputCommand).toContain('scale=512:-2');
+  });
+
+  test('Avatar attempts change width only and add no media-reduction controls', () => {
+    const first = buildOutputCommand({
+      inputName: 'input.mp4',
+      outputName: 'output.gif',
+      target: conversionTargetPresets.avatar,
+      width: 512,
+    });
+    const second = buildOutputCommand({
+      inputName: 'input.mp4',
+      outputName: 'output.gif',
+      target: conversionTargetPresets.avatar,
+      width: 384,
+    });
+    const optimized = buildOptimizedInputCommand({
+      inputName: 'input.mp4',
+      outputName: 'optimized.mp4',
+      target: conversionTargetPresets.avatar,
+    });
+
+    expect(first.join(' ').replace('scale=512:', 'scale=<width>:')).toBe(
+      second.join(' ').replace('scale=384:', 'scale=<width>:')
+    );
+    for (const command of [first, second, optimized]) {
+      const text = command.join(' ');
+      expect(command).not.toEqual(
+        expect.arrayContaining(['-r', '-t', '-vsync'])
+      );
+      expect(text).not.toMatch(/fps=|max_colors|frame_drop|select=/);
+    }
+  });
+
   test('does not add frame-rate, frame-dropping, duration, or colour-count controls', () => {
     const commands = [
       buildOutputCommand({
@@ -190,6 +260,7 @@ describe('Frame size calculator', () => {
   test.each([
     ['emote', conversionTargetPresets.emote, [80, 40, 10]],
     ['sticker', conversionTargetPresets.sticker, [140, 100, 60, 30]],
+    ['avatar', conversionTargetPresets.avatar, [512, 384, 256, 128, 64]],
   ] as const)(
     'preserves the %s width sequence when reducing to the minimum',
     (_, target, expected) => {
