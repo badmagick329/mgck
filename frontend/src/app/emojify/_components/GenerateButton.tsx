@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Sparkles } from 'lucide-react';
 
 type GenerateButtonProps = {
   setOutput: (output: string) => void;
@@ -28,48 +29,40 @@ export default function GenerateButton({
   }
 
   return (
-    <section className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
-      <abbr
-        className='order-2 flex w-full flex-col items-center justify-between no-underline sm:order-1'
-        title='Control the frequency of emojis inserted by AI'
+    <div className='flex flex-wrap items-center gap-3'>
+      <div className='flex items-center gap-2'>
+        <Switch
+          id='emoji-frequency'
+          className='data-[state=checked]:bg-primary-em'
+          checked={frequent}
+          onCheckedChange={setFrequent}
+        />
+        <Label htmlFor='emoji-frequency' className='text-xs'>
+          More emojis
+        </Label>
+      </div>
+      <Button
+        type='button'
+        variant='outline'
+        className='border-primary-em/30 bg-transparent hover:bg-primary-em/10'
+        disabled={generating || !messageInput.trim()}
+        onClick={async () => {
+          try {
+            setGenerating(true);
+            const generatedText = await emojifyWithAi(
+              username,
+              messageInput,
+              frequent
+            );
+            setOutput(generatedText);
+          } finally {
+            setGenerating(false);
+          }
+        }}
       >
-        <div className='flex h-10 flex-wrap items-center space-x-2 rounded-md'>
-          <Label htmlFor='emoji-frequency'>
-            {frequent ? 'Max emojis' : 'Low emojis'}
-          </Label>
-          <Switch
-            id='emoji-frequency'
-            className='data-[state=checked]:bg-green-400 dark:data-[state=checked]:bg-green-200'
-            defaultChecked={frequent}
-            onCheckedChange={setFrequent}
-          />
-        </div>
-      </abbr>
-      <abbr
-        className='order-1 justify-self-end no-underline sm:order-2'
-        title='Use AI to generate emojis for your message'
-      >
-        <Button
-          className='w-40 bg-primary-em/70 hover:bg-primary-em'
-          disabled={generating}
-          onClick={async () => {
-            try {
-              setGenerating(true);
-              const generatedText = await emojifyWithAi(
-                username,
-                messageInput,
-                frequent
-              );
-              setOutput(generatedText);
-              setGenerating(false);
-            } finally {
-              setGenerating(false);
-            }
-          }}
-        >
-          Generate with AI ✨
-        </Button>
-      </abbr>
-    </section>
+        <Sparkles />
+        {generating ? 'Matching...' : 'Smart match'}
+      </Button>
+    </div>
   );
 }

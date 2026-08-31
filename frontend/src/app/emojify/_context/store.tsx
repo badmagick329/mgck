@@ -1,17 +1,18 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
 import useLocalStorage from '@/hooks/useLocalStorage';
-import { defaultEmojis } from '@/lib/emojify';
+import { defaultEmojis, emojisForPack } from '@/lib/emojify';
+import { EmojiIntensity, EmojiPackId } from '@/lib/consts/emojify';
 
 type EmojifyContextType = {
-  showHelp: boolean;
-  toggleHelp: () => void;
   emojisInput: string;
   setEmojisInput: (newInput: string) => void;
+  selectedPack: EmojiPackId;
+  setSelectedPack: (pack: EmojiPackId) => void;
+  intensity: EmojiIntensity;
+  setIntensity: (intensity: EmojiIntensity) => void;
   messageInput: string;
   setMessageInput: (newMessage: string) => void;
-  messageInputTextAreaRows: number;
-  setMessageInputTextAreaRows: (newRows: number) => void;
   isLoaded: boolean;
 };
 
@@ -22,20 +23,16 @@ export const EmojifyContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { value: showHelp, updateValue: setShowHelp } =
-    useLocalStorage<boolean>('showEmojifyHelp', true);
-  const toggleHelp = () => setShowHelp(!showHelp);
-
-  const { value: emojisInput, updateValue: _setEmojisInput } = useLocalStorage(
+  const { value: customEmojis, updateValue: setCustomEmojis } = useLocalStorage(
     'defaultEmojis',
     defaultEmojis()
   );
-  const setEmojisInput = (newInput: string) => _setEmojisInput(newInput);
-
-  const {
-    value: messageInputTextAreaRows,
-    updateValue: setMessageInputTextAreaRows,
-  } = useLocalStorage<number>('emojifyMessageInputTextAreaRows', 5);
+  const { value: selectedPack, updateValue: setSelectedPack } =
+    useLocalStorage<EmojiPackId>('emojifySelectedPack', 'original');
+  const { value: intensity, updateValue: setIntensity } =
+    useLocalStorage<EmojiIntensity>('emojifyIntensity', 'chaos');
+  const emojisInput = emojisForPack(selectedPack, customEmojis);
+  const setEmojisInput = (newInput: string) => setCustomEmojis(newInput);
 
   const [messageInput, setMessageInput] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -47,14 +44,14 @@ export const EmojifyContextProvider = ({
   return (
     <EmojifyContext.Provider
       value={{
-        showHelp,
-        toggleHelp,
         emojisInput,
         setEmojisInput,
+        selectedPack,
+        setSelectedPack,
+        intensity,
+        setIntensity,
         messageInput,
         setMessageInput,
-        messageInputTextAreaRows,
-        setMessageInputTextAreaRows,
         isLoaded,
       }}
     >

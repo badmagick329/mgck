@@ -1,62 +1,36 @@
 'use client';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { useEmojifyContext } from '@/app/emojify/_context/store';
-import { useEffect, useRef, useState } from 'react';
 
 export default function InputMessageField() {
-  const {
-    messageInput,
-    setMessageInput,
-    messageInputTextAreaRows,
-    setMessageInputTextAreaRows,
-  } = useEmojifyContext();
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted || !textAreaRef.current) return;
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const target = entry.target as HTMLTextAreaElement;
-        const style = window.getComputedStyle(target);
-        const lineHeight = parseFloat(style.lineHeight) || 5;
-        const rowCount = Math.floor(target.clientHeight / lineHeight);
-
-        setMessageInputTextAreaRows(rowCount);
-      }
-    });
-
-    observer.observe(textAreaRef.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [mounted, setMessageInputTextAreaRows]);
-
-  if (!mounted) {
-    return null;
-  }
+  const { messageInput, setMessageInput } = useEmojifyContext();
 
   return (
-    <section className='pb-2 pt-1'>
-      <abbr
-        className='h-full w-full no-underline'
-        title='The message that will be emojified'
-      >
-        <Textarea
-          ref={textAreaRef}
-          className='rounded-md bg-background-em-dark/10 p-2 focus:outline-none focus:ring-1 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 dark:bg-background-em-dark'
-          onChange={(e) => setMessageInput(e.target.value)}
-          placeholder='Enter your message here'
-          value={messageInput}
-          rows={messageInputTextAreaRows}
-        />
-      </abbr>
+    <section className='space-y-2'>
+      <div className='flex items-center justify-between gap-4'>
+        <Label htmlFor='emojify-message' className='text-base font-semibold'>
+          Message
+        </Label>
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          onClick={() => setMessageInput('')}
+          disabled={!messageInput}
+        >
+          Clear
+        </Button>
+      </div>
+      <Textarea
+        id='emojify-message'
+        className='min-h-36 resize-y rounded-md border-primary-em/25 bg-background-em-dark/10 p-3 text-base focus-visible:ring-primary-em dark:bg-background-em-dark'
+        onChange={(e) => setMessageInput(e.target.value)}
+        placeholder='Type or paste a message'
+        value={messageInput}
+        rows={6}
+      />
     </section>
   );
 }

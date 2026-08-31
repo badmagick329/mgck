@@ -87,7 +87,8 @@ export default async function Index() {
     },
     {
       title: 'Emojifier',
-      description: 'Improve your messages by adding emojis between each word.',
+      description:
+        'Add random emojis to a message, choose how chaotic it gets, and shuffle until it works.',
       icon: <Smile />,
       className:
         'border-primary-em bg-background-em text-foreground shadow-glow-primary-em dark:bg-background-em-dark dark:text-primary-foreground',

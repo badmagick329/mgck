@@ -1,5 +1,8 @@
 'use client';
-import { useState } from 'react';
+
+import { useEmojifyContext } from '@/app/emojify/_context/store';
+import { emojifyText } from '@/lib/emojify';
+import { useEffect, useState } from 'react';
 
 import EmojifyButtons from './EmojifyButtons';
 
@@ -9,24 +12,39 @@ type OutputFieldProps = {
 };
 
 export default function OutputField({ username, showAi }: OutputFieldProps) {
-  const [output, setOutput] = useState<string>('');
+  const { messageInput, emojisInput, intensity } = useEmojifyContext();
+  const [output, setOutput] = useState('');
+  const [shuffleCount, setShuffleCount] = useState(0);
+
+  useEffect(() => {
+    setOutput(emojifyText(messageInput, emojisInput, intensity));
+  }, [emojisInput, intensity, messageInput, shuffleCount]);
 
   return (
-    <section className='flex pb-2 flex-col flex-wrap'>
+    <section className='overflow-hidden rounded-lg border border-primary-em/25 bg-background/50'>
+      <div className='flex items-center justify-between border-b border-primary-em/20 bg-primary-em/10 px-4 py-3'>
+        <h2 className='text-base font-semibold'>Result</h2>
+        <span className='text-xs text-muted-foreground' aria-live='polite'>
+          {output ? `${output.length} characters` : 'Waiting for a message'}
+        </span>
+      </div>
+      <div
+        className='min-h-36 whitespace-pre-wrap break-words p-4 text-base leading-7'
+        aria-live='polite'
+      >
+        {output || (
+          <span className='text-muted-foreground'>
+            Your emojified message will appear here.
+          </span>
+        )}
+      </div>
       <EmojifyButtons
-        setOutput={setOutput}
         output={output}
+        setOutput={setOutput}
+        onShuffle={() => setShuffleCount((count) => count + 1)}
         username={username}
         showAi={showAi}
       />
-      <section className='bg-background-em-dark/10 dark:bg-background-em-dark rounded-md border-2 p-2'>
-        <abbr
-          className='no-underline justify-self-start'
-          title='Emojified message will appear here'
-        >
-          <span className='flex flex-wrap break-all'>{output}</span>
-        </abbr>
-      </section>
     </section>
   );
 }
