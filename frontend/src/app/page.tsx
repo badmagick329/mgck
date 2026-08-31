@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import type { Metadata } from 'next';
 
-const homeTitle = 'mgck — Red Velvet, K-pop comebacks, and side quests';
+const homeTitle =
+  'mgck | Red Velvet GIFs, K-pop releases, and useful little web tools';
 const homeDescription =
   'A Red Velvet GIF archive, K-pop comeback tracker, and a few small web tools.';
 
@@ -136,7 +137,7 @@ export default async function Index() {
       <header className='border-b border-primary/30 bg-gradient-to-b from-background via-background to-primary/10 px-6 py-20 text-center sm:py-24'>
         <h1 className='text-4xl font-bold tracking-tight md:text-5xl'>mgck</h1>
         <p className='mt-3 text-lg text-muted-foreground'>
-          Red Velvet, K-pop comebacks, and side quests.
+          Red Velvet GIFs, K-pop releases, and useful little web tools.
         </p>
       </header>
       <div className='bg-gradient-to-b from-primary/10 via-background to-background pt-10'>
