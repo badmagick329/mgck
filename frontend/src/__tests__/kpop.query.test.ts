@@ -4,9 +4,8 @@ import {
   buildFollowingSearchParams,
   buildRecentSearchParams,
   buildSearchSearchParams,
-  buildTimelineShiftSearchParams,
-  buildTodaySearchParams,
-  canShiftTimelineEarlier,
+  buildTimelineExpansionSearchParams,
+  canExpandTimelineEarlier,
   getActiveKpopPreset,
   getCanonicalKpopSearchParams,
   getKpopApiQuery,
@@ -17,9 +16,9 @@ import {
 
 describe('kpop query helpers', () => {
   test('does not treat timeline dates as search filters', () => {
-    expect(
-      hasKpopSearchFilters(new URLSearchParams('start-date=250525'))
-    ).toBe(false);
+    expect(hasKpopSearchFilters(new URLSearchParams('start-date=250525'))).toBe(
+      false
+    );
     expect(
       hasKpopSearchFilters(
         new URLSearchParams('start-date=250525&artist=Red%20Velvet')
@@ -44,34 +43,33 @@ describe('kpop query helpers', () => {
     expect(state.exact).toBe(true);
   });
 
-  test('earlier on open-ended browse creates previous week window', () => {
-    const next = buildTimelineShiftSearchParams(
+  test('earlier expands an open-ended timeline without dropping later dates', () => {
+    const next = buildTimelineExpansionSearchParams(
       new URLSearchParams('start-date=250601'),
       'earlier'
     );
 
     expect(next.get('start-date')).toBe('250525');
-    expect(next.get('end-date')).toBe('250531');
+    expect(next.get('end-date')).toBeNull();
   });
 
-  test('later on open-ended browse creates next week window', () => {
-    const next = buildTimelineShiftSearchParams(
-      new URLSearchParams('start-date=250526'),
+  test('later expands a bounded timeline without dropping earlier dates', () => {
+    const next = buildTimelineExpansionSearchParams(
+      new URLSearchParams('start-date=250526&end-date=250601'),
       'later'
     );
 
-    expect(next.get('start-date')).toBe('250602');
+    expect(next.get('start-date')).toBe('250526');
     expect(next.get('end-date')).toBe('250608');
   });
 
-  test('recent, today, all, and clear strip page and end-date state', () => {
+  test('recent, all, and clear strip page and end-date state', () => {
     const source = new URLSearchParams(
       'start-date=250526&end-date=250601&artist=rv&page=3&exact=on'
     );
 
     expect(buildRecentSearchParams(source).get('end-date')).toBeNull();
     expect(buildRecentSearchParams(source).get('page')).toBeNull();
-    expect(buildTodaySearchParams(source).get('end-date')).toBeNull();
     expect(buildAllSearchParams(source).get('start-date')).toBe('000101');
     expect(buildAllSearchParams(source).get('end-date')).toBeNull();
     expect(buildAllSearchParams(source).get('page')).toBeNull();
@@ -82,18 +80,18 @@ describe('kpop query helpers', () => {
     const boundary = searchParamsToKpopQueryState(
       new URLSearchParams('start-date=000101')
     );
-    const partialWeek = buildTimelineShiftSearchParams(
+    const partialWeek = buildTimelineExpansionSearchParams(
       new URLSearchParams('start-date=000104&end-date=000110'),
       'earlier'
     );
-    const atBoundary = buildTimelineShiftSearchParams(
+    const atBoundary = buildTimelineExpansionSearchParams(
       new URLSearchParams('start-date=000101'),
       'earlier'
     );
 
-    expect(canShiftTimelineEarlier(boundary)).toBe(false);
+    expect(canExpandTimelineEarlier(boundary)).toBe(false);
     expect(partialWeek.get('start-date')).toBe('000101');
-    expect(partialWeek.get('end-date')).toBe('000103');
+    expect(partialWeek.get('end-date')).toBe('000110');
     expect(atBoundary.get('start-date')).toBe('000101');
     expect(atBoundary.get('end-date')).toBeNull();
   });
@@ -175,7 +173,7 @@ describe('kpop query helpers', () => {
       start_date: '2025-05-26',
       end_date: '',
       page: '1',
-      page_size: '10',
+      page_size: '50',
       exact: '',
     });
   });

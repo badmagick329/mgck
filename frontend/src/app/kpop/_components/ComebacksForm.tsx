@@ -8,10 +8,8 @@ import {
   buildFollowingSearchParams,
   buildRecentSearchParams,
   buildSearchSearchParams,
-  buildTimelineShiftSearchParams,
-  buildTodaySearchParams,
-  canShiftTimelineEarlier,
-  getActiveKpopPreset,
+  buildTimelineExpansionSearchParams,
+  canExpandTimelineEarlier,
   hasKpopSearchFilters,
   getTimelineLabel,
   getKpopView,
@@ -52,8 +50,7 @@ export default function ComebacksForm() {
     [hasSearchFilters, isSearchView]
   );
   const isTimelineView = !isFollowingView && !searchOpen;
-  const activePreset = getActiveKpopPreset(searchParams);
-  const canGoEarlier = canShiftTimelineEarlier(queryState);
+  const canGoEarlier = canExpandTimelineEarlier(queryState);
   const {
     artists,
     isLoaded,
@@ -130,16 +127,16 @@ export default function ComebacksForm() {
                 )
               : isSearchView
                 ? 'Adjust the date range, then narrow it by artist or title.'
-                : 'Browse by week, refine the search with artist or title filters.'}
+                : 'Scroll through releases, or expand the date range without losing your place.'}
           </p>
         </div>
-        <div className='flex flex-wrap justify-end gap-2'>
+        <div className='flex flex-wrap justify-start gap-2 sm:justify-end'>
           {isTimelineView && (
             <>
               <Button
                 variant='outline'
                 className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-                onClick={onTimelineClick(
+                onClick={onTimelineExpansionClick(
                   searchParams,
                   pathname,
                   router,
@@ -149,54 +146,35 @@ export default function ComebacksForm() {
                 disabled={isSearching || !canGoEarlier}
               >
                 <ChevronLeft className='mr-2 h-4 w-4' />
-                Earlier
+                Show earlier
               </Button>
+              {queryState.endDate && (
+                <Button
+                  variant='outline'
+                  className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
+                  onClick={onTimelineExpansionClick(
+                    searchParams,
+                    pathname,
+                    router,
+                    'later',
+                    startSearchTransition
+                  )}
+                  disabled={isSearching}
+                >
+                  Show later
+                  <ChevronRight className='ml-2 h-4 w-4' />
+                </Button>
+              )}
               <Button
                 variant='outline'
                 className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-                onClick={onTimelineClick(
+                onClick={onTodayClick(
                   searchParams,
                   pathname,
                   router,
-                  'later',
                   startSearchTransition
                 )}
                 disabled={isSearching}
-              >
-                Later
-                <ChevronRight className='ml-2 h-4 w-4' />
-              </Button>
-            </>
-          )}
-          {isTimelineView && (
-            <>
-              <Button
-                variant={activePreset === 'recent' ? 'default' : 'outline'}
-                className={presetButtonClass(activePreset === 'recent')}
-                onClick={onPresetClick(
-                  searchParams,
-                  pathname,
-                  router,
-                  'recent',
-                  startSearchTransition
-                )}
-                disabled={isSearching}
-                aria-pressed={activePreset === 'recent'}
-              >
-                Recent
-              </Button>
-              <Button
-                variant={activePreset === 'today' ? 'default' : 'outline'}
-                className={presetButtonClass(activePreset === 'today')}
-                onClick={onPresetClick(
-                  searchParams,
-                  pathname,
-                  router,
-                  'today',
-                  startSearchTransition
-                )}
-                disabled={isSearching}
-                aria-pressed={activePreset === 'today'}
               >
                 Today
               </Button>
@@ -346,12 +324,6 @@ export default function ComebacksForm() {
   );
 }
 
-function presetButtonClass(isActive: boolean) {
-  return isActive
-    ? 'whitespace-nowrap bg-primary-kp hover:bg-primary-kp/90'
-    : 'whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10';
-}
-
 function modeButtonClass(isActive: boolean) {
   return isActive
     ? 'bg-primary-kp text-primary-foreground hover:bg-primary-kp/90'
@@ -374,7 +346,7 @@ function followingDescription(
   return `Upcoming releases first, followed by the latest releases from the past ${lookbackDays} days.`;
 }
 
-function onTimelineClick(
+function onTimelineExpansionClick(
   searchParams:
     | URLSearchParams
     | ReturnType<typeof useURLState>['searchParams'],
@@ -384,32 +356,40 @@ function onTimelineClick(
   startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
-    const nextSearchParams = buildTimelineShiftSearchParams(
+    const nextSearchParams = buildTimelineExpansionSearchParams(
       searchParams,
       direction
     );
     startSearchTransition(() => {
-      router.replace(`${pathname}?${nextSearchParams.toString()}`);
+      router.replace(`${pathname}?${nextSearchParams.toString()}`, {
+        scroll: false,
+      });
     });
   };
 }
 
-function onPresetClick(
+function onTodayClick(
   searchParams:
     | URLSearchParams
     | ReturnType<typeof useURLState>['searchParams'],
   pathname: string,
   router: ReturnType<typeof useURLState>['router'],
-  preset: 'recent' | 'today',
   startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
-    const nextSearchParams =
-      preset === 'recent'
-        ? buildRecentSearchParams(searchParams)
-        : buildTodaySearchParams(searchParams);
+    const visibleToday = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-kpop-today]')
+    ).find((element) => element.getClientRects().length > 0);
+    if (visibleToday) {
+      visibleToday.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    const nextSearchParams = buildRecentSearchParams(searchParams);
     startSearchTransition(() => {
-      router.replace(`${pathname}?${nextSearchParams.toString()}`);
+      router.replace(`${pathname}?${nextSearchParams.toString()}#kpop-today`, {
+        scroll: false,
+      });
     });
   };
 }

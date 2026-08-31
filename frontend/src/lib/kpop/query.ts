@@ -2,14 +2,14 @@ import { validDateStringOrNull } from '@/lib/utils';
 import { ReadonlyURLSearchParams } from 'next/navigation';
 
 export const DEFAULT_RECENT_BUFFER_DAYS = 7;
-export const TIMELINE_JUMP_DAYS = 7;
-export const OPEN_ENDED_PAGE_SIZE = 10;
+export const TIMELINE_EXPANSION_DAYS = 7;
+export const OPEN_ENDED_PAGE_SIZE = 50;
 export const BOUNDED_WINDOW_PAGE_SIZE = 100;
 export const ARCHIVE_START_DATE_COMPACT = '000101';
 export const FOLLOWING_LOOKBACK_DAYS = 30;
 
 export type KpopView = 'timeline' | 'following' | 'search';
-export type KpopPreset = 'recent' | 'today' | 'all' | 'following' | null;
+export type KpopPreset = 'recent' | 'all' | 'following' | null;
 
 export type KpopQueryState = {
   artist: string;
@@ -66,9 +66,6 @@ export function getActiveKpopPreset(
   }
   if (state.startDate === getDefaultStartDateCompact()) {
     return 'recent';
-  }
-  if (state.startDate === getTodayDateCompact()) {
-    return 'today';
   }
   if (state.startDate === ARCHIVE_START_DATE_COMPACT) {
     return 'all';
@@ -158,13 +155,12 @@ export function getKpopApiQuery(state: KpopQueryState) {
   };
 }
 
-export function buildTimelineShiftSearchParams(
+export function buildTimelineExpansionSearchParams(
   searchParams: SearchParamsInput,
   direction: 'earlier' | 'later'
 ) {
   const params = getCanonicalKpopSearchParams(searchParams);
   const state = searchParamsToKpopQueryState(params);
-  const multiplier = direction === 'earlier' ? -1 : 1;
   const currentStart =
     compactDateToUtcDate(state.startDate) || getTodayUtcDate();
   const currentEnd = compactDateToUtcDate(state.endDate);
@@ -176,36 +172,24 @@ export function buildTimelineShiftSearchParams(
     return params;
   }
 
-  let nextStart: Date;
-  let nextEnd: Date | null;
-
-  if (currentEnd) {
-    nextStart = addDays(currentStart, multiplier * TIMELINE_JUMP_DAYS);
-    nextEnd = addDays(currentEnd, multiplier * TIMELINE_JUMP_DAYS);
-  } else if (direction === 'earlier') {
-    nextEnd = addDays(currentStart, -1);
-    nextStart = addDays(nextEnd, -(TIMELINE_JUMP_DAYS - 1));
-  } else {
-    nextStart = addDays(currentStart, TIMELINE_JUMP_DAYS);
-    nextEnd = addDays(nextStart, TIMELINE_JUMP_DAYS - 1);
-  }
-
-  if (nextStart < archiveStart) {
-    nextStart = archiveStart;
-  }
-
-  params.set('start-date', formatCompactDate(nextStart));
-  if (nextEnd) {
-    params.set('end-date', formatCompactDate(nextEnd));
-  } else {
-    params.delete('end-date');
+  if (direction === 'earlier') {
+    const nextStart = addDays(currentStart, -TIMELINE_EXPANSION_DAYS);
+    params.set(
+      'start-date',
+      formatCompactDate(nextStart < archiveStart ? archiveStart : nextStart)
+    );
+  } else if (currentEnd) {
+    params.set(
+      'end-date',
+      formatCompactDate(addDays(currentEnd, TIMELINE_EXPANSION_DAYS))
+    );
   }
   params.delete('page');
   params.delete('view');
   return params;
 }
 
-export function canShiftTimelineEarlier(state: KpopQueryState) {
+export function canExpandTimelineEarlier(state: KpopQueryState) {
   const start = compactDateToUtcDate(state.startDate);
   return Boolean(start && start > getArchiveStartUtcDate());
 }
@@ -213,15 +197,6 @@ export function canShiftTimelineEarlier(state: KpopQueryState) {
 export function buildRecentSearchParams(searchParams: SearchParamsInput) {
   const params = getCanonicalKpopSearchParams(searchParams);
   params.set('start-date', getDefaultStartDateCompact());
-  params.delete('end-date');
-  params.delete('page');
-  params.delete('view');
-  return params;
-}
-
-export function buildTodaySearchParams(searchParams: SearchParamsInput) {
-  const params = getCanonicalKpopSearchParams(searchParams);
-  params.set('start-date', getTodayDateCompact());
   params.delete('end-date');
   params.delete('page');
   params.delete('view');
@@ -261,11 +236,11 @@ export function getTimelineLabel(state: KpopQueryState) {
   const start = compactDateToUtcDate(state.startDate);
   const end = compactDateToUtcDate(state.endDate);
   if (!start) {
-    return 'Recent + Upcoming';
+    return 'Recent and upcoming';
   }
   if (!end) {
     if (state.startDate === getDefaultStartDateCompact()) {
-      return 'Recent + Upcoming';
+      return 'Recent and upcoming';
     }
     return `From ${formatHumanDate(start)} onward`;
   }
