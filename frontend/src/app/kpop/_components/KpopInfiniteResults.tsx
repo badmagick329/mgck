@@ -20,6 +20,7 @@ export default function KpopInfiniteResults({
   initialState,
 }: KpopInfiniteResultsProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const scrolledToTodayRef = useRef(false);
   const queryKey = useMemo(() => {
     const { page, ...queryWithoutPage } = getKpopApiQuery({
       ...initialState,
@@ -72,6 +73,20 @@ export default function KpopInfiniteResults({
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
   }, [canLoadMore, loadMore]);
+
+  useEffect(() => {
+    if (scrolledToTodayRef.current || window.location.hash !== '#kpop-today') {
+      return;
+    }
+    const visibleToday = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-kpop-today]')
+    ).find((element) => element.getClientRects().length > 0);
+    if (!visibleToday) {
+      return;
+    }
+    scrolledToTodayRef.current = true;
+    visibleToday.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [comebacks]);
 
   return (
     <div className='flex min-h-full w-full flex-1 flex-col items-center gap-6'>

@@ -5,6 +5,7 @@ export {
   fetchWatchlistComebacks,
   partitionKpopArtistResults,
 } from './watchlist';
+export { groupComebacksByDate } from './results';
 
 export function dateStringIsToday(dateString: string) {
   const today = new Date();
