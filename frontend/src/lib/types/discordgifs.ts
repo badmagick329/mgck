@@ -32,11 +32,11 @@ export type FFmpegConversionResult = {
   width: number;
 };
 export type FFmpegConversionState =
-  | 'idle'
-  | 'busy'
-  | 'optimizing'
-  | 'done'
-  | 'converting';
+  'idle' | 'busy' | 'optimizing' | 'done' | 'converting';
+export type FileDurationState =
+  | { status: 'checking' }
+  | { status: 'known'; seconds: number }
+  | { status: 'unknown' };
 export type FFmpegFileData = {
   file: File;
   outputs: Array<FFmpegFileDataOutput>;
@@ -45,4 +45,5 @@ export type FFmpegFileData = {
   size: number;
   currentTarget: ConversionTarget;
   conversionState: FFmpegConversionState;
+  duration: FileDurationState;
 };

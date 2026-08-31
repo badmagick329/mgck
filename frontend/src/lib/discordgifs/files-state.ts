@@ -8,8 +8,13 @@ import {
   FFmpegFileData,
   FFmpegFileDataOutput,
 } from '@/lib/types/discordgifs';
+import { getFileOutputEligibility } from './eligibility';
 
 export type FileAction =
+  | {
+      type: 'updateDuration';
+      payload: { name: string; seconds: number | null };
+    }
   | {
       type: 'updateProgress';
       payload: { name: string; progress: number };
@@ -87,12 +92,14 @@ export const filesStateReducer = (
         },
       };
     case 'addOutput': {
+      const fileData = state[action.payload.name];
+      if (!fileData) return state;
+      const { eligibleOutputTypes } = getFileOutputEligibility(fileData);
       const doneAfterAdding =
-        state[action.payload.name].outputs.length ===
-        state[action.payload.name].outputTypes.length - 1;
+        fileData.outputs.length === eligibleOutputTypes.length - 1;
       const conversionState = doneAfterAdding
         ? 'done'
-        : state[action.payload.name].conversionState;
+        : fileData.conversionState;
 
       return {
         ...state,
@@ -132,6 +139,7 @@ export const filesStateReducer = (
             conversionTargetPresets[action.payload.outputTypes[0]] ??
             conversionTargetPresets.emote,
           conversionState: 'idle',
+          duration: { status: 'checking' },
         },
       };
     case 'addFiles':
@@ -147,6 +155,7 @@ export const filesStateReducer = (
               conversionTargetPresets[action.payload.outputTypes[0]] ??
               conversionTargetPresets.emote,
             conversionState: 'idle',
+            duration: { status: 'checking' },
           };
           return acc;
         },
@@ -173,6 +182,20 @@ export const filesStateReducer = (
           conversionState: action.payload.conversionState,
         },
       };
+
+    case 'updateDuration': {
+      if (!state[action.payload.name]) return state;
+      return {
+        ...state,
+        [action.payload.name]: {
+          ...state[action.payload.name],
+          duration:
+            action.payload.seconds === null
+              ? { status: 'unknown' }
+              : { status: 'known', seconds: action.payload.seconds },
+        },
+      };
+    }
 
     case 'removeFile':
       const { [action.payload.name]: _, ...rest } = state;

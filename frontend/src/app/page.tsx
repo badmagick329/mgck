@@ -7,6 +7,7 @@ import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import { shortenerLauncherAccess } from '@/lib/account/launcher-access';
 import { hasFilesAccess } from '@/lib/files/session';
 import { getFilesUrl } from '@/lib/files/url';
+import { discordGifMakerCard } from '@/lib/homepage/discord-gif-maker';
 import {
   FileUp,
   Film,
@@ -94,14 +95,17 @@ export default async function Index() {
       primary: { href: '/emojify', label: 'Open Emojifier' },
     },
     {
-      title: 'Discord Emotes & Stickers',
-      description: 'Turn video clips into Discord-ready emotes and stickers.',
+      title: discordGifMakerCard.title,
+      description: discordGifMakerCard.description,
       icon: <Sticker />,
       className:
         'border-primary-dg bg-background-dg text-foreground-dg shadow-glow-primary-dg dark:text-primary-foreground',
       buttonClassName:
         'bg-primary-dg/80 text-white shadow-glow-primary-dg hover:bg-primary-dg',
-      primary: { href: '/discordgifs', label: 'Open Emotes & Stickers' },
+      primary: {
+        href: discordGifMakerCard.href,
+        label: discordGifMakerCard.buttonLabel,
+      },
     },
     {
       title: 'Files',

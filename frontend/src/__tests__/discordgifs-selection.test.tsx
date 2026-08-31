@@ -26,6 +26,9 @@ jest.mock('../hooks/discordgifs/useFilePaste', () => ({
 jest.mock('../lib/discordgifs/index', () => ({
   convert: jest.fn(async () => undefined),
 }));
+jest.mock('../lib/discordgifs/file-duration', () => ({
+  readFileDuration: jest.fn(async () => null),
+}));
 
 import '@testing-library/jest-dom';
 
@@ -43,12 +46,14 @@ import {
 } from '@/lib/discordgifs/conversion-target';
 import { FilesState, filesStateReducer } from '@/lib/discordgifs/files-state';
 import { FFmpegFileData } from '@/lib/types/discordgifs';
+import { readFileDuration } from '@/lib/discordgifs/file-duration';
 
 const mockAcceptedFiles: File[] = [];
 
 describe('Discord preset selection', () => {
   beforeEach(() => {
     mockAcceptedFiles.splice(0, mockAcceptedFiles.length);
+    jest.mocked(readFileDuration).mockResolvedValue(null);
   });
 
   test('displays all presets in conversion order with accessible pressed states', () => {
@@ -139,6 +144,20 @@ describe('Discord preset selection', () => {
       expect(button).toBeDisabled();
     }
   });
+
+  test('disables conversion when an overlong file has only Sticker selected', async () => {
+    jest.mocked(readFileDuration).mockResolvedValueOnce(7);
+    mockAcceptedFiles.push(new File(['clip'], 'long.mp4'));
+    render(<FileDropzone />);
+
+    fireEvent.click(screen.getByRole('button', { name: /🏷️ Sticker/i }));
+    fireEvent.click(screen.getByRole('button', { name: /😄 Emoji/i }));
+
+    const warning = await screen.findByRole('alert');
+    expect(warning).toHaveTextContent('Sticker will be skipped');
+    expect(warning).toHaveTextContent('nothing eligible to convert');
+    expect(screen.getByRole('button', { name: 'Convert' })).toBeDisabled();
+  });
 });
 
 describe('Discord preset state', () => {
@@ -222,5 +241,6 @@ function fileData(
     size: 1234,
     currentTarget: conversionTargetPresets.emote,
     conversionState,
+    duration: { status: 'unknown' },
   };
 }
