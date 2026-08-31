@@ -2,9 +2,9 @@ import { Toaster } from '@/components/ui/toaster';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Emojify 😀 Your 😳 Message',
+  title: 'Emojifier | Add random emojis to any message',
   description:
-    'Use the emoji generator to improve your messages by 300%. Add an emoji between each word to impress everyone.',
+    'Add random emojis to any message. Choose an emoji set and intensity, shuffle the result, then copy it.',
   icons: {
     icon: '/emojify.ico',
   },

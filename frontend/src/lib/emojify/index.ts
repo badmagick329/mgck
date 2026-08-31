@@ -1,19 +1,68 @@
-import { DEFAULT_EMOJIS } from '@/lib/consts/emojify';
+import {
+  DEFAULT_EMOJIS,
+  EMOJI_INTENSITIES,
+  EMOJI_PACKS,
+  EmojiIntensity,
+  EmojiPackId,
+} from '@/lib/consts/emojify';
 import { randomChoice } from '@/lib/utils';
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 
 export const defaultEmojis = () => DEFAULT_EMOJIS.join(' ');
 
-export const emojifyText = (message: string, emojisInput: string) => {
-  if (!message) return 'Emojified message will appear here';
-  if (!emojisInput) return message;
-  const words = message.split(' ').filter((word) => word.length > 0);
-  const emojis = emojisInput.split(' ').filter((emoji) => emoji.length > 1);
-  const wordsWithEmojis = words.map(
-    (word) => `${word} ${randomChoice(emojis)}`
-  );
-  return wordsWithEmojis.join(' ');
+export const emojisForPack = (
+  pack: EmojiPackId,
+  customEmojis: string
+): string => {
+  if (pack === 'custom') return customEmojis;
+  return EMOJI_PACKS[pack].emojis.join(' ');
 };
+
+export const emojifyText = (
+  message: string,
+  emojisInput: string,
+  intensity: EmojiIntensity = 'chaos',
+  random: () => number = Math.random
+) => {
+  if (!message) return '';
+  if (!emojisInput) return message;
+  const emojis = emojisInput.split(/\s+/).filter(Boolean);
+  if (emojis.length === 0) return message;
+
+  const parts = message.split(/(\s+)/);
+  const eligibleIndexes = parts
+    .map((part, index) => (isEligibleWord(part) ? index : -1))
+    .filter((index) => index >= 0);
+  if (eligibleIndexes.length === 0) return message;
+
+  const probability = EMOJI_INTENSITIES[intensity].probability;
+  const selectedIndexes = new Set(
+    eligibleIndexes.filter(() => probability === 1 || random() < probability)
+  );
+
+  if (selectedIndexes.size === 0) {
+    const fallbackIndex = Math.min(
+      eligibleIndexes.length - 1,
+      Math.floor(random() * eligibleIndexes.length)
+    );
+    selectedIndexes.add(eligibleIndexes[fallbackIndex]);
+  }
+
+  return parts
+    .map((part, index) => {
+      if (!selectedIndexes.has(index)) return part;
+      const emojiIndex = Math.min(
+        emojis.length - 1,
+        Math.floor(random() * emojis.length)
+      );
+      return `${part} ${emojis[emojiIndex]}`;
+    })
+    .join('');
+};
+
+function isEligibleWord(value: string) {
+  return /[\p{L}\p{N}]/u.test(value);
+}
 
 export const emojifyPrompt = (text: string, frequent: boolean) => {
   const frequencyText = frequent

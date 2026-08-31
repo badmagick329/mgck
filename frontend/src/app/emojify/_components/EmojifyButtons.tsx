@@ -1,43 +1,57 @@
 'use client';
+
+import { useEmojifyContext } from '@/app/emojify/_context/store';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { handleCopyToClipboard } from '@/lib/utils';
-import { useEffect, useState } from 'react';
-import { useEmojifyContext } from '@/app/emojify/_context/store';
+import { Copy, Shuffle } from 'lucide-react';
+import { useState } from 'react';
+
 import GenerateButton from './GenerateButton';
-import { emojifyText } from '@/lib/emojify';
 
 type EmojifyButtonsProps = {
-  setOutput: (output: string) => void;
   output: string;
+  setOutput: (output: string) => void;
+  onShuffle: () => void;
   username: string;
   showAi: boolean;
 };
 
 export default function EmojifyButtons({
-  setOutput,
   output,
+  setOutput,
+  onShuffle,
   username,
   showAi,
 }: EmojifyButtonsProps) {
   const { toast } = useToast();
   const { emojisInput, messageInput } = useEmojifyContext();
-  const [frequent, setFrequent] = useState(true);
-
-  useEffect(() => {
-    setOutput(emojifyText(messageInput, emojisInput));
-  }, [messageInput, emojisInput, setOutput]);
+  const [frequent, setFrequent] = useState(false);
+  const canRandomize = Boolean(messageInput && emojisInput.trim());
 
   return (
-    <section className='flex justify-between gap-2 p-2 shadow-glow-primary-em md:gap-6 md:shadow-none'>
-      <abbr className='no-underline' title='Copy the output to clipboard'>
+    <div className='flex flex-col gap-3 border-t border-primary-em/20 p-3 sm:flex-row sm:items-center sm:justify-between'>
+      <div className='flex flex-wrap gap-2'>
         <Button
-          className='w-40 bg-primary-em/70 hover:bg-primary-em'
-          onClick={() => handleCopyToClipboard(output, toast)}
+          type='button'
+          variant='outline'
+          onClick={onShuffle}
+          disabled={!canRandomize}
+          className='border-primary-em/30 bg-transparent hover:bg-primary-em/10'
         >
-          Copy 📋
+          <Shuffle />
+          Shuffle again
         </Button>
-      </abbr>
+        <Button
+          type='button'
+          onClick={() => handleCopyToClipboard(output, toast)}
+          disabled={!output}
+          className='bg-primary-em/80 text-white hover:bg-primary-em'
+        >
+          <Copy />
+          Copy
+        </Button>
+      </div>
       <GenerateButton
         messageInput={messageInput}
         setOutput={setOutput}
@@ -46,6 +60,6 @@ export default function EmojifyButtons({
         frequent={frequent}
         setFrequent={setFrequent}
       />
-    </section>
+    </div>
   );
 }
