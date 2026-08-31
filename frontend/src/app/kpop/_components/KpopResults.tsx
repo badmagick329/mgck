@@ -62,14 +62,10 @@ function DesktopDateGroup({ group }: { group: ComebackDateGroup }) {
   return (
     <TableBody>
       <TableRow
-        className={
-          isToday
-            ? 'scroll-mt-4 border-primary-kp/30 bg-green-500/10 hover:bg-green-500/10'
-            : 'border-primary-kp/20 bg-primary-kp/5 hover:bg-primary-kp/5'
-        }
+        className={`scroll-mt-4 ${dateGroupSurfaceClass(dayOffset)}`}
         data-kpop-today={isToday ? 'true' : undefined}
       >
-        <TableCell colSpan={4} className='px-4 py-2.5'>
+        <TableCell colSpan={4} className='px-4 py-3'>
           <DateGroupLabel date={group.date} count={group.comebacks.length} />
         </TableCell>
       </TableRow>
@@ -120,7 +116,8 @@ function MobileComebackList({ groups }: { groups: ComebackDateGroup[] }) {
       role='region'
     >
       {groups.map((group) => {
-        const isToday = dayOffsetFromToday(group.date) === 0;
+        const dayOffset = dayOffsetFromToday(group.date);
+        const isToday = dayOffset === 0;
         return (
           <section
             key={group.date}
@@ -128,11 +125,7 @@ function MobileComebackList({ groups }: { groups: ComebackDateGroup[] }) {
             data-kpop-today={isToday ? 'true' : undefined}
           >
             <div
-              className={
-                isToday
-                  ? 'border-b border-green-400/25 bg-green-500/10 px-4 py-3'
-                  : 'border-b border-primary-kp/20 bg-primary-kp/5 px-4 py-3'
-              }
+              className={`border-b px-4 py-3 ${dateGroupSurfaceClass(dayOffset)}`}
             >
               <DateGroupLabel
                 date={group.date}
@@ -187,11 +180,7 @@ function DateGroupLabel({ date, count }: { date: string; count: number }) {
       <div className='flex flex-wrap items-baseline gap-2'>
         <time
           dateTime={date}
-          className={
-            isToday
-              ? 'font-bold text-green-700 dark:text-green-300'
-              : 'font-semibold'
-          }
+          className={`text-base ${dateGroupTextClass(dayOffset)}`}
         >
           {formatReleaseDate(date)}
         </time>
@@ -204,6 +193,26 @@ function DateGroupLabel({ date, count }: { date: string; count: number }) {
       </span>
     </div>
   );
+}
+
+function dateGroupSurfaceClass(dayOffset: number) {
+  if (dayOffset === 0) {
+    return 'border-green-400/30 bg-green-500/10 hover:bg-green-500/10';
+  }
+  if (dayOffset < 0) {
+    return 'border-orange-400/20 bg-orange-500/5 hover:bg-orange-500/5';
+  }
+  return 'border-cyan-400/20 bg-cyan-500/5 hover:bg-cyan-500/5';
+}
+
+function dateGroupTextClass(dayOffset: number) {
+  if (dayOffset === 0) {
+    return 'font-bold text-green-700 dark:text-green-300';
+  }
+  if (dayOffset < 0) {
+    return 'font-semibold text-orange-800/80 dark:text-orange-200/80';
+  }
+  return 'font-semibold text-cyan-800/80 dark:text-cyan-200/80';
 }
 
 function formatReleaseDate(date: string) {
