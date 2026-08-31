@@ -1,43 +1,23 @@
-import {
-  ConversionPresetId,
-  conversionTargetPresets,
-} from '@/lib/discordgifs/conversion-target';
 import { FFmpegFileData } from '@/lib/types/discordgifs';
 import { truncateText } from '@/lib/utils';
 import clsx from 'clsx';
 
-import ChoiceCheckbox from './ChoiceCheckbox';
 import ConversionOutput from './ConversionOutput';
 import OutputPlaceholder from './OutputPlaceholder';
 import ProgressBar from './ProgressBar';
 import { IoIosCloseCircle } from 'react-icons/io';
 
-const targetChoices = Object.keys(
-  conversionTargetPresets
-) as Array<ConversionPresetId>;
-
 type ConvertedFileProps = {
   fileData: FFmpegFileData;
-  setOutputTypes: (targets: Array<ConversionPresetId>) => void;
   removeFile: () => void;
-  buttonsEnabled: boolean;
 };
 
 export default function ConvertedFile({
   fileData,
-  setOutputTypes,
   removeFile,
-  buttonsEnabled,
 }: ConvertedFileProps) {
-  const {
-    file,
-    outputs,
-    outputTypes,
-    progress,
-    currentTarget,
-    size,
-    conversionState,
-  } = fileData;
+  const { file, outputs, progress, currentTarget, size, conversionState } =
+    fileData;
   if (!file) {
     return null;
   }
@@ -64,21 +44,6 @@ export default function ConvertedFile({
         iterationProgress={progress}
         conversionState={conversionState}
       />
-      <div className='flex gap-16'>
-        {targetChoices.map((choice, idx) => {
-          const key = `${file.name}-${choice}`;
-          return (
-            <ChoiceCheckbox
-              key={key}
-              checkboxId={key}
-              choice={choice}
-              outputTypes={outputTypes}
-              setOutputTypes={setOutputTypes}
-              buttonsEnabled={buttonsEnabled}
-            />
-          );
-        })}
-      </div>
       <div className='flex h-full w-full items-center justify-center gap-4 border-2 border-orange-500/40'>
         {outputs.length === 0 && <OutputPlaceholder />}
         {outputs.map((output) => (

@@ -1,5 +1,9 @@
 import { Dispatch } from 'react';
-import { ConversionTarget, conversionTargetPresets } from './conversion-target';
+import {
+  ConversionTarget,
+  conversionTargetPresets,
+  orderConversionPresetIds,
+} from './conversion-target';
 import { FFmpegManager } from './ffmpeg-manager';
 import { FilesState, FileAction } from './files-state';
 import {
@@ -32,7 +36,7 @@ export async function convert(
       .setNewSizeCallback(sizeCallback)
       .setUpdateConversionStateCallback(updateFileConversionStateCallback);
 
-    for (const outputType of data.outputTypes) {
+    for (const outputType of orderConversionPresetIds(data.outputTypes)) {
       const target = conversionTargetPresets[outputType];
       ffmpeg.setFileConfig({
         file: data.file,

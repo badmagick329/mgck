@@ -2,9 +2,9 @@ import { Toaster } from '@/components/ui/toaster';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Create emotes and stickers',
+  title: 'Discord GIF Maker for Emojis, Stickers, and Avatars',
   description:
-    "Create emotes and stickers for Discord from your video clips, complying with Discord's size limits.",
+    'Convert videos and GIFs into animated Discord emojis, stickers, and profile avatars that meet Discord size limits.',
   keywords: [
     'discord',
     'emotes',
@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     'gifs',
     'animated',
     'emojis',
+    'avatars',
+    'video to gif',
+    'size limits',
   ],
   icons: {
     icon: '/discordgifs.ico',

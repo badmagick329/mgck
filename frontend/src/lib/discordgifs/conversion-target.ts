@@ -55,6 +55,37 @@ export const conversionTargetPresets = {
     startingWidth: 140,
     minWidth: 30,
   },
+  avatar: {
+    id: 'avatar',
+    format: 'gif',
+    extension: '.gif',
+    mimeType: 'image/gif',
+    filenameSuffix: '_avatar',
+    changeSize: 128,
+    minChangeSize: 1,
+    sizeLimit: 8 * 1024 * 1024,
+    sizeMargin: 0.05,
+    startingWidth: 512,
+    minWidth: 64,
+  },
 } as const satisfies Record<string, ConversionTarget>;
 
 export type ConversionPresetId = keyof typeof conversionTargetPresets;
+
+export const conversionPresetOrder: readonly ConversionPresetId[] = [
+  'emote',
+  'sticker',
+  'avatar',
+];
+
+export const defaultConversionPresetSelection: readonly ConversionPresetId[] = [
+  'emote',
+];
+
+export function orderConversionPresetIds(
+  presetIds: readonly ConversionPresetId[]
+): ConversionPresetId[] {
+  return conversionPresetOrder.filter((presetId) =>
+    presetIds.includes(presetId)
+  );
+}
