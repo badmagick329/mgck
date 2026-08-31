@@ -1,5 +1,3 @@
-'use client';
-
 import Navbar from '@/app/_components/Navbar';
 
 import FileDropzone from './_components/FileDropzone';

@@ -7,8 +7,11 @@ import {
 } from '@/lib/discordgifs/files-state';
 import {
   ConversionPresetId,
+  conversionTargetPresets,
   defaultConversionPresetSelection,
 } from '@/lib/discordgifs/conversion-target';
+import { hasEligibleIdleFile } from '@/lib/discordgifs/eligibility';
+import { readFileDuration } from '@/lib/discordgifs/file-duration';
 import clsx from 'clsx';
 import { useCallback, useEffect, useReducer, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -34,6 +37,15 @@ export default function FileDropzone() {
   const [selectedOutputTypes, setSelectedOutputTypes] = useState<
     ConversionPresetId[]
   >([...defaultConversionPresetSelection]);
+
+  const checkFileDuration = useCallback((file: File) => {
+    void readFileDuration(file).then((seconds) => {
+      dispatch({
+        type: 'updateDuration',
+        payload: { name: file.name, seconds },
+      });
+    });
+  }, []);
 
   const { acceptedFiles, getRootProps, getInputProps, fileRejections } =
     useDropzone({
@@ -84,6 +96,7 @@ export default function FileDropzone() {
         type: 'addFile',
         payload: { file, outputTypes: selectedOutputTypes },
       });
+      checkFileDuration(file);
     }
     setDropError(null);
   }, [acceptedFiles]);
@@ -105,6 +118,7 @@ export default function FileDropzone() {
         type: 'addFiles',
         payload: { files: newFiles, outputTypes: selectedOutputTypes },
       });
+      for (const file of newFiles) checkFileDuration(file);
 
       setDropError(null);
     },
@@ -117,16 +131,13 @@ export default function FileDropzone() {
     ['busy', 'optimizing', 'converting'].includes(d.conversionState)
   );
 
-  const hasIdleFiles = Object.values(filesState).some(
-    (d) => d.conversionState === 'idle'
-  );
+  const hasEligibleOutput = hasEligibleIdleFile(filesState);
 
   const buttonEnabled =
     !conversionInProgress &&
     !anyProcessing &&
     totalFiles > 0 &&
-    hasIdleFiles &&
-    selectedOutputTypes.length > 0;
+    hasEligibleOutput;
 
   const selectorDisabled = conversionInProgress || anyProcessing;
 
@@ -155,8 +166,9 @@ export default function FileDropzone() {
       />
       <div className='max-w-2xl px-2 text-sm text-foreground-dg/80'>
         <p>
-          🫣 Stickers have to be 5 seconds or less, or Discord won&apos;t accept
-          them.
+          🫣 Stickers have to be{' '}
+          {conversionTargetPresets.sticker.maxDurationSeconds} seconds or less,
+          or Discord won&apos;t accept them.
         </p>
       </div>
       <div

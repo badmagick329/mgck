@@ -74,6 +74,7 @@ describe('conversion targets', () => {
         sizeMargin: 0.08,
         startingWidth: 140,
         minWidth: 30,
+        maxDurationSeconds: 5,
       },
       avatar: {
         id: 'avatar',

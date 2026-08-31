@@ -10,6 +10,7 @@ export type ScaleCalculationConfig = {
 type ConversionTargetBase = ScaleCalculationConfig & {
   id: string;
   filenameSuffix: string;
+  maxDurationSeconds?: number;
 };
 
 type GifTarget = {
@@ -54,6 +55,7 @@ export const conversionTargetPresets = {
     sizeMargin: 0.08,
     startingWidth: 140,
     minWidth: 30,
+    maxDurationSeconds: 5,
   },
   avatar: {
     id: 'avatar',
@@ -71,6 +73,12 @@ export const conversionTargetPresets = {
 } as const satisfies Record<string, ConversionTarget>;
 
 export type ConversionPresetId = keyof typeof conversionTargetPresets;
+
+export const conversionPresetLabels: Record<ConversionPresetId, string> = {
+  emote: 'Emoji',
+  sticker: 'Sticker',
+  avatar: 'Avatar',
+};
 
 export const conversionPresetOrder: readonly ConversionPresetId[] = [
   'emote',

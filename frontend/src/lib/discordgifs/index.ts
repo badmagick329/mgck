@@ -1,9 +1,6 @@
 import { Dispatch } from 'react';
-import {
-  ConversionTarget,
-  conversionTargetPresets,
-  orderConversionPresetIds,
-} from './conversion-target';
+import { ConversionTarget, conversionTargetPresets } from './conversion-target';
+import { getFileOutputEligibility } from './eligibility';
 import { FFmpegManager } from './ffmpeg-manager';
 import { FilesState, FileAction } from './files-state';
 import {
@@ -16,15 +13,18 @@ export async function convert(
   filesState: FilesState,
   dispatch: Dispatch<FileAction>
 ) {
+  const eligibleFiles = Object.entries(filesState).filter(
+    ([, data]) =>
+      data.conversionState === 'idle' &&
+      getFileOutputEligibility(data).eligibleOutputTypes.length > 0
+  );
+  if (eligibleFiles.length === 0) return;
+
   if (!ffmpegRef.current.loaded()) {
     await ffmpegRef.current.load();
   }
   const ffmpeg = ffmpegRef.current;
-  for (const [name, data] of Object.entries(filesState)) {
-    if (data.conversionState !== 'idle') {
-      continue;
-    }
-
+  for (const [name, data] of eligibleFiles) {
     const {
       progressCallback,
       updateFileConversionStateCallback,
@@ -36,7 +36,8 @@ export async function convert(
       .setNewSizeCallback(sizeCallback)
       .setUpdateConversionStateCallback(updateFileConversionStateCallback);
 
-    for (const outputType of orderConversionPresetIds(data.outputTypes)) {
+    const { eligibleOutputTypes } = getFileOutputEligibility(data);
+    for (const outputType of eligibleOutputTypes) {
       const target = conversionTargetPresets[outputType];
       ffmpeg.setFileConfig({
         file: data.file,

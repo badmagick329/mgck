@@ -1,4 +1,9 @@
 import { FFmpegFileData } from '@/lib/types/discordgifs';
+import {
+  conversionPresetLabels,
+  conversionTargetPresets,
+} from '@/lib/discordgifs/conversion-target';
+import { getFileOutputEligibility } from '@/lib/discordgifs/eligibility';
 import { truncateText } from '@/lib/utils';
 import clsx from 'clsx';
 
@@ -18,6 +23,10 @@ export default function ConvertedFile({
 }: ConvertedFileProps) {
   const { file, outputs, progress, currentTarget, size, conversionState } =
     fileData;
+  const { eligibleOutputTypes, excludedOutputTypes } =
+    getFileOutputEligibility(fileData);
+  const stickerLimit = conversionTargetPresets.sticker.maxDurationSeconds;
+  const stickerIsExcluded = excludedOutputTypes.includes('sticker');
   if (!file) {
     return null;
   }
@@ -44,6 +53,29 @@ export default function ConvertedFile({
         iterationProgress={progress}
         conversionState={conversionState}
       />
+      {stickerIsExcluded &&
+        fileData.duration.status === 'known' &&
+        stickerLimit !== undefined && (
+          <div
+            role='alert'
+            className='rounded-md border border-amber-500/70 bg-amber-950/30 px-3 py-2 text-left text-xs leading-relaxed text-amber-100'
+          >
+            <p>
+              This clip is {formatDuration(fileData.duration.seconds)} long;
+              Stickers are limited to {stickerLimit} seconds. Sticker will be
+              skipped.
+            </p>
+            <p className='mt-1'>
+              {eligibleOutputTypes.length > 0
+                ? `Selected ${eligibleOutputTypes
+                    .map((outputType) => conversionPresetLabels[outputType])
+                    .join(' and ')} output${
+                    eligibleOutputTypes.length === 1 ? '' : 's'
+                  } can still be converted.`
+                : 'There is nothing eligible to convert for this file while only Sticker is selected.'}
+            </p>
+          </div>
+        )}
       <div className='flex h-full w-full items-center justify-center gap-4 border-2 border-orange-500/40'>
         {outputs.length === 0 && <OutputPlaceholder />}
         {outputs.map((output) => (
@@ -52,4 +84,9 @@ export default function ConvertedFile({
       </div>
     </div>
   );
+}
+
+function formatDuration(seconds: number): string {
+  const rounded = Math.round(seconds * 10) / 10;
+  return `${rounded.toFixed(Number.isInteger(rounded) ? 0 : 1)} seconds`;
 }
