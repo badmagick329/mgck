@@ -27,8 +27,16 @@ describe('emojifyText', () => {
     );
   });
 
-  test('leaves punctuation-only input alone', () => {
-    expect(emojifyText('... !?', '😀', 'chaos')).toBe('... !?');
+  test('chaos mode adds emojis after punctuation characters', () => {
+    expect(emojifyText('H E Y ! ! !', '😀', 'chaos', () => 0)).toBe(
+      'H 😀 E 😀 Y 😀 ! 😀 ! 😀 ! 😀'
+    );
+  });
+
+  test('balanced mode still ignores punctuation-only chunks', () => {
+    expect(emojifyText('hello ! !', '😀', 'balanced', () => 0)).toBe(
+      'hello 😀 ! !'
+    );
   });
 
   test('accepts single-character custom options', () => {
