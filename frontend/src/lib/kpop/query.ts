@@ -183,6 +183,15 @@ export function buildTimelineExpansionSearchParams(
       'end-date',
       formatCompactDate(addDays(currentEnd, TIMELINE_EXPANSION_DAYS))
     );
+  } else {
+    const defaultStart = compactDateToUtcDate(getDefaultStartDateCompact());
+    if (defaultStart && currentStart < defaultStart) {
+      const nextStart = addDays(currentStart, TIMELINE_EXPANSION_DAYS);
+      params.set(
+        'start-date',
+        formatCompactDate(nextStart > defaultStart ? defaultStart : nextStart)
+      );
+    }
   }
   params.delete('page');
   params.delete('view');
@@ -192,6 +201,15 @@ export function buildTimelineExpansionSearchParams(
 export function canExpandTimelineEarlier(state: KpopQueryState) {
   const start = compactDateToUtcDate(state.startDate);
   return Boolean(start && start > getArchiveStartUtcDate());
+}
+
+export function canExpandTimelineLater(state: KpopQueryState) {
+  if (state.endDate) {
+    return true;
+  }
+  const start = compactDateToUtcDate(state.startDate);
+  const defaultStart = compactDateToUtcDate(getDefaultStartDateCompact());
+  return Boolean(start && defaultStart && start < defaultStart);
 }
 
 export function buildRecentSearchParams(searchParams: SearchParamsInput) {
