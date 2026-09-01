@@ -33,6 +33,7 @@ class ReleaseYoutubeUrls:
                     self._logger.debug(
                         "Skipping releases with no urls found or no update required"
                     )
+                    self.releases.append(release)
                     continue
 
                 saved_releases = self._in_saved_releases(release)
@@ -41,6 +42,7 @@ class ReleaseYoutubeUrls:
                         f"Using saved youtube urls {saved_releases.urls}"
                     )
                     release.urls = saved_releases.urls
+                    self.releases.append(release)
                     continue
 
                 self._process_reddit_urls(release)

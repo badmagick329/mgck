@@ -48,11 +48,11 @@ class ParsedHTML:
                     release_type = cell.text
                     continue
                 if i == 5:
-                    children = cell.contents
                     title = cell.text
-                    for child in children:
-                        if child.name == "a":  # type: ignore
-                            reddit_urls.append(child["href"])  # type: ignore
+                    for link in cell.select("a[href]"):
+                        href = link.get("href")
+                        if isinstance(href, str):
+                            reddit_urls.append(href)
                     continue
 
             release = self.validated_parsed_data(
