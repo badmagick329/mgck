@@ -13,7 +13,7 @@ jest.mock('../app/kpop/_components/FollowArtistButton', () => ({
   ),
 }));
 
-jest.mock('../app/kpop/_components/ComebackYoutubeLinks', () => ({
+jest.mock('../app/kpop/_components/ComebackLinks', () => ({
   __esModule: true,
   default: ({ title }: { title: string }) => <a href='#watch'>Watch {title}</a>,
 }));
@@ -67,5 +67,7 @@ function comeback({
     album: `Album ${id}`,
     release_type: 'digital single',
     urls: [],
+    spotify_urls: [],
+    apple_music_urls: [],
   };
 }

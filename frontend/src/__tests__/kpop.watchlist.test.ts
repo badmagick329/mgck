@@ -35,6 +35,8 @@ describe('kpop watchlist transport', () => {
       date: '2026-07-16',
       release_type: 'Single',
       urls: [],
+      spotify_urls: [],
+      apple_music_urls: [],
     };
 
     expect(ComebackResponseSchema.safeParse(release).success).toBe(false);

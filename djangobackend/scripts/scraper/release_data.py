@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime as dt
 
 import pendulum
@@ -14,6 +14,8 @@ class ReleaseData:
     release_type: str
     reddit_urls: list[str]
     urls: list[str] | None
+    spotify_urls: list[str] = field(default_factory=list)
+    apple_music_urls: list[str] = field(default_factory=list)
     id: int | None = None
 
     def to_dict(self) -> dict:
@@ -26,6 +28,8 @@ class ReleaseData:
             "release_type": self.release_type,
             "reddit_urls": self.reddit_urls,
             "urls": self.urls,
+            "spotify_urls": self.spotify_urls,
+            "apple_music_urls": self.apple_music_urls,
         }
 
     @staticmethod
@@ -39,6 +43,8 @@ class ReleaseData:
             release_type=data["release_type"],
             reddit_urls=data["reddit_urls"],
             urls=data["urls"],
+            spotify_urls=data.get("spotify_urls", []),
+            apple_music_urls=data.get("apple_music_urls", []),
         )
 
     def to_release(self) -> Release:
@@ -60,6 +66,8 @@ class ReleaseData:
             release_type=release_type,
             reddit_urls=self.reddit_urls,
             urls=self.urls,
+            spotify_urls=self.spotify_urls,
+            apple_music_urls=self.apple_music_urls,
         )
 
     @staticmethod
@@ -73,6 +81,8 @@ class ReleaseData:
             release_type=release.release_type.name,
             reddit_urls=release.reddit_urls or [],
             urls=release.urls,
+            spotify_urls=release.spotify_urls or [],
+            apple_music_urls=release.apple_music_urls or [],
         )
 
     @staticmethod
@@ -108,6 +118,8 @@ class ReleaseData:
             f"album={self.album}, "
             f"release_type={self.release_type}, "
             f"reddit_urls={self.reddit_urls}, "
-            f"urls={self.urls}"
+            f"urls={self.urls}, "
+            f"spotify_urls={self.spotify_urls}, "
+            f"apple_music_urls={self.apple_music_urls}"
             f")>"
         )

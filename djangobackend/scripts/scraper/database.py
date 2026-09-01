@@ -83,10 +83,26 @@ class Database:
                     release_from_db.urls = (  # type: ignore
                         release.urls if release.urls else release_from_db.urls
                     )
+                    release_from_db.spotify_urls = (  # type: ignore
+                        release.spotify_urls
+                        if release.spotify_urls
+                        else release_from_db.spotify_urls
+                    )
+                    release_from_db.apple_music_urls = (  # type: ignore
+                        release.apple_music_urls
+                        if release.apple_music_urls
+                        else release_from_db.apple_music_urls
+                    )
                     update_releases.append(release_from_db)
                     if len(update_releases) == BATCH:
                         Release.objects.bulk_update(
-                            update_releases, fields=["reddit_urls", "urls"]
+                            update_releases,
+                            fields=[
+                                "reddit_urls",
+                                "urls",
+                                "spotify_urls",
+                                "apple_music_urls",
+                            ],
                         )
                         update_releases = list()
                 else:
@@ -118,6 +134,8 @@ class Database:
                         release_date=release.release_date,
                         reddit_urls=release.reddit_urls,
                         urls=release.urls,
+                        spotify_urls=release.spotify_urls,
+                        apple_music_urls=release.apple_music_urls,
                     )
                     create_releases.append(release)
                     if len(create_releases) == BATCH:
@@ -128,6 +146,12 @@ class Database:
             Release.objects.bulk_create(create_releases)
         if len(update_releases) > 0:
             Release.objects.bulk_update(
-                update_releases, fields=["reddit_urls", "urls"]
+                update_releases,
+                fields=[
+                    "reddit_urls",
+                    "urls",
+                    "spotify_urls",
+                    "apple_music_urls",
+                ],
             )
         refresh_artist_credit_matches(created_artist_ids)

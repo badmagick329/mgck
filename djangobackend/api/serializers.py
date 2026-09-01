@@ -103,6 +103,16 @@ class KpopComebackListSerializer(serializers.BaseSerializer):
                     type=openapi.TYPE_ARRAY,
                     items=openapi.Items(type=openapi.TYPE_STRING),
                 ),
+                "spotify_urls": openapi.Schema(
+                    description="The Spotify urls for the comeback",
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_STRING),
+                ),
+                "apple_music_urls": openapi.Schema(
+                    description="The Apple Music urls for the comeback",
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_STRING),
+                ),
             },
             "example": [
                 {
@@ -126,7 +136,9 @@ class KpopComebackListSerializer(serializers.BaseSerializer):
             "date": datetime.strftime(instance.release_date, "%Y-%m-%d"),
             "album": instance.album,
             "release_type": instance.release_type.name,
-            "urls": instance.urls,
+            "urls": instance.urls or [],
+            "spotify_urls": instance.spotify_urls or [],
+            "apple_music_urls": instance.apple_music_urls or [],
         }
 
 

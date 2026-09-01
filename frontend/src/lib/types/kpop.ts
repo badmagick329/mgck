@@ -9,6 +9,8 @@ export const ComebackResponseSchema = z.object({
   date: z.string(),
   release_type: z.string(),
   urls: z.array(z.string()),
+  spotify_urls: z.array(z.string()).default([]),
+  apple_music_urls: z.array(z.string()).default([]),
 });
 
 export const ComebacksResultSchema = z.object({
