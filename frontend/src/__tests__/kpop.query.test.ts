@@ -6,6 +6,7 @@ import {
   buildSearchSearchParams,
   buildTimelineExpansionSearchParams,
   canExpandTimelineEarlier,
+  canExpandTimelineLater,
   getActiveKpopPreset,
   getCanonicalKpopSearchParams,
   getKpopApiQuery,
@@ -61,6 +62,30 @@ describe('kpop query helpers', () => {
 
     expect(next.get('start-date')).toBe('250526');
     expect(next.get('end-date')).toBe('250608');
+  });
+
+  test('later retracts an earlier expansion in an open-ended timeline', () => {
+    const next = buildTimelineExpansionSearchParams(
+      new URLSearchParams('start-date=000101'),
+      'later'
+    );
+
+    expect(next.get('start-date')).toBe('000108');
+    expect(next.get('end-date')).toBeNull();
+  });
+
+  test('later is available only when there is a range to expand or retract', () => {
+    const expanded = searchParamsToKpopQueryState(
+      new URLSearchParams('start-date=000101')
+    );
+    const bounded = searchParamsToKpopQueryState(
+      new URLSearchParams('start-date=250526&end-date=250601')
+    );
+    const recent = searchParamsToKpopQueryState(new URLSearchParams());
+
+    expect(canExpandTimelineLater(expanded)).toBe(true);
+    expect(canExpandTimelineLater(bounded)).toBe(true);
+    expect(canExpandTimelineLater(recent)).toBe(false);
   });
 
   test('recent, all, and clear strip page and end-date state', () => {

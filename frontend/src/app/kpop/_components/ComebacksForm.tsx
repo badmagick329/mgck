@@ -10,6 +10,7 @@ import {
   buildSearchSearchParams,
   buildTimelineExpansionSearchParams,
   canExpandTimelineEarlier,
+  canExpandTimelineLater,
   hasKpopSearchFilters,
   getTimelineLabel,
   getKpopView,
@@ -51,6 +52,7 @@ export default function ComebacksForm() {
   );
   const isTimelineView = !isFollowingView && !searchOpen;
   const canGoEarlier = canExpandTimelineEarlier(queryState);
+  const canGoLater = canExpandTimelineLater(queryState);
   const {
     artists,
     isLoaded,
@@ -148,7 +150,7 @@ export default function ComebacksForm() {
                 <ChevronLeft className='mr-2 h-4 w-4' />
                 Show earlier
               </Button>
-              {queryState.endDate && (
+              {canGoLater && (
                 <Button
                   variant='outline'
                   className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
@@ -159,7 +161,7 @@ export default function ComebacksForm() {
                     'later',
                     startSearchTransition
                   )}
-                  disabled={isSearching}
+                  disabled={isSearching || !canGoLater}
                 >
                   Show later
                   <ChevronRight className='ml-2 h-4 w-4' />
