@@ -30,8 +30,9 @@ export const emojifyText = (
   if (emojis.length === 0) return message;
 
   const parts = message.split(/(\s+)/);
+  const isEligible = intensity === 'chaos' ? isNonWhitespace : isEligibleWord;
   const eligibleIndexes = parts
-    .map((part, index) => (isEligibleWord(part) ? index : -1))
+    .map((part, index) => (isEligible(part) ? index : -1))
     .filter((index) => index >= 0);
   if (eligibleIndexes.length === 0) return message;
 
@@ -62,6 +63,10 @@ export const emojifyText = (
 
 function isEligibleWord(value: string) {
   return /[\p{L}\p{N}]/u.test(value);
+}
+
+function isNonWhitespace(value: string) {
+  return /\S/u.test(value);
 }
 
 export const emojifyPrompt = (text: string, frequent: boolean) => {
