@@ -52,6 +52,8 @@ class Release(models.Model):
     release_type = models.ForeignKey("ReleaseType", on_delete=models.CASCADE)
     reddit_urls = models.JSONField(null=True, blank=True)
     urls = models.JSONField(null=True, blank=True)
+    spotify_urls = models.JSONField(default=list, blank=True)
+    apple_music_urls = models.JSONField(default=list, blank=True)
 
     class Meta:  # type: ignore
         unique_together = [
@@ -75,7 +77,9 @@ class Release(models.Model):
             f"release_date={self.release_date}, "
             f"release_type={self.release_type}, "
             f"reddit_urls={self.reddit_urls}, "
-            f"urls={self.urls})>"
+            f"urls={self.urls}, "
+            f"spotify_urls={self.spotify_urls}, "
+            f"apple_music_urls={self.apple_music_urls})>"
         )
 
     # def to_dict(self):

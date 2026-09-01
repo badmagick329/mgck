@@ -64,15 +64,23 @@ def test_artist_public_id_is_stable_when_artist_name_changes():
 @pytest.mark.django_db
 def test_kpop_get_includes_artist_public_id(api_client):
     artist = Artist.objects.create(name="Artist")
-    create_release(artist, "Release", date(2026, 7, 16))
+    release = create_release(artist, "Release", date(2026, 7, 16))
+    release.spotify_urls = ["https://open.spotify.com/album/example"]
+    release.apple_music_urls = ["https://music.apple.com/gb/album/example"]
+    release.save(update_fields=["spotify_urls", "apple_music_urls"])
 
     response = api_client.get(KPOP_URL, {"page_size": 10})
 
     assert response.status_code == 200
-    assert response.json()["results"][0]["artist"] == "Artist"
-    assert response.json()["results"][0]["artist_public_id"] == str(
-        artist.public_id
-    )
+    result = response.json()["results"][0]
+    assert result["artist"] == "Artist"
+    assert result["artist_public_id"] == str(artist.public_id)
+    assert result["spotify_urls"] == [
+        "https://open.spotify.com/album/example"
+    ]
+    assert result["apple_music_urls"] == [
+        "https://music.apple.com/gb/album/example"
+    ]
 
 
 @pytest.mark.django_db
@@ -287,6 +295,35 @@ def test_scraper_created_credit_refreshes_existing_followed_artist(api_client):
     assert response.status_code == 200
     assert [release["artist"] for release in response.json()["results"]] == [
         "Rei (IVE) x DEAN"
+    ]
+
+
+@pytest.mark.django_db
+def test_scraper_persists_streaming_urls():
+    Database.save_to_db(
+        [
+            ReleaseData(
+                release_date="2026-07-18",
+                artist="Artist",
+                title="Title",
+                album="Album",
+                release_type="Single",
+                reddit_urls=[],
+                urls=[],
+                spotify_urls=["https://open.spotify.com/album/example"],
+                apple_music_urls=[
+                    "https://music.apple.com/gb/album/example"
+                ],
+            )
+        ]
+    )
+
+    release = Release.objects.get(artist__name="Artist", title="Title")
+    assert release.spotify_urls == [
+        "https://open.spotify.com/album/example"
+    ]
+    assert release.apple_music_urls == [
+        "https://music.apple.com/gb/album/example"
     ]
 
 

@@ -10,7 +10,7 @@ import { dayOffsetFromToday, relativeDayLabel } from '@/lib/kpop';
 import { ComebackDateGroup, groupComebacksByDate } from '@/lib/kpop/results';
 import { ComebackResponse } from '@/lib/types/kpop';
 
-import ComebackYoutubeLinks from './ComebackYoutubeLinks';
+import ComebackLinks from './ComebackLinks';
 import FollowArtistButton from './FollowArtistButton';
 
 export default function KpopResults({
@@ -42,10 +42,10 @@ function DesktopComebackTable({ groups }: { groups: ComebackDateGroup[] }) {
       <Table className='table-fixed' aria-label='K-pop comeback releases'>
         <TableHeader>
           <TableRow className='border-primary-kp/25 hover:bg-transparent'>
-            <TableHead className='w-[23%] px-4'>Artist</TableHead>
-            <TableHead className='w-[27%] px-4'>Release</TableHead>
-            <TableHead className='w-[32%] px-4'>Album and type</TableHead>
-            <TableHead className='w-[18%] px-4'>YouTube</TableHead>
+            <TableHead className='w-[22%] px-4'>Artist</TableHead>
+            <TableHead className='w-[24%] px-4'>Release</TableHead>
+            <TableHead className='w-[29%] px-4'>Album and type</TableHead>
+            <TableHead className='w-[25%] px-4'>Listen</TableHead>
           </TableRow>
         </TableHeader>
         {groups.map((group) => (
@@ -95,8 +95,10 @@ function DesktopDateGroup({ group }: { group: ComebackDateGroup }) {
             </div>
           </TableCell>
           <TableCell className='whitespace-normal px-4 py-5'>
-            <ComebackYoutubeLinks
-              urls={comeback.urls}
+            <ComebackLinks
+              youtubeUrls={comeback.urls}
+              spotifyUrls={comeback.spotify_urls}
+              appleMusicUrls={comeback.apple_music_urls}
               artist={comeback.artist}
               title={comeback.title}
               releaseDate={comeback.date}
@@ -156,8 +158,10 @@ function MobileComebackList({ groups }: { groups: ComebackDateGroup[] }) {
                     <span className='break-words'>{comeback.album}</span>
                     <span className='break-words'>{comeback.release_type}</span>
                   </div>
-                  <ComebackYoutubeLinks
-                    urls={comeback.urls}
+                  <ComebackLinks
+                    youtubeUrls={comeback.urls}
+                    spotifyUrls={comeback.spotify_urls}
+                    appleMusicUrls={comeback.apple_music_urls}
                     artist={comeback.artist}
                     title={comeback.title}
                     releaseDate={comeback.date}

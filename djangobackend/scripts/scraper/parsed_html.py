@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 import pendulum
 from bs4 import BeautifulSoup as bs
 
@@ -24,6 +26,8 @@ class ParsedHTML:
             release_type = None
             title = ""
             reddit_urls = list()
+            spotify_urls = list()
+            apple_music_urls = list()
             for i, cell in enumerate(row.select("td")):
                 if i == 0:
                     if not cell.text:
@@ -54,9 +58,27 @@ class ParsedHTML:
                         if isinstance(href, str):
                             reddit_urls.append(href)
                     continue
+                if i == 6:
+                    for link in cell.select("a[href]"):
+                        href = link.get("href")
+                        if not isinstance(href, str):
+                            continue
+                        hostname = (urlparse(href).hostname or "").lower()
+                        if hostname == "open.spotify.com":
+                            spotify_urls.append(href)
+                        elif hostname == "music.apple.com":
+                            apple_music_urls.append(href)
+                    continue
 
             release = self.validated_parsed_data(
-                release_date, artist, title, album, release_type, reddit_urls
+                release_date,
+                artist,
+                title,
+                album,
+                release_type,
+                reddit_urls,
+                spotify_urls,
+                apple_music_urls,
             )
             release_list.append(release)
         return release_list
@@ -69,6 +91,8 @@ class ParsedHTML:
         album: str | None,
         release_type: str | None,
         reddit_urls: list[str],
+        spotify_urls: list[str],
+        apple_music_urls: list[str],
     ) -> ReleaseData:
         assert (
             title is not None
@@ -93,4 +117,6 @@ class ParsedHTML:
             release_type=release_type,
             reddit_urls=reddit_urls,
             urls=None,
+            spotify_urls=spotify_urls,
+            apple_music_urls=apple_music_urls,
         )
