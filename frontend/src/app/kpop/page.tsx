@@ -7,7 +7,7 @@ import {
   getCanonicalKpopSearchParams,
   getKpopView,
 } from '@/lib/kpop/query';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, ExternalLink } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 import ComebacksForm from './_components/ComebacksForm';
@@ -69,6 +69,19 @@ export default async function KpopPage({ searchParams }: PageProps) {
           <p className='text-sm text-muted-foreground md:text-base'>
             Browse recent and upcoming Kpop song releases or search through the
             archive for specific comebacks.
+          </p>
+          <p className='text-xs text-muted-foreground/80'>
+            Release data from the{' '}
+            <a
+              className='decoration-current/40 inline-flex items-center gap-1 font-medium underline underline-offset-4 transition-colors hover:text-foreground'
+              href='https://www.reddit.com/r/kpop/wiki/index/'
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              r/kpop community&apos;s Upcoming Releases wiki
+              <ExternalLink className='h-3 w-3 shrink-0' aria-hidden='true' />
+            </a>
+            .
           </p>
         </div>
         <FollowingProvider>
