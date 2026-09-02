@@ -2,3 +2,5 @@
 .dockerignore
 **/Dockerfile
 **/node_modules/
+.env
+.env.*

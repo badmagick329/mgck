@@ -5,11 +5,18 @@ export class RateLimit {
   limit: number;
   windowSeconds: number;
   keyPrefix: string;
+  failOpen: boolean;
 
-  constructor(limit: number, windowSeconds: number, keyPrefix = 'rate:') {
+  constructor(
+    limit: number,
+    windowSeconds: number,
+    keyPrefix = 'rate:',
+    failOpen = true
+  ) {
     this.limit = limit;
     this.windowSeconds = windowSeconds;
     this.keyPrefix = keyPrefix;
+    this.failOpen = failOpen;
   }
 
   private getFullKey(key: string): string {
@@ -36,7 +43,7 @@ export class RateLimit {
       return { count: currentCount, success: true };
     } catch (error) {
       console.error('Rate limit error:', error);
-      return { count: 0, success: true };
+      return { count: 0, success: this.failOpen };
     }
   }
 
