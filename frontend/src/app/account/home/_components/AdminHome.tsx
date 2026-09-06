@@ -1,4 +1,5 @@
 import AppLauncher from '@/app/_components/AppLauncher';
+import Link from 'next/link';
 import UserManager from '@/app/account/home/_components/UserManager';
 import { fetchWithAuthHeader } from '@/lib/account/requests';
 import { API_USERS_BASE } from '@/lib/consts/urls';
@@ -38,6 +39,12 @@ export default async function AdminHome({ username }: { username: string }) {
         </div>
       </header>
       <main className='mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-6'>
+        <Link
+          href='/account/home/ai-usage'
+          className='rounded-lg border p-4 font-semibold hover:bg-muted'
+        >
+          AI usage and kill switch →
+        </Link>
         <section aria-labelledby='continue-heading'>
           <div className='mb-3'>
             <h2 id='continue-heading' className='text-lg font-semibold'>
