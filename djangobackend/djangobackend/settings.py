@@ -25,6 +25,8 @@ REDDIT_SECRET = os.environ.get("REDDIT_SECRET", "")
 REDDIT_ID = os.environ.get("REDDIT_ID", "")
 REDDIT_AGENT = os.environ.get("REDDIT_AGENT", "")
 TOKEN = os.environ.get("TOKEN", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 NEXT_DJANGO_INTERNAL_API_KEY = os.environ.get(
     "NEXT_DJANGO_INTERNAL_API_KEY", ""
 )
