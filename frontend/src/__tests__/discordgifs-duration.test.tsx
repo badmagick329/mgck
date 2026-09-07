@@ -15,6 +15,10 @@ import type { FFmpegManager } from '@/lib/discordgifs/ffmpeg-manager';
 import type { FFmpegFileData } from '@/lib/types/discordgifs';
 
 describe('per-file output eligibility', () => {
+  beforeAll(() => {
+    URL.createObjectURL = jest.fn(() => 'blob:preview');
+    URL.revokeObjectURL = jest.fn();
+  });
   test.each([
     [4.9, ['sticker']],
     [5, ['sticker']],
@@ -113,12 +117,14 @@ describe('per-file output eligibility', () => {
       <ConvertedFile
         fileData={fileData('long', ['emote', 'sticker', 'avatar'], 7.24)}
         removeFile={jest.fn()}
+        onTrimChange={jest.fn()}
+        onConvert={jest.fn()}
       />
     );
     const warning = screen.getByRole('alert');
     expect(warning).toHaveTextContent('7.2 seconds');
     expect(warning).toHaveTextContent('limited to 5 seconds');
-    expect(warning).toHaveTextContent('Sticker will be skipped');
+    expect(warning).toHaveTextContent('Choose a shorter segment above');
     expect(warning).toHaveTextContent(
       'Selected Emoji and Avatar outputs can still be converted.'
     );

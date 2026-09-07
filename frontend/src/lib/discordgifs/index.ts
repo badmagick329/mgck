@@ -16,6 +16,7 @@ export async function convert(
   const eligibleFiles = Object.entries(filesState).filter(
     ([, data]) =>
       data.conversionState === 'idle' &&
+      data.duration.status !== 'checking' &&
       getFileOutputEligibility(data).eligibleOutputTypes.length > 0
   );
   if (eligibleFiles.length === 0) return;
@@ -41,6 +42,7 @@ export async function convert(
       const target = conversionTargetPresets[outputType];
       ffmpeg.setFileConfig({
         file: data.file,
+        trim: data.trim,
         target,
       });
       targetCallback(target);

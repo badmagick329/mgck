@@ -4,6 +4,7 @@ import {
   conversionTargetPresets,
 } from '@/lib/discordgifs/conversion-target';
 import {
+  ClipTrim,
   FFmpegConversionState,
   FFmpegFileData,
   FFmpegFileDataOutput,
@@ -11,6 +12,10 @@ import {
 import { getFileOutputEligibility } from './eligibility';
 
 export type FileAction =
+  | {
+      type: 'updateTrim';
+      payload: { name: string; trim: ClipTrim | undefined };
+    }
   | {
       type: 'updateDuration';
       payload: { name: string; seconds: number | null };
@@ -67,6 +72,14 @@ export const filesStateReducer = (
   action: FileAction
 ): FilesState => {
   switch (action.type) {
+    case 'updateTrim':
+      return {
+        ...state,
+        [action.payload.name]: {
+          ...state[action.payload.name],
+          trim: action.payload.trim,
+        },
+      };
     case 'updateProgress':
       return {
         ...state,

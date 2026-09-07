@@ -35,6 +35,7 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 
+import { convert } from '@/lib/discordgifs';
 import FileDropzone from '@/app/discordgifs/_components/FileDropzone';
 import PresetSelector from '@/app/discordgifs/_components/PresetSelector';
 import {
@@ -52,6 +53,8 @@ const mockAcceptedFiles: File[] = [];
 
 describe('Discord preset selection', () => {
   beforeEach(() => {
+    URL.createObjectURL = jest.fn(() => 'blob:preview');
+    URL.revokeObjectURL = jest.fn();
     mockAcceptedFiles.splice(0, mockAcceptedFiles.length);
     jest.mocked(readFileDuration).mockResolvedValue(null);
   });
@@ -104,11 +107,34 @@ describe('Discord preset selection', () => {
     expect(avatar.getAttribute('aria-pressed')).toBe('false');
   });
 
+  test('card conversion selects only that clip while Convert All selects the batch', async () => {
+    jest.mocked(convert).mockClear();
+    mockAcceptedFiles.push(
+      new File(['one'], 'one.mp4'),
+      new File(['two'], 'two.mp4')
+    );
+    render(<FileDropzone />);
+    const buttons = screen.getAllByRole('button', { name: 'Convert clip' });
+    await waitFor(() => expect(buttons[0]).toBeEnabled());
+    expect(screen.queryByText('Ready')).not.toBeInTheDocument();
+    fireEvent.click(buttons[0]);
+    expect(Object.keys(jest.mocked(convert).mock.calls[0][1])).toEqual([
+      'one.mp4',
+    ]);
+    await waitFor(() => expect(screen.getByText('Convert All')).toBeEnabled());
+    fireEvent.click(screen.getByText('Convert All'));
+    expect(Object.keys(jest.mocked(convert).mock.calls[1][1])).toEqual([
+      'one.mp4',
+      'two.mp4',
+    ]);
+    await waitFor(() => expect(screen.getByText('Convert All')).toBeEnabled());
+  });
+
   test('allows an empty selection and disables conversion', async () => {
     mockAcceptedFiles.push(new File(['clip'], 'clip.mp4'));
     render(<FileDropzone />);
 
-    const convertButton = screen.getByRole('button', { name: 'Convert' });
+    const convertButton = screen.getByRole('button', { name: 'Convert All' });
     await waitFor(() => expect(convertButton).not.toBeDisabled());
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
 
@@ -154,9 +180,9 @@ describe('Discord preset selection', () => {
     fireEvent.click(screen.getByRole('button', { name: /😄 Emoji/i }));
 
     const warning = await screen.findByRole('alert');
-    expect(warning).toHaveTextContent('Sticker will be skipped');
+    expect(warning).toHaveTextContent('Choose a shorter segment above');
     expect(warning).toHaveTextContent('nothing eligible to convert');
-    expect(screen.getByRole('button', { name: 'Convert' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Convert All' })).toBeDisabled();
   });
 });
 
