@@ -1,6 +1,8 @@
+import { ClipTrim } from '@/lib/types/discordgifs';
 import { ConversionTarget } from './conversion-target';
 
 type OutputCommandOptions = {
+  trim?: ClipTrim;
   inputName: string;
   outputName: string;
   target: ConversionTarget;
@@ -8,6 +10,7 @@ type OutputCommandOptions = {
 };
 
 export function buildOutputCommand({
+  trim,
   inputName,
   outputName,
   target,
@@ -17,8 +20,7 @@ export function buildOutputCommand({
 
   if (target.format === 'apng') {
     return [
-      '-i',
-      inputName,
+      ...trimInput(inputName, trim),
       '-f',
       'apng',
       '-plays',
@@ -32,8 +34,7 @@ export function buildOutputCommand({
   }
 
   return [
-    '-i',
-    inputName,
+    ...trimInput(inputName, trim),
     '-filter_complex',
     `[0:v] ${paletteFilter}`,
     outputName,
@@ -41,19 +42,20 @@ export function buildOutputCommand({
 }
 
 type OptimizedInputCommandOptions = {
+  trim?: ClipTrim;
   inputName: string;
   outputName: string;
   target: ConversionTarget;
 };
 
 export function buildOptimizedInputCommand({
+  trim,
   inputName,
   outputName,
   target,
 }: OptimizedInputCommandOptions): string[] {
   return [
-    '-i',
-    inputName,
+    ...trimInput(inputName, trim),
     '-b:v',
     '0.5M',
     '-an',
@@ -72,4 +74,15 @@ export function buildDownloadName(
   const lastDot = originalName.lastIndexOf('.');
   const baseName = lastDot > 0 ? originalName.slice(0, lastDot) : originalName;
   return `${baseName}${target.filenameSuffix}${target.extension}`;
+}
+
+/** Seek before decoding so preprocessing and size retries only encode the selection. */
+function trimInput(inputName: string, trim?: ClipTrim): string[] {
+  return trim
+    ? [
+        '-ss', String(trim.start),
+        '-t', String(trim.end - trim.start),
+        '-i', inputName,
+      ]
+    : ['-i', inputName];
 }

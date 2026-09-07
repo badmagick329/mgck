@@ -12,7 +12,7 @@ export type FileOutputEligibility = {
 };
 
 export function getFileOutputEligibility(
-  fileData: Pick<FFmpegFileData, 'duration' | 'outputTypes'>
+  fileData: Pick<FFmpegFileData, 'duration' | 'outputTypes' | 'trim'>
 ): FileOutputEligibility {
   const orderedOutputTypes = orderConversionPresetIds(fileData.outputTypes);
   const eligibleOutputTypes: ConversionPresetId[] = [];
@@ -24,7 +24,9 @@ export function getFileOutputEligibility(
     const exceedsDurationLimit =
       maxDurationSeconds !== undefined &&
       fileData.duration.status === 'known' &&
-      fileData.duration.seconds > maxDurationSeconds;
+      (fileData.trim
+        ? fileData.trim.end - fileData.trim.start
+        : fileData.duration.seconds) > maxDurationSeconds;
 
     if (exceedsDurationLimit) {
       excludedOutputTypes.push(outputType);
@@ -42,6 +44,7 @@ export function hasEligibleIdleFile(
   return Object.values(filesState).some(
     (fileData) =>
       fileData.conversionState === 'idle' &&
+      fileData.duration.status !== 'checking' &&
       getFileOutputEligibility(fileData).eligibleOutputTypes.length > 0
   );
 }

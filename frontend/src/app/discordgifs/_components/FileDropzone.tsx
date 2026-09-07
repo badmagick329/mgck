@@ -141,6 +141,13 @@ export default function FileDropzone() {
 
   const selectorDisabled = conversionInProgress || anyProcessing;
 
+  const startConversion = (files: FilesState) => {
+    setConversionInProgress(true);
+    void convert(ffmpegRef, files, dispatch)
+      .catch((error) => console.error('Conversion error:', error))
+      .finally(() => setConversionInProgress(false));
+  };
+
   if (isLoaded === false) {
     return (
       <div className='flex w-full flex-col items-center gap-8 px-2 pt-16'>
@@ -201,24 +208,17 @@ export default function FileDropzone() {
             !buttonEnabled && dragEnter && 'animate-pulse'
           }`
         )}
-        onClick={() => {
-          setConversionInProgress(true);
-          void convert(ffmpegRef, filesState, dispatch)
-            .catch((error) => {
-              console.error('Conversion error:', error);
-            })
-            .finally(() => {
-              setConversionInProgress(false);
-            });
-        }}
+        onClick={() => startConversion(filesState)}
         disabled={!buttonEnabled}
       >
-        Convert
+        Convert All
       </button>
       {dropError && <p className='font-semibold text-red-500'>{dropError}</p>}
       <ConvertedFiles
         filesState={filesState}
         dispatch={dispatch}
+        disabled={selectorDisabled}
+        onConvert={(name) => startConversion({ [name]: filesState[name] })}
         setDropError={setDropError}
       />
     </div>
@@ -251,7 +251,11 @@ function ConvertedFiles({
   filesState,
   dispatch,
   setDropError,
+  disabled,
+  onConvert,
 }: {
+  disabled: boolean;
+  onConvert: (name: string) => void;
   filesState: FilesState;
   dispatch: (value: FileAction) => void;
   setDropError: React.Dispatch<React.SetStateAction<string | null>>;
@@ -262,6 +266,11 @@ function ConvertedFiles({
         Object.entries(filesState).map(([name, data]) => (
           <ConvertedFile
             key={name}
+            disabled={disabled}
+            onConvert={() => onConvert(name)}
+            onTrimChange={(trim) =>
+              dispatch({ type: 'updateTrim', payload: { name, trim } })
+            }
             fileData={data}
             removeFile={() => {
               dispatch({

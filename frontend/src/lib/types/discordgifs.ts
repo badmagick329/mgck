@@ -32,12 +32,18 @@ export type FFmpegConversionResult = {
   width: number;
 };
 export type FFmpegConversionState =
-  'idle' | 'busy' | 'optimizing' | 'done' | 'converting';
+  | 'idle'
+  | 'busy'
+  | 'optimizing'
+  | 'done'
+  | 'converting';
 export type FileDurationState =
   | { status: 'checking' }
   | { status: 'known'; seconds: number }
   | { status: 'unknown' };
+export type ClipTrim = { start: number; end: number };
 export type FFmpegFileData = {
+  trim?: ClipTrim;
   file: File;
   outputs: Array<FFmpegFileDataOutput>;
   outputTypes: Array<ConversionPresetId>;
