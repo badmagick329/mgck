@@ -1,5 +1,10 @@
 ./*
 !djangobackend/
+!frontend/
+frontend/*
+!frontend/package.json
+!frontend/pnpm-lock.yaml
+djangobackend/urlshortener/static/css/style.css
 !pyproject.toml
 !poetry.lock
 !crontab
