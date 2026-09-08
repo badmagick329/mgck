@@ -1,3 +1,12 @@
+FROM node:22-alpine AS styles
+
+WORKDIR /app/frontend
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN corepack enable && pnpm install --frozen-lockfile --ignore-scripts
+
+COPY djangobackend /app/djangobackend
+RUN pnpm run django:css:build
+
 FROM python:3.10.10-bullseye AS builder
 
 WORKDIR /usr/src/app
@@ -13,6 +22,8 @@ COPY uv.lock ./
 RUN uv sync --frozen --no-install-project --no-dev --python 3.10
 
 COPY ./djangobackend .
+# The runtime needs the compiled stylesheet, not Node or the CSS build tools.
+COPY --from=styles /app/djangobackend/urlshortener/static/css/style.css ./urlshortener/static/css/style.css
 
 FROM python:3.10-slim-bullseye
 

@@ -26,6 +26,24 @@ Start the app with:
 docker-compose up -d
 ```
 
+### Django styles
+
+The Django Docker build compiles Tailwind CSS before packaging the app. Build it from the repository root:
+
+```bash
+docker build -f djangobackend/Dockerfile -t mgckdjangobackend:prod .
+```
+
+For local Django development, install the frontend dependencies and generate the stylesheet:
+
+```bash
+cd frontend
+pnpm install --frozen-lockfile
+pnpm run django:css:build
+```
+
+Use `pnpm run django:css:watch` while editing Django templates. Edit `djangobackend/urlshortener/static/css/input.css` or `djangobackend/tailwind.config.js` for custom styles. The generated `style.css` is ignored by Git; Django's `collectstatic` collects it but does not compile it.
+
 ## Contact
 
 If you have any suggestions, feedback feel free to [open an issue.](https://github.com/badmagick329/mgck/issues)
