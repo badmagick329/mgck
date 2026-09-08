@@ -5,6 +5,7 @@ import {
 } from '@/lib/discordgifs/conversion-target';
 import {
   ClipTrim,
+  ClipCrop,
   FFmpegConversionState,
   FFmpegFileData,
   FFmpegFileDataOutput,
@@ -12,6 +13,10 @@ import {
 import { getFileOutputEligibility } from './eligibility';
 
 export type FileAction =
+  | {
+      type: 'updateCrop';
+      payload: { name: string; crop: ClipCrop | undefined };
+    }
   | {
       type: 'updateTrim';
       payload: { name: string; trim: ClipTrim | undefined };
@@ -72,6 +77,14 @@ export const filesStateReducer = (
   action: FileAction
 ): FilesState => {
   switch (action.type) {
+    case 'updateCrop':
+      return {
+        ...state,
+        [action.payload.name]: {
+          ...state[action.payload.name],
+          crop: action.payload.crop,
+        },
+      };
     case 'updateTrim':
       return {
         ...state,

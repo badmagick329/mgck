@@ -1,5 +1,6 @@
 import {
   ClipTrim,
+  ClipCrop,
   FFmpegConversionResult,
   FFmpegConversionState,
   FFmpegLogEvent,
@@ -41,6 +42,7 @@ type FFmpegManagerDependencies = {
 };
 
 type FFmpegFileConfig = {
+  crop?: ClipCrop;
   trim?: ClipTrim;
   file: File;
   target: ConversionTarget;
@@ -161,10 +163,12 @@ export class FFmpegManager {
     file,
     target,
     trim,
+    crop,
   }: {
     file: File;
     target: ConversionTarget;
     trim?: ClipTrim;
+    crop?: ClipCrop;
   }): FFmpegManager {
     const id = this.dependencies.createId();
     const inputExtension = this.safeInputExtension(file.name);
@@ -172,6 +176,7 @@ export class FFmpegManager {
     this.fileConfig = {
       file,
       trim,
+      crop,
       target,
       inputName,
       optimizedInputName: `optimized-${id}.mp4`,
@@ -311,6 +316,7 @@ export class FFmpegManager {
     this.updateFileConversionStateCallback?.('optimizing');
     const command = buildOptimizedInputCommand({
       trim: config.trim,
+      crop: config.crop,
       inputName: config.inputName,
       outputName: config.optimizedInputName,
       target: config.target,
@@ -340,6 +346,8 @@ export class FFmpegManager {
     while (width !== null && !calculator.isDone) {
       lastWidth = width;
       const command = buildOutputCommand({
+        crop:
+          config.activeInputName === config.inputName ? config.crop : undefined,
         trim:
           config.activeInputName === config.inputName ? config.trim : undefined,
         inputName: config.activeInputName,

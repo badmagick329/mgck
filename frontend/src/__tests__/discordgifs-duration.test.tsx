@@ -118,6 +118,7 @@ describe('per-file output eligibility', () => {
         fileData={fileData('long', ['emote', 'sticker', 'avatar'], 7.24)}
         removeFile={jest.fn()}
         onTrimChange={jest.fn()}
+        onCropChange={jest.fn()}
         onConvert={jest.fn()}
       />
     );

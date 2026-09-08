@@ -1,7 +1,8 @@
-import { ClipTrim } from '@/lib/types/discordgifs';
+import { ClipCrop, ClipTrim } from '@/lib/types/discordgifs';
 import { ConversionTarget } from './conversion-target';
 
 type OutputCommandOptions = {
+  crop?: ClipCrop;
   trim?: ClipTrim;
   inputName: string;
   outputName: string;
@@ -10,13 +11,14 @@ type OutputCommandOptions = {
 };
 
 export function buildOutputCommand({
+  crop,
   trim,
   inputName,
   outputName,
   target,
   width,
 }: OutputCommandOptions): string[] {
-  const paletteFilter = `scale=${width}:-1:flags=lanczos,split [a][b];[a] palettegen [p];[b][p] paletteuse=dither=sierra2_4a`;
+  const paletteFilter = `${cropFilter(crop)}scale=${width}:-1:flags=lanczos,split [a][b];[a] palettegen [p];[b][p] paletteuse=dither=sierra2_4a`;
 
   if (target.format === 'apng') {
     return [
@@ -42,6 +44,7 @@ export function buildOutputCommand({
 }
 
 type OptimizedInputCommandOptions = {
+  crop?: ClipCrop;
   trim?: ClipTrim;
   inputName: string;
   outputName: string;
@@ -49,6 +52,7 @@ type OptimizedInputCommandOptions = {
 };
 
 export function buildOptimizedInputCommand({
+  crop,
   trim,
   inputName,
   outputName,
@@ -60,11 +64,18 @@ export function buildOptimizedInputCommand({
     '0.5M',
     '-an',
     '-vf',
-    `scale=${target.startingWidth}:-2`,
+    `${cropFilter(crop)}scale=${target.startingWidth}:-2`,
     '-preset',
     'veryfast',
     outputName,
   ];
+}
+
+/** Crop before scaling so retries spend their work on the retained image. */
+function cropFilter(crop?: ClipCrop): string {
+  return crop
+    ? `crop='max(1,iw*${crop.width})':'max(1,ih*${crop.height})':iw*${crop.x}:ih*${crop.y}:exact=1,`
+    : '';
 }
 
 export function buildDownloadName(

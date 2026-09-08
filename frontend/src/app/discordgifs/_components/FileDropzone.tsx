@@ -268,6 +268,9 @@ function ConvertedFiles({
             key={name}
             disabled={disabled}
             onConvert={() => onConvert(name)}
+            onCropChange={(crop) =>
+              dispatch({ type: 'updateCrop', payload: { name, crop } })
+            }
             onTrimChange={(trim) =>
               dispatch({ type: 'updateTrim', payload: { name, trim } })
             }
