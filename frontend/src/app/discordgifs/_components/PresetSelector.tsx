@@ -48,7 +48,7 @@ export default function PresetSelector({
         id='discord-output-heading'
         className='text-center text-lg font-semibold'
       >
-        What are we making?
+        Output format
       </h2>
       <div
         role='group'

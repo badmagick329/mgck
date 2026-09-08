@@ -42,7 +42,7 @@ export default function VideoTrimmer({
     return (
       <p className='text-sm'>
         This browser cannot preview this format. You can still try converting
-        the original file. To trim it here, choose a browser-playable video such
+        the original file. To trim or crop it here, choose a browser-playable video such
         as an H.264 MP4.
       </p>
     );

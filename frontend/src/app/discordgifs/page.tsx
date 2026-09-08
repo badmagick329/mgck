@@ -12,8 +12,8 @@ export default function DiscordGifsPage() {
           Make Discord emojis, stickers, and avatars
         </h1>
         <p className='max-w-2xl text-base text-foreground-dg/80 sm:text-lg'>
-          Drop in a clip and we&apos;ll squeeze it under Discord&apos;s size
-          limits.
+          Convert videos and GIFs for Discord. Trim and crop videos before
+          converting.
         </p>
       </div>
       <FileDropzone />

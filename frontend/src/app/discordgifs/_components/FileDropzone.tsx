@@ -7,7 +7,6 @@ import {
 } from '@/lib/discordgifs/files-state';
 import {
   ConversionPresetId,
-  conversionTargetPresets,
   defaultConversionPresetSelection,
 } from '@/lib/discordgifs/conversion-target';
 import { hasEligibleIdleFile } from '@/lib/discordgifs/eligibility';
@@ -171,13 +170,6 @@ export default function FileDropzone() {
           });
         }}
       />
-      <div className='max-w-2xl px-2 text-sm text-foreground-dg/80'>
-        <p>
-          🫣 Stickers have to be{' '}
-          {conversionTargetPresets.sticker.maxDurationSeconds} seconds or less,
-          or Discord won&apos;t accept them.
-        </p>
-      </div>
       <div
         {...getRootProps({ className: 'dropzone' })}
         className={clsx(
@@ -188,10 +180,10 @@ export default function FileDropzone() {
         )}
       >
         <input {...getInputProps()} />
-        <p>Drag and drop files here, or click to select files.</p>
-        <p>You can also paste files from clipboard (Ctrl+V).</p>
+        <p>Drop a video or GIF here, or click to choose files.</p>
+        <p>You can also paste files from your clipboard.</p>
         <p className='pb-4'>
-          Accepted types are{' '}
+          Supported formats:{' '}
           <span className='font-semibold'>
             {acceptedImageTypes.join(', ')}, {acceptedVideoTypes.join(', ')}
           </span>
