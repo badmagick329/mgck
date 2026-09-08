@@ -1,17 +1,20 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ClipTrim, FFmpegFileData } from '@/lib/types/discordgifs';
+import { ClipCrop, ClipTrim, FFmpegFileData } from '@/lib/types/discordgifs';
+import VideoCropper from './VideoCropper';
 
 /** Native playback keeps editing responsive without generating encoded previews. */
 export default function VideoTrimmer({
   fileData,
   disabled,
   onChange,
+  onCropChange,
 }: {
   fileData: FFmpegFileData;
   disabled: boolean;
   onChange: (trim: ClipTrim | undefined) => void;
+  onCropChange: (crop: ClipCrop | undefined) => void;
 }) {
   const { file, duration, trim } = fileData;
   const video = useRef<HTMLVideoElement>(null);
@@ -19,6 +22,12 @@ export default function VideoTrimmer({
   const [failed, setFailed] = useState(false);
   const [playError, setPlayError] = useState('');
   const [loopSelection, setLoopSelection] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [dimensions, setDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [editingCrop, setEditingCrop] = useState(false);
   const selectionPlayback = useRef(false);
 
   useEffect(() => {
@@ -56,31 +65,51 @@ export default function VideoTrimmer({
       className='flex w-full min-w-0 flex-col gap-3 text-left disabled:opacity-60'
     >
       <legend className='mb-2 font-semibold'>Choose your clip</legend>
-      <video
-        ref={video}
-        src={url}
-        controls
-        playsInline
-        preload='metadata'
-        className='max-h-64 w-full rounded-md bg-black'
-        onError={() => setFailed(true)}
-        onTimeUpdate={() => {
-          const player = video.current!;
-          if (selectionPlayback.current && player.currentTime >= end) {
-            if (loopSelection) {
-              player.currentTime = start;
-              void player.play().catch(() => {
-                selectionPlayback.current = false;
-                setPlayError('Could not loop this clip. Try playing it again.');
+      <VideoCropper
+        dimensions={dimensions}
+        crop={fileData.crop}
+        disabled={disabled}
+        onChange={onCropChange}
+        onEditingChange={setEditingCrop}
+      >
+        <video
+          ref={video}
+          src={url}
+          controls={!editingCrop}
+          playsInline
+          preload='metadata'
+          className='max-h-64 w-full rounded-md bg-black'
+          onLoadedMetadata={() => {
+            const player = video.current!;
+            if (player.videoWidth >= 2 && player.videoHeight >= 2)
+              setDimensions({
+                width: player.videoWidth,
+                height: player.videoHeight,
               });
-            } else {
-              player.pause();
-              selectionPlayback.current = false;
-              player.currentTime = end;
+          }}
+          onError={() => setFailed(true)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onTimeUpdate={() => {
+            const player = video.current!;
+            if (selectionPlayback.current && player.currentTime >= end) {
+              if (loopSelection) {
+                player.currentTime = start;
+                void player.play().catch(() => {
+                  selectionPlayback.current = false;
+                  setPlayError(
+                    'Could not loop this clip. Try playing it again.'
+                  );
+                });
+              } else {
+                player.pause();
+                selectionPlayback.current = false;
+                player.currentTime = end;
+              }
             }
-          }
-        }}
-      />
+          }}
+        />
+      </VideoCropper>
       <label className='flex flex-col gap-1'>
         Start: {start.toFixed(2)} s
         <input
@@ -125,6 +154,11 @@ export default function VideoTrimmer({
           className='rounded border px-3 py-2'
           onClick={async () => {
             const player = video.current!;
+            if (playing) {
+              player.pause();
+              selectionPlayback.current = false;
+              return;
+            }
             player.currentTime = start;
             selectionPlayback.current = true;
             setPlayError('');
@@ -138,7 +172,7 @@ export default function VideoTrimmer({
             }
           }}
         >
-          Play selection
+          {playing ? 'Pause preview' : 'Play selection'}
         </button>
         <label className='flex items-center gap-2 px-2'>
           <input

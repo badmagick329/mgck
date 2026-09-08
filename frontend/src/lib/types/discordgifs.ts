@@ -42,7 +42,10 @@ export type FileDurationState =
   | { status: 'known'; seconds: number }
   | { status: 'unknown' };
 export type ClipTrim = { start: number; end: number };
+/** Fractions of the displayed source frame keep crops independent of preview size. */
+export type ClipCrop = { x: number; y: number; width: number; height: number };
 export type FFmpegFileData = {
+  crop?: ClipCrop;
   trim?: ClipTrim;
   file: File;
   outputs: Array<FFmpegFileDataOutput>;

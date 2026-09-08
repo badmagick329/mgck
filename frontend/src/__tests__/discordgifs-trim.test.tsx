@@ -49,7 +49,12 @@ test('a short selection enables stickers from a long source and reset restores e
     const data = { ...fileData, trim };
     return (
       <>
-        <VideoTrimmer fileData={data} disabled={false} onChange={setTrim} />
+        <VideoTrimmer
+          onCropChange={jest.fn()}
+          fileData={data}
+          disabled={false}
+          onChange={setTrim}
+        />
         <button
           disabled={!getFileOutputEligibility(data).eligibleOutputTypes.length}
         >
@@ -81,7 +86,12 @@ test('a short selection enables stickers from a long source and reset restores e
 
 test('unsupported previews explain the limitation without running FFmpeg', () => {
   const { container } = render(
-    <VideoTrimmer fileData={fileData} disabled={false} onChange={jest.fn()} />
+    <VideoTrimmer
+      onCropChange={jest.fn()}
+      fileData={fileData}
+      disabled={false}
+      onChange={jest.fn()}
+    />
   );
   fireEvent.error(container.querySelector('video')!);
   expect(screen.getByText(/cannot preview this format/)).toBeInTheDocument();
@@ -89,7 +99,14 @@ test('unsupported previews explain the limitation without running FFmpeg', () =>
 });
 
 test('trim controls cannot change a queued conversion', () => {
-  render(<VideoTrimmer fileData={fileData} disabled onChange={jest.fn()} />);
+  render(
+    <VideoTrimmer
+      onCropChange={jest.fn()}
+      fileData={fileData}
+      disabled
+      onChange={jest.fn()}
+    />
+  );
   expect(screen.getByLabelText('Clip start')).toBeDisabled();
   expect(screen.getByLabelText('Clip end')).toBeDisabled();
   expect(screen.getByText('Play selection')).toBeDisabled();
@@ -121,9 +138,13 @@ test.each([100, 700_000])(
       file: new File([new Uint8Array(size)], 'long.mp4'),
       target: conversionTargetPresets.sticker,
       trim: { start: 20, end: 23 },
+      crop: { x: 0.25, y: 0, width: 0.5, height: 1 },
     });
     await manager.convert();
     const commands = exec.mock.calls as unknown as string[][][];
+    expect(commands[0][0].join(' ')).toContain(
+      "crop='max(1,iw*0.5)':'max(1,ih*1)':iw*0.25:ih*0:exact=1,scale="
+    );
     expect(commands[0][0].slice(0, 6)).toEqual([
       '-ss',
       '20',
@@ -136,6 +157,7 @@ test.each([100, 700_000])(
       expect(commands.length).toBeGreaterThan(1);
       for (const [command] of commands.slice(1)) {
         expect(command).not.toContain('-ss');
+        expect(command.join(' ')).not.toContain('crop=');
         expect(command).toContain('optimized-test.mp4');
       }
     } else {
@@ -147,6 +169,7 @@ test.each([100, 700_000])(
 test('looping returns to the selection start, and disabling it stops at the end', () => {
   const { container } = render(
     <VideoTrimmer
+      onCropChange={jest.fn()}
       fileData={{ ...fileData, trim: { start: 2, end: 5 } }}
       disabled={false}
       onChange={jest.fn()}
@@ -163,5 +186,31 @@ test('looping returns to the selection start, and disabling it stops at the end'
   player.currentTime = 5;
   fireEvent.timeUpdate(player);
   expect(player.currentTime).toBe(5);
+  expect(player.pause).toHaveBeenCalled();
+});
+
+test('preview can be paused while native controls are hidden for cropping', () => {
+  const { container } = render(
+    <VideoTrimmer
+      onCropChange={jest.fn()}
+      fileData={fileData}
+      disabled={false}
+      onChange={jest.fn()}
+    />
+  );
+  const player = container.querySelector('video')!;
+  Object.defineProperties(player, {
+    videoWidth: { value: 640 },
+    videoHeight: { value: 360 },
+  });
+  fireEvent.loadedMetadata(player);
+  fireEvent.click(screen.getByText('Adjust crop'));
+  expect(player.controls).toBe(false);
+  fireEvent.click(screen.getByText('Play selection'));
+  fireEvent.play(player);
+  player.currentTime = 1;
+  fireEvent.timeUpdate(player);
+  expect(player.pause).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByText('Pause preview'));
   expect(player.pause).toHaveBeenCalled();
 });

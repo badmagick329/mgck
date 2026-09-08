@@ -1,5 +1,5 @@
 import VideoTrimmer from './VideoTrimmer';
-import { ClipTrim, FFmpegFileData } from '@/lib/types/discordgifs';
+import { ClipCrop, ClipTrim, FFmpegFileData } from '@/lib/types/discordgifs';
 import {
   conversionPresetLabels,
   conversionTargetPresets,
@@ -18,6 +18,7 @@ type ConvertedFileProps = {
   disabled?: boolean;
   onConvert: () => void;
   onTrimChange: (trim: ClipTrim | undefined) => void;
+  onCropChange: (crop: ClipCrop | undefined) => void;
 };
 
 export default function ConvertedFile({
@@ -25,6 +26,7 @@ export default function ConvertedFile({
   removeFile,
   disabled = false,
   onTrimChange,
+  onCropChange,
   onConvert,
 }: ConvertedFileProps) {
   const { file, outputs, progress, currentTarget, size, conversionState } =
@@ -60,6 +62,7 @@ export default function ConvertedFile({
           fileData={fileData}
           disabled={disabled}
           onChange={onTrimChange}
+          onCropChange={onCropChange}
         />
       )}
       {conversionState !== 'idle' && (

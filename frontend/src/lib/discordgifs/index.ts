@@ -43,6 +43,7 @@ export async function convert(
       ffmpeg.setFileConfig({
         file: data.file,
         trim: data.trim,
+        crop: data.crop,
         target,
       });
       targetCallback(target);
