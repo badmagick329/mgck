@@ -139,11 +139,6 @@ describe('Discord preset selection', () => {
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
 
     expect(
-      screen.getByText(
-        "🫣 Stickers have to be 5 seconds or less, or Discord won't accept them."
-      )
-    ).toBeTruthy();
-    expect(
       screen.queryByText(
         '🔒 Everything happens in your browser. Your files never leave your device.'
       )

@@ -12,13 +12,13 @@ describe('Discord GIF Maker SEO', () => {
       url: '/discordgifs',
       title: 'Discord GIF Maker for Emojis, Stickers, and Avatars',
       description:
-        'Turn video clips and GIFs into Discord-ready animated emojis, APNG stickers, and GIF avatars. Files are processed privately in your browser.',
+        'Make Discord emojis, stickers, and avatars from videos or GIFs. Trim and crop videos, with all processing done in your browser.',
     });
     expect(discordGifsMetadata.twitter).toMatchObject({
       card: 'summary_large_image',
       title: 'Discord GIF Maker for Emojis, Stickers, and Avatars',
       description:
-        'Turn video clips and GIFs into Discord-ready animated emojis, APNG stickers, and GIF avatars. Files are processed privately in your browser.',
+        'Make Discord emojis, stickers, and avatars from videos or GIFs. Trim and crop videos, with all processing done in your browser.',
       images: ['/discordgifs/opengraph-image'],
     });
     expect(discordGifsMetadata).not.toHaveProperty('keywords');
