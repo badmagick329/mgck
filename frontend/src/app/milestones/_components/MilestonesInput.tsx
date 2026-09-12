@@ -1,54 +1,60 @@
 import useMilestones from '@/hooks/milestones/useMilestones';
-import DatetimePicker from '@/app/milestones/_components/DatetimePicker';
-import ColorPicker from '@/app/milestones/_components/ColorPicker';
-import { Input } from '@/components/ui/input';
-import { MilestonesButton } from '@/components/ui/MilestonesButton';
 import { DEFAULT_COLOR } from '@/lib/consts/milestones';
 import { useState } from 'react';
-import useDebounceInput from '@/hooks/useDebounceInput';
-
 type Props = {
   createMilestone: ReturnType<typeof useMilestones>['createMilestone'];
+  onCreated: () => void;
 };
-
-export default function MilestonesInput({ createMilestone }: Props) {
-  const [date, setDate] = useState<Date | undefined>(undefined);
+export default function MilestonesInput({ createMilestone, onCreated }: Props) {
+  const [date, setDate] = useState('');
   const [name, setName] = useState('');
-  const { value: color, handleChange: handleColorChange } = useDebounceInput({
-    defaultValue: DEFAULT_COLOR,
-    delay: 100,
-  });
-
+  const [color, setColor] = useState(DEFAULT_COLOR);
   return (
-    <div className='mx-auto flex w-full max-w-4xl flex-col items-center gap-4 rounded-md bg-background-light-ml px-4 py-6 shadow-card md:flex-row'>
-      <Input
-        type='text'
-        onChange={(e) => setName(e.target.value || '')}
-        value={name}
-        placeholder='Enter milestone name... e.g Birthday'
-        className='focus-visible:ring-0 focus-visible:ring-offset-0'
-      />
-      <div className='flex w-full flex-col items-start gap-2 sm:flex-row sm:items-center'>
-        <DatetimePicker date={date} setDate={setDate} />
-        <div className='flex w-full items-center justify-between gap-4 px-1'>
-          <ColorPicker color={color} handleColorChange={handleColorChange} />
-          <MilestonesButton
-            className='h-10'
-            appVariant={'milestonesPrimary'}
-            onClick={() => {
-              (async () => {
-                const result = await createMilestone({ name, date, color });
-                if (result.ok) {
-                  setName('');
-                  setDate(undefined);
-                }
-              })();
-            }}
-          >
-            Add
-          </MilestonesButton>
-        </div>
-      </div>
-    </div>
+    <form
+      className='milestones-form'
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const result = await createMilestone({
+          name,
+          date: date ? new Date(`${date}T00:00:00`) : undefined,
+          color,
+        });
+        if (result.ok) {
+          setName('');
+          setDate('');
+          onCreated();
+        }
+      }}
+    >
+      <label>
+        Milestone
+        <input
+          autoFocus
+          required
+          maxLength={255}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder='e.g. Turning 40'
+        />
+      </label>
+      <label>
+        Date
+        <input
+          required
+          type='date'
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+      </label>
+      <label className='milestones-color'>
+        Colour
+        <input
+          type='color'
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
+        />
+      </label>
+      <button className='milestones-add'>Add milestone</button>
+    </form>
   );
 }

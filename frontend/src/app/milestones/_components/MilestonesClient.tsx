@@ -1,18 +1,13 @@
 'use client';
-
 import Loading from '@/app/milestones/loading';
-
 import useMilestones from '@/hooks/milestones/useMilestones';
 import Navbar from '@/app/_components/Navbar';
-import MilestonesDisplay from '@/app/milestones/_components/MilestonesDisplay';
-import MilestonesChart from '@/app/milestones/_components/MilestonesChart';
-import MilestonesInput from '@/app/milestones/_components/MilestonesInput';
-import TimePeriodButtonGroup from '@/app/milestones/_components/TimePeriodButtonGroup';
-import MilestonesHeading from '@/app/milestones/_components/MilestonesHeading';
-import Footer from '@/app/_components/Footer';
+import MilestonesComparison from './MilestonesComparison';
+import MilestonesInput from './MilestonesInput';
 import { useToast } from '@/components/ui/use-toast';
 import { MilestoneAccount } from '@/lib/types/milestones';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import '../milestones.css';
 
 export default function MilestonesClient({
   account,
@@ -28,7 +23,7 @@ export default function MilestonesClient({
   } = useMilestones(account);
   const { toast } = useToast();
   const shownWarning = useRef<string | null>(null);
-
+  const [adding, setAdding] = useState(false);
   useEffect(() => {
     const warningKey = store.loadWarning
       ? `${store.storageKey}:${store.loadWarning}`
@@ -42,40 +37,51 @@ export default function MilestonesClient({
       });
     }
   }, [store.loadWarning, store.storageKey, toast]);
-
-  if (!store.isLoaded) {
-    return <Loading />;
-  }
-
+  if (!store.isLoaded) return <Loading />;
   return (
-    <main className='flex min-h-dvh flex-col justify-center bg-background-ml text-foreground-ml'>
+    <main className='milestones-page'>
       <Navbar className='bg-background-lighter-ml' />
-      <article className='flex w-full grow flex-col justify-between gap-4 px-2 md:px-4'>
-        <section className='flex flex-col gap-4 pt-8'>
-          <MilestonesHeading syncStatus={syncStatus} />
-          <MilestonesChart
-            milestones={store.milestones}
-            diffPeriod={store.config.diffPeriod}
-            hiddenMilestoneIds={store.hiddenMilestoneIds}
-          />
-          {store.milestones.length > 0 && (
-            <TimePeriodButtonGroup
-              diffPeriod={store.config.diffPeriod}
-              setDiffPeriod={store.setDiffPeriod}
+      <div className='milestones-content'>
+        <header className='milestones-header'>
+          <div>
+            <h1>Milestones</h1>
+            <p>See the time between now and what matters to you.</p>
+          </div>
+          <button
+            className='milestones-add'
+            aria-expanded={adding || store.milestones.length === 0}
+            aria-controls='milestone-entry'
+            onClick={() => setAdding(!adding)}
+          >
+            Add milestone
+          </button>
+        </header>
+        {syncStatus === 'not-synced' && (
+          <p className='milestones-sync' role='status'>
+            Not synced — changes are saved on this device and will retry
+            automatically.
+          </p>
+        )}
+        {(adding || store.milestones.length === 0) && (
+          <div id='milestone-entry'>
+            <MilestonesInput
+              createMilestone={createMilestone}
+              onCreated={() => setAdding(false)}
             />
-          )}
-          <section className='flex flex-col justify-center gap-12'>
-            <MilestonesDisplay
-              milestones={store.milestones}
-              updateMilestone={updateMilestone}
-              deleteMilestone={deleteMilestone}
-              store={store}
-            />
-            <MilestonesInput createMilestone={createMilestone} />
-          </section>
-        </section>
-      </article>
-      <Footer />
+          </div>
+        )}
+        <MilestonesComparison
+          store={store}
+          updateMilestone={updateMilestone}
+          deleteMilestone={deleteMilestone}
+        />
+        <footer className='milestones-footer'>
+          <span>
+            Milestones <span className='milestones-dot'>/</span> Make time
+            tangible.
+          </span>
+        </footer>
+      </div>
     </main>
   );
 }
