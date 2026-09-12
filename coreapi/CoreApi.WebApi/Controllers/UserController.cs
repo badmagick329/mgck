@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Models;
 
 [ApiController]
+[Authorize(Policy = RoleConstants.Admin)]
 [Route("api/users")]
 public class UserController : ControllerBase
 {
@@ -21,15 +22,8 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("")]
-    [Authorize]
     public async Task<IActionResult> Users()
     {
-        var unauthorized = await UserUnauthorizedResult();
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
-
         var users = await _userManager.Users.OrderBy(u => u.UserName).ToListAsync();
         var usersAndRoles = new List<UserAndRole>();
         foreach (var u in users)
@@ -47,15 +41,8 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("manage/approve")]
-    [Authorize]
     public async Task<IActionResult> ApproveUser([FromBody] UsernameDto model)
     {
-        var unauthorized = await UserUnauthorizedResult();
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
-
         var user = await _userManager.FindByNameAsync(model.Username);
         if (user is null)
         {
@@ -74,15 +61,8 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("manage/unapprove")]
-    [Authorize]
     public async Task<IActionResult> UnApproveUser([FromBody] UsernameDto model)
     {
-        var unauthorized = await UserUnauthorizedResult();
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
-
         var user = await _userManager.FindByNameAsync(model.Username);
         if (user is null)
         {
@@ -99,17 +79,9 @@ public class UserController : ControllerBase
         return Ok(new { message = "User unapproved" });
     }
 
-    // Can't do a delete request from nextjs server action
     [HttpPost("manage/delete")]
-    [Authorize]
     public async Task<IActionResult> DeleteUser()
     {
-        var unauthorized = await UserUnauthorizedResult();
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
-
         var newUsers = await _userManager.GetUsersInRoleAsync(RoleConstants.NewUser);
 
         foreach (var newUser in newUsers)
@@ -118,22 +90,6 @@ public class UserController : ControllerBase
         }
 
         return Ok(new { message = "User deleted" });
-    }
-
-    private async Task<IActionResult?> UserUnauthorizedResult()
-    {
-        var permission = await Permissions.ConfirmAdmin(_userManager, User);
-        if (permission != PermissionResult.Ok)
-        {
-            return permission switch
-            {
-                PermissionResult.Unauthorized => Unauthorized(),
-                PermissionResult.Forbidden => Forbid(),
-                _ => BadRequest(),
-            };
-        }
-
-        return null;
     }
 }
 

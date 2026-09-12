@@ -1,12 +1,15 @@
+using CoreApi.WebApi.Common;
 using CoreApi.WebApi.Dtos;
 using CoreApi.WebApi.Infrastructure;
 using CoreApi.WebApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoreApi.WebApi.Controllers;
 
 [ApiController]
+[Authorize(Policy = RoleConstants.Admin)]
 [Route("api/feedback")]
 public class FeedbackController : ControllerBase
 {
@@ -58,12 +61,9 @@ public class FeedbackController : ControllerBase
     }
 
     [HttpPost("")]
+    [AllowAnonymous]
     public async Task<IActionResult> CreateFeedback([FromBody] FeedbackCommentDto feedbackDto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
         if (string.IsNullOrWhiteSpace(feedbackDto.Comment))
         {
             return BadRequest(new { errors = new[] { "Comment is required" } });
@@ -94,17 +94,11 @@ public class FeedbackController : ControllerBase
         return CreatedAtAction(nameof(GetFeedback), new { id = feedback.Id }, response);
     }
 
-    // Can't do a delete request from nextjs server action
     [HttpPost("delete")]
     public async Task<IActionResult> DeleteFeedback(
         [FromBody] FeedbackCommentIdDto feedbackCommentIdDto
     )
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         var feedback = await _context.FeedbackComments.FindAsync(feedbackCommentIdDto.Id);
 
         if (feedback == null)

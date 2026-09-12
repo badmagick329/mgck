@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
+import useDebounce from './useDebounce';
 
 export default function useDebounceInput({
   defaultValue,
@@ -8,15 +9,13 @@ export default function useDebounceInput({
   delay: number;
 }) {
   const [value, setValue] = useState(defaultValue);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>();
+  const debounce = useDebounce<[string]>(delay);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    clearTimeout(timeoutRef.current);
-    const newValue = e.target.value;
-    timeoutRef.current = setTimeout(() => {
-      setValue(newValue);
-    }, delay);
-  }, []);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      debounce(setValue, e.target.value),
+    [debounce]
+  );
 
   return {
     value,

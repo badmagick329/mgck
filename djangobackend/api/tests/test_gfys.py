@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client
 
-from gfys.models import Account, Gfy
+from gfys.models import Account, Gfy, Tag
 
 
 @pytest.mark.django_db
@@ -52,3 +52,25 @@ def test_random_gfy_returns_a_result_from_the_active_filters():
 
     assert response.status_code == 200
     assert response.json() == {"imgur_id": matching_gfy.imgur_id}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("tags", ["irene,seulgi", " Irene,irene, SEULGI, "])
+@pytest.mark.parametrize("sort", ["recent", "oldest", "most_viewed"])
+def test_tag_filters_require_all_distinct_tags_without_multiplying_views(tags, sort):
+    irene = Tag.objects.create(name="irene")
+    seulgi = Tag.objects.create(name="seulgi")
+    matching = Gfy.objects.create(imgur_id="both", imgur_title="Both members")
+    matching.tags.add(irene, seulgi)
+    matching.add_view()
+    matching.add_view()
+    partial = Gfy.objects.create(imgur_id="one", imgur_title="One member")
+    partial.tags.add(irene)
+    partial.add_view()
+    partial.add_view()
+
+    response = Client().get("/api/gfys", {"tags": tags, "sort": sort})
+
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert [(gfy["imgur_id"], gfy["view_count"]) for gfy in results] == [("both", 2)]

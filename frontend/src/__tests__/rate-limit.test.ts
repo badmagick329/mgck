@@ -1,10 +1,6 @@
 jest.mock('ioredis', () =>
   jest.fn().mockImplementation(() => ({
-    expire: jest.fn(),
-    get: jest.fn(),
-    incr: jest.fn(),
-    ttl: jest.fn(),
-    del: jest.fn(),
+    eval: jest.fn(),
   }))
 );
 
@@ -20,8 +16,7 @@ describe('RateLimit failure policy', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-    mockRedis.get.mockRejectedValue(new Error('redis unavailable'));
-    mockRedis.incr.mockRejectedValue(new Error('redis unavailable'));
+    mockRedis.eval.mockRejectedValue(new Error('redis unavailable'));
   });
 
   afterEach(() => {
@@ -44,5 +39,25 @@ describe('RateLimit failure policy', () => {
       count: 0,
       success: true,
     });
+  });
+
+  test.each([
+    [[1, 1], { count: 1, success: true }],
+    [[3, 1], { count: 3, success: true }],
+    [[3, 0], { count: 3, success: false }],
+  ])('uses the atomic admission result %j', async (reply, expected) => {
+    mockRedis.eval.mockResolvedValue(reply);
+    const rateLimit = new RateLimit(3, 60, 'feedback:');
+
+    await expect(rateLimit.tryIncrementAndGetCount('user')).resolves.toEqual(
+      expected
+    );
+    expect(mockRedis.eval).toHaveBeenCalledWith(
+      expect.any(String),
+      1,
+      'feedback:user',
+      3,
+      60
+    );
   });
 });

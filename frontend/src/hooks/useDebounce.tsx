@@ -1,19 +1,15 @@
-import { useState } from 'react';
-
-type SetTimeout = ReturnType<typeof setTimeout>;
+import { useCallback, useEffect, useRef } from 'react';
 
 export default function useDebounce<T extends unknown[]>(delay: number) {
-  const [timer, setTimer] = useState<SetTimeout | undefined>(undefined);
+  const timer = useRef<ReturnType<typeof setTimeout>>();
 
-  function debounce(callback: (...args: T) => unknown, ...args: T) {
-    if (timer) {
-      clearTimeout(timer);
-    }
-    const newTimer = setTimeout(() => {
-      callback(...args);
-    }, delay);
-    setTimer(newTimer);
-  }
+  useEffect(() => () => clearTimeout(timer.current), [delay]);
 
-  return debounce;
+  return useCallback(
+    (callback: (...args: T) => unknown, ...args: T) => {
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => callback(...args), delay);
+    },
+    [delay]
+  );
 }
