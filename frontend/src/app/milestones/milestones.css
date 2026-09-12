@@ -1,15 +1,14 @@
 .milestones-page {
+  display: flex;
+  flex-direction: column;
   min-height: 100dvh;
   background: #0c0d13;
   color: #ececf3;
   font-family: inherit;
   letter-spacing: 0;
 }
-.milestones-dot {
-  margin: 0 9px;
-  color: #6b677b;
-}
 .milestones-content {
+  width: 100%;
   max-width: 1160px;
   margin: auto;
   padding: 56px 36px 30px;
@@ -219,20 +218,6 @@
   font-size: 11px;
   color: #9691a6;
 }
-.milestones-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 38px;
-  padding-top: 22px;
-  border-top: 1px solid #25232e;
-  font-size: 11px;
-  color: #9992a9;
-  line-height: 1.8;
-}
-.milestones-footer > span:last-child {
-  text-align: right;
-}
 .milestones-form {
   display: flex;
   gap: 16px;
@@ -272,6 +257,7 @@
 }
 @media (max-width: 760px) {
   .milestones-content {
+    width: 100%;
     padding: 32px 18px 24px;
   }
   .milestones-header {
@@ -342,13 +328,6 @@
   .milestones-hidden-heading {
     flex-direction: column;
     gap: 5px;
-  }
-  .milestones-footer {
-    flex-direction: column;
-    gap: 8px;
-  }
-  .milestones-footer > span:last-child {
-    text-align: left;
   }
   .milestones-form {
     flex-direction: column;
@@ -430,4 +409,3 @@
     flex: auto;
   }
 }
-
