@@ -3,17 +3,12 @@ import { render, screen } from '@testing-library/react';
 jest.mock('../hooks/milestones/useMilestones', () => jest.fn());
 jest.mock('../app/_components/Navbar', () => () => <div>Navbar</div>);
 jest.mock('../app/_components/Footer', () => () => <div>Footer</div>);
-jest.mock('../app/milestones/_components/MilestonesChart', () => () => (
-  <div>Chart</div>
-));
-jest.mock('../app/milestones/_components/MilestonesDisplay', () => () => (
-  <div>Display</div>
-));
 jest.mock('../app/milestones/_components/MilestonesInput', () => () => (
   <div>Input</div>
 ));
-jest.mock('../app/milestones/_components/MilestonesHeading', () => () => (
-  <div>Heading</div>
+
+jest.mock('../app/milestones/_components/MilestonesComparison', () => () => (
+  <div>Comparison</div>
 ));
 
 import MilestonesClient from '@/app/milestones/_components/MilestonesClient';
