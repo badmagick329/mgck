@@ -29,7 +29,10 @@ export async function getFeedbacksAction(): Promise<
     });
   }
 
-  const resp = await fetch(`${BASE_URL}${API_FEEDBACK}`);
+  const resp = await fetch(`${BASE_URL}${API_FEEDBACK}`, {
+    headers: { Authorization: `Bearer ${session.accessToken}` },
+    cache: 'no-store',
+  });
   return await asFeedbacksSuccessOrError(resp);
 }
 
@@ -75,6 +78,7 @@ export async function deleteFeedbackAction({
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.accessToken}`,
     },
     body: JSON.stringify({ id: feedbackId }),
   });
@@ -106,11 +110,9 @@ function createError({
 }
 
 async function limitExceededCheck(): Promise<FeedbackError | undefined> {
-  const ip = await IP();
-  console.log(`ip: ${ip}`);
+  const ip = await getClientIp();
   if (ip) {
-    const { count, success } = await rateLimit.tryIncrementAndGetCount(ip);
-    console.log(`count for ${ip}: ${count}`);
+    const { success } = await rateLimit.tryIncrementAndGetCount(ip);
     if (!success) {
       return createError({
         status: 429,
@@ -122,14 +124,13 @@ async function limitExceededCheck(): Promise<FeedbackError | undefined> {
   }
 }
 
-async function IP(): Promise<string | undefined> {
-  const FALLBACK_IP_ADDRESS = undefined;
+async function getClientIp(): Promise<string | undefined> {
   const headersObject = await headers();
   const forwardedFor = headersObject.get('x-forwarded-for');
 
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0] ?? FALLBACK_IP_ADDRESS;
-  }
-
-  return headersObject.get('x-real-ip') ?? FALLBACK_IP_ADDRESS;
+  return (
+    forwardedFor?.split(',')[0].trim() ||
+    headersObject.get('x-real-ip')?.trim() ||
+    undefined
+  );
 }

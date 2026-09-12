@@ -1,4 +1,3 @@
-import random
 import re
 from datetime import datetime
 
@@ -19,52 +18,43 @@ IMGUR_A_RE = re.compile(
 
 
 def filter_gfys(
-    title: str, tags: str, start_date: str, end_date: str, account: str,
+    title: str,
+    tags: str,
+    start_date: str,
+    end_date: str,
+    account: str,
     sort: str = "recent",
 ) -> QuerySet[Gfy]:
-    title = title.strip().lower()
-    tags = [tag.strip().lower() for tag in tags.split(",") if tag.strip()]  # type: ignore
-    filters = list()
+    title = title.strip()
+    tag_names = {tag.strip().lower() for tag in tags.split(",") if tag.strip()}
+    filters = []
     if title:
         filters.append(Q(imgur_title__icontains=title))
-    start_date, end_date = valid_date(start_date.strip()), valid_date(end_date.strip())  # type: ignore
-    if start_date:
-        filters.append(Q(date__gte=start_date))
-    if end_date:
-        filters.append(Q(date__lte=end_date))
+    parsed_start_date = valid_date(start_date.strip())
+    parsed_end_date = valid_date(end_date.strip())
+    if parsed_start_date:
+        filters.append(Q(date__gte=parsed_start_date))
+    if parsed_end_date:
+        filters.append(Q(date__lte=parsed_end_date))
     if account:
         filters.append(Q(account__name__iexact=account))
+    queryset = Gfy.objects.filter(*filters).prefetch_related("tags")
+    if tag_names:
+        # Joining view counts must not multiply the number of matching tags.
+        queryset = (
+            queryset.filter(tags__name__in=tag_names)
+            .annotate(num_tags=Count("tags", distinct=True))
+            .filter(num_tags=len(tag_names))
+        )
+
+    queryset = queryset.annotate(view_total=Count("gfyview", distinct=True))
+    if sort == "most_viewed":
+        return queryset.order_by("-view_total", "-id")
     ordering = (
         (F("date").asc(nulls_last=True), "id")
         if sort == "oldest"
         else (F("date").desc(nulls_last=True), "-id")
     )
-    if filters or tags:
-        if not tags:
-            return order_gfys(
-                Gfy.objects.filter(*filters)
-                .prefetch_related("tags"), sort, ordering
-            )
-        else:
-            results = (
-                Gfy.objects.filter(*filters)
-                .filter(tags__name__in=tags)
-                .annotate(num_tags=Count("tags"))
-                .filter(num_tags=len(tags))
-                .prefetch_related("tags")
-            )
-            return order_gfys(results, sort, ordering)
-
-    return order_gfys(
-        Gfy.objects.all()
-        .prefetch_related("tags"), sort, ordering
-    )
-
-
-def order_gfys(queryset: QuerySet[Gfy], sort: str, ordering) -> QuerySet[Gfy]:
-    queryset = queryset.annotate(view_total=Count("gfyview", distinct=True))
-    if sort == "most_viewed":
-        return queryset.order_by("-view_total", "-id")
     return queryset.order_by(*ordering)
 
 

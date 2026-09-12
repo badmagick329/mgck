@@ -4,6 +4,7 @@ using CoreApi.WebApi.Common;
 using CoreApi.WebApi.Infrastructure;
 using CoreApi.WebApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
@@ -101,6 +102,13 @@ builder
         };
     });
 
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy(RoleConstants.Admin, policy =>
+        policy.RequireAuthenticatedUser().AddRequirements(new AdminRequirement())
+    )
+);
+builder.Services.AddScoped<IAuthorizationHandler, AdminAuthorizationHandler>();
+
 // Rate limiter
 builder.Services.AddRateLimiter(limiterOptions =>
 {
@@ -136,18 +144,9 @@ builder.Services.AddRateLimiter(limiterOptions =>
                 var body = reader.ReadToEnd();
                 context.Request.Body.Position = 0;
 
-                try
-                {
-                    var jsonDoc = System.Text.Json.JsonDocument.Parse(body);
-                    if (jsonDoc.RootElement.TryGetProperty("username", out var usernameElement))
-                    {
-                        partitionKey = usernameElement.GetString() ?? "default";
-                    }
-                }
-                catch (JsonException) { }
+                partitionKey = LoginRateLimit.GetPartitionKey(body);
             }
 
-            Console.WriteLine($"Partition key is {partitionKey}");
             return RateLimitPartition.GetSlidingWindowLimiter(
                 partitionKey,
                 _ => new SlidingWindowRateLimiterOptions

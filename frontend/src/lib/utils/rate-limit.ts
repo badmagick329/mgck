@@ -1,81 +1,42 @@
 import Redis from 'ioredis';
 const redis = new Redis(process.env.REDIS_URL || '');
 
+// Keep admission and expiry atomic across requests and server instances.
+const incrementScript = `
+  local count = tonumber(redis.call('GET', KEYS[1]) or '0')
+  if count >= tonumber(ARGV[1]) then
+    return {count, 0}
+  end
+  count = redis.call('INCR', KEYS[1])
+  if count == 1 then
+    redis.call('EXPIRE', KEYS[1], ARGV[2])
+  end
+  return {count, 1}
+`;
+
 export class RateLimit {
-  limit: number;
-  windowSeconds: number;
-  keyPrefix: string;
-  failOpen: boolean;
-
   constructor(
-    limit: number,
-    windowSeconds: number,
-    keyPrefix = 'rate:',
-    failOpen = true
-  ) {
-    this.limit = limit;
-    this.windowSeconds = windowSeconds;
-    this.keyPrefix = keyPrefix;
-    this.failOpen = failOpen;
-  }
-
-  private getFullKey(key: string): string {
-    return `${this.keyPrefix}${key}`;
-  }
+    private readonly limit: number,
+    private readonly windowSeconds: number,
+    private readonly keyPrefix = 'rate:',
+    private readonly failOpen = true
+  ) {}
 
   async tryIncrementAndGetCount(
     key: string
   ): Promise<{ count: number; success: boolean }> {
     try {
-      const fullKey = this.getFullKey(key);
-      const oldCount = await this.checkKey(key);
-
-      if (oldCount >= this.limit) {
-        return { count: oldCount, success: false };
-      }
-
-      const currentCount = await redis.incr(fullKey);
-
-      if (currentCount === 1) {
-        await redis.expire(fullKey, this.windowSeconds);
-      }
-
-      return { count: currentCount, success: true };
+      const [count, admitted] = (await redis.eval(
+        incrementScript,
+        1,
+        `${this.keyPrefix}${key}`,
+        this.limit,
+        this.windowSeconds
+      )) as [number, number];
+      return { count, success: admitted === 1 };
     } catch (error) {
       console.error('Rate limit error:', error);
       return { count: 0, success: this.failOpen };
-    }
-  }
-
-  async checkKey(key: string): Promise<number> {
-    try {
-      const fullKey = this.getFullKey(key);
-      const currentCount = await redis.get(fullKey);
-      return currentCount ? parseInt(currentCount, 10) : 0;
-    } catch (error) {
-      console.error('Error checking rate limit:', error);
-      return 0;
-    }
-  }
-
-  async getRemainingTime(key: string): Promise<number> {
-    try {
-      const fullKey = this.getFullKey(key);
-      return await redis.ttl(fullKey);
-    } catch (error) {
-      console.error('Error getting remaining time:', error);
-      return 0;
-    }
-  }
-
-  async reset(key: string): Promise<boolean> {
-    try {
-      const fullKey = this.getFullKey(key);
-      await redis.del(fullKey);
-      return true;
-    } catch (error) {
-      console.error('Error resetting rate limit:', error);
-      return false;
     }
   }
 }

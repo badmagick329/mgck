@@ -1,5 +1,6 @@
 ﻿using CoreApi.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace CoreApi.WebApi.Controllers;
 
@@ -22,9 +23,7 @@ public class RoleController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Role()
     {
-        var user = _userManager.Users.FirstOrDefault(u =>
-            User.Identity != null && u.UserName == User.Identity.Name
-        );
+        var user = await _userManager.GetUserAsync(User);
         if (user is null)
         {
             return Unauthorized();
@@ -40,21 +39,10 @@ public class RoleController : ControllerBase
     }
 
     [HttpGet("init")]
-    [Authorize]
+    [Authorize(Policy = RoleConstants.Admin)]
     public async Task<IActionResult> SetRoles()
     {
-        var permission = await Permissions.ConfirmAdmin(_userManager, User);
-        if (permission != PermissionResult.Ok)
-        {
-            return permission switch
-            {
-                PermissionResult.Unauthorized => Unauthorized(),
-                PermissionResult.Forbidden => Forbid(),
-                _ => BadRequest(),
-            };
-        }
-
-        var users = _userManager.Users.ToList();
+        var users = await _userManager.Users.ToListAsync();
         foreach (var u in users)
         {
             var userRole = (await _userManager.GetRolesAsync(u)).FirstOrDefault();
