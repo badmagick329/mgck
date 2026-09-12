@@ -2,6 +2,7 @@
 import Loading from '@/app/milestones/loading';
 import useMilestones from '@/hooks/milestones/useMilestones';
 import Navbar from '@/app/_components/Navbar';
+import Footer from '@/app/_components/Footer';
 import MilestonesComparison from './MilestonesComparison';
 import MilestonesInput from './MilestonesInput';
 import { useToast } from '@/components/ui/use-toast';
@@ -75,13 +76,8 @@ export default function MilestonesClient({
           updateMilestone={updateMilestone}
           deleteMilestone={deleteMilestone}
         />
-        <footer className='milestones-footer'>
-          <span>
-            Milestones <span className='milestones-dot'>/</span> Make time
-            tangible.
-          </span>
-        </footer>
       </div>
+      <Footer />
     </main>
   );
 }
