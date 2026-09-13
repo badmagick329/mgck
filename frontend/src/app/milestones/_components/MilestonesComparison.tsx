@@ -41,7 +41,11 @@ export default function MilestonesComparison({
   const hidden = store.milestones.filter((m) =>
     store.hiddenMilestoneIds.includes(m.publicId)
   );
-  const max = Math.max(0, ...visible.map((m) => Math.abs(m.timestamp - now)));
+  const past = Math.max(0, ...visible.map((m) => now - m.timestamp));
+  const future = Math.max(0, ...visible.map((m) => m.timestamp - now));
+  // A single span gives equal durations equal widths on either side of now.
+  const span = past + future;
+  const origin = span === 0 ? 50 : (past / span) * 100;
   const count = (duration: number) =>
     number.format(
       unit === 'weeks'
@@ -140,14 +144,20 @@ export default function MilestonesComparison({
         </div>
         {visible.length > 0 && (
           <div className='milestones-scale'>
-            <span>NOW</span>
-            <span>
-              {count(max)} {unit}
-              <span className='milestones-scale-detail'>
-                {' '}
-                · longest visible interval
+            <div className='milestones-directions'>
+              <span>{past > 0 && `Past · ${count(past)} ${unit}`}</span>
+              <span>{future > 0 && `Future · ${count(future)} ${unit}`}</span>
+            </div>
+            <div className='milestones-axis-label'>
+              <span
+                style={{
+                  left: `${origin}%`,
+                  transform: `translateX(-${origin}%)`,
+                }}
+              >
+                Now
               </span>
-            </span>
+            </div>
           </div>
         )}
         <div className='milestones-rows'>
@@ -162,9 +172,14 @@ export default function MilestonesComparison({
                 <div
                   className='milestones-bar'
                   style={{
-                    width: `${max === 0 ? 0 : (Math.abs(m.timestamp - now) / max) * 100}%`,
+                    left: `${span === 0 ? origin : ((past + Math.min(0, m.timestamp - now)) / span) * 100}%`,
+                    width: `${span === 0 ? 0 : (Math.abs(m.timestamp - now) / span) * 100}%`,
                     background: m.color,
                   }}
+                />
+                <span
+                  className='milestones-now-line'
+                  style={{ left: `${origin}%` }}
                 />
               </div>
             </article>
@@ -180,10 +195,8 @@ export default function MilestonesComparison({
         {visible.length > 0 && (
           <div className='milestones-chart-footer'>
             <span>
-              <span className='milestones-origin' />{' '}
-              {visible.some((m) => m.timestamp < now)
-                ? 'Bars show time before or after now'
-                : 'Every bar starts at today'}
+              <span className='milestones-origin' /> Past extends left · Future
+              extends right
             </span>
             <span>Bar lengths share the same scale</span>
           </div>

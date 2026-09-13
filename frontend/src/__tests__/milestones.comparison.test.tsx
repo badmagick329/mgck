@@ -122,3 +122,59 @@ test('retains show, edit and delete controls when every milestone is hidden', ()
     screen.getByRole('button', { name: 'Delete Turning 40' })
   ).toBeTruthy();
 });
+
+test.each([
+  { offsets: [-1000, 1000], origin: 50, left: [0, 50], widths: [50, 50] },
+  { offsets: [-1000, 3000], origin: 25, left: [0, 25], widths: [25, 75] },
+  { offsets: [-1000, -2000], origin: 100, left: [50, 0], widths: [50, 100] },
+  { offsets: [1000, 2000], origin: 0, left: [0, 0], widths: [50, 100] },
+  { offsets: [0, 0], origin: 50, left: [50, 50], widths: [0, 0] },
+])('uses one signed axis for $offsets', ({ offsets, origin, left, widths }) => {
+  const data = store();
+  data.milestones = data.milestones.map((m, i) => ({
+    ...m,
+    timestamp: start + offsets[i],
+  }));
+  const { container } = render(
+    <MilestonesComparison
+      store={data}
+      updateMilestone={jest.fn()}
+      deleteMilestone={jest.fn()}
+    />
+  );
+  container
+    .querySelectorAll<HTMLElement>('.milestones-bar')
+    .forEach((bar, i) => {
+      expect(parseFloat(bar.style.left)).toBe(left[i]);
+      expect(parseFloat(bar.style.width)).toBe(widths[i]);
+    });
+  container
+    .querySelectorAll<HTMLElement>('.milestones-now-line')
+    .forEach((line) => expect(parseFloat(line.style.left)).toBe(origin));
+});
+
+test('recalculates the axis when a past milestone is hidden', () => {
+  const data = store();
+  data.milestones = [
+    { ...milestone, timestamp: start - 86400000 },
+    { ...milestone, publicId: 'two', timestamp: start + 86400000 },
+  ];
+  const props = {
+    store: data,
+    updateMilestone: jest.fn(),
+    deleteMilestone: jest.fn(),
+  };
+  const { container, rerender } = render(<MilestonesComparison {...props} />);
+  expect(
+    (container.querySelector('.milestones-now-line') as HTMLElement).style.left
+  ).toBe('50%');
+  rerender(
+    <MilestonesComparison
+      {...props}
+      store={{ ...data, hiddenMilestoneIds: ['one'] }}
+    />
+  );
+  expect(
+    (container.querySelector('.milestones-now-line') as HTMLElement).style.left
+  ).toBe('0%');
+});
