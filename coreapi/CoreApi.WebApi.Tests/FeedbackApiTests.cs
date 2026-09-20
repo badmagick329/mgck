@@ -36,6 +36,16 @@ public class FeedbackApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Health_check_is_public_without_exposing_feedback()
+    {
+        using var client = _factory.CreateClient();
+        using var health = await client.GetAsync("/healthz");
+        Assert.Equal(HttpStatusCode.OK, health.StatusCode);
+        Assert.Equal("ok", (await health.Content.ReadFromJsonAsync<Dictionary<string, string>>())!["status"]);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/feedback")).StatusCode);
+    }
+
+    [Fact]
     public async Task Malformed_login_bodies_return_bad_request()
     {
         using var client = _factory.CreateClient();

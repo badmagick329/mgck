@@ -112,6 +112,11 @@ describe('/healthz route', () => {
       new URL('http://djangobackend:8002/health/'),
       expect.objectContaining({ method: 'GET', cache: 'no-store' })
     );
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      2,
+      new URL('http://coreapi:5010/healthz'),
+      expect.objectContaining({ method: 'GET', cache: 'no-store' })
+    );
     expect(mockPgClients.length).toBe(2);
   });
 

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 const CHECK_TIMEOUT_MS = 2000;
 const DJANGO_HEALTH_PATH = '/health/';
-const CORE_API_HEALTH_PATH = '/api/feedback';
+const CORE_API_HEALTH_PATH = '/healthz';
 
 type ServiceStatus = 'up' | 'down';
 
