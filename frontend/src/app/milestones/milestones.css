@@ -241,13 +241,18 @@
 }
 .milestones-form {
   display: flex;
-  gap: 16px;
-  align-items: end;
+  flex-direction: column;
+  gap: 14px;
   padding: 20px;
   border: 1px solid #3b3142;
   border-radius: 12px;
   margin-bottom: 24px;
   background: #17131d;
+}
+.milestones-fields {
+  display: flex;
+  gap: 16px;
+  align-items: end;
 }
 .milestones-form label {
   flex: 1;
@@ -257,6 +262,7 @@
 .milestones-form input {
   display: block;
   width: 100%;
+  height: 42px;
   padding: 10px;
   border: 1px solid #4a3a51;
   border-radius: 6px;
@@ -354,6 +360,10 @@
     flex-direction: column;
     align-items: stretch;
   }
+  .milestones-fields {
+    flex-direction: column;
+    align-items: stretch;
+  }
   .milestones-header {
     gap: 12px;
   }
@@ -410,6 +420,63 @@
   color: #c5b6c9;
   font-size: 12px;
   margin-bottom: 20px;
+}
+.milestones-when {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: #c4bbcf;
+}
+.milestones-mode {
+  width: fit-content;
+  gap: 3px;
+  padding: 3px;
+  background: #0b0c12;
+  border: 1px solid #292837;
+  border-radius: 6px;
+}
+.milestones-mode button {
+  height: auto;
+  padding: 5px 12px;
+  border-radius: 4px;
+  color: #aaa7bb;
+  font-size: 12px;
+  font-weight: 600;
+}
+.milestones-mode button:hover {
+  color: #fff;
+}
+.milestones-mode button[data-state='on'] {
+  background: #563049;
+  color: #ffe2f3;
+  box-shadow: inset 0 0 0 1px #975375;
+}
+.milestones-duration {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.milestones-duration input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.milestones-form .milestones-select-trigger {
+  flex: 0 0 auto;
+  width: 110px;
+  height: 42px;
+  border-color: #4a3a51;
+  background: #0c0d13;
+  color: #fff;
+}
+.milestones-select-content {
+  border-color: #4a3a51;
+  background: #17131d;
+  color: #ececf3;
+}
+.milestones-duration-preview {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #9691a6;
 }
 @media (max-width: 760px) {
   .milestones-hidden-cards {
