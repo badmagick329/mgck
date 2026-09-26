@@ -26,6 +26,22 @@ Start the app with:
 docker-compose up -d
 ```
 
+### Core API local development
+
+Copy `coreapi/CoreApi.WebApi/appsettings.Development.example.json` to
+`coreapi/CoreApi.WebApi/appsettings.Development.json`, then replace the database
+connection and JWT signing key placeholders with local values. The development
+settings file is ignored by Git.
+
+You can store the signing key in .NET user secrets instead:
+
+```bash
+dotnet user-secrets set "JWT:SigningKey" "<random-secret-of-at-least-64-characters>" --project coreapi/CoreApi.WebApi
+```
+
+If you do not copy the example file, provide the remaining connection string
+and JWT settings through user secrets or environment variables as well.
+
 ### Django styles
 
 The Django Docker build compiles Tailwind CSS before packaging the app. Build it from the repository root:
