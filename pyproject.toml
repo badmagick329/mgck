@@ -6,14 +6,14 @@ requires-python = ">=3.10"
 authors = [{ name = "badmagick329" }]
 license = "MIT"
 dependencies = [
-    "Django==4.2.17",
-    "python-dotenv>=1.0.0,<2",
+    "Django>=5.2.16,<5.3",
+    "python-dotenv>=1.2.2,<2",
     "gunicorn>=22.0.0,<23",
     "psycopg2-binary>=2.9.6,<3",
-    "requests==2.32.3",
+    "requests>=2.33.0,<3",
     "beautifulsoup4>=4.12.2,<5",
     "pendulum>=2.1.2,<3",
-    "lxml>=4.9.3,<5",
+    "lxml>=6.1.0,<7",
     "praw>=7.7.1,<8",
     "result>=0.13.1,<0.14",
     "djangorestframework>=3.15.2,<4",
@@ -28,7 +28,7 @@ packages = ["djangobackend"]
 
 [dependency-groups]
 dev = [
-    "pytest>=7.4.0,<8",
+    "pytest>=9.0.3,<10",
     "pytest-django>=4.5.2,<5",
     "django-stubs>=4.2.4,<5",
     "djangorestframework-stubs>=3.14.5,<4",
