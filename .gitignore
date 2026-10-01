@@ -313,3 +313,6 @@ __pycache__/
 # Prod settings
 appsettings.Production.json
 /coreapi/CoreApi.WebApi/appsettings.Development.json
+
+# Private deployment tools and credentials
+.ignore/
