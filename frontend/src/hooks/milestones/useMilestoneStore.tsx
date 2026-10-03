@@ -6,7 +6,6 @@ import {
   bootstrapMilestoneStore,
   createStoredMilestone,
   loadMilestoneStore,
-  markAnonymousConsumed,
 } from '@/lib/milestones/storage';
 import {
   ClientMilestone,
@@ -215,36 +214,34 @@ export default function useMilestoneStore(account: MilestoneAccount | null) {
         }),
         expectedStorageKey
       );
-      if (saved && account?.userId) {
-        markAnonymousConsumed(localStorage, account.userId);
-      }
       return saved !== null;
     },
-    [account?.userId, persist]
+    [persist]
   );
 
-  const records = localStore?.records || [];
+  const ownerMatches = localStore?.accountUserId === (account?.userId || null);
+  const visibleStore = ownerMatches ? localStore : null;
+  const records = visibleStore?.records || [];
   const milestones = useMemo(() => activeMilestones(records), [records]);
-  const hiddenMilestoneIds = localStore?.hiddenMilestoneIds || [];
+  const hiddenMilestoneIds = visibleStore?.hiddenMilestoneIds || [];
   const hiddenSet = useMemo(
     () => new Set(hiddenMilestoneIds),
     [hiddenMilestoneIds]
   );
-  const ownerMatches = !account || localStore?.accountUserId === account.userId;
 
   return {
     milestones,
     records,
-    config: localStore?.config || {
+    config: visibleStore?.config || {
       diffPeriod: 'days' as const,
     },
-    sync: localStore?.sync || {
+    sync: visibleStore?.sync || {
       bootstrapCompleted: false,
       lastSuccessfulSyncAt: null,
       bootstrapPreference: 'local' as const,
     },
     storageKey,
-    accountUserId: localStore?.accountUserId || null,
+    accountUserId: visibleStore?.accountUserId || null,
     account,
     isLoaded: isHydrated && ownerMatches,
     loadWarning,

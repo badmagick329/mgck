@@ -16,6 +16,8 @@ import {
 } from '@/lib/account/auth-cookies';
 import { verifyCoreAccessToken } from '@/lib/account/core-token';
 import { parsedServerResponse } from '@/lib/account/parsed-server-response';
+import { admitAuthentication } from '@/lib/account/auth-admission';
+import { z } from 'zod';
 import {
   API_APPROVE_USER,
   API_AUTH_STATUS,
@@ -31,6 +33,24 @@ import { fetchWithAuthHeader } from '@/lib/account/requests';
 import { cookies } from 'next/headers';
 
 const BASE_URL = process.env.CORE_API_BASE_URL;
+const credentialsSchema = z.object({
+  username: z.string().min(1).max(256),
+  password: z.string().min(1).max(1024),
+});
+
+async function authenticateAdmission(
+  operation: 'login' | 'registration',
+  payload: unknown
+): Promise<ErrorResponse | undefined> {
+  const parsed = credentialsSchema.safeParse(payload);
+  if (!parsed.success)
+    return {
+      type: 'error',
+      status: 400,
+      errors: [{ code: '400', description: 'Invalid credentials format.' }],
+    };
+  return admitAuthentication(operation, parsed.data.username);
+}
 
 export async function userAuthStatusAction(): Promise<
   MessageResponse | ErrorResponse
@@ -47,6 +67,8 @@ export async function loginUserAction(payload: {
   username: string;
   password: string;
 }): Promise<MessageResponse | ErrorResponse> {
+  const rejected = await authenticateAdmission('login', payload);
+  if (rejected) return rejected;
   const response = await fetch(`${BASE_URL}${API_LOGIN}`, {
     method: 'POST',
     headers: {
@@ -130,6 +152,8 @@ export async function registerUserAction(payload: {
   username: string;
   password: string;
 }): Promise<MessageResponse | ErrorResponse> {
+  const rejected = await authenticateAdmission('registration', payload);
+  if (rejected) return rejected;
   const response = await fetch(`${BASE_URL}${API_REGISTER}`, {
     method: 'POST',
     headers: {

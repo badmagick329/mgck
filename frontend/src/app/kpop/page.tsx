@@ -1,4 +1,5 @@
 import { fetchComebacks } from '@/actions/kpop';
+import { getVerifiedCoreSession } from '@/lib/account/verified-session';
 import Footer from '@/app/_components/Footer';
 import Navbar from '@/app/_components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ type PageProps = {
 };
 
 export default async function KpopPage({ searchParams }: PageProps) {
+  const session = await getVerifiedCoreSession();
   const resolvedSearchParams = (await searchParams) || {};
   const canonicalSearchParams =
     getCanonicalKpopSearchParams(resolvedSearchParams);
@@ -84,7 +86,10 @@ export default async function KpopPage({ searchParams }: PageProps) {
             .
           </p>
         </div>
-        <FollowingProvider>
+        <FollowingProvider
+          key={session?.userId || 'anonymous'}
+          accountUserId={session?.userId || null}
+        >
           <FollowedArtistsDialog />
           <ComebacksForm />
           <div className='flex w-full grow flex-col items-center gap-4 pt-2'>

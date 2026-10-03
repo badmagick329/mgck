@@ -8,6 +8,7 @@ import {
   AccountFollowingSchema,
 } from '@/lib/types/kpop-following';
 import { cookies } from 'next/headers';
+import { verifyCoreAccessToken } from '@/lib/account/core-token';
 
 type AccountFollowingResult =
   | { type: 'ok'; data: AccountFollowing }
@@ -22,30 +23,39 @@ export async function getAccountFollowing(): Promise<AccountFollowingResult> {
 }
 
 export async function mergeAccountFollowing(
-  artists: AccountFollowingRequest[]
+  artists: AccountFollowingRequest[],
+  expectedUserId: string
 ): Promise<AccountFollowingResult> {
-  return requestFollowing('POST', '/merge', { artists });
+  return requestFollowing('POST', '/merge', { artists }, expectedUserId);
 }
 
 export async function addAccountFollowing(
-  artist: AccountFollowingRequest
+  artist: AccountFollowingRequest,
+  expectedUserId: string
 ): Promise<AccountFollowingResult> {
   if (!AccountFollowingRequestSchema.safeParse(artist).success) {
     return { type: 'error' };
   }
-  return requestFollowing('POST', '', artist);
+  return requestFollowing('POST', '', artist, expectedUserId);
 }
 
 export async function removeAccountFollowing(
-  artistPublicId: string
+  artistPublicId: string,
+  expectedUserId: string
 ): Promise<AccountFollowingResult> {
-  return requestFollowing('DELETE', `/${artistPublicId}`);
+  return requestFollowing(
+    'DELETE',
+    `/${artistPublicId}`,
+    undefined,
+    expectedUserId
+  );
 }
 
 async function requestFollowing(
   method: 'GET' | 'POST' | 'DELETE',
   suffix = '',
-  body?: unknown
+  body?: unknown,
+  expectedUserId?: string
 ): Promise<AccountFollowingResult> {
   let token: string | undefined;
   try {
@@ -55,6 +65,17 @@ async function requestFollowing(
   }
   if (!token || !BASE_URL) {
     return { type: 'unauthenticated' };
+  }
+  if (method !== 'GET') {
+    // Pending edits belong to the rendered account, even if cookies changed in another tab.
+    const verification = await verifyCoreAccessToken(token);
+    if (
+      !verification.ok ||
+      !expectedUserId ||
+      verification.session.userId !== expectedUserId
+    ) {
+      return { type: 'unauthenticated' };
+    }
   }
 
   try {

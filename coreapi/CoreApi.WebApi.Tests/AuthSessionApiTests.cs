@@ -7,7 +7,6 @@ using System.Text.Json;
 using CoreApi.WebApi.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
@@ -195,6 +194,17 @@ public class AuthSessionApiTests : IAsyncLifetime
         Assert.DoesNotContain(Hash(expired.RefreshToken), hashes);
     }
 
+    [Fact]
+    public async Task Authenticated_status_still_works_and_requires_a_session()
+    {
+        var username = await RegisterUser();
+        var login = await Login(username);
+        var client = _factory!.CreateClient();
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsync("/api/auth/status", null)).StatusCode);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.Token);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsync("/api/auth/status", null)).StatusCode);
+    }
+
     private async Task<string> RegisterUser()
     {
         var username = $"user-{Guid.NewGuid():N}";
@@ -255,9 +265,6 @@ public class AuthSessionApiTests : IAsyncLifetime
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Development");
-            builder.ConfigureTestServices(services =>
-                services.Configure<TestServerOptions>(options => options.AllowSynchronousIO = true)
-            );
             builder.ConfigureAppConfiguration(configuration =>
                 configuration.AddInMemoryCollection(
                     new Dictionary<string, string?>

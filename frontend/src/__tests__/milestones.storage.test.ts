@@ -9,7 +9,6 @@ import {
   createStoredMilestone,
   LAST_ACCOUNT_KEY,
   loadMilestoneStore,
-  markAnonymousConsumed,
   RECOVERY_KEY_PREFIX,
   v2AccountStoreKey,
 } from '@/lib/milestones/storage';
@@ -184,9 +183,12 @@ describe('milestone local storage', () => {
 
     const loggedOut = loadMilestoneStore(localStorage, null);
 
-    expect(loggedOut.storageKey).toBe(accountStoreKey('alice'));
-    expect(loggedOut.store.accountUserId).toBe('alice');
-    expect(loggedOut.store.records[0].name).toBe('Offline');
+    expect(loggedOut.storageKey).toBe(ANONYMOUS_STORE_KEY);
+    expect(loggedOut.store.accountUserId).toBeNull();
+    expect(loggedOut.store.records).toEqual([]);
+    expect(
+      loadMilestoneStore(localStorage, 'alice').store.records[0].name
+    ).toBe('Offline');
   });
 
   test('quarantines corrupt and wrong-owner scoped stores without leaking data', () => {
@@ -232,12 +234,14 @@ describe('milestone local storage', () => {
       'Launch',
     ]);
     expect(alice.store.hiddenMilestoneIds).toEqual([FIRST_ID]);
-    expect(localStorage.getItem(ANONYMOUS_OWNER_KEY)).toBe('alice');
+    expect(localStorage.getItem(ANONYMOUS_OWNER_KEY)).toBeNull();
     expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBeNull();
     expect(bob.store.records).toEqual([]);
 
-    markAnonymousConsumed(localStorage, 'alice');
-    expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBe('alice');
+    expect(loadMilestoneStore(localStorage, null).store.records).toEqual([]);
+    expect(
+      loadMilestoneStore(localStorage, 'alice').store.records
+    ).toHaveLength(1);
   });
 
   test('bootstraps exact-name UUIDs with server and local precedence', () => {

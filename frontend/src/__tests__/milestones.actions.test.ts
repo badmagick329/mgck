@@ -61,7 +61,7 @@ describe('milestone server actions', () => {
       )
     );
 
-    const result = await syncMilestonesAction([stored]);
+    const result = await syncMilestonesAction([stored], 'core-user-123');
 
     expect(result).toEqual({ ok: true, data: [stored] });
     const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
@@ -89,7 +89,7 @@ describe('milestone server actions', () => {
   test('rejects malformed local snapshots before making a request', async () => {
     const invalid = { ...stored, deletedAt: stored.updatedAt + 1 };
 
-    const result = await syncMilestonesAction([invalid]);
+    const result = await syncMilestonesAction([invalid], 'core-user-123');
 
     expect(result).toEqual({
       ok: false,
@@ -122,7 +122,7 @@ describe('milestone server actions', () => {
       )
     );
 
-    const result = await syncMilestonesAction([stored]);
+    const result = await syncMilestonesAction([stored], 'core-user-123');
 
     expect(result).toEqual({
       ok: false,
@@ -145,7 +145,7 @@ describe('milestone server actions', () => {
         new Response('{}', { status, statusText: 'failed' })
       );
 
-      const result = await syncMilestonesAction([stored]);
+      const result = await syncMilestonesAction([stored], 'core-user-123');
 
       expect(result).toEqual({ ok: false, kind, error: 'failed' });
     }
@@ -154,7 +154,7 @@ describe('milestone server actions', () => {
   test('classifies sync network failures as transient', async () => {
     (global.fetch as jest.Mock).mockRejectedValue(new Error('offline'));
 
-    const result = await syncMilestonesAction([stored]);
+    const result = await syncMilestonesAction([stored], 'core-user-123');
 
     expect(result).toEqual({
       ok: false,
@@ -166,7 +166,7 @@ describe('milestone server actions', () => {
   test('does not contact Django without a verified Core session', async () => {
     mockVerifiedSession.mockResolvedValue(null);
 
-    const result = await syncMilestonesAction([stored]);
+    const result = await syncMilestonesAction([stored], 'core-user-123');
 
     expect(result).toEqual({
       ok: false,
@@ -176,13 +176,20 @@ describe('milestone server actions', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
+  test('rejects a pending snapshot when cookies now authenticate another account', async () => {
+    expect(
+      await syncMilestonesAction([stored], 'previous-account')
+    ).toMatchObject({ ok: false, kind: 'unauthenticated' });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
   test('fails as retryable when internal service auth is not configured', async () => {
     const consoleError = jest
       .spyOn(console, 'error')
       .mockImplementation(() => undefined);
     delete process.env.NEXT_DJANGO_INTERNAL_API_KEY;
 
-    const result = await syncMilestonesAction([stored]);
+    const result = await syncMilestonesAction([stored], 'core-user-123');
 
     expect(result).toEqual({
       ok: false,

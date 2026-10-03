@@ -20,7 +20,8 @@ type MilestoneAuthenticationResult =
     };
 
 export async function syncMilestonesAction(
-  records: StoredMilestone[]
+  records: StoredMilestone[],
+  expectedUserId: string
 ): Promise<MilestoneSyncResult> {
   const parsedRecords = storedMilestoneSnapshotSchema.safeParse(records);
   if (!parsedRecords.success) {
@@ -30,7 +31,7 @@ export async function syncMilestonesAction(
       error: 'Invalid milestone snapshot',
     };
   }
-  const authResult = await getMilestoneAuthenticationHeaders();
+  const authResult = await getMilestoneAuthenticationHeaders(expectedUserId);
   if (!authResult.ok) {
     return {
       ok: false,
@@ -95,9 +96,12 @@ export async function syncMilestonesAction(
   }
 }
 
-async function getMilestoneAuthenticationHeaders(): Promise<MilestoneAuthenticationResult> {
+async function getMilestoneAuthenticationHeaders(
+  expectedUserId: string
+): Promise<MilestoneAuthenticationResult> {
   const session = await getVerifiedCoreSession();
-  if (!session) {
+  // A pending snapshot cannot follow a changed browser session into another account.
+  if (!session || !expectedUserId || session.userId !== expectedUserId) {
     return {
       ok: false,
       kind: 'unauthenticated',

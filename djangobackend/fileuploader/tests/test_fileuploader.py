@@ -3,7 +3,7 @@ import tempfile
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from fileuploader.admin import UploadUserAdminForm
@@ -250,6 +250,39 @@ class FileUploaderTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(UploadedFile.objects.filter(id=uploaded_file.id).exists())
         self.assertFalse(uploaded_file.file.storage.exists(stored_name))
+
+    def test_delete_rejects_safe_methods_and_requires_owner_and_csrf(self):
+        UploadUser.objects.create(user=self.user, storage_quota_bytes=10)
+        UploadUser.objects.create(user=self.other_user, storage_quota_bytes=10)
+        uploaded = UploadedFile.objects.create(uploaded_by=self.user, file=SimpleUploadedFile("keep.html", b"<script>alert(1)</script>"))
+        url = reverse("fileuploader:delete_file", args=[uploaded.id])
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.user)
+        for method in (client.get, client.head):
+            self.assertEqual(method(url).status_code, 405)
+        self.assertEqual(client.post(url).status_code, 403)
+        self.assertTrue(UploadedFile.objects.filter(pk=uploaded.pk).exists())
+        self.assertTrue(uploaded.file.storage.exists(uploaded.file.name))
+        client.get(reverse("fileuploader:list_files"))
+        token = client.cookies["csrftoken"].value
+        client.force_login(self.other_user)
+        self.assertEqual(client.post(url, HTTP_X_CSRFTOKEN=token).status_code, 404)
+        client.force_login(self.user)
+        self.assertEqual(client.post(url, HTTP_X_CSRFTOKEN=token).status_code, 302)
+        self.assertFalse(UploadedFile.objects.filter(pk=uploaded.pk).exists())
+        self.assertFalse(uploaded.file.storage.exists(uploaded.file.name))
+
+    def test_logout_requires_post_and_csrf(self):
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.user)
+        url = reverse("fileuploader:logout")
+        self.assertEqual(client.get(url).status_code, 405)
+        self.assertEqual(client.post(url).status_code, 403)
+        self.assertIn("_auth_user_id", client.session)
+        client.get(reverse("fileuploader:login"))
+        token = client.cookies["csrftoken"].value
+        self.assertEqual(client.post(url, HTTP_X_CSRFTOKEN=token).status_code, 302)
+        self.assertNotIn("_auth_user_id", client.session)
 
     def test_file_list_only_shows_users_own_files(self):
         UploadUser.objects.create(user=self.user, storage_quota_bytes=20)

@@ -52,9 +52,9 @@ export default function useMilestonesAutomaticSync({
     const current = latest.current;
     return Boolean(
       mounted.current &&
-        current.account &&
-        current.store.isLoaded &&
-        current.store.storageKey
+      current.account &&
+      current.store.isLoaded &&
+      current.store.storageKey
     );
   }, []);
 
@@ -125,7 +125,7 @@ export default function useMilestonesAutomaticSync({
     try {
       let snapshot = localStore.records;
       if (!localStore.sync.bootstrapCompleted) {
-        const bootstrap = await syncMilestonesAction([]);
+        const bootstrap = await syncMilestonesAction([], userId);
         if (!isCurrentRequest(requestGeneration, userId, storageKey)) {
           return;
         }
@@ -142,7 +142,7 @@ export default function useMilestonesAutomaticSync({
         snapshot = bootstrapped.records;
       }
 
-      const result = await syncMilestonesAction(snapshot);
+      const result = await syncMilestonesAction(snapshot, userId);
       if (!isCurrentRequest(requestGeneration, userId, storageKey)) {
         return;
       }

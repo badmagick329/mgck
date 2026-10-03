@@ -30,11 +30,10 @@
           href="{% url 'fileuploader:password_change' %}"
           >Change Password</a
         >
-        <a
-          class="text-fu-muted transition-colors hover:text-fu-foreground"
-          href="{% url 'fileuploader:logout' %}"
-          >Logout</a
-        >
+        <form method="post" action="{% url 'fileuploader:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="text-fu-muted transition-colors hover:text-fu-foreground">Logout</button>
+        </form>
       </div>
     </div>
     {% endif %}

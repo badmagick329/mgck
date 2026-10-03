@@ -43,7 +43,8 @@ public class RefreshSessionMigrationTests : IAsyncLifetime
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var beforeMigration = DateTime.UtcNow;
+        // The migration uses the database clock; the Docker host clock can differ.
+        var beforeMigration = await context.Database.SqlQueryRaw<DateTime>("SELECT clock_timestamp() AS \"Value\"").SingleAsync();
         await migrator.MigrateAsync();
 
         var session = await context.RefreshSessions.SingleAsync();
@@ -54,7 +55,8 @@ public class RefreshSessionMigrationTests : IAsyncLifetime
             expiresAt.AddMilliseconds(-1),
             expiresAt.AddMilliseconds(1)
         );
-        Assert.InRange(session.CreatedAt, beforeMigration, DateTime.UtcNow);
+        var afterMigration = await context.Database.SqlQueryRaw<DateTime>("SELECT clock_timestamp() AS \"Value\"").SingleAsync();
+        Assert.InRange(session.CreatedAt, beforeMigration, afterMigration);
         Assert.Equal(rawToken, (await context.Users.SingleAsync()).RefreshToken);
     }
 

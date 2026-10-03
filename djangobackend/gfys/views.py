@@ -1,22 +1,26 @@
 import json
 
+from django.conf import settings
 from django.http import JsonResponse
+from django.utils.crypto import constant_time_compare
 from django.views.decorators.csrf import csrf_exempt
 from gfys.models import Gfy
-
-from djangobackend.settings import TOKEN
 
 
 @csrf_exempt
 def gfy_upload(request):
     if request.method != "POST":
         return JsonResponse({"message": "Invalid request"}, status=400)
+    if not settings.TOKEN or not settings.TOKEN.strip():
+        return JsonResponse({"error": "Ingestion unavailable"}, status=503)
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({"message": "Invalid request"}, status=400)
-    token = data.get("token", "")
-    if token != TOKEN:
+    if not isinstance(data, dict):
+        return JsonResponse({"message": "Invalid request"}, status=400)
+    token = data.get("token")
+    if not isinstance(token, str) or not constant_time_compare(token, settings.TOKEN):
         return JsonResponse({"error": "Invalid token"}, status=403)
 
     imgur_url = data.get("imgur_url", "")

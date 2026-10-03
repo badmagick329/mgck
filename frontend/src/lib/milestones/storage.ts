@@ -111,11 +111,17 @@ export function loadMilestoneStore(
   authenticatedUserId: string | null,
   now = Date.now()
 ): StorageLoadResult {
-  if (authenticatedUserId) {
-    storage.setItem(LAST_ACCOUNT_KEY, authenticatedUserId);
+  // A previous session is not authority to open that account's private cache.
+  storage.removeItem(LAST_ACCOUNT_KEY);
+  if (!authenticatedUserId && storage.getItem(ANONYMOUS_OWNER_KEY)) {
+    const raw = storage.getItem(ANONYMOUS_STORE_KEY);
+    if (raw) preserveRecovery(storage, raw, now);
+    storage.removeItem(ANONYMOUS_STORE_KEY);
+    storage.removeItem(V2_ANONYMOUS_STORE_KEY);
+    storage.removeItem(ANONYMOUS_OWNER_KEY);
+    storage.removeItem(ANONYMOUS_CONSUMED_KEY);
   }
-  const ownerId =
-    authenticatedUserId || storage.getItem(LAST_ACCOUNT_KEY) || null;
+  const ownerId = authenticatedUserId;
   const storageKey = ownerId ? accountStoreKey(ownerId) : ANONYMOUS_STORE_KEY;
   const migration = loadOrMigrateOwnerStore(storage, ownerId, now, true);
   let store = migration.store;
@@ -174,6 +180,15 @@ export function loadMilestoneStore(
       storage.removeItem(sourceKey);
     }
     storage.removeItem(LEGACY_BACKUP_KEY);
+    if (
+      authenticatedUserId &&
+      storage.getItem(ANONYMOUS_OWNER_KEY) === authenticatedUserId
+    ) {
+      // Transfer guest data after durable local save; logout must open a fresh guest store.
+      storage.removeItem(ANONYMOUS_STORE_KEY);
+      storage.removeItem(ANONYMOUS_OWNER_KEY);
+      storage.removeItem(ANONYMOUS_CONSUMED_KEY);
+    }
   } else {
     warning = warning || 'Your milestone data could not be migrated safely.';
   }
@@ -276,14 +291,6 @@ function persistMigratedStore(
     );
   } catch {
     return false;
-  }
-}
-
-export function markAnonymousConsumed(storage: Storage, userId: string) {
-  const owner = storage.getItem(ANONYMOUS_OWNER_KEY);
-  if (!owner || owner === userId) {
-    storage.setItem(ANONYMOUS_OWNER_KEY, userId);
-    storage.setItem(ANONYMOUS_CONSUMED_KEY, userId);
   }
 }
 

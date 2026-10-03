@@ -22,13 +22,21 @@ class TestMilestoneAuthentication:
     def test_requires_internal_service_authentication(self):
         assert self.client.get(self.url).status_code == 401
 
-    def test_valid_internal_identity_claims_an_exact_legacy_owner(self):
+    def test_matching_username_cannot_claim_unbound_legacy_records(self):
         legacy = MilestoneUser.objects.create(username="Alice")
 
         response = self.client.get(
             self.url, **internal_auth_headers("Alice", "core-alice")
         )
 
+        assert response.status_code == 409
+        legacy.refresh_from_db()
+        assert legacy.core_user_id is None
+        assert MilestoneUser.objects.count() == 1
+
+    def test_verified_stable_id_can_access_manually_bound_legacy_owner(self):
+        legacy = MilestoneUser.objects.create(username="Alice", core_user_id="core-alice")
+        response = self.client.get(self.url, **internal_auth_headers("Alice", "core-alice"))
         assert response.status_code == 200
         legacy.refresh_from_db()
         assert legacy.core_user_id == "core-alice"

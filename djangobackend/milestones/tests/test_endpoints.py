@@ -164,7 +164,7 @@ class TestMilestoneListEndpoint:
 
     def test_list_milestones_single(self):
         """Test listing with one milestone"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -184,8 +184,8 @@ class TestMilestoneListEndpoint:
 
     def test_list_milestones_multiple(self):
         """Test listing multiple milestones"""
-        user1 = MilestoneUser.objects.create(username="user1")
-        user2 = MilestoneUser.objects.create(username="user2")
+        user1 = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
+        user2 = MilestoneUser.objects.create(username="user2", core_user_id="core-user2")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
 
         Milestone.objects.create(
@@ -212,7 +212,7 @@ class TestMilestoneListEndpoint:
 
     def test_list_milestones_includes_required_fields(self):
         """Test that list response includes all required fields"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -236,8 +236,8 @@ class TestMilestoneListEndpoint:
 
     def test_list_milestones_empty_for_user_with_no_milestones(self):
         """Test that user with no milestones gets empty list"""
-        user1 = MilestoneUser.objects.create(username="user1")
-        MilestoneUser.objects.create(username="user2")
+        user1 = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
+        MilestoneUser.objects.create(username="user2", core_user_id="core-user2")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
 
         Milestone.objects.create(
@@ -263,7 +263,7 @@ class TestMilestoneUpdateEndpoint:
 
     def test_update_milestone_event_name(self):
         """Test updating just the event name"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -289,7 +289,7 @@ class TestMilestoneUpdateEndpoint:
 
     def test_update_milestone_timestamp(self):
         """Test updating just the timestamp"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         old_dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -315,7 +315,7 @@ class TestMilestoneUpdateEndpoint:
 
     def test_update_milestone_timezone(self):
         """Test updating just the timezone"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -340,7 +340,7 @@ class TestMilestoneUpdateEndpoint:
 
     def test_update_milestone_color(self):
         """Test updating just the color"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -365,7 +365,7 @@ class TestMilestoneUpdateEndpoint:
 
     def test_update_milestone_all_fields(self):
         """Test updating all fields"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -394,7 +394,7 @@ class TestMilestoneUpdateEndpoint:
 
     def test_update_milestone_no_fields_provided(self):
         """Test update with no fields provided"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -434,7 +434,7 @@ class TestMilestoneUpdateEndpoint:
 
     def test_update_milestone_nonexistent_milestone(self):
         """Test updating nonexistent milestone"""
-        MilestoneUser.objects.create(username="user1")
+        MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
 
         data = {
             "username": "user1",
@@ -452,7 +452,7 @@ class TestMilestoneUpdateEndpoint:
 
     def test_update_milestone_duplicate_new_name(self):
         """Test updating to a name that already exists"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -489,7 +489,7 @@ class TestMilestoneDeleteEndpoint:
 
     def test_delete_milestone_success(self):
         """Test successfully deleting a milestone"""
-        user = MilestoneUser.objects.create(username="user1")
+        user = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",
@@ -574,7 +574,7 @@ class TestMilestoneDeleteEndpoint:
 
     def test_delete_milestone_nonexistent_milestone(self):
         """Test deleting nonexistent milestone"""
-        MilestoneUser.objects.create(username="user1")
+        MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
 
         data = {
             "username": "user1",
@@ -591,8 +591,8 @@ class TestMilestoneDeleteEndpoint:
 
     def test_delete_milestone_wrong_user(self):
         """Test deleting milestone owned by different user"""
-        user1 = MilestoneUser.objects.create(username="user1")
-        MilestoneUser.objects.create(username="user2")
+        user1 = MilestoneUser.objects.create(username="user1", core_user_id="core-user1")
+        MilestoneUser.objects.create(username="user2", core_user_id="core-user2")
         dt = datetime.fromtimestamp(1766248695, tz=timezone.utc)
         Milestone.objects.create(
             event_timezone="UTC",

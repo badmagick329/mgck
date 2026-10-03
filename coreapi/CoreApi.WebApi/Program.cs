@@ -1,12 +1,9 @@
-using System.Globalization;
-using System.Threading.RateLimiting;
 using CoreApi.WebApi.Common;
 using CoreApi.WebApi.Infrastructure;
 using CoreApi.WebApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -14,7 +11,6 @@ using Newtonsoft.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
 builder
     .Services.AddControllers()
     .AddNewtonsoftJson(options =>
@@ -109,57 +105,7 @@ builder.Services.AddAuthorization(options =>
 );
 builder.Services.AddScoped<IAuthorizationHandler, AdminAuthorizationHandler>();
 
-// Rate limiter
-builder.Services.AddRateLimiter(limiterOptions =>
-{
-    limiterOptions.OnRejected = async (context, cancellationToken) =>
-    {
-        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
-        {
-            context.HttpContext.Response.Headers.RetryAfter = (
-                (int)retryAfter.TotalSeconds
-            ).ToString(NumberFormatInfo.InvariantInfo);
-        }
-
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        await context.HttpContext.Response.WriteAsync("Too many requests", cancellationToken);
-    };
-    limiterOptions.AddPolicy(
-        "login-limiter",
-        context =>
-        {
-            string partitionKey = "default";
-
-            if (context.Request.HasJsonContentType())
-            {
-                context.Request.EnableBuffering();
-
-                using var reader = new StreamReader(
-                    context.Request.Body,
-                    encoding: System.Text.Encoding.UTF8,
-                    detectEncodingFromByteOrderMarks: false,
-                    bufferSize: -1,
-                    leaveOpen: true
-                );
-                var body = reader.ReadToEnd();
-                context.Request.Body.Position = 0;
-
-                partitionKey = LoginRateLimit.GetPartitionKey(body);
-            }
-
-            return RateLimitPartition.GetSlidingWindowLimiter(
-                partitionKey,
-                _ => new SlidingWindowRateLimiterOptions
-                {
-                    AutoReplenishment = true,
-                    PermitLimit = 10,
-                    Window = TimeSpan.FromSeconds(60),
-                    SegmentsPerWindow = 6,
-                }
-            );
-        }
-    );
-});
+builder.Services.AddAuthenticationRateLimits();
 
 var app = builder.Build();
 

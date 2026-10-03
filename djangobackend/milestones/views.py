@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from milestones.apps import MilestonesConfig
 from djangobackend.internal_authentication import NextServiceAuthentication
-from milestones.ownership import OwnerConflict, get_or_claim_owner
+from milestones.ownership import OwnerConflict, get_or_create_owner
 from milestones.serializers import SyncSnapshotSerializer
 from milestones.sync import SyncConflict, merge_snapshot
 from milestones.utils import (
@@ -58,7 +58,7 @@ def sync_milestones(request: Request):
 
     try:
         with transaction.atomic():
-            owner = get_or_claim_owner(request.user)
+            owner = get_or_create_owner(request.user)
             records = merge_snapshot(
                 owner, serializer.validated_data["records"]
             )
@@ -86,7 +86,7 @@ def handle_list(request: Request):
     """
     try:
         with transaction.atomic():
-            owner = get_or_claim_owner(request.user)
+            owner = get_or_create_owner(request.user)
             return get_all_milestones_response(owner)
     except OwnerConflict:
         return Response({"error": "Account ownership conflict"}, status=409)
@@ -113,7 +113,7 @@ def handle_post(request: Request):
 
     try:
         with transaction.atomic():
-            owner = get_or_claim_owner(request.user)
+            owner = get_or_create_owner(request.user)
             return create_milestone_response(
                 timestamp, timezone, owner, event_name, color
             )
@@ -145,7 +145,7 @@ def handle_update(request: Request, event_name: str):
 
     try:
         with transaction.atomic():
-            owner = get_or_claim_owner(request.user)
+            owner = get_or_create_owner(request.user)
             return update_milestone_response(
                 owner,
                 event_name,
@@ -170,7 +170,7 @@ def handle_delete(request: Request, event_name: str):
     """
     try:
         with transaction.atomic():
-            owner = get_or_claim_owner(request.user)
+            owner = get_or_create_owner(request.user)
             return delete_milestone_response(owner, event_name)
     except OwnerConflict:
         return Response({"error": "Account ownership conflict"}, status=409)

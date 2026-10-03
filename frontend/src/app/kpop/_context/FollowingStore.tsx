@@ -21,6 +21,9 @@ import {
 } from 'react';
 
 const STORAGE_KEY = 'mgck:kpop-following:v3';
+const anonymousStorageKey = 'mgck:kpop-following:anonymous:v4';
+export const followingAccountStorageKey = (userId: string) =>
+  `mgck:kpop-following:account:${encodeURIComponent(userId)}:v4`;
 const V2_STORAGE_KEY = 'mgck:kpop-following:v2';
 const LEGACY_STORAGE_KEY = 'mgck:kpop-following:v1';
 export const MAX_FOLLOWED_ARTISTS = 250;
@@ -93,24 +96,44 @@ const initialStore: FollowingStore = {
   preferences: defaultPreferences,
 };
 
-export function FollowingProvider({ children }: { children: ReactNode }) {
-  const [store, setStore] = useState<FollowingStore>(initialStore);
+export function FollowingProvider({
+  children,
+  accountUserId,
+}: {
+  children: ReactNode;
+  accountUserId: string | null;
+}) {
+  const [store, setStore] = useState<FollowingStore>({
+    ...initialStore,
+    accountUserId,
+  });
   const [isLoaded, setIsLoaded] = useState(false);
   const [isManagerOpen, setManagerOpen] = useState(false);
   const storeRef = useRef(store);
+  const sessionRef = useRef(accountUserId);
+  sessionRef.current = accountUserId;
+  const syncing = useRef(false);
+  const syncRequested = useRef(false);
   const showedSyncWarning = useRef(false);
 
   const persistStore = useCallback((nextStore: FollowingStore) => {
     storeRef.current = nextStore;
     setStore(nextStore);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStore));
+      localStorage.setItem(
+        nextStore.accountUserId
+          ? followingAccountStorageKey(nextStore.accountUserId)
+          : anonymousStorageKey,
+        JSON.stringify(nextStore)
+      );
+      return true;
     } catch {
       toast({
         title: 'Could not save followed artists',
         description: 'Your latest changes may not survive a refresh.',
         variant: 'destructive',
       });
+      return false;
     }
   }, []);
 
@@ -127,51 +150,64 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    sessionRef.current = accountUserId;
+    // Preserve an old cache under its recorded owner before selecting the verified session.
+    const migrate = (
+      oldKey: string,
+      schema:
+        | typeof FollowingStoreSchema
+        | typeof V2FollowingStoreSchema
+        | typeof LegacyFollowingStoreSchema
+    ) => {
+      const raw = localStorage.getItem(oldKey);
+      if (!raw) return;
+      try {
+        const parsed = schema.safeParse(JSON.parse(raw));
+        if (parsed.success) {
+          const migrated: FollowingStore = {
+            ...initialStore,
+            ...parsed.data,
+            version: 3,
+          };
+          const target = migrated.accountUserId
+            ? followingAccountStorageKey(migrated.accountUserId)
+            : anonymousStorageKey;
+          if (!localStorage.getItem(target))
+            localStorage.setItem(target, JSON.stringify(migrated));
+        }
+        localStorage.removeItem(oldKey);
+      } catch {
+        /* Keep unreadable or unsaved data for recovery; never display it. */
+      }
+    };
     try {
-      const savedStore = localStorage.getItem(STORAGE_KEY);
+      migrate(STORAGE_KEY, FollowingStoreSchema);
+      migrate(V2_STORAGE_KEY, V2FollowingStoreSchema);
+      migrate(LEGACY_STORAGE_KEY, LegacyFollowingStoreSchema);
+      const selectedKey = accountUserId
+        ? followingAccountStorageKey(accountUserId)
+        : anonymousStorageKey;
+      const savedStore = localStorage.getItem(selectedKey);
       const parsedStore = savedStore
         ? FollowingStoreSchema.safeParse(JSON.parse(savedStore))
         : null;
-      if (parsedStore?.success) {
+      if (
+        parsedStore?.success &&
+        parsedStore.data.accountUserId === accountUserId
+      ) {
         persistStore(parsedStore.data);
       } else {
-        const v2Store = localStorage.getItem(V2_STORAGE_KEY);
-        const parsedV2 = v2Store
-          ? V2FollowingStoreSchema.safeParse(JSON.parse(v2Store))
-          : null;
-        if (parsedV2?.success) {
-          persistStore({
-            ...parsedV2.data,
-            version: 3,
-            preferences: defaultPreferences,
-          });
-          localStorage.removeItem(V2_STORAGE_KEY);
-        } else {
-          const legacyStore = localStorage.getItem(LEGACY_STORAGE_KEY);
-          const parsedLegacy = legacyStore
-            ? LegacyFollowingStoreSchema.safeParse(JSON.parse(legacyStore))
-            : null;
-          if (parsedLegacy?.success) {
-            persistStore({
-              ...initialStore,
-              artists: parsedLegacy.data.artists,
-            });
-            localStorage.removeItem(LEGACY_STORAGE_KEY);
-          } else if (savedStore || v2Store || legacyStore) {
-            localStorage.removeItem(STORAGE_KEY);
-            localStorage.removeItem(V2_STORAGE_KEY);
-            localStorage.removeItem(LEGACY_STORAGE_KEY);
-          }
-        }
+        persistStore({ ...initialStore, accountUserId });
       }
     } catch {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(V2_STORAGE_KEY);
-      localStorage.removeItem(LEGACY_STORAGE_KEY);
+      persistStore({ ...initialStore, accountUserId });
     } finally {
       setIsLoaded(true);
     }
-  }, [persistStore]);
+    return () => {
+      sessionRef.current = null;
+    };
+  }, [accountUserId, persistStore]);
 
   const applyAccount = useCallback(
     (
@@ -190,7 +226,7 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
         })),
         ...pendingArtists,
       ]).filter((artist) => !pending.removals.includes(artist.publicId));
-      persistStore({
+      return persistStore({
         version: 3,
         artists,
         accountUserId: account.userId,
@@ -201,8 +237,11 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
     [persistStore]
   );
 
-  const syncAccount = useCallback(async () => {
+  const syncAccountOnce = useCallback(async () => {
+    if (!accountUserId) return;
+    const snapshot = storeRef.current;
     const accountResult = await getAccountFollowing();
+    if (sessionRef.current !== accountUserId) return;
     if (accountResult.type === 'unauthenticated') {
       return;
     }
@@ -210,10 +249,23 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       warnSync('Changes will be retried the next time you visit K-pop.');
       return;
     }
+    if (accountResult.data.userId !== accountUserId) return;
 
     const current = storeRef.current;
-    if (current.accountUserId !== accountResult.data.userId) {
+    let anonymous: FollowingStore | null = null;
+    try {
+      const anonymousRaw = localStorage.getItem(anonymousStorageKey);
+      const parsed = anonymousRaw
+        ? FollowingStoreSchema.safeParse(JSON.parse(anonymousRaw))
+        : null;
+      if (parsed?.success && parsed.data.accountUserId === null)
+        anonymous = parsed.data;
+    } catch {
+      /* Corrupt guest data cannot be imported into an account. */
+    }
+    if (anonymous && anonymous.artists.length) {
       const artists = dedupeArtists([
+        ...anonymous.artists,
         ...current.artists,
         ...accountResult.data.artists.map((artist) => ({
           publicId: artist.artistPublicId,
@@ -225,9 +277,16 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
         warnSync('Reduce your follows to 250 before they can be merged.');
         return;
       }
-      const merged = await mergeAccountFollowing(toAccountRequests(artists));
+      const merged = await mergeAccountFollowing(
+        toAccountRequests(artists),
+        accountUserId
+      );
+      if (sessionRef.current !== accountUserId) return;
       if (merged.type === 'ok') {
-        applyAccount(merged.data);
+        if (merged.data.userId !== accountUserId) return;
+        if (applyAccount(merged.data, storeRef.current.pending)) {
+          localStorage.removeItem(anonymousStorageKey);
+        }
       } else if (merged.type === 'limit') {
         warnSync('Reduce your follows to 250 before they can be merged.');
       } else if (merged.type !== 'unauthenticated') {
@@ -239,7 +298,8 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
     let latest = accountResult.data;
     const pending = current.pending;
     for (const publicId of pending.removals) {
-      const result = await removeAccountFollowing(publicId);
+      const result = await removeAccountFollowing(publicId, accountUserId);
+      if (sessionRef.current !== accountUserId) return;
       if (result.type !== 'ok') {
         if (result.type !== 'unauthenticated') {
           warnSync('Changes will be retried the next time you visit K-pop.');
@@ -255,10 +315,14 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       if (!artist) {
         continue;
       }
-      const result = await addAccountFollowing({
-        artistPublicId: artist.publicId,
-        displayName: artist.displayName,
-      });
+      const result = await addAccountFollowing(
+        {
+          artistPublicId: artist.publicId,
+          displayName: artist.displayName,
+        },
+        accountUserId
+      );
+      if (sessionRef.current !== accountUserId) return;
       if (result.type !== 'ok') {
         if (result.type === 'limit') {
           warnSync('Reduce your follows to 250 before they can be merged.');
@@ -269,8 +333,28 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       }
       latest = result.data;
     }
-    applyAccount(latest);
-  }, [applyAccount, warnSync]);
+    // A response cannot acknowledge edits made after its request snapshot.
+    applyAccount(
+      latest,
+      storeRef.current === snapshot ? undefined : storeRef.current.pending
+    );
+  }, [accountUserId, applyAccount, warnSync]);
+
+  const syncAccount = useCallback(async () => {
+    syncRequested.current = true;
+    if (syncing.current) return;
+    syncing.current = true;
+    try {
+      while (syncRequested.current) {
+        syncRequested.current = false;
+        await syncAccountOnce();
+      }
+    } catch {
+      warnSync('Changes will be retried the next time you visit K-pop.');
+    } finally {
+      syncing.current = false;
+    }
+  }, [syncAccountOnce, warnSync]);
 
   useEffect(() => {
     if (isLoaded) {
@@ -287,6 +371,11 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
         return 'already-following';
       }
       const current = storeRef.current;
+      if (
+        accountUserId !== sessionRef.current ||
+        current.accountUserId !== accountUserId
+      )
+        return 'already-following';
       if (
         current.artists.some(
           (followedArtist) =>
@@ -317,12 +406,17 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       void syncAccount();
       return 'added';
     },
-    [persistStore, syncAccount]
+    [accountUserId, persistStore, syncAccount]
   );
 
   const unfollow = useCallback(
     (publicId: string, displayName?: string) => {
       const current = storeRef.current;
+      if (
+        accountUserId !== sessionRef.current ||
+        current.accountUserId !== accountUserId
+      )
+        return;
       const matchingIds = new Set(
         current.artists
           .filter(
@@ -348,7 +442,7 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       });
       void syncAccount();
     },
-    [persistStore, syncAccount]
+    [accountUserId, persistStore, syncAccount]
   );
 
   const isFollowing = useCallback(
@@ -369,33 +463,47 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
         return;
       }
       const current = storeRef.current;
+      if (
+        accountUserId !== sessionRef.current ||
+        current.accountUserId !== accountUserId
+      )
+        return;
       persistStore({
         ...current,
         preferences: { ...current.preferences, lookbackDays },
       });
     },
-    [persistStore]
+    [accountUserId, persistStore]
   );
 
   const setOrdering = useCallback(
     (ordering: FollowingOrdering) => {
       const current = storeRef.current;
+      if (
+        accountUserId !== sessionRef.current ||
+        current.accountUserId !== accountUserId
+      )
+        return;
       persistStore({
         ...current,
         preferences: { ...current.preferences, ordering },
       });
     },
-    [persistStore]
+    [accountUserId, persistStore]
   );
 
-  const artists = useMemo(() => dedupeArtists(store.artists), [store.artists]);
+  const ownerMatches = store.accountUserId === accountUserId;
+  const artists = useMemo(
+    () => (ownerMatches ? dedupeArtists(store.artists) : []),
+    [store.artists, ownerMatches]
+  );
 
   const value = useMemo(
     () => ({
       artists,
-      isLoaded,
+      isLoaded: isLoaded && ownerMatches,
       isManagerOpen,
-      preferences: store.preferences,
+      preferences: ownerMatches ? store.preferences : defaultPreferences,
       follow,
       unfollow,
       isFollowing,
@@ -409,6 +517,7 @@ export function FollowingProvider({ children }: { children: ReactNode }) {
       follow,
       isFollowing,
       isLoaded,
+      ownerMatches,
       isManagerOpen,
       setLookbackDays,
       setOrdering,

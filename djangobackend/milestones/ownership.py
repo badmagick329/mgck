@@ -8,7 +8,7 @@ class OwnerConflict(Exception):
     pass
 
 
-def get_or_claim_owner(principal: CorePrincipal) -> MilestoneUser:
+def get_or_create_owner(principal: CorePrincipal) -> MilestoneUser:
     owner = (
         MilestoneUser.objects.select_for_update()
         .filter(core_user_id=principal.user_id)
@@ -23,11 +23,9 @@ def get_or_claim_owner(principal: CorePrincipal) -> MilestoneUser:
         .first()
     )
     if legacy_owner is not None:
-        if legacy_owner.core_user_id is not None:
-            raise OwnerConflict
-        legacy_owner.core_user_id = principal.user_id
-        legacy_owner.save(update_fields=["core_user_id"])
-        return legacy_owner
+        # A reusable username cannot prove ownership of records from an older identity.
+        # Keep these records untouched until an administrator verifies the stable ID.
+        raise OwnerConflict
 
     try:
         return MilestoneUser.objects.create(

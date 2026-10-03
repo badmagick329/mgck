@@ -11,6 +11,7 @@ import {
   createEmptyMilestoneStore,
   createStoredMilestone,
   LAST_ACCOUNT_KEY,
+  ANONYMOUS_STORE_KEY,
 } from '@/lib/milestones/storage';
 
 const FIRST_ID = '048c3d72-5c61-4f2c-9707-e06b0cc1f7f5';
@@ -83,7 +84,7 @@ describe('milestone owner store hook', () => {
     expect(result.current.hiddenMilestoneIds).toEqual([]);
   });
 
-  test('logged out continues the last account locally', async () => {
+  test('logout opens anonymous data and preserves the signed-out account cache', async () => {
     const stored = {
       ...createEmptyMilestoneStore('alice'),
       records: [createStoredMilestone(fields(), 100, FIRST_ID)],
@@ -93,14 +94,17 @@ describe('milestone owner store hook', () => {
 
     const { result } = renderHook(() => useMilestoneStore(null));
     await waitFor(() => expect(result.current.isLoaded).toBe(true));
-    expect(result.current.milestones[0].publicId).toBe(FIRST_ID);
+    expect(result.current.milestones).toEqual([]);
 
     act(() => result.current.addMilestone(fields('Offline')));
 
     expect(result.current.config).toEqual({ diffPeriod: 'days' });
     expect(
       JSON.parse(localStorage.getItem(accountStoreKey('alice'))!).records
-    ).toHaveLength(2);
+    ).toHaveLength(1);
+    expect(
+      JSON.parse(localStorage.getItem(ANONYMOUS_STORE_KEY)!).records
+    ).toHaveLength(1);
   });
 
   test('account switches enter loading state and never expose the old owner', async () => {
@@ -129,6 +133,7 @@ describe('milestone owner store hook', () => {
     rerender({ owner: { userId: 'bob', username: 'Bob' } });
 
     expect(result.current.isLoaded).toBe(false);
+    expect(result.current.records).toEqual([]);
     await waitFor(() => expect(result.current.isLoaded).toBe(true));
     expect(result.current.accountUserId).toBe('bob');
     expect(result.current.milestones.map((record) => record.name)).toEqual([

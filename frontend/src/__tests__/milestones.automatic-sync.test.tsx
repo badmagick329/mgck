@@ -379,7 +379,7 @@ describe('milestone automatic sync coordinator', () => {
     ]);
   });
 
-  test('consumes a reserved anonymous handoff only after full sync succeeds', async () => {
+  test('moves anonymous data into the account cache before syncing', async () => {
     const anonymous = {
       ...createEmptyMilestoneStore(null),
       records: [createStoredMilestone(fields('Anonymous'), 100, FIRST_ID)],
@@ -392,9 +392,9 @@ describe('milestone automatic sync coordinator', () => {
 
     const { result } = renderHook(() => useMilestones(account));
     await waitFor(() => expect(result.current.store.isLoaded).toBe(true));
-    await waitFor(() =>
-      expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBe('alice')
-    );
+    await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(2));
+    expect(localStorage.getItem(ANONYMOUS_STORE_KEY)).toBeNull();
+    expect(localStorage.getItem(ANONYMOUS_CONSUMED_KEY)).toBeNull();
 
     expect(mockSync).toHaveBeenCalledTimes(2);
     expect(result.current.store.milestones).toEqual([

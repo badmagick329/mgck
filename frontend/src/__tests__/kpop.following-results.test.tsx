@@ -57,12 +57,16 @@ describe('following timeline loading', () => {
 
   test('does not restart an unchanged initial watchlist request after account sync', async () => {
     render(
-      <FollowingProvider>
+      <FollowingProvider accountUserId='account-user'>
         <FollowingKpopResults />
       </FollowingProvider>
     );
 
-    await waitFor(() => expect(fetchWatchlistComebacks).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(fetchWatchlistComebacks).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(fetchWatchlistComebacks).toHaveBeenCalledTimes(1)
+    );
+    await waitFor(() =>
+      expect(fetchWatchlistComebacks).toHaveBeenCalledTimes(1)
+    );
   });
 });

@@ -2,14 +2,22 @@
  * @jest-environment node
  */
 
-import { loginUserAction, logoutUserAction } from '@/actions/account';
+import {
+  loginUserAction,
+  logoutUserAction,
+  registerUserAction,
+} from '@/actions/account';
 import { NAME_CLAIM, NAME_IDENTIFIER_CLAIM } from '@/lib/account/core-token';
 import { REFRESH_COOKIE_MAX_AGE_SECONDS } from '@/lib/account/auth-cookies';
 import { fetchWithAuthHeader } from '@/lib/account/requests';
 import { cookies } from 'next/headers';
+import { admitAuthentication } from '@/lib/account/auth-admission';
 import { SignJWT } from 'jose';
 
 jest.mock('server-only', () => ({}));
+jest.mock('../lib/account/auth-admission', () => ({
+  admitAuthentication: jest.fn(),
+}));
 jest.mock('next/headers', () => ({
   cookies: jest.fn(),
 }));
@@ -54,6 +62,7 @@ describe('account server actions', () => {
       JWT__SigningKey: signingKey,
     };
     jest.clearAllMocks();
+    jest.mocked(admitAuthentication).mockResolvedValue(undefined);
     mockedCookies.mockResolvedValue(cookieStore as never);
     global.fetch = jest.fn();
   });
@@ -61,6 +70,24 @@ describe('account server actions', () => {
   afterAll(() => {
     process.env = originalEnv;
   });
+
+  test.each([loginUserAction, registerUserAction])(
+    'denied admission never reaches Core or sets cookies',
+    async (action) => {
+      jest
+        .mocked(admitAuthentication)
+        .mockResolvedValue({
+          type: 'error',
+          status: 429,
+          errors: [{ code: '429', description: 'Too many attempts' }],
+        });
+      expect(
+        await action({ username: 'Alice', password: 'password1' })
+      ).toMatchObject({ status: 429 });
+      expect(fetch).not.toHaveBeenCalled();
+      expect(cookieStore.set).not.toHaveBeenCalled();
+    }
+  );
 
   test('verifies login tokens and sets consistent persistent cookies', async () => {
     const expiresAt = Math.floor(Date.now() / 1000) + 300;

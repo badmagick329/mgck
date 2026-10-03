@@ -7,6 +7,7 @@ from django.db.models import QuerySet
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_POST
 from fileuploader.forms import StyledPasswordChangeForm, UploadedFileForm
 from fileuploader.models import UploadedFile, UploadUser
 
@@ -112,6 +113,7 @@ def list_files(request):
 
 
 @login_required(login_url=reverse_lazy("fileuploader:login"))
+@require_POST
 def delete_file(request, file_id):
     if get_upload_user(request) is None:
         return HttpResponse(status=403)
@@ -146,6 +148,7 @@ def login_view(request):
         )
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("fileuploader:login"))

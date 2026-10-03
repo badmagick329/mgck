@@ -47,7 +47,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    [EnableRateLimiting("login-limiter")]
+    [EnableRateLimiting(AuthRateLimiting.RegistrationPolicy)]
     public async Task<IActionResult> Register([FromBody] RegisterDto model)
     {
         if (model.Username.Length < 3)
@@ -84,7 +84,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    [EnableRateLimiting("login-limiter")]
+    [EnableRateLimiting(AuthRateLimiting.LoginPolicy)]
     public async Task<IActionResult> Login([FromBody] LoginDto model)
     {
         var user = await _userManager.FindByNameAsync(model.Username);
@@ -170,7 +170,6 @@ public class AuthController : ControllerBase
 
     [HttpPost("status")]
     [Authorize]
-    [EnableRateLimiting("login-limiter")]
     public IActionResult Status()
     {
         return Ok(new { message = "User is logged in." });
