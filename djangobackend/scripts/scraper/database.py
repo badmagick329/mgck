@@ -2,6 +2,8 @@ from datetime import datetime as dt
 from typing import Protocol
 
 import pendulum
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from kpopcomebacks.artist_credit_matches import (
     refresh_artist_credit_matches,
     suspend_artist_credit_match_refresh,
@@ -41,7 +43,11 @@ class Database:
         return [ReleaseData.from_release(release) for release in releases]
 
     @staticmethod
+    @transaction.atomic
     def save_to_db(releases: list[ReleaseData]):
+        # Bulk writes bypass model validation. Reject the whole external snapshot
+        # before deleting anything, including conflicts within a replacement day.
+        _validate_releases(releases)
         update_releases = list()
         create_releases = list()
         BATCH = 500
@@ -154,4 +160,68 @@ class Database:
                     "apple_music_urls",
                 ],
             )
+        # Match refresh must succeed with the replacement, or neither is committed.
         refresh_artist_credit_matches(created_artist_ids)
+
+
+def _validate_releases(releases: list[ReleaseData]) -> None:
+    for release in releases:
+        for model, field_name, value in (
+            (Artist, "name", release.artist),
+            (ReleaseType, "name", release.release_type),
+            (Release, "title", release.title),
+            (Release, "album", release.album),
+        ):
+            if not isinstance(value, str):
+                raise ValidationError(f"{field_name} must be text")
+            # Empty titles/albums occur in the source; enforce persisted length
+            # constraints without inventing a new requirement for those cells.
+            model._meta.get_field(field_name).run_validators(value)
+        if not release.artist.strip() or not release.release_type.strip():
+            raise ValidationError("Artist and release type must not be empty")
+        if not isinstance(release.release_date, str):
+            raise ValidationError("Release date must be an ISO date string")
+        parsed_date = Release._meta.get_field("release_date").clean(
+            release.release_date, None
+        )
+        if parsed_date.isoformat() != release.release_date:
+            raise ValidationError("Release date must use YYYY-MM-DD")
+        for field_name in (
+            "reddit_urls",
+            "urls",
+            "spotify_urls",
+            "apple_music_urls",
+        ):
+            value = getattr(release, field_name)
+            if value is None and field_name in ("reddit_urls", "urls"):
+                continue
+            if not isinstance(value, list) or any(
+                not isinstance(url, str) for url in value
+            ):
+                raise ValidationError(f"{field_name} must be a list of strings")
+        if release.id is not None and (
+            type(release.id) is not int or release.id <= 0
+        ):
+            raise ValidationError("Release ID must be a positive integer")
+
+    replacement_dates = {
+        release.release_date for release in releases if release.id is None
+    }
+    replacement_keys = set()
+    update_ids = set()
+    for release in releases:
+        if release.release_date in replacement_dates:
+            key = (
+                release.artist,
+                release.album,
+                release.title,
+                release.release_date,
+                release.release_type,
+            )
+            if key in replacement_keys:
+                raise ValidationError("Duplicate release in replacement snapshot")
+            replacement_keys.add(key)
+        elif release.id in update_ids:
+            raise ValidationError("Duplicate release ID in update snapshot")
+        else:
+            update_ids.add(release.id)
