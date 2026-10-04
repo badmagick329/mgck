@@ -163,6 +163,20 @@ describe('milestone server actions', () => {
     });
   });
 
+  test('classifies storage quota separately from conflicts and ignores untrusted error prose', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(
+      new Response(
+        JSON.stringify({ code: 'record_limit', error: 'internal diagnostic' }),
+        { status: 409 }
+      )
+    );
+    expect(await syncMilestonesAction([stored], 'core-user-123')).toEqual({
+      ok: false,
+      kind: 'quota',
+      error: 'Milestone server storage limit reached.',
+    });
+  });
+
   test('does not contact Django without a verified Core session', async () => {
     mockVerifiedSession.mockResolvedValue(null);
 

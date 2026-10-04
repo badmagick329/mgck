@@ -1,5 +1,10 @@
 import Redis from 'ioredis';
-const redis = new Redis(process.env.REDIS_URL || '');
+const redis = new Redis(process.env.REDIS_URL || '', {
+  connectTimeout: 2000,
+  commandTimeout: 2000,
+  maxRetriesPerRequest: 0,
+  enableOfflineQueue: false,
+});
 
 // Keep admission and expiry atomic across requests and server instances.
 const incrementScript = `
@@ -18,8 +23,7 @@ export class RateLimit {
   constructor(
     private readonly limit: number,
     private readonly windowSeconds: number,
-    private readonly keyPrefix = 'rate:',
-    private readonly failOpen = true
+    private readonly keyPrefix = 'rate:'
   ) {}
 
   async tryIncrementAndGetCount(
@@ -35,8 +39,8 @@ export class RateLimit {
       )) as [number, number];
       return { count, success: admitted === 1 };
     } catch (error) {
-      console.error('Rate limit error:', error);
-      return { count: 0, success: this.failOpen };
+      console.error('Rate limit unavailable');
+      return { count: 0, success: false };
     }
   }
 }

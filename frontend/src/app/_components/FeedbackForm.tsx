@@ -34,10 +34,11 @@ import { topRightDefaultToast } from '@/lib/utils';
 import { MessageSquare } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import useKeyboardOffset from '@/hooks/useKeyboardOffset';
+import { FEEDBACK_COMMENT_MAX, FEEDBACK_NAME_MAX } from '@/lib/feedback/input';
 
 const FormSchema = z.object({
-  name: z.string(),
-  comment: z.string().min(10),
+  name: z.string().max(FEEDBACK_NAME_MAX),
+  comment: z.string().min(10).max(FEEDBACK_COMMENT_MAX),
 });
 
 export default function FeedbackForm() {
@@ -120,7 +121,12 @@ export default function FeedbackForm() {
                 <FormItem>
                   <FormLabel>Name (Optional)</FormLabel>
                   <FormControl>
-                    <Input autoComplete={'off'} placeholder='Name' {...field} />
+                    <Input
+                      maxLength={FEEDBACK_NAME_MAX}
+                      autoComplete={'off'}
+                      placeholder='Name'
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,6 +140,7 @@ export default function FeedbackForm() {
                   <FormLabel>Comment</FormLabel>
                   <FormControl>
                     <Textarea
+                      maxLength={FEEDBACK_COMMENT_MAX}
                       placeholder='Comment'
                       rows={4}
                       autoFocus

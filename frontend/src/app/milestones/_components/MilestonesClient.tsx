@@ -63,6 +63,12 @@ export default function MilestonesClient({
             automatically.
           </p>
         )}
+        {syncStatus === 'storage-limit' && (
+          <p className='milestones-sync' role='status'>
+            Server storage limit reached. Changes are saved on this device.
+            Deleted records also count toward the server limit.
+          </p>
+        )}
         {(adding || store.milestones.length === 0) && (
           <div id='milestone-entry'>
             <MilestonesInput

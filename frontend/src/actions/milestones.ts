@@ -54,6 +54,21 @@ export async function syncMilestonesAction(
       cache: 'no-store',
     });
     if (!response.ok) {
+      if (response.status === 409) {
+        const failure: unknown = await response.json().catch(() => null);
+        if (
+          failure &&
+          typeof failure === 'object' &&
+          'code' in failure &&
+          failure.code === 'record_limit'
+        ) {
+          return {
+            ok: false,
+            kind: 'quota',
+            error: 'Milestone server storage limit reached.',
+          };
+        }
+      }
       const kind =
         response.status === 409
           ? 'conflict'

@@ -106,6 +106,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<IAuthorizationHandler, AdminAuthorizationHandler>();
 
 builder.Services.AddAuthenticationRateLimits();
+builder.Services.AddFeedbackRateLimits();
 
 var app = builder.Build();
 

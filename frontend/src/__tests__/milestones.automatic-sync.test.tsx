@@ -258,6 +258,28 @@ describe('milestone automatic sync coordinator', () => {
     expect(store.markAutomaticSyncSuccess).toHaveBeenCalledTimes(1);
   });
 
+  test('quota rejection preserves local edits and does not schedule an automatic retry', async () => {
+    jest.useFakeTimers();
+    mockSync.mockResolvedValue({
+      ok: false,
+      kind: 'quota',
+      error: 'Storage full',
+    });
+    const store = fakeStore(readyStore());
+    const { result } = renderHook(() =>
+      useMilestonesAutomaticSync({ account, store })
+    );
+    await act(async () => Promise.resolve());
+    expect(result.current.status).toBe('storage-limit');
+    expect(store.applySyncResponse).not.toHaveBeenCalled();
+    expect(store.markAutomaticSyncSuccess).not.toHaveBeenCalled();
+    await act(async () => {
+      jest.advanceTimersByTime(60_000);
+      await Promise.resolve();
+    });
+    expect(mockSync).toHaveBeenCalledTimes(1);
+  });
+
   test('keeps CRUD local while an earlier response is in flight', async () => {
     let resolveInitial!: (value: any) => void;
     mockSync

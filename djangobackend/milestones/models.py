@@ -4,9 +4,10 @@ from datetime import datetime
 from datetime import timezone as dt_timezone
 
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, router, transaction
 from django.db.models import Q
 from django.utils import timezone
+from milestones.limits import enforce_record_limit
 
 
 def validate_hex_color(value):
@@ -94,5 +95,25 @@ class Milestone(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
+        using = kwargs.get("using") or router.db_for_write(type(self), instance=self)
+        with transaction.atomic(using=using):
+            # All model-based creation (including admin and legacy helpers) and
+            # sync take this owner lock before counting or writing. A count
+            # without the lock would allow concurrent requests past the quota.
+            MilestoneUser.objects.using(using).select_for_update().get(
+                pk=self.created_by_id
+            )
+            previous_owner = (
+                type(self).objects.using(using).filter(pk=self.pk)
+                .values_list("created_by_id", flat=True).first()
+                if self.pk else None
+            )
+            if previous_owner != self.created_by_id:
+                enforce_record_limit(
+                    type(self).objects.using(using).filter(
+                        created_by_id=self.created_by_id
+                    ).count(),
+                    1,
+                )
+            self.full_clean()
+            super().save(*args, **kwargs)

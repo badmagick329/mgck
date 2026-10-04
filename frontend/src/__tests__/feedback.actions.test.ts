@@ -41,7 +41,7 @@ test('forwards the verified token for feedback listing and deletion', async () =
   jest.mocked(getVerifiedCoreSession).mockResolvedValue(session);
   jest
     .mocked(fetch)
-    .mockResolvedValueOnce(new Response('[]'))
+    .mockResolvedValueOnce(new Response('{"feedbacks":[],"nextCursor":null}'))
     .mockResolvedValueOnce(new Response(null, { status: 204 }));
 
   expect(await getFeedbacksAction()).toMatchObject({ type: 'success' });
@@ -61,3 +61,24 @@ test('forwards the verified token for feedback listing and deletion', async () =
     body: JSON.stringify({ id: 1 }),
   });
 });
+
+test('forwards a validated pagination cursor', async () => {
+  jest.mocked(getVerifiedCoreSession).mockResolvedValue(session);
+  jest
+    .mocked(fetch)
+    .mockResolvedValue(new Response('{"feedbacks":[],"nextCursor":null}'));
+  expect(await getFeedbacksAction(123)).toMatchObject({ type: 'success' });
+  expect(fetch).toHaveBeenCalledWith(
+    expect.stringContaining('?beforeId=123'),
+    expect.any(Object)
+  );
+});
+
+test.each([0, -1, 1.5, NaN, 2147483648])(
+  'invalid cursor %s makes no Core request',
+  async (cursor) => {
+    jest.mocked(getVerifiedCoreSession).mockResolvedValue(session);
+    expect(await getFeedbacksAction(cursor)).toMatchObject({ status: 400 });
+    expect(fetch).not.toHaveBeenCalled();
+  }
+);

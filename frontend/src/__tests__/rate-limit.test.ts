@@ -24,7 +24,7 @@ describe('RateLimit failure policy', () => {
   });
 
   test('fails closed when configured for a paid API action', async () => {
-    const rateLimit = new RateLimit(20, 60, 'rate:emojify:', false);
+    const rateLimit = new RateLimit(20, 60, 'rate:emojify:');
 
     await expect(rateLimit.tryIncrementAndGetCount('user')).resolves.toEqual({
       count: 0,
@@ -32,12 +32,12 @@ describe('RateLimit failure policy', () => {
     });
   });
 
-  test('preserves fail-open behavior for existing callers by default', async () => {
+  test('fails closed for default callers too', async () => {
     const rateLimit = new RateLimit(3, 60);
 
     await expect(rateLimit.tryIncrementAndGetCount('user')).resolves.toEqual({
       count: 0,
-      success: true,
+      success: false,
     });
   });
 

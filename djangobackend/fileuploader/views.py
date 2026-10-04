@@ -8,7 +8,9 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods
 from fileuploader.forms import StyledPasswordChangeForm, UploadedFileForm
+from fileuploader.login_admission import admit_login
 from fileuploader.models import UploadedFile, UploadUser
 
 
@@ -126,10 +128,26 @@ def delete_file(request, file_id):
     return HttpResponseRedirect(reverse("fileuploader:list_files"))
 
 
+@require_http_methods(["GET", "HEAD", "POST"])
 def login_view(request):
     if request.method == "POST":
-        username = request.POST["username"]
-        password = request.POST["password"]
+        username = request.POST.get("username", "")
+        password = request.POST.get("password", "")
+        if not username or len(username) > 150 or not password or len(password) > 1024:
+            return render(request, "registration/login.html", {
+                "message": "Invalid username and/or password.",
+            }, status=400)
+        admission_status = admit_login(request, username)
+        if admission_status is not None:
+            response = render(request, "registration/login.html", {
+                "message": (
+                    "Too many login attempts. Please try again later."
+                    if admission_status == 429
+                    else "Login is temporarily unavailable. Please try again later."
+                ),
+            }, status=admission_status)
+            response["Retry-After"] = "60"
+            return response
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)

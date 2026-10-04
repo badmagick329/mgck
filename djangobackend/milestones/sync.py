@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone as django_timezone
 
 from milestones.models import Milestone, MilestoneUser
+from milestones.limits import enforce_record_limit
 
 MAX_FUTURE_SKEW = timedelta(minutes=5)
 
@@ -160,6 +161,11 @@ def merge_snapshot(
     models_by_id = {
         milestone.public_id: milestone for milestone in existing_models
     }
+    # Reject the entire snapshot before modifying existing rows. New tombstones
+    # and same-name conflict losers consume space just like active records.
+    enforce_record_limit(
+        len(existing_models), len(set(incoming_ids) - models_by_id.keys())
+    )
     states = {
         milestone.public_id: RecordState.from_model(milestone)
         for milestone in existing_models
@@ -199,6 +205,7 @@ def merge_snapshot(
             deleted_at=received_at
         )
 
+    new_models = []
     for state in changed_states:
         values = {
             "event_name": state.name,
@@ -210,14 +217,18 @@ def merge_snapshot(
             "server_received_at": state.server_received_at,
         }
         if state.database_id is None:
-            milestone = Milestone.objects.create(
+            new_models.append(Milestone(
                 public_id=state.public_id,
                 created_by=owner,
                 **values,
-            )
-            state.database_id = milestone.pk
+            ))
         else:
             Milestone.objects.filter(pk=state.database_id).update(**values)
+
+    # Serializer validation, conflict resolution and the quota check above
+    # cover this batch under the owner lock. Avoid per-row count/validation
+    # queries for an already validated snapshot.
+    Milestone.objects.bulk_create(new_models)
 
     authoritative = Milestone.objects.filter(created_by=owner).order_by(
         "public_id"

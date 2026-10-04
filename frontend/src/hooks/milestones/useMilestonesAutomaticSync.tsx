@@ -77,7 +77,7 @@ export default function useMilestonesAutomaticSync({
         return;
       }
       if (kind !== 'transient') {
-        setStatus('not-synced');
+        setStatus(kind === 'quota' ? 'storage-limit' : 'not-synced');
         return;
       }
       failureCount.current += 1;

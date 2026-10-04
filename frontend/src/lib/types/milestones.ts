@@ -80,20 +80,14 @@ export type MilestoneSyncWireRecord = z.infer<
 >;
 
 export type MilestoneSyncErrorKind =
-  | 'unauthenticated'
-  | 'invalid'
-  | 'conflict'
-  | 'transient';
+  'unauthenticated' | 'invalid' | 'conflict' | 'quota' | 'transient';
 
 export type MilestoneSyncResult =
   | { ok: true; data: StoredMilestone[] }
   | { ok: false; kind: MilestoneSyncErrorKind; error: string };
 
 export type MilestoneSyncStatus =
-  | 'idle'
-  | 'syncing'
-  | 'retrying'
-  | 'not-synced';
+  'idle' | 'syncing' | 'retrying' | 'not-synced' | 'storage-limit';
 
 export const diffPeriodEnum = z.enum([
   'seconds',

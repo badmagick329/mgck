@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from milestones.apps import MilestonesConfig
 from djangobackend.internal_authentication import NextServiceAuthentication
 from milestones.ownership import OwnerConflict, get_or_create_owner
+from milestones.limits import MilestoneQuotaExceeded
 from milestones.serializers import SyncSnapshotSerializer
 from milestones.sync import SyncConflict, merge_snapshot
 from milestones.utils import (
@@ -65,6 +66,10 @@ def sync_milestones(request: Request):
             return Response({"records": records}, status=200)
     except (OwnerConflict, SyncConflict):
         return Response({"error": "Milestone sync conflict"}, status=409)
+    except MilestoneQuotaExceeded as error:
+        return Response(
+            {"error": error.messages[0], "code": "record_limit"}, status=409
+        )
 
 
 def handle_list(request: Request):

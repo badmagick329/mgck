@@ -6,6 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const CHECK_TIMEOUT_MS = 2000;
+const SNAPSHOT_TTL_MS = 30_000;
 const DJANGO_HEALTH_PATH = '/health/';
 const CORE_API_HEALTH_PATH = '/healthz';
 
@@ -52,7 +53,32 @@ type PostgresConfig = {
   password: string | undefined;
 };
 
+let snapshot: HealthResponse | undefined;
+let expiresAt = 0;
+let pending: Promise<HealthResponse> | undefined;
+
 export async function GET() {
+  // Coalesce concurrent probes and reuse failures too. Public traffic must not
+  // create a fresh set of dependency connections on every request.
+  if (!snapshot || Date.now() >= expiresAt) {
+    pending ??= collectHealth()
+      .then((body) => {
+        snapshot = body;
+        expiresAt = Date.now() + SNAPSHOT_TTL_MS;
+        return body;
+      })
+      .finally(() => {
+        pending = undefined;
+      });
+    await pending;
+  }
+  return NextResponse.json(snapshot, {
+    status: snapshot!.status === 'ok' ? 200 : 503,
+    headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+  });
+}
+
+async function collectHealth(): Promise<HealthResponse> {
   const [django, coreapi, redis, postgresDjango, postgresCore] =
     await Promise.all([
       checkHttpService(process.env.BASE_URL, DJANGO_HEALTH_PATH),
@@ -81,18 +107,11 @@ export async function GET() {
     postgresDjango.status === 'up' &&
     postgresCore.status === 'up';
 
-  const body: HealthResponse = {
+  return {
     status: allHealthy ? 'ok' : 'degraded',
     timestamp: new Date().toISOString(),
     services: { django, coreapi, redis, postgresDjango, postgresCore },
   };
-
-  return NextResponse.json(body, {
-    status: allHealthy ? 200 : 503,
-    headers: {
-      'Cache-Control': 'no-store, no-cache, must-revalidate',
-    },
-  });
 }
 
 async function checkHttpService(
@@ -110,9 +129,8 @@ async function checkHttpService(
   const start = Date.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS);
-  const url = new URL(path, baseUrl);
-
   try {
+    const url = new URL(path, baseUrl);
     const response = await fetch(url, {
       method: 'GET',
       cache: 'no-store',
@@ -149,24 +167,28 @@ async function checkRedis(
   }
 
   const start = Date.now();
-  const redis = new Redis(redisUrl, {
-    lazyConnect: true,
-    connectTimeout: CHECK_TIMEOUT_MS,
-    commandTimeout: CHECK_TIMEOUT_MS,
-    maxRetriesPerRequest: 0,
-    enableOfflineQueue: false,
-  });
-
+  let redis: Redis | undefined;
   try {
-    await withTimeout(() => redis.connect(), CHECK_TIMEOUT_MS);
-    const pingResult = await withTimeout(() => redis.ping(), CHECK_TIMEOUT_MS);
+    redis = new Redis(redisUrl, {
+      lazyConnect: true,
+      connectTimeout: CHECK_TIMEOUT_MS,
+      commandTimeout: CHECK_TIMEOUT_MS,
+      maxRetriesPerRequest: 0,
+      enableOfflineQueue: false,
+      retryStrategy: () => null,
+    });
+    // ioredis emits errors in addition to rejecting commands. Do not log URLs
+    // or driver diagnostics through this public probe.
+    redis.on('error', () => {});
+    const client = redis;
+    await withTimeout(() => client.connect(), CHECK_TIMEOUT_MS);
+    const pingResult = await withTimeout(() => client.ping(), CHECK_TIMEOUT_MS);
     const latencyMs = Date.now() - start;
 
     if (pingResult !== 'PONG') {
       return {
         status: 'down',
         latencyMs,
-        result: pingResult,
         error: 'unexpected_ping_response',
       };
     }
@@ -183,11 +205,8 @@ async function checkRedis(
       error: asErrorMessage(error),
     };
   } finally {
-    try {
-      await withTimeout(() => redis.quit(), CHECK_TIMEOUT_MS);
-    } catch {
-      redis.disconnect();
-    }
+    // No queued work is needed after PING; avoid a second timeout on QUIT.
+    redis?.disconnect();
   }
 }
 
@@ -208,19 +227,23 @@ async function checkPostgres(
     };
   }
 
-  const client = new Client({
-    host: config.host,
-    port: Number(config.port),
-    database: config.database,
-    user: config.user,
-    password: config.password,
-    connectionTimeoutMillis: CHECK_TIMEOUT_MS,
-  });
-
   const start = Date.now();
+  let client: Client | undefined;
   try {
-    await withTimeout(() => client.connect(), CHECK_TIMEOUT_MS);
-    await withTimeout(() => client.query('SELECT 1'), CHECK_TIMEOUT_MS);
+    client = new Client({
+      host: config.host,
+      port: Number(config.port),
+      database: config.database,
+      user: config.user,
+      password: config.password,
+      connectionTimeoutMillis: CHECK_TIMEOUT_MS,
+      query_timeout: CHECK_TIMEOUT_MS,
+      statement_timeout: CHECK_TIMEOUT_MS,
+    });
+    client.on('error', () => {});
+    const database = client;
+    await withTimeout(() => database.connect(), CHECK_TIMEOUT_MS);
+    await withTimeout(() => database.query('SELECT 1'), CHECK_TIMEOUT_MS);
     return {
       status: 'up',
       latencyMs: Date.now() - start,
@@ -234,9 +257,12 @@ async function checkPostgres(
     };
   } finally {
     try {
-      await withTimeout(() => client.end(), CHECK_TIMEOUT_MS);
+      if (client) {
+        const database = client;
+        await withTimeout(() => database.end(), CHECK_TIMEOUT_MS);
+      }
     } catch {
-      //
+      // The readiness failure is already recorded; cleanup cannot change it.
     }
   }
 }
@@ -267,9 +293,9 @@ function asErrorMessage(error: unknown): string {
     if (error.message === 'timeout') {
       return 'timeout';
     }
-    return error.message || 'unknown_error';
   }
-  return 'unknown_error';
+  // Driver errors can contain hosts, usernames, SQL and connection strings.
+  return 'unavailable';
 }
 
 function isAbortError(error: unknown) {

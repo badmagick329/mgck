@@ -10,6 +10,7 @@ from django.utils import timezone as django_timezone
 from rest_framework.response import Response
 
 from milestones.models import Milestone, MilestoneUser
+from milestones.limits import MilestoneQuotaExceeded
 
 
 class MilestoneError(Error):
@@ -63,6 +64,8 @@ def create_milestone(
         return Ok(milestone)
     except (TypeError, ValueError, OverflowError, OSError) as e:
         return Err(MilestoneError(f"Invalid timestamp: {str(e)}", 400))
+    except MilestoneQuotaExceeded as e:
+        return Err(MilestoneError(e.messages[0], 409))
     except ValidationError as e:
         return Err(
             MilestoneError(f"Invalid data: {e.message_dict or str(e)}", 400)

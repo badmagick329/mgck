@@ -20,8 +20,13 @@ export const feedbackSchema = z.object({
 
 export type Feedback = z.infer<typeof feedbackSchema>;
 
+export const feedbackPageSchema = z.object({
+  feedbacks: z.array(feedbackSchema).max(50),
+  nextCursor: z.number().int().positive().nullable(),
+});
+
 export const feedbacksSuccessSchema = successBaseSchema.extend({
-  data: z.object({ feedbacks: z.array(feedbackSchema) }),
+  data: feedbackPageSchema,
 });
 
 export type FeedbacksSuccess = z.infer<typeof feedbacksSuccessSchema>;

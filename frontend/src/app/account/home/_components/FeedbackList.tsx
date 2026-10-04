@@ -27,6 +27,8 @@ export default function FeedbackList() {
   const [error, setError] = useState('');
   const [selectedFeedbacks, setSelectedFeedbacks] = useState<number[]>([]);
   const [deleting, setDeleting] = useState(false);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchFeedbacks = async () => {
@@ -35,12 +37,32 @@ export default function FeedbackList() {
       if (parsed.success) {
         setError('');
         setFeedbacks(parsed.data.data.feedbacks);
+        setNextCursor(parsed.data.data.nextCursor);
       } else {
         setError('Failed to fetch feedback.');
       }
     };
     fetchFeedbacks();
   }, [getFeedback]);
+
+  async function loadMore() {
+    if (nextCursor === null || loading) return;
+    setLoading(true);
+    try {
+      const parsed = feedbacksSuccessSchema.safeParse(
+        await getFeedback(nextCursor)
+      );
+      if (!parsed.success) {
+        setError('Failed to fetch feedback.');
+        return;
+      }
+      setError('');
+      setFeedbacks((current) => [...current, ...parsed.data.data.feedbacks]);
+      setNextCursor(parsed.data.data.nextCursor);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleDelete() {
     setDeleting(true);
@@ -137,6 +159,17 @@ export default function FeedbackList() {
             );
           })}
         </div>
+      )}
+
+      {nextCursor !== null && (
+        <Button
+          className='mt-4'
+          variant='outline'
+          disabled={loading}
+          onClick={loadMore}
+        >
+          {loading ? 'Loading…' : 'Load older feedback'}
+        </Button>
       )}
 
       {selectedFeedbacks.length > 0 && (

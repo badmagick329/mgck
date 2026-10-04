@@ -12,6 +12,7 @@ type MockPgClient = {
   connect: jest.Mock;
   query: jest.Mock;
   end: jest.Mock;
+  on: jest.Mock;
 };
 
 const mockPgClients: MockPgClient[] = [];
@@ -24,6 +25,7 @@ jest.mock('ioredis', () => ({
     ping: mockRedisPing,
     quit: mockRedisQuit,
     disconnect: mockRedisDisconnect,
+    on: jest.fn(),
   })),
 }));
 
@@ -41,18 +43,21 @@ jest.mock('pg', () => ({
         return Promise.resolve({ rows: [{ '?column?': 1 }] });
       }),
       end: jest.fn().mockResolvedValue(undefined),
+      on: jest.fn(),
     };
     mockPgClients.push(client);
     return client;
   }),
 }));
 
-import { GET } from '@/app/healthz/route';
+let GET: typeof import('@/app/healthz/route').GET;
 
 const originalEnv = process.env;
 
 describe('/healthz route', () => {
   beforeEach(() => {
+    jest.resetModules();
+    GET = require('../app/healthz/route').GET;
     jest.clearAllMocks();
     mockPgClients.length = 0;
     Object.keys(mockPgFailureByHost).forEach(
@@ -149,8 +154,8 @@ describe('/healthz route', () => {
     expect(response.status).toBe(503);
     expect(data.status).toBe('degraded');
     expect(data.services.redis.status).toBe('down');
-    expect(data.services.redis.error).toBe('redis down');
-    expect(mockRedisQuit).toHaveBeenCalledTimes(1);
+    expect(data.services.redis.error).toBe('unavailable');
+    expect(mockRedisDisconnect).toHaveBeenCalledTimes(1);
   });
 
   test('returns 503 when django database check fails', async () => {
@@ -165,7 +170,7 @@ describe('/healthz route', () => {
     expect(response.status).toBe(503);
     expect(data.status).toBe('degraded');
     expect(data.services.postgresDjango.status).toBe('down');
-    expect(data.services.postgresDjango.error).toBe('connect ECONNREFUSED');
+    expect(data.services.postgresDjango.error).toBe('unavailable');
     expect(data.services.postgresCore.status).toBe('up');
   });
 
@@ -198,5 +203,61 @@ describe('/healthz route', () => {
     expect(data.services.postgresCore.error).toBe('missing_env');
     expect(data.services.postgresDjango.status).toBe('up');
     expect(mockPgClients.length).toBe(1);
+  });
+
+  test('concurrent and repeated probes share one dependency snapshot', async () => {
+    let release!: (value: Response) => void;
+    (global.fetch as jest.Mock)
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          release = resolve;
+        })
+      )
+      .mockResolvedValue(new Response('{}'));
+    const probes = Array.from({ length: 20 }, () => GET());
+    expect(fetch).toHaveBeenCalledTimes(2);
+    release(new Response('{}'));
+    const responses = await Promise.all(probes);
+    const first = await responses[0].json();
+    expect(await (await GET()).json()).toEqual(first);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(mockPgClients).toHaveLength(2);
+    expect(mockRedisConnect).toHaveBeenCalledTimes(1);
+  });
+
+  test('caches failures, sanitizes diagnostics, then rechecks after 30 seconds', async () => {
+    const clock = jest.spyOn(Date, 'now').mockReturnValue(1000);
+    (global.fetch as jest.Mock).mockRejectedValue(
+      new Error('http://internal-user:secret@private-host failed')
+    );
+    mockPgFailureByHost.db = 'private database SQL connection error';
+    mockRedisPing.mockRejectedValue(new Error('redis://user:secret@internal'));
+    try {
+      const first = await GET();
+      expect(first.status).toBe(503);
+      const body = await first.text();
+      expect(body).not.toMatch(/secret|private-host|internal-user|SQL/);
+      expect((await GET()).status).toBe(503);
+      expect(fetch).toHaveBeenCalledTimes(2);
+
+      clock.mockReturnValue(31_001);
+      (global.fetch as jest.Mock).mockResolvedValue(new Response('{}'));
+      delete mockPgFailureByHost.db;
+      mockRedisPing.mockResolvedValue('PONG');
+      expect((await GET()).status).toBe(200);
+      expect(fetch).toHaveBeenCalledTimes(4);
+      expect(mockPgClients).toHaveLength(4);
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  test('malformed dependency URL yields a sanitized readiness failure', async () => {
+    process.env.BASE_URL = 'invalid-url';
+    (global.fetch as jest.Mock).mockResolvedValue(new Response('{}'));
+    const response = await GET();
+    expect(response.status).toBe(503);
+    expect((await response.json()).services.django.error).toBe('unavailable');
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

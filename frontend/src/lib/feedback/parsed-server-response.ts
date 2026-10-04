@@ -2,6 +2,7 @@ import {
   FeedbacksSuccess,
   FeedbackError,
   feedbackSchema,
+  feedbackPageSchema,
   FeedbackCreationSuccess,
 } from '../types/feedback';
 
@@ -15,7 +16,7 @@ export async function asFeedbacksSuccessOrError(
         type: 'error',
         status: response.status,
         data: {
-          errors: data?.errors || ['Unknown error occurred'],
+          errors: responseErrors(data),
         },
       };
     }
@@ -23,21 +24,7 @@ export async function asFeedbacksSuccessOrError(
     return {
       type: 'success',
       status: response.status,
-      data: {
-        feedbacks: data.map((d: unknown) => {
-          const parsed = feedbackSchema.safeParse(d);
-          if (parsed.success) {
-            return {
-              id: parsed.data.id,
-              comment: parsed.data.comment,
-              createdBy: parsed.data.createdBy,
-              originPath: parsed.data.originPath,
-              createdAt: parsed.data.createdAt,
-            };
-          }
-          throw new Error('Invalid feedback data');
-        }),
-      },
+      data: feedbackPageSchema.parse(data),
     };
   } catch (e) {
     console.error('Error retrieving feedback:', e);
@@ -58,7 +45,7 @@ export async function asCreationSuccessOrError(
         type: 'error',
         status: response.status,
         data: {
-          errors: data.errors || ['Unknown error occurred'],
+          errors: responseErrors(data),
         },
       };
     }
@@ -67,13 +54,7 @@ export async function asCreationSuccessOrError(
       type: 'success',
       status: response.status,
       data: {
-        created: {
-          id: data.id,
-          comment: data.comment,
-          createdBy: data.createdBy,
-          originPath: data.originPath,
-          createdAt: data.createdAt,
-        },
+        created: feedbackSchema.parse(data),
       },
     };
   } catch (e) {
@@ -84,4 +65,17 @@ export async function asCreationSuccessOrError(
       data: { errors: ['Error creating feedback'] },
     };
   }
+}
+
+function responseErrors(data: { errors?: unknown }): string[] {
+  const errors = data?.errors;
+  const candidates = Array.isArray(errors)
+    ? errors
+    : errors && typeof errors === 'object'
+      ? Object.values(errors).flat()
+      : [];
+  const messages = candidates.filter(
+    (value): value is string => typeof value === 'string'
+  );
+  return messages.length ? messages : ['Unknown error occurred'];
 }

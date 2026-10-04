@@ -13,11 +13,12 @@ import {
 import { useCallback } from 'react';
 
 export function useFeedback() {
-  const getFeedback = useCallback(async (): Promise<
-    FeedbacksSuccess | FeedbackError
-  > => {
-    return await getFeedbacksAction();
-  }, []);
+  const getFeedback = useCallback(
+    async (beforeId?: number): Promise<FeedbacksSuccess | FeedbackError> => {
+      return await getFeedbacksAction(beforeId);
+    },
+    []
+  );
 
   const createFeedback = useCallback(
     async ({

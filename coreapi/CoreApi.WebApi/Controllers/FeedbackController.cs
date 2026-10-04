@@ -4,6 +4,7 @@ using CoreApi.WebApi.Infrastructure;
 using CoreApi.WebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoreApi.WebApi.Controllers;
@@ -21,10 +22,16 @@ public class FeedbackController : ControllerBase
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> GetFeedbacks()
+    public async Task<IActionResult> GetFeedbacks([FromQuery] FeedbackPageQuery query)
     {
+        const int pageSize = 50;
+        // Cursor on the indexed primary key bounds work and avoids offset drift
+        // when the administrator deletes messages or new feedback arrives.
         var feedbacks = await _context
-            .FeedbackComments.OrderByDescending(f => f.CreatedAt)
+            .FeedbackComments.AsNoTracking()
+            .Where(f => query.BeforeId == null || f.Id < query.BeforeId)
+            .OrderByDescending(f => f.Id)
+            .Take(pageSize + 1)
             .Select(f => new FeedbackCommentResponseDto
             {
                 Id = f.Id,
@@ -35,7 +42,13 @@ public class FeedbackController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(feedbacks);
+        var hasMore = feedbacks.Count > pageSize;
+        var page = feedbacks.Take(pageSize).ToList();
+        return Ok(new FeedbackPageResponseDto
+        {
+            Feedbacks = page,
+            NextCursor = hasMore ? page[^1].Id : null,
+        });
     }
 
     [HttpGet("{id}")]
@@ -62,6 +75,8 @@ public class FeedbackController : ControllerBase
 
     [HttpPost("")]
     [AllowAnonymous]
+    [EnableRateLimiting(FeedbackRateLimiting.CreationPolicy)]
+    [RequestSizeLimit(32 * 1024)]
     public async Task<IActionResult> CreateFeedback([FromBody] FeedbackCommentDto feedbackDto)
     {
         if (string.IsNullOrWhiteSpace(feedbackDto.Comment))
@@ -71,11 +86,11 @@ public class FeedbackController : ControllerBase
 
         var feedback = new FeedbackComment
         {
-            Comment = feedbackDto.Comment,
+            Comment = feedbackDto.Comment.Trim(),
             CreatedBy = string.IsNullOrWhiteSpace(feedbackDto.CreatedBy)
                 ? "Anonymous"
-                : feedbackDto.CreatedBy,
-            OriginPath = feedbackDto.OriginPath,
+                : feedbackDto.CreatedBy.Trim(),
+            OriginPath = feedbackDto.OriginPath.Trim(),
             CreatedAt = DateTime.UtcNow,
         };
 

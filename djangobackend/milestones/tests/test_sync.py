@@ -228,7 +228,7 @@ class TestMilestoneSync:
         updated_at = int(django_timezone.now().timestamp() * 1000) + 1
 
         with patch(
-            "milestones.sync.Milestone.objects.create",
+            "milestones.sync.Milestone.objects.bulk_create",
             side_effect=RuntimeError("database failure"),
         ):
             with pytest.raises(RuntimeError):
