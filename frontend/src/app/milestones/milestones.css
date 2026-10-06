@@ -422,6 +422,7 @@
   margin-bottom: 20px;
 }
 .milestones-when {
+  position: relative;
   flex: 1;
   min-width: 0;
   font-size: 12px;
@@ -473,7 +474,12 @@
   background: #17131d;
   color: #ececf3;
 }
+/* Out of flow so the preview doesn't make the When column taller; the
+   fields row aligns to the bottom, so a taller column lifts its input above
+   the others. It sits in the form's bottom padding instead. */
 .milestones-duration-preview {
+  position: absolute;
+  top: 100%;
   margin-top: 6px;
   font-size: 11px;
   color: #9691a6;
@@ -495,5 +501,10 @@
   }
   .milestones-form .milestones-color {
     flex: auto;
+  }
+  /* Stacked layout has no row alignment to protect; keep it in flow so it
+     doesn't overlap the Colour field below. */
+  .milestones-duration-preview {
+    position: static;
   }
 }
