@@ -6,7 +6,6 @@ nginx/conf.d/*
 !nginx/conf.d/main.conf.sample
 .pytest_cache
 __pycache__
-notes/
 # Built by Tailwind locally and during the Django Docker build.
 /djangobackend/urlshortener/static/css/style.css
 local_media/
