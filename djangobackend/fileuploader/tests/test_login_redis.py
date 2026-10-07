@@ -87,7 +87,7 @@ def test_real_login_view_never_hashes_denied_attempts_and_window_expires(shared_
 
 
 def test_active_dokploy_compose_supplies_django_redis():
-    compose = Path(__file__).resolve().parents[3] / "notes/dokploy/docker-compose.yaml"
+    compose = Path(__file__).resolve().parents[3] / ".ignore/deployment/dokploy/docker-compose.yaml"
     import json
     result = subprocess.run([
         "docker", "compose", "-f", str(compose), "config", "--no-interpolate",

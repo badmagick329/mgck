@@ -11,7 +11,7 @@ import pytest
 
 @pytest.mark.skipif(os.environ.get("MGCK_TEST_DOCKER") != "1", reason="requires local Docker")
 def test_uploads_are_downloads_including_legacy_and_normalized_paths(tmp_path):
-    compose = Path(__file__).resolve().parents[2] / "notes/dokploy/docker-compose.yaml"
+    compose = Path(__file__).resolve().parents[2] / ".ignore/deployment/dokploy/docker-compose.yaml"
 
     def docker(*args):
         return subprocess.run(["docker", *args], check=True, capture_output=True, text=True).stdout.strip()
