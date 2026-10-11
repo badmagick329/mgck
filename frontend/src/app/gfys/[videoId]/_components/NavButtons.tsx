@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { isShortcutBlocked } from '@/lib/gfys/keyboard';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Dices } from 'lucide-react';
@@ -34,13 +35,7 @@ export default function NavButtons() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (
-        e.ctrlKey ||
-        e.metaKey ||
-        e.altKey ||
-        target?.matches('input, textarea, select, button, a, [contenteditable="true"]')
-      ) {
+      if (isShortcutBlocked(e)) {
         return;
       }
       if (e.key.toLowerCase() === 'r') {
@@ -88,7 +83,7 @@ export default function NavButtons() {
               <Button
                 className={cn(
                   loopAll ? 'shadow-glow-primary-gf' : '',
-                  'text-bold bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+                  'text-bold bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
                 )}
                 variant={loopAll ? 'default' : 'secondary'}
                 ref={loopAllRef}
@@ -110,7 +105,7 @@ export default function NavButtons() {
             <TooltipTrigger asChild>
               <Button
                 className={cn(
-                  'text-bold bg-primary-gf/90 hover:bg-primary-gf text-primary-gf-foreground'
+                  'text-bold bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
                 )}
                 variant='secondary'
                 size={'icon'}

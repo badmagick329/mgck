@@ -1,11 +1,12 @@
 import { addGfyView } from '@/actions/gfys';
 import { useGfyContext } from '@/app/gfys/_context/store';
+import { isShortcutBlocked } from '@/lib/gfys/keyboard';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
-  const { videoVolume, setVideoVolume, goToNextGfy, goToPreviousGfy, data, loopAll } =
+  const { videoVolume, setVideoVolume, goToNextGfy, data, loopAll } =
     useGfyContext();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoading, setVideoLoading] = useState<boolean>(true);
@@ -13,10 +14,11 @@ export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
   const [viewed, setViewed] = useState<boolean>(false);
   const router = useRouter();
 
+  // Arrow keys belong to the nav buttons (useNavButton); handling them here too
+  // advanced twice per press and skipped a clip.
   useEffect(() => {
     const onKeyDown = async (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.matches('input, textarea, select, button, a, [contenteditable="true"]')) return;
+      if (isShortcutBlocked(event)) return;
       const video = videoRef.current;
       if (!video) return;
       if (event.key === ' ') {
@@ -24,17 +26,11 @@ export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
         video.paused ? await video.play() : video.pause();
       } else if (event.key.toLowerCase() === 'm') {
         video.muted = !video.muted;
-      } else if (event.key === 'ArrowRight') {
-        const url = await goToNextGfy();
-        if (url) router.replace(url);
-      } else if (event.key === 'ArrowLeft') {
-        const url = await goToPreviousGfy();
-        if (url) router.replace(url);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [goToNextGfy, goToPreviousGfy, router]);
+  }, []);
 
   return (
     <video

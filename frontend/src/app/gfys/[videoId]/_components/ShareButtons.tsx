@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
+import { isShortcutBlocked } from '@/lib/gfys/keyboard';
 import { cn, handleCopyToClipboard } from '@/lib/utils';
 import { useEffect, useRef } from 'react';
 import { MdOutlineContentCopy } from 'react-icons/md';
@@ -49,6 +50,9 @@ function ShareButton({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isShortcutBlocked(e)) {
+        return;
+      }
       if (isImgur && e.key === 'i') {
         ref.current?.click();
       } else if (!isImgur && e.key === 'q') {

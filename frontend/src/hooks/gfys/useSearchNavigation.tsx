@@ -1,4 +1,5 @@
 import { useGfyContext } from '@/app/gfys/_context/store';
+import { isShortcutBlocked } from '@/lib/gfys/keyboard';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -18,11 +19,8 @@ export default function useSearchNavigation({
       return;
     }
     const handleKeyDown = (e: KeyboardEvent) => {
-      const inputs = document.querySelectorAll('input');
-      for (let i = 0; i < inputs.length; i++) {
-        if (inputs[i] === document.activeElement) {
-          return;
-        }
+      if (isShortcutBlocked(e)) {
+        return;
       }
       if (e.key === 'ArrowLeft' || e.key === 'h') {
         leftRef.current?.click();

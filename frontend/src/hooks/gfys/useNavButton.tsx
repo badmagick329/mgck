@@ -1,4 +1,5 @@
 import { useGfyContext } from '@/app/gfys/_context/store';
+import { isShortcutBlocked } from '@/lib/gfys/keyboard';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ImArrowLeft, ImArrowRight } from 'react-icons/im';
@@ -20,6 +21,9 @@ export default function useNavButton(direction: 'previous' | 'next') {
       setIsDisabled(true);
     }
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isShortcutBlocked(e)) {
+        return;
+      }
       if (e.key === 'ArrowRight' || e.key === 'l') {
         rightRef.current?.click();
       } else if (e.key === 'ArrowLeft' || e.key === 'h') {
@@ -52,7 +56,7 @@ export default function useNavButton(direction: 'previous' | 'next') {
     tooltipText:
       direction === 'next'
         ? 'Next [Right Arrow] [l]'
-        : 'Next [Right Arrow] [l]',
+        : 'Previous [Left Arrow] [h]',
     Icon: direction === 'previous' ? ImArrowLeft : ImArrowRight,
     handleClick,
   };
