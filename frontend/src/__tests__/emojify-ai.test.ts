@@ -1,8 +1,14 @@
 /** @jest-environment node */
 jest.mock('server-only', () => ({}));
-jest.mock('../lib/account/verified-session', () => ({
-  getVerifiedCoreSession: jest.fn(),
-}));
+// The tests set one session; aiRequest reads the current-role variant of it.
+jest.mock('../lib/account/verified-session', () => {
+  const getVerifiedCoreSession = jest.fn();
+  return {
+    getVerifiedCoreSession,
+    getCurrentCoreSession: (...args: unknown[]) =>
+      getVerifiedCoreSession(...args),
+  };
+});
 jest.mock('next/cache', () => ({ revalidatePath: jest.fn() }));
 
 import { getVerifiedCoreSession } from '@/lib/account/verified-session';
@@ -15,20 +21,16 @@ beforeEach(() => {
   process.env.BASE_URL = 'http://django.test';
   process.env.NEXT_DJANGO_INTERNAL_API_KEY =
     'test-internal-key-at-least-32-characters';
-  jest
-    .mocked(getVerifiedCoreSession)
-    .mockResolvedValue({
-      userId: 'real-id',
-      username: 'Alice',
-      role: 'AcceptedUser',
-    } as never);
-  global.fetch = jest
-    .fn()
-    .mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({ text: 'hello 👋' }),
-    });
+  jest.mocked(getVerifiedCoreSession).mockResolvedValue({
+    userId: 'real-id',
+    username: 'Alice',
+    role: 'AcceptedUser',
+  } as never);
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: async () => ({ text: 'hello 👋' }),
+  });
 });
 
 test('forwards verified identity and delegates generation to Django', async () => {
@@ -67,13 +69,11 @@ test('non-admin cannot change availability', async () => {
 });
 
 test('admin switch changes are sent to Django', async () => {
-  jest
-    .mocked(getVerifiedCoreSession)
-    .mockResolvedValue({
-      userId: 'admin-id',
-      username: 'Admin',
-      role: 'Admin',
-    } as never);
+  jest.mocked(getVerifiedCoreSession).mockResolvedValue({
+    userId: 'admin-id',
+    username: 'Admin',
+    role: 'Admin',
+  } as never);
   const form = new FormData();
   form.set('enabled', 'false');
   await changeAiAvailability(form);

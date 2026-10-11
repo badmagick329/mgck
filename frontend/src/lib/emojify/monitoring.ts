@@ -1,10 +1,14 @@
 import 'server-only';
 import { z } from 'zod';
-import { getVerifiedCoreSession } from '@/lib/account/verified-session';
+import { getCurrentCoreSession } from '@/lib/account/verified-session';
 
-/** Keep Core identity assertions on the trusted server-to-server connection. */
+/**
+ * Keep Core identity assertions on the trusted server-to-server connection.
+ * Django authorises AI use and administration from the forwarded role, so it
+ * must be Core's current role, not the one baked into the access token.
+ */
 export async function aiRequest(path: string, method = 'GET', data?: unknown) {
-  const session = await getVerifiedCoreSession();
+  const session = await getCurrentCoreSession();
   const key = process.env.NEXT_DJANGO_INTERNAL_API_KEY;
   if (!session || !key || key.length < 32)
     throw new Error('AI service unavailable');

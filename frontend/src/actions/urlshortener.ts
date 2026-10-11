@@ -1,6 +1,9 @@
 'use server';
 
-import { getVerifiedCoreSession } from '@/lib/account/verified-session';
+import {
+  getCurrentCoreSession,
+  getVerifiedCoreSession,
+} from '@/lib/account/verified-session';
 import { canUseShortener } from '@/lib/account/permissions';
 import { API_SHORTENER_URL, INTERNAL_SHORTENER_URL } from '@/lib/consts/urls';
 import {
@@ -36,7 +39,8 @@ export async function createShortenedUrl({
   const res = await fetch(apiUrl, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json', ...authentication,
+      'Content-Type': 'application/json',
+      ...authentication,
     },
     body,
   });
@@ -44,7 +48,9 @@ export async function createShortenedUrl({
     const data = await res.json();
     revalidateTag('shortened-urls');
     const record = shortenedUrlSchema.safeParse(data.record);
-    return record.success ? { url: data.url, record: record.data } : { error: 'Invalid shortened URL response' };
+    return record.success
+      ? { url: data.url, record: record.data }
+      : { error: 'Invalid shortened URL response' };
   } catch (e) {
     console.error(e);
     return {
@@ -115,9 +121,14 @@ export async function deleteShortenedUrl({
   }
   const authentication = await getShortenerAuthenticationHeaders();
   if (!authentication) return { error: 'Shortener service unavailable' };
-  const apiUrl = new URL(`${BASE_URL}${INTERNAL_SHORTENER_URL}url/${encodeURIComponent(code)}`);
+  const apiUrl = new URL(
+    `${BASE_URL}${INTERNAL_SHORTENER_URL}url/${encodeURIComponent(code)}`
+  );
 
-  const res = await fetch(apiUrl, { method: 'DELETE', headers: authentication });
+  const res = await fetch(apiUrl, {
+    method: 'DELETE',
+    headers: authentication,
+  });
   if (!res.ok) {
     return {
       error: 'Failed to delete shortened url',
@@ -127,10 +138,21 @@ export async function deleteShortenedUrl({
   return {};
 }
 
-async function getShortenerAuthenticationHeaders(): Promise<Record<string, string> | null> {
-  const session = await getVerifiedCoreSession();
+/**
+ * Django's owner routes trust Next for shortener permission and check no role,
+ * so the permission is rechecked here against Core's current role: a demoted
+ * user's still-valid access token must not reach Django.
+ */
+async function getShortenerAuthenticationHeaders() {
+  const session = await getCurrentCoreSession();
   const internalKey = process.env.NEXT_DJANGO_INTERNAL_API_KEY;
-  if (!session || !internalKey || internalKey.length < 32) return null;
+  if (
+    !canUseShortener(session) ||
+    !session ||
+    !internalKey ||
+    internalKey.length < 32
+  )
+    return null;
   return {
     Authorization: `Bearer ${internalKey}`,
     'X-MGCK-Core-User-Id': encodeURIComponent(session.userId),
