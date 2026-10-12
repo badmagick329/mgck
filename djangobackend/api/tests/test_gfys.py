@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client
 
-from gfys.models import Account, Gfy, GfyView, Tag
+from gfys.models import Account, Gfy, Tag
 
 
 @pytest.mark.django_db
@@ -77,7 +77,7 @@ def test_tag_filters_require_all_distinct_tags_without_multiplying_views(tags, s
 
 
 @pytest.mark.django_db
-def test_view_posts_increment_a_counter_without_storing_rows():
+def test_view_posts_increment_the_counter():
     gfy = Gfy.objects.create(imgur_id="clip", imgur_title="Clip")
     client = Client()
 
@@ -93,4 +93,3 @@ def test_view_posts_increment_a_counter_without_storing_rows():
     assert [response.json()["viewCount"] for response in responses] == [1, 2, 3]
     gfy.refresh_from_db()
     assert gfy.view_count == 3
-    assert GfyView.objects.count() == 0

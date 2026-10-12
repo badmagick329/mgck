@@ -27,6 +27,11 @@ class TestViewCountMigration(TransactionTestCase):
         executor.migrate([self.migrate_to])
         self.apps = executor.loader.project_state([self.migrate_to]).apps
 
+    def tearDown(self):
+        # Later tests expect the current schema, not this midpoint.
+        executor = MigrationExecutor(connection)
+        executor.migrate(executor.loader.graph.leaf_nodes())
+
     def test_folds_existing_views_into_the_counter(self):
         Gfy = self.apps.get_model("gfys", "Gfy")
 

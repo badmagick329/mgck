@@ -278,20 +278,3 @@ class Gfy(models.Model):
         if match := cls.IMGUR_RE.match(video_url):
             return match.group(1)
         return None
-
-
-class GfyView(models.Model):
-    """Retired per-view rows (MGK-19), folded into Gfy.view_count by migration
-    0009. Nothing writes them; the table stays one release so the previous image
-    still works after a rollback, until MGK-22 drops it."""
-
-    gfy = models.ForeignKey(Gfy, on_delete=models.CASCADE)
-    date = models.DateTimeField(auto_now_add=True)
-
-    class Meta:  # type: ignore
-        ordering = ["-date"]
-
-    def __str__(self):
-        return (
-            f"<GfyView(gfy_object_id={self.gfy.object_id} date={self.date})>"
-        )
