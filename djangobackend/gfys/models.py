@@ -5,6 +5,7 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import F
 
 VIDEO_URL = settings.VIDEO_URL
 
@@ -70,6 +71,10 @@ class Gfy(models.Model):
     )
     width = models.IntegerField(blank=True, null=True)
     height = models.IntegerField(blank=True, null=True)
+    # A counter keeps storage bounded under public, unauthenticated view posts;
+    # the count is non-authoritative analytics. db_default lets the previous
+    # image, which omits the column, keep inserting Gfys after a rollback.
+    view_count = models.PositiveBigIntegerField(default=0, db_default=0)
 
     class Meta:  # type: ignore
         ordering = ["-date"]
@@ -262,11 +267,9 @@ class Gfy(models.Model):
         gfy.save()
 
     def add_view(self) -> None:
-        GfyView.objects.create(gfy=self)
-
-    @property
-    def view_count(self) -> int:
-        return GfyView.objects.filter(gfy=self).count()
+        # Atomic in the database, so concurrent views are not lost.
+        Gfy.objects.filter(pk=self.pk).update(view_count=F("view_count") + 1)
+        self.refresh_from_db(fields=["view_count"])
 
     @classmethod
     def id_from_url(cls, video_url: str) -> str | None:
@@ -278,6 +281,10 @@ class Gfy(models.Model):
 
 
 class GfyView(models.Model):
+    """Retired per-view rows (MGK-19), folded into Gfy.view_count by migration
+    0009. Nothing writes them; the table stays one release so the previous image
+    still works after a rollback, until MGK-22 drops it."""
+
     gfy = models.ForeignKey(Gfy, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
 

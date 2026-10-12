@@ -40,16 +40,14 @@ def filter_gfys(
         filters.append(Q(account__name__iexact=account))
     queryset = Gfy.objects.filter(*filters).prefetch_related("tags")
     if tag_names:
-        # Joining view counts must not multiply the number of matching tags.
         queryset = (
             queryset.filter(tags__name__in=tag_names)
             .annotate(num_tags=Count("tags", distinct=True))
             .filter(num_tags=len(tag_names))
         )
 
-    queryset = queryset.annotate(view_total=Count("gfyview", distinct=True))
     if sort == "most_viewed":
-        return queryset.order_by("-view_total", "-id")
+        return queryset.order_by("-view_count", "-id")
     ordering = (
         (F("date").asc(nulls_last=True), "id")
         if sort == "oldest"

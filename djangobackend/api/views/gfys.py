@@ -216,5 +216,4 @@ class GfyViewCountView(APIView):
         object_id = Gfy.id_from_url(video_url)
         gfy = get_object_or_404(Gfy, object_id=object_id)
         gfy.add_view()
-        print("view count is ", gfy.view_count)
         return Response({"message": "success", "viewCount": gfy.view_count})

@@ -72,7 +72,7 @@ class GfysListSerializer(serializers.BaseSerializer):
             "account": instance.account.name if instance.account else None,
             "width": instance.width,
             "height": instance.height,
-            "view_count": getattr(instance, "view_total", instance.view_count),
+            "view_count": instance.view_count,
         }
 
 
