@@ -15,7 +15,7 @@ export type FFmpegProgressEvent = {
 export type FFmpegFileDataOutput = {
   name: string;
   url: string;
-  type: string;
+  type: ConversionPresetId;
   finalSize?: number;
   targetId?: string;
   format?: ConversionFormat;

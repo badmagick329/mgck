@@ -119,7 +119,7 @@ export default function ConvertedFile({
         </button>
       )}
       {outputs.length > 0 && (
-        <div className='flex h-full w-full items-center justify-center gap-4 border-2 border-orange-500/40'>
+        <div className='flex w-full flex-col gap-4'>
           {outputs.map((output) => (
             <ConversionOutput key={output.url} output={output} />
           ))}

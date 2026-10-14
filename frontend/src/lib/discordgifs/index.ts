@@ -80,7 +80,7 @@ export async function convert(
           type: 'addOutput',
           payload: {
             name,
-            output: { name: '', url: '', type: '' },
+            output: { name: '', url: '', type: outputType },
           },
         });
       }

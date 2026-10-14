@@ -16,6 +16,7 @@ import { useCallback, useEffect, useReducer, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import ConvertedFile from './ConvertedFile';
+import DiscordUploadHelp from './DiscordUploadHelp';
 import PresetSelector from './PresetSelector';
 import { convert } from '@/lib/discordgifs';
 import {
@@ -213,6 +214,7 @@ export default function FileDropzone() {
         onConvert={(name) => startConversion({ [name]: filesState[name] })}
         setDropError={setDropError}
       />
+      <DiscordUploadHelp />
     </div>
   );
 }

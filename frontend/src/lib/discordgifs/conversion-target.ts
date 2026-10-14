@@ -86,8 +86,10 @@ export const conversionPresetOrder: readonly ConversionPresetId[] = [
   'avatar',
 ];
 
+// Sticker is preselected because "video to Discord sticker" is the task most
+// search visitors arrive with; the card order stays by output size.
 export const defaultConversionPresetSelection: readonly ConversionPresetId[] = [
-  'emote',
+  'sticker',
 ];
 
 export function orderConversionPresetIds(

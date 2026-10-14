@@ -70,8 +70,8 @@ describe('Discord preset selection', () => {
       expect.stringContaining('👤 Avatar'),
     ]);
     expect(conversionPresetOrder).toEqual(['emote', 'sticker', 'avatar']);
-    expect(buttons[0].getAttribute('aria-pressed')).toBe('true');
-    expect(buttons[1].getAttribute('aria-pressed')).toBe('false');
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('false');
+    expect(buttons[1].getAttribute('aria-pressed')).toBe('true');
     expect(buttons[2].getAttribute('aria-pressed')).toBe('false');
     expect(screen.getByText('Animated GIF · under 256 KiB')).toBeTruthy();
     expect(screen.getByText('Animated PNG · under 512 KiB')).toBeTruthy();
@@ -85,25 +85,25 @@ describe('Discord preset selection', () => {
 
     const selectedLabel = screen.getByText('Selected');
     expect(selectedLabel).toHaveClass('sr-only');
-    expect(screen.getByRole('button', { name: /😄 Emoji.*Selected/i })).toBe(
-      buttons[0]
+    expect(screen.getByRole('button', { name: /🏷️ Sticker.*Selected/i })).toBe(
+      buttons[1]
     );
     expect(screen.getByText('✓').getAttribute('aria-hidden')).toBe('true');
   });
 
-  test('selects and deselects Sticker and Avatar while preserving preset order', () => {
+  test('selects and deselects Emoji and Avatar while preserving preset order', () => {
     render(<PresetSelectorHarness />);
 
-    const sticker = screen.getByRole('button', { name: /🏷️ Sticker/i });
+    const emoji = screen.getByRole('button', { name: /😄 Emoji/i });
     const avatar = screen.getByRole('button', { name: /👤 Avatar/i });
     fireEvent.click(avatar);
-    fireEvent.click(sticker);
-    expect(sticker.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(emoji);
+    expect(emoji.getAttribute('aria-pressed')).toBe('true');
     expect(avatar.getAttribute('aria-pressed')).toBe('true');
 
-    fireEvent.click(sticker);
+    fireEvent.click(emoji);
     fireEvent.click(avatar);
-    expect(sticker.getAttribute('aria-pressed')).toBe('false');
+    expect(emoji.getAttribute('aria-pressed')).toBe('false');
     expect(avatar.getAttribute('aria-pressed')).toBe('false');
   });
 
@@ -114,7 +114,7 @@ describe('Discord preset selection', () => {
       new File(['two'], 'two.mp4')
     );
     render(<FileDropzone />);
-    const buttons = screen.getAllByRole('button', { name: 'Convert clip' });
+    const buttons = screen.getAllByRole('button', { name: 'Create sticker' });
     await waitFor(() => expect(buttons[0]).toBeEnabled());
     expect(screen.queryByText('Ready')).not.toBeInTheDocument();
     fireEvent.click(buttons[0]);
@@ -144,7 +144,7 @@ describe('Discord preset selection', () => {
       )
     ).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /😄 Emoji/i }));
+    fireEvent.click(screen.getByRole('button', { name: /🏷️ Sticker/i }));
 
     expect(convertButton).toBeDisabled();
     expect(screen.getByRole('status').textContent).toBe(
@@ -166,13 +166,10 @@ describe('Discord preset selection', () => {
     }
   });
 
-  test('disables conversion when an overlong file has only Sticker selected', async () => {
+  test('disables conversion when an overlong file has only the default Sticker selected', async () => {
     jest.mocked(readFileDuration).mockResolvedValueOnce(7);
     mockAcceptedFiles.push(new File(['clip'], 'long.mp4'));
     render(<FileDropzone />);
-
-    fireEvent.click(screen.getByRole('button', { name: /🏷️ Sticker/i }));
-    fireEvent.click(screen.getByRole('button', { name: /😄 Emoji/i }));
 
     const warning = await screen.findByRole('alert');
     expect(warning).toHaveTextContent('Choose a shorter segment above');
