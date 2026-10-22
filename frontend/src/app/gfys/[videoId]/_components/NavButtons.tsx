@@ -53,7 +53,7 @@ export default function NavButtons() {
   }, []);
 
   return (
-    <div className='flex justify-center gap-2'>
+    <div className='flex flex-wrap items-center gap-2'>
       <NavButton direction='previous' />
       <NavButton direction='next' />
       <TooltipProvider>
@@ -61,14 +61,14 @@ export default function NavButtons() {
           <TooltipTrigger asChild>
             <Button
               aria-label='Show a random Gfy'
-              className='text-bold bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
+              className='h-9 border-primary-gf/30 bg-transparent px-3 shadow-none hover:bg-primary-gf/10'
               disabled={isFindingRandom}
               onClick={showRandomGfy}
               ref={randomRef}
-              size='icon'
-              variant='secondary'
+              variant='outline'
             >
               <Dices aria-hidden='true' />
+              <span>Random</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -82,10 +82,12 @@ export default function NavButtons() {
             <TooltipTrigger asChild>
               <Button
                 className={cn(
-                  loopAll ? 'shadow-glow-primary-gf' : '',
-                  'text-bold bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
+                  loopAll ? 'bg-primary-gf/20' : 'bg-transparent',
+                  'border-primary-gf/30 shadow-none hover:bg-primary-gf/10'
                 )}
-                variant={loopAll ? 'default' : 'secondary'}
+                variant='outline'
+                aria-label='Loop all clips'
+                aria-pressed={loopAll}
                 ref={loopAllRef}
                 size={'icon'}
                 onClick={() => setLoopAll(!loopAll)}
@@ -105,9 +107,10 @@ export default function NavButtons() {
             <TooltipTrigger asChild>
               <Button
                 className={cn(
-                  'text-bold bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
+                  'border-primary-gf/30 bg-transparent shadow-none hover:bg-primary-gf/10'
                 )}
-                variant='secondary'
+                variant='outline'
+                aria-label='Back to results'
                 size={'icon'}
                 ref={backRef}
                 onClick={() => router.replace(gfyViewData.listUrl)}

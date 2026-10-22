@@ -1,12 +1,15 @@
 'use client';
 
 import { GfyDetailResponse } from '@/lib/types/gfys';
-import { useEffect, useState } from 'react';
+import { imgurIdToThumbnail } from '@/lib/gfys';
+import { useEffect } from 'react';
+import { useGfyContext } from '@/app/gfys/_context/store';
 
 import AdditionalGfyDetails from './AdditionalGfyDetails';
 import GfyPlayer from './GfyPlayer';
 import NavButtons from './NavButtons';
 import ShareButtons from './ShareButtons';
+import RelatedGfys from './RelatedGfys';
 
 type Props = {
   params: {
@@ -16,33 +19,40 @@ type Props = {
 };
 
 export default function GfyView(props: Props) {
-  const [gfyDetail, setGfyDetail] = useState<GfyDetailResponse | null>(null);
-
+  const { gfyDetail } = props;
+  const { reconcileCurrentGfy } = useGfyContext();
   useEffect(() => {
-    setGfyDetail(props.gfyDetail);
-  }, []);
-
-  if (!gfyDetail) {
-    return null;
-  }
+    reconcileCurrentGfy(gfyDetail.imgur_id);
+  }, [gfyDetail.imgur_id, reconcileCurrentGfy]);
 
   return (
-    <div className='max-w-screen dark:bg-background-dark m-0 flex h-dvh flex-col bg-background-gf sm:flex-row sm:content-between sm:justify-center'>
-      <div className='flex h-4/5 w-full items-center justify-center sm:h-full sm:w-4/5'>
-        <GfyPlayer videoUrl={gfyDetail.video_url} />
-      </div>
-      <div className='flex justify-center p-2 sm:w-1/5 sm:flex-col sm:justify-end mdp:justify-between'>
-        <div className='hidden mdp:block'>
-          <AdditionalGfyDetails gfyDetail={gfyDetail} />
+    <main className='dark:bg-background-dark min-h-dvh bg-background-gf p-3 sm:p-5'>
+      <div className='grid w-full items-start gap-5 lg:min-h-[calc(100dvh-2.5rem)] lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[1fr_auto]'>
+        <div className='grid min-w-0 gap-5 lg:col-span-2 lg:grid-cols-[minmax(0,1fr)_20rem] lg:self-center'>
+          <div className='min-w-0 lg:self-center'>
+            <GfyPlayer
+              key={gfyDetail.video_url}
+              videoUrl={gfyDetail.video_url}
+              poster={imgurIdToThumbnail(gfyDetail.imgur_id)}
+            />
+          </div>
+          <div className='flex min-w-0 flex-col gap-4 lg:justify-between'>
+            <div className='space-y-4'>
+              <AdditionalGfyDetails gfyDetail={gfyDetail} />
+            </div>
+            <div className='space-y-2'>
+              <ShareButtons
+                imgurId={gfyDetail.imgur_id}
+                videoUrl={gfyDetail.video_url}
+              />
+              <NavButtons />
+            </div>
+          </div>
         </div>
-        <div className='flex flex-col gap-2'>
-          <ShareButtons
-            imgurId={gfyDetail?.imgur_id}
-            videoUrl={gfyDetail?.video_url}
-          />
-          <NavButtons />
+        <div className='min-w-0 lg:col-start-1'>
+          <RelatedGfys clips={gfyDetail.related_clips} />
         </div>
       </div>
-    </div>
+    </main>
   );
 }

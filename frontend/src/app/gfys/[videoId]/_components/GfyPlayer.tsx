@@ -1,15 +1,19 @@
 import { addGfyView } from '@/actions/gfys';
 import { useGfyContext } from '@/app/gfys/_context/store';
 import { isShortcutBlocked } from '@/lib/gfys/keyboard';
-import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
+export default function GfyPlayer({
+  videoUrl,
+  poster,
+}: {
+  videoUrl: string;
+  poster: string;
+}) {
   const { videoVolume, setVideoVolume, goToNextGfy, data, loopAll } =
     useGfyContext();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoLoading, setVideoLoading] = useState<boolean>(true);
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [viewed, setViewed] = useState<boolean>(false);
   const router = useRouter();
@@ -35,12 +39,10 @@ export default function GfyPlayer({ videoUrl }: { videoUrl: string }) {
   return (
     <video
       ref={videoRef}
-      className={cn(
-        videoLoading ? 'hidden' : 'block',
-        'my-auto max-h-[90%] w-full sm:max-h-full'
-      )}
+      className='block max-h-[75dvh] w-full rounded-lg object-contain'
+      poster={poster}
+      playsInline
       onLoadedData={(e) => {
-        setVideoLoading(false);
         videoVolume === 0
           ? (e.currentTarget.muted = true)
           : (e.currentTarget.volume = videoVolume);

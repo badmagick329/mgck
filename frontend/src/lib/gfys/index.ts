@@ -12,6 +12,7 @@ export function parseGfyResponse(resp: GfyResponse): GfyParsedResponse {
     newData.push({
       imgurId: d.imgur_id,
       title: d.imgur_title,
+      displayTitle: d.display_title,
       tags: d.tags,
       date: d.date,
       account: d.account,

@@ -22,10 +22,10 @@ export async function generateMetadata({
 
   return {
     metadataBase: new URL('https://mgck.ink'),
-    title: `${gfyDetail.title}`,
+    title: gfyDetail.display_title,
     keywords: gfyDetail.tags.concat(['gfy', 'gfycat', 'kpop']),
     openGraph: {
-      title: `${gfyDetail.title}`,
+      title: gfyDetail.display_title,
       url: gfyDetail.video_url,
       type: 'video.other',
       videos: [
@@ -41,7 +41,7 @@ export async function generateMetadata({
           url: imgurIdToThumbnail(gfyDetail.imgur_id),
           width,
           height,
-          alt: `${gfyDetail.title}`,
+          alt: gfyDetail.display_title,
         },
       ],
     },

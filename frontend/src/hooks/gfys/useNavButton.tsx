@@ -14,12 +14,6 @@ export default function useNavButton(direction: 'previous' | 'next') {
   const router = useRouter();
 
   useEffect(() => {
-    if (direction === 'next' && !nextGfyExists()) {
-      setIsDisabled(true);
-    }
-    if (direction === 'previous' && !previousGfyExists()) {
-      setIsDisabled(true);
-    }
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isShortcutBlocked(e)) {
         return;
@@ -50,7 +44,9 @@ export default function useNavButton(direction: 'previous' | 'next') {
   };
 
   return {
-    isDisabled,
+    isDisabled:
+      isDisabled ||
+      !(direction === 'next' ? nextGfyExists() : previousGfyExists()),
     shouldRender: nextGfyExists() || previousGfyExists(),
     buttonRef: direction === 'previous' ? leftRef : rightRef,
     tooltipText:

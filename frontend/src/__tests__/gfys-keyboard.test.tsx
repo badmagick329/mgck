@@ -117,10 +117,51 @@ describe('Gfys shortcuts', () => {
   });
 
   it('leaves arrow keys to the nav buttons so one press moves one clip', () => {
-    render(<GfyPlayer videoUrl='https://example.com/v.mp4' />);
+    render(
+      <GfyPlayer
+        videoUrl='https://example.com/v.mp4'
+        poster='https://example.com/poster.webp'
+      />
+    );
 
     fireEvent.keyDown(document.body, { key: 'ArrowRight' });
 
     expect(goToNextGfy).not.toHaveBeenCalled();
+  });
+
+  it('copies each labelled source by click and by its existing shortcut', () => {
+    render(
+      <ShareButtons
+        imgurId='abc'
+        videoUrl='https://mgck.ink/gfy-videos/abc.mp4'
+      />
+    );
+    const imgur = screen.getByRole('button', { name: 'Copy Imgur video link' });
+    const hq = screen.getByRole('button', { name: 'Copy HQ video link' });
+
+    fireEvent.click(imgur);
+    fireEvent.keyDown(document.body, { key: 'i' });
+    fireEvent.click(hq);
+    fireEvent.keyDown(document.body, { key: 'q' });
+
+    expect(
+      (handleCopyToClipboard as jest.Mock).mock.calls.map(([url]) => url)
+    ).toEqual([
+      'https://imgur.com/abc.mp4',
+      'https://imgur.com/abc.mp4',
+      'https://mgck.ink/gfy-videos/abc.mp4',
+      'https://mgck.ink/gfy-videos/abc.mp4',
+    ]);
+  });
+
+  it('omits the HQ copy action when Imgur is the only source', () => {
+    render(
+      <ShareButtons imgurId='abc' videoUrl='https://i.imgur.com/abc.mp4' />
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Copy HQ video link' })
+    ).toBeNull();
+    fireEvent.keyDown(document.body, { key: 'q' });
+    expect(handleCopyToClipboard).not.toHaveBeenCalled();
   });
 });

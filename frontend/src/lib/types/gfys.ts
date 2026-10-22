@@ -4,9 +4,10 @@ import { z } from 'zod';
 export const GfyDataSchema = z.object({
   imgurId: z.string(),
   title: z.string(),
+  displayTitle: z.string(),
   tags: z.array(z.string()),
   date: z.string().nullable(),
-  account: z.string(),
+  account: z.string().nullable(),
   width: z.number().nullable(),
   height: z.number().nullable(),
   viewCount: z.number(),
@@ -25,10 +26,11 @@ export type GfyParsedResponse = z.infer<typeof GfyParsedResponseSchema>;
 export const GfyResultSchema = z.object({
   imgur_id: z.string(),
   imgur_title: z.string(),
+  display_title: z.string(),
   gfy_id: z.string().nullable(),
   gfy_title: z.string().nullable(),
   date: z.string().nullable(),
-  account: z.string(),
+  account: z.string().nullable(),
   tags: z.array(z.string()),
   width: z.number().nullable(),
   height: z.number().nullable(),
@@ -47,14 +49,30 @@ export type GfyResponse = z.infer<typeof GfyResponseSchema>;
 
 export const GfyDetailResponseSchema = z.object({
   title: z.string(),
+  display_title: z.string(),
+  gfy_title: z.string().nullable(),
+  gfy_id: z.string().nullable(),
   tags: z.array(z.string()),
   date: z.string().nullable(),
-  account: z.string(),
+  account: z.string().nullable(),
   imgur_id: z.string(),
   width: z.number().nullable(),
   height: z.number().nullable(),
-  video_url: z.string(),
+  video_url: z.string().url(),
   view_count: z.number(),
+  related_clips: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        imgur_id: z.string().min(1),
+        title: z.string(),
+        tags: z.array(z.string()),
+        date: z.string().nullable(),
+        width: z.number().nullable(),
+        height: z.number().nullable(),
+      })
+    )
+    .max(6),
 });
 export type GfyDetailResponse = z.infer<typeof GfyDetailResponseSchema>;
 

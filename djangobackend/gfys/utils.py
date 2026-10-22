@@ -29,7 +29,11 @@ def filter_gfys(
     tag_names = {tag.strip().lower() for tag in tags.split(",") if tag.strip()}
     filters = []
     if title:
-        filters.append(Q(imgur_title__icontains=title))
+        filters.append(
+            Q(imgur_title__icontains=title)
+            | Q(gfy_title__icontains=title)
+            | Q(gfy_id__icontains=title)
+        )
     parsed_start_date = valid_date(start_date.strip())
     parsed_end_date = valid_date(end_date.strip())
     if parsed_start_date:

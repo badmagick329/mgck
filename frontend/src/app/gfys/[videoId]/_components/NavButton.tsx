@@ -33,9 +33,10 @@ export default function NavButton({
           <Button
             disabled={isDisabled}
             className={cn(
-              'text-bold bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
+              'border-primary-gf/30 bg-transparent shadow-none hover:bg-primary-gf/10'
             )}
-            variant='secondary'
+            variant='outline'
+            aria-label={direction === 'next' ? 'Next clip' : 'Previous clip'}
             size={'icon'}
             ref={buttonRef}
             onClick={handleClick}

@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
 import { isShortcutBlocked } from '@/lib/gfys/keyboard';
-import { cn, handleCopyToClipboard } from '@/lib/utils';
+import { handleCopyToClipboard } from '@/lib/utils';
 import { useEffect, useRef } from 'react';
 import { MdOutlineContentCopy } from 'react-icons/md';
 
@@ -23,14 +23,20 @@ export default function ShareButtons({
   const { toast } = useToast();
 
   return (
-    <div className='flex justify-center gap-2'>
+    <div className='grid grid-cols-2 gap-2'>
       <ShareButton
         url={`https://imgur.com/${imgurId}.mp4`}
-        text={'Imgur'}
+        text='Copy Imgur video link'
+        shortcut='i'
         toast={toast}
       />
       {!videoUrl.includes('imgur') && (
-        <ShareButton url={videoUrl} text={'HQ'} toast={toast} />
+        <ShareButton
+          url={videoUrl}
+          text='Copy HQ video link'
+          shortcut='q'
+          toast={toast}
+        />
       )}
     </div>
   );
@@ -39,23 +45,22 @@ export default function ShareButtons({
 function ShareButton({
   url,
   text,
+  shortcut,
   toast,
 }: {
   url: string;
   text: string;
+  shortcut: 'i' | 'q';
   toast: ToastType;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
-  const isImgur = text === 'Imgur';
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isShortcutBlocked(e)) {
         return;
       }
-      if (isImgur && e.key === 'i') {
-        ref.current?.click();
-      } else if (!isImgur && e.key === 'q') {
+      if (e.key.toLowerCase() === shortcut) {
         ref.current?.click();
       }
     };
@@ -63,32 +68,27 @@ function ShareButton({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [shortcut]);
 
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            variant='secondary'
-            className={cn(
-              'text-bold bg-primary-gf/90 text-primary-gf-foreground hover:bg-primary-gf'
-            )}
+            variant='outline'
+            aria-label={text}
+            className='h-9 w-full gap-1.5 border-primary-gf/30 bg-transparent px-2 text-xs shadow-none hover:bg-primary-gf/10'
             onClick={() => handleCopyToClipboard(url, toast)}
             ref={ref}
           >
-            <span className='flex items-center gap-2'>
-              <MdOutlineContentCopy />
-              <span>{text}</span>
-            </span>
+            <MdOutlineContentCopy aria-hidden='true' />
+            <span>{shortcut === 'i' ? 'Copy Imgur link' : 'Copy HQ link'}</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {isImgur ? (
-            <span>Copy [i]mgur Link</span>
-          ) : (
-            <span>Copy H[q] Link</span>
-          )}
+          <span>
+            {text} [{shortcut}]
+          </span>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

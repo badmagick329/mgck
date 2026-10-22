@@ -10,6 +10,7 @@ from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from gfys.models import Account, Gfy
+from gfys.presentation import display_title, related_clips
 from gfys.utils import filter_gfys
 from rest_framework import generics
 from rest_framework.response import Response
@@ -62,6 +63,39 @@ class GfyDetails(APIView):
                             description="The title of the gfy",
                             type=openapi.TYPE_STRING,
                         ),
+                        "display_title": openapi.Schema(
+                            description="The readable title without migration decoration",
+                            type=openapi.TYPE_STRING,
+                        ),
+                        "gfy_title": openapi.Schema(
+                            description="The stored original Gfycat title",
+                            type=openapi.TYPE_STRING,
+                            x_nullable=True,
+                        ),
+                        "gfy_id": openapi.Schema(
+                            description="The stored original Gfycat slug",
+                            type=openapi.TYPE_STRING,
+                            x_nullable=True,
+                        ),
+                        "related_clips": openapi.Schema(
+                            description="Up to six clips ranked by meaningful shared tags",
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    "id": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "imgur_id": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "title": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "tags": openapi.Schema(
+                                        type=openapi.TYPE_ARRAY,
+                                        items=openapi.Items(type=openapi.TYPE_STRING),
+                                    ),
+                                    "date": openapi.Schema(type=openapi.TYPE_STRING, x_nullable=True),
+                                    "width": openapi.Schema(type=openapi.TYPE_INTEGER, x_nullable=True),
+                                    "height": openapi.Schema(type=openapi.TYPE_INTEGER, x_nullable=True),
+                                },
+                            ),
+                        ),
                         "tags": openapi.Schema(
                             description="The tags belonging to the gfy",
                             type=openapi.TYPE_ARRAY,
@@ -113,15 +147,22 @@ class GfyDetails(APIView):
         },
     )
     def get(self, request, *args, **kwargs):
-        gfy = Gfy.objects.filter(object_id=kwargs["id"]).first()
+        gfy = (
+            Gfy.objects.select_related("account").prefetch_related("tags")
+            .filter(object_id=kwargs["id"]).first()
+        )
         if gfy is None:
             return Response(status=404)
         return Response(
             {
                 "title": gfy.imgur_title,
-                "tags": gfy.tags.all().values_list("name", flat=True),
+                "display_title": display_title(gfy),
+                "gfy_title": gfy.gfy_title,
+                "gfy_id": gfy.gfy_id,
+                "related_clips": related_clips(gfy),
+                "tags": [tag.name for tag in gfy.tags.all()],
                 "date": gfy.date,
-                "account": gfy.account.name,
+                "account": gfy.account.name if gfy.account else None,
                 "imgur_id": gfy.imgur_id,
                 "width": gfy.width,
                 "height": gfy.height,
@@ -147,7 +188,7 @@ class GfysList(generics.ListAPIView):
                 name="title",
                 in_=openapi.IN_QUERY,
                 type=openapi.TYPE_STRING,
-                description="Filter by title (case insensitive substring match)",
+                description="Search Imgur title, original Gfycat title or slug (case insensitive substring match)",
             ),
             openapi.Parameter(
                 name="tags",

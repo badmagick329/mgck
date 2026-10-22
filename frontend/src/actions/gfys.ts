@@ -1,10 +1,15 @@
 'use server';
 
-import { API_GFYS, API_GFYS_RANDOM, API_GFY_ACCOUNTS, API_GFY_VIEWS } from '@/lib/consts/urls';
+import {
+  API_GFYS,
+  API_GFYS_RANDOM,
+  API_GFY_ACCOUNTS,
+  API_GFY_VIEWS,
+} from '@/lib/consts/urls';
 import {
   AccountsResponse,
   AccountsResponseSchema,
-  GfyDetailResponse,
+  GfyDetailResponseSchema,
   GfyResponseSchema,
 } from '@/lib/types/gfys';
 import { validDateStringOrNull } from '@/lib/utils';
@@ -76,10 +81,12 @@ export async function fetchGfy(videoId: string) {
       'Content-Type': 'application/json',
     },
   });
+  if (!res.ok) return null;
   try {
     const data = await res.json();
-    return data as GfyDetailResponse;
-  } catch (error) {
+    const parsed = GfyDetailResponseSchema.safeParse(data);
+    return parsed.success ? parsed.data : null;
+  } catch {
     return null;
   }
 }

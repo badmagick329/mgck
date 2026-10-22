@@ -93,3 +93,58 @@ def test_view_posts_increment_the_counter():
     assert [response.json()["viewCount"] for response in responses] == [1, 2, 3]
     gfy.refresh_from_db()
     assert gfy.view_count == 3
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("query", ["original imgur", "original gfycat", "OldSlug"])
+def test_original_names_remain_searchable_with_tag_and_sort_filters(query):
+    tag = Tag.objects.create(name="irene")
+    matching = Gfy.objects.create(
+        imgur_id="archive", imgur_title="Original Imgur_[OldSlug]",
+        gfy_title="Original Gfycat", gfy_id="OldSlug",
+    )
+    matching.tags.add(tag)
+    Gfy.objects.create(
+        imgur_id="excluded", imgur_title="Original Imgur_[OldSlug]",
+        gfy_title="Original Gfycat", gfy_id="OldSlug",
+    )
+
+    response = Client().get("/api/gfys", {"title": query, "tags": "irene", "sort": "oldest"})
+
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert [clip["imgur_id"] for clip in results] == ["archive"]
+    assert results[0]["display_title"] == "Original Gfycat"
+    assert results[0]["imgur_title"] == "Original Imgur_[OldSlug]"
+    assert results[0]["gfy_title"] == "Original Gfycat"
+    assert results[0]["gfy_id"] == "OldSlug"
+
+
+@pytest.mark.django_db
+def test_details_preserve_original_title_and_include_related_contract(django_assert_num_queries):
+    tag = Tag.objects.create(name="irene")
+    current = Gfy.objects.create(
+        imgur_id="archive", imgur_title="Original_[OldSlug]",
+        gfy_title="230101 Irene", gfy_id="OldSlug",
+    )
+    current.tags.add(tag)
+    related = Gfy.objects.create(
+        imgur_id="thumbnail", video_id="canonical", imgur_title="Related.mp4",
+        width=1920, height=1080,
+    )
+    related.tags.add(tag)
+
+    with django_assert_num_queries(4):
+        response = Client().get("/api/gfys/archive")
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["title"] == "Original_[OldSlug]"
+    assert result["display_title"] == "230101 Irene"
+    assert result["gfy_title"] == "230101 Irene"
+    assert result["gfy_id"] == "OldSlug"
+    assert result["account"] is None
+    assert result["related_clips"] == [{
+        "id": "canonical", "imgur_id": "thumbnail", "title": "Related",
+        "tags": ["irene"], "date": None, "width": 1920, "height": 1080,
+    }]

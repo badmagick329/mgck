@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from drf_yasg import openapi
+from gfys.presentation import display_title
 from rest_framework import serializers
 
 
@@ -32,6 +33,10 @@ class GfysListSerializer(serializers.BaseSerializer):
                 ),
                 "gfy_title": openapi.Schema(
                     description="The gfy title of the gfy",
+                    type=openapi.TYPE_STRING,
+                ),
+                "display_title": openapi.Schema(
+                    description="The readable title without migration decoration",
                     type=openapi.TYPE_STRING,
                 ),
                 "date": openapi.Schema(
@@ -68,6 +73,7 @@ class GfysListSerializer(serializers.BaseSerializer):
             "tags": [tag.name for tag in instance.tags.all()],
             "imgur_title": instance.imgur_title,
             "gfy_title": instance.gfy_title,
+            "display_title": display_title(instance),
             "date": instance.date,
             "account": instance.account.name if instance.account else None,
             "width": instance.width,

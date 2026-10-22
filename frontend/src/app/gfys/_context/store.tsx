@@ -14,6 +14,8 @@ import {
   SetStateAction,
   createContext,
   useContext,
+  useCallback,
+  useRef,
   useState,
 } from 'react';
 
@@ -30,6 +32,7 @@ interface ContextProps {
   updateDataFromParams: (params: ReadonlyURLSearchParams) => Promise<void>;
   loopAll: boolean;
   setLoopAll: (value: boolean) => void;
+  reconcileCurrentGfy: (imgurId: string) => void;
 }
 
 const GfyContext = createContext<ContextProps>({
@@ -45,6 +48,7 @@ const GfyContext = createContext<ContextProps>({
   updateDataFromParams: async (params) => {},
   loopAll: false,
   setLoopAll: () => {},
+  reconcileCurrentGfy: () => {},
 });
 
 export const GfyContextProvider = ({
@@ -66,6 +70,32 @@ export const GfyContextProvider = ({
   });
   const [volume, setVolume] = useState<number>(0);
   const [loopAll, setLoopAll] = useState<boolean>(false);
+  // Keep reconciliation stable while arrows load the next page: its old detail
+  // must not clear the newly loaded sequence before the route finishes changing.
+  const sequenceIds = useRef(gfyViewData.videoIds);
+  sequenceIds.current = gfyViewData.videoIds;
+
+  // Related links and browser history can enter a clip outside the loaded
+  // result sequence. Keep Back useful without navigating an unrelated sequence.
+  const reconcileCurrentGfy = useCallback((imgurId: string) => {
+    const index = sequenceIds.current.indexOf(imgurId);
+    if (index >= 0) {
+      setGfyViewData((previous) =>
+        previous.index === index ? previous : { ...previous, index }
+      );
+      return;
+    }
+    if (sequenceIds.current.length === 0) return;
+    setGfyViewData((previous) => ({ ...previous, index: 0, videoIds: [] }));
+    setData({
+      count: 0,
+      previous: null,
+      next: null,
+      totalPages: 0,
+      gfys: [],
+    });
+    setLoopAll(false);
+  }, []);
 
   const nextGfyExists = () => {
     return !!(gfyViewData.index < gfyViewData.videoIds.length - 1 || data.next);
@@ -110,6 +140,7 @@ export const GfyContextProvider = ({
         },
         loopAll,
         setLoopAll,
+        reconcileCurrentGfy,
       }}
     >
       {children}

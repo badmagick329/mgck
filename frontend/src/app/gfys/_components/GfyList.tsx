@@ -21,7 +21,7 @@ export default function GfyList() {
       {data.gfys.map((d, key) => (
         <GfyPreview
           key={key}
-          title={d.title}
+          title={d.displayTitle}
           imgurId={d.imgurId}
           index={key}
           width={d.width}
