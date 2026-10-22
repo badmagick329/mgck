@@ -122,14 +122,6 @@ public class AuthController : ControllerBase
                 && (session.ExpiresAt <= now || session.RevokedAt != null)
             )
             .ExecuteDeleteAsync();
-        if (
-            user.RefreshToken is not null
-            && (user.RefreshTokenExpiryTime is null || user.RefreshTokenExpiryTime <= now)
-        )
-        {
-            user.RefreshToken = null;
-            user.RefreshTokenExpiryTime = null;
-        }
         _context.RefreshSessions.Add(
             new RefreshSession
             {
@@ -162,7 +154,6 @@ public class AuthController : ControllerBase
         {
             session.RevokedAt = DateTime.UtcNow;
         }
-        ClearMatchingLegacyRefreshToken(user, tokenHash);
         await _context.SaveChangesAsync();
 
         return Ok(new { message = "User logged out" });
@@ -216,10 +207,6 @@ public class AuthController : ControllerBase
         var now = DateTime.UtcNow;
         if (session.RevokedAt is not null || session.ExpiresAt <= now || session.User is null)
         {
-            if (session.User is not null)
-            {
-                ClearMatchingLegacyRefreshToken(session.User, tokenHash);
-            }
             _context.RefreshSessions.Remove(session);
             await _context.SaveChangesAsync();
             return Unauthorized(new { message = "Invalid refresh token." });
@@ -239,18 +226,6 @@ public class AuthController : ControllerBase
     {
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
         return Convert.ToHexString(hash).ToLowerInvariant();
-    }
-
-    private static void ClearMatchingLegacyRefreshToken(AppUser user, string tokenHash)
-    {
-        if (
-            user.RefreshToken is not null
-            && HashRefreshToken(user.RefreshToken) == tokenHash
-        )
-        {
-            user.RefreshToken = null;
-            user.RefreshTokenExpiryTime = null;
-        }
     }
 
     private RefreshToken GenerateRefreshToken()

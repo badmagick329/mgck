@@ -72,7 +72,7 @@ function fakeStore(local: MilestoneLocalStore, userId = 'alice') {
 
 describe('milestone automatic sync coordinator', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     localStorage.clear();
     Object.defineProperty(navigator, 'onLine', {
       configurable: true,
@@ -278,6 +278,109 @@ describe('milestone automatic sync coordinator', () => {
       await Promise.resolve();
     });
     expect(mockSync).toHaveBeenCalledTimes(1);
+  });
+
+  test('preserves an offline edit after transport rejection and syncs it on reconnect', async () => {
+    jest.useFakeTimers();
+    localStorage.setItem(
+      accountStoreKey('alice'),
+      JSON.stringify(readyStore([createStoredMilestone(fields(), 100, FIRST_ID)]))
+    );
+    mockSync.mockImplementation(async (records: StoredMilestone[]) => ({
+      ok: true,
+      data: records,
+    }));
+    const { result } = renderHook(() => useMilestones(account));
+    await waitFor(() => expect(result.current.store.isLoaded).toBe(true));
+    await waitFor(() => expect(mockSync).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(result.current.syncStatus).toBe('idle'));
+
+    Object.defineProperty(navigator, 'onLine', {
+      configurable: true,
+      value: false,
+    });
+    mockSync.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    await act(async () => {
+      await result.current.updateMilestone(FIRST_ID, { name: 'Edited offline' });
+    });
+
+    expect(result.current.syncStatus).toBe('not-synced');
+    expect(result.current.store.milestones[0].name).toBe('Edited offline');
+    expect(
+      JSON.parse(localStorage.getItem(accountStoreKey('alice'))!).records[0].name
+    ).toBe('Edited offline');
+    await act(async () => {
+      jest.advanceTimersByTime(60_000);
+    });
+    expect(mockSync).toHaveBeenCalledTimes(2);
+
+    Object.defineProperty(navigator, 'onLine', {
+      configurable: true,
+      value: true,
+    });
+    await act(async () => window.dispatchEvent(new Event('online')));
+    expect(mockSync).toHaveBeenCalledTimes(3);
+    expect(mockSync.mock.calls[2][0][0].name).toBe('Edited offline');
+    expect(result.current.syncStatus).toBe('idle');
+    expect(result.current.store.milestones[0].name).toBe('Edited offline');
+  });
+
+  test('recovers from a bootstrap transport rejection before sending local records', async () => {
+    jest.useFakeTimers();
+    const local = createStoredMilestone(fields(), 100, FIRST_ID);
+    const store = fakeStore({
+      ...createEmptyMilestoneStore('alice'),
+      records: [local],
+    });
+    mockSync
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({ ok: true, data: [local] })
+      .mockResolvedValueOnce({ ok: true, data: [local] });
+    const { result } = renderHook(() =>
+      useMilestonesAutomaticSync({ account, store })
+    );
+    await act(async () => Promise.resolve());
+    expect(result.current.status).toBe('retrying');
+    expect(store.bootstrapFromServer).not.toHaveBeenCalled();
+    expect(store.getLocalStoreSnapshot().records).toEqual([local]);
+
+    await act(async () => jest.advanceTimersByTime(2_000));
+    expect(mockSync.mock.calls.map(([records]) => records)).toEqual([
+      [],
+      [],
+      [local],
+    ]);
+    expect(result.current.status).toBe('idle');
+    expect(store.markAutomaticSyncSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  test('discards a late transport rejection after switching accounts', async () => {
+    jest.useFakeTimers();
+    let rejectAlice!: (reason: Error) => void;
+    let resolveBob!: (value: any) => void;
+    mockSync
+      .mockReturnValueOnce(
+        new Promise((_resolve, reject) => (rejectAlice = reject))
+      )
+      .mockReturnValueOnce(new Promise((resolve) => (resolveBob = resolve)));
+    const aliceStore = fakeStore(readyStore());
+    const bobStore = fakeStore(readyStore(), 'bob');
+    const { result, rerender } = renderHook(
+      ({ owner, store }) => useMilestonesAutomaticSync({ account: owner, store }),
+      { initialProps: { owner: account, store: aliceStore } }
+    );
+
+    rerender({ owner: { userId: 'bob', username: 'Bob' }, store: bobStore });
+    await act(async () => rejectAlice(new TypeError('Failed to fetch')));
+    await act(async () => jest.runAllTicks());
+    expect(result.current.status).toBe('syncing');
+    expect(aliceStore.applySyncResponse).not.toHaveBeenCalled();
+    expect(mockSync).toHaveBeenCalledTimes(2);
+
+    await act(async () => resolveBob({ ok: true, data: [] }));
+    await act(async () => jest.advanceTimersByTime(60_000));
+    expect(result.current.status).toBe('idle');
+    expect(mockSync).toHaveBeenCalledTimes(2);
   });
 
   test('keeps CRUD local while an earlier response is in flight', async () => {

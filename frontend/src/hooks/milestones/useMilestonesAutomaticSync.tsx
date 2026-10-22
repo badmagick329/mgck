@@ -6,6 +6,8 @@ import {
   MilestoneAccount,
   MilestoneSyncErrorKind,
   MilestoneSyncStatus,
+  MilestoneSyncResult,
+  StoredMilestone,
 } from '@/lib/types/milestones';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -13,6 +15,19 @@ const RETRY_DELAYS = [2_000, 5_000, 15_000, 30_000] as const;
 const TRANSIENT_WARNING_THRESHOLD = 3;
 
 type Store = ReturnType<typeof useMilestoneStore>;
+
+function requestMilestoneSync(
+  records: StoredMilestone[],
+  userId: string
+): Promise<MilestoneSyncResult> {
+  // The browser can lose the Server Action transport before the server returns a result.
+  // Catch only that promise: local store invariants must still fail visibly.
+  return syncMilestonesAction(records, userId).catch(() => ({
+    ok: false,
+    kind: 'transient',
+    error: 'Milestone sync request failed',
+  }));
+}
 
 export default function useMilestonesAutomaticSync({
   account,
@@ -81,13 +96,13 @@ export default function useMilestonesAutomaticSync({
         return;
       }
       failureCount.current += 1;
+      const online =
+        typeof navigator === 'undefined' || navigator.onLine !== false;
       setStatus(
-        failureCount.current >= TRANSIENT_WARNING_THRESHOLD
+        !online || failureCount.current >= TRANSIENT_WARNING_THRESHOLD
           ? 'not-synced'
           : 'retrying'
       );
-      const online =
-        typeof navigator === 'undefined' || navigator.onLine !== false;
       const visible =
         typeof document === 'undefined' ||
         document.visibilityState === 'visible';
@@ -125,7 +140,7 @@ export default function useMilestonesAutomaticSync({
     try {
       let snapshot = localStore.records;
       if (!localStore.sync.bootstrapCompleted) {
-        const bootstrap = await syncMilestonesAction([], userId);
+        const bootstrap = await requestMilestoneSync([], userId);
         if (!isCurrentRequest(requestGeneration, userId, storageKey)) {
           return;
         }
@@ -142,7 +157,7 @@ export default function useMilestonesAutomaticSync({
         snapshot = bootstrapped.records;
       }
 
-      const result = await syncMilestonesAction(snapshot, userId);
+      const result = await requestMilestoneSync(snapshot, userId);
       if (!isCurrentRequest(requestGeneration, userId, storageKey)) {
         return;
       }
