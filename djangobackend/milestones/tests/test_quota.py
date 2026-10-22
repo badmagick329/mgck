@@ -63,17 +63,24 @@ def test_new_tombstones_and_same_name_losers_cannot_bypass_quota(small_quota):
 
 
 @pytest.mark.django_db
-def test_legacy_create_and_model_create_share_the_quota(small_quota):
-    owner = MilestoneUser.objects.create(username="Alice", core_user_id="core-alice")
-    first = Milestone.create("First", 1_800_000_000_000, "UTC", "Alice")
-    first.soft_delete()
-    assert sync([record(name="Second")]).status_code == 200
-    response = Client().post(
-        reverse("milestones:milestones"),
-        {"event_name": "Overflow", "timestamp": 1_800_000_000_000, "timezone": "UTC"},
-        content_type="application/json", **internal_auth_headers("Alice", "core-alice"),
+def test_sync_and_model_creation_share_quota_including_durable_tombstones(small_quota):
+    owner = MilestoneUser.objects.create(
+        username="Alice", core_user_id="core-alice"
     )
+    tombstone = Milestone.objects.create(
+        created_by=owner,
+        event_name="First",
+        event_timezone="UTC",
+        event_datetime_utc=timezone.now(),
+        deleted_at=timezone.now(),
+    )
+    assert sync([record(name="Second")]).status_code == 200
+    response = sync([record(name="Overflow")])
     assert response.status_code == 409
+    returned = {
+        item["public_id"]: item for item in sync([]).json()["records"]
+    }
+    assert returned[str(tombstone.public_id)]["deleted_at"] is not None
     with pytest.raises(MilestoneQuotaExceeded):
         Milestone.objects.create(
             created_by=owner, event_name="Admin overflow", event_timezone="UTC",
@@ -92,13 +99,41 @@ def test_existing_over_quota_accounts_keep_data_and_can_edit(monkeypatch):
     assert sync([{**records[0], "name": "Changed", "updated_at": records[0]["updated_at"] + 1}]).status_code == 200
     assert sync([record(name="New")]).status_code == 409
     assert Milestone.objects.count() == 3
+    existing = Milestone.objects.get(public_id=records[1]["public_id"])
+    existing.event_name = "Model edit over quota"
+    existing.save()
+    existing.refresh_from_db()
+    assert existing.event_name == "Model edit over quota"
+    with pytest.raises(MilestoneQuotaExceeded):
+        Milestone.objects.create(
+            created_by=existing.created_by,
+            event_name="Model overflow",
+            event_timezone="UTC",
+            event_datetime_utc=timezone.now(),
+        )
 
 
 @pytest.mark.django_db
 def test_accounts_have_independent_quotas(small_quota):
     assert sync([record(name="First"), record(name="Second")]).status_code == 200
-    Milestone.create("Bob's first", 1_800_000_000_000, "UTC", "Bob")
+    bob = MilestoneUser.objects.create(username="Bob", core_user_id="core-bob")
+    Milestone.objects.create(
+        created_by=bob,
+        event_name="Bob's first",
+        event_timezone="UTC",
+        event_datetime_utc=timezone.now(),
+    )
     assert Milestone.objects.filter(created_by__username="Bob").count() == 1
+    response = Client().post(
+        reverse("milestones:sync_milestones"),
+        {"records": [record(name="Bob's second")]},
+        content_type="application/json",
+        **internal_auth_headers("Bob", "core-bob"),
+    )
+    assert response.status_code == 200
+    assert Milestone.objects.filter(created_by=bob).count() == 2
+    assert sync([record(name="Alice overflow")]).status_code == 409
+    assert Milestone.objects.filter(created_by=bob).count() == 2
 
 
 @pytest.mark.django_db
@@ -115,8 +150,10 @@ def test_full_size_snapshot_is_bounded_without_per_record_quota_queries():
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.skipif(connection.vendor != "postgresql", reason="Requires real row locks")
-def test_concurrent_sync_and_legacy_creation_cannot_share_last_slot(small_quota):
-    MilestoneUser.objects.create(username="Alice", core_user_id="core-alice")
+def test_concurrent_sync_and_model_creation_cannot_share_last_slot(small_quota):
+    owner = MilestoneUser.objects.create(
+        username="Alice", core_user_id="core-alice"
+    )
     assert sync([record(name="Existing")]).status_code == 200
     barrier = Barrier(2)
 
@@ -125,11 +162,16 @@ def test_concurrent_sync_and_legacy_creation_cannot_share_last_slot(small_quota)
             barrier.wait(timeout=10)
             if use_sync:
                 return sync([record(name="Sync contender")]).status_code
-            return Client().post(
-                reverse("milestones:milestones"),
-                {"event_name": "Legacy contender", "timestamp": 1_800_000_000_000, "timezone": "UTC"},
-                content_type="application/json", **internal_auth_headers("Alice", "core-alice"),
-            ).status_code
+            try:
+                Milestone.objects.create(
+                    created_by_id=owner.pk,
+                    event_name="Model contender",
+                    event_timezone="UTC",
+                    event_datetime_utc=timezone.now(),
+                )
+                return 201
+            except MilestoneQuotaExceeded:
+                return 409
         finally:
             connections.close_all()
 

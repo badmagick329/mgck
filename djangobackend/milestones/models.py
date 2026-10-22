@@ -1,7 +1,5 @@
 import re
 import uuid
-from datetime import datetime
-from datetime import timezone as dt_timezone
 
 from django.core.exceptions import ValidationError
 from django.db import models, router, transaction
@@ -58,46 +56,10 @@ class Milestone(models.Model):
             )
         ]
 
-    @classmethod
-    def create(
-        cls,
-        event_name: str,
-        timestamp: int,
-        timezone: str,
-        username: str,
-        color: str | None = None,
-    ):
-        milestone_user, created = MilestoneUser.objects.get_or_create(
-            username=username
-        )
-
-        timestamp_seconds = timestamp / 1000
-        event_datetime = datetime.fromtimestamp(
-            timestamp_seconds, tz=dt_timezone.utc
-        )
-
-        milestone = cls.objects.create(
-            event_name=event_name,
-            event_timezone=timezone,
-            event_datetime_utc=event_datetime,
-            created_by=milestone_user,
-            color=color or cls.DEFAULT_COLOR,
-        )
-        return milestone
-
-    def soft_delete(self, received_at=None):
-        deletion_time = received_at or timezone.now()
-        self.updated_at = deletion_time
-        self.deleted_at = deletion_time
-        self.server_received_at = deletion_time
-        self.save(
-            update_fields=["updated_at", "deleted_at", "server_received_at"]
-        )
-
     def save(self, *args, **kwargs):
         using = kwargs.get("using") or router.db_for_write(type(self), instance=self)
         with transaction.atomic(using=using):
-            # All model-based creation (including admin and legacy helpers) and
+            # All model-based creation (including admin) and
             # sync take this owner lock before counting or writing. A count
             # without the lock would allow concurrent requests past the quota.
             MilestoneUser.objects.using(using).select_for_update().get(

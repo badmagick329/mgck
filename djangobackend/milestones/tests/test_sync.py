@@ -220,11 +220,14 @@ class TestMilestoneSync:
         owner = MilestoneUser.objects.create(
             username="Alice", core_user_id="core-alice"
         )
-        existing = Milestone.create(
-            "Original", EVENT_TIMESTAMP, "UTC", "Alice"
+        existing = Milestone.objects.create(
+            event_name="Original",
+            event_datetime_utc=datetime.fromtimestamp(
+                EVENT_TIMESTAMP / 1000, tz=timezone.utc
+            ),
+            event_timezone="UTC",
+            created_by=owner,
         )
-        existing.created_by = owner
-        existing.save(update_fields=["created_by"])
         updated_at = int(django_timezone.now().timestamp() * 1000) + 1
 
         with patch(
