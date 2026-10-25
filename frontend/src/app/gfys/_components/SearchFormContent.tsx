@@ -2,7 +2,7 @@ import { fetchAccounts, fetchRandomGfy } from '@/actions/gfys';
 import { Button } from '@/components/ui/button';
 import { SearchFormParams, SearchParams } from '@/lib/types/gfys';
 import { validDateStringOrNull } from '@/lib/utils';
-import { createURL } from '@/lib/gfys';
+import { DEFAULT_GFY_SORT, createURL } from '@/lib/gfys';
 import {
   Tooltip,
   TooltipContent,
@@ -94,7 +94,7 @@ export default function SearchFormContent() {
                 <select
                   aria-label='Sort Gfys'
                   className='flex h-10 w-full appearance-none rounded-md border-2 border-black/60 bg-background-gf-dark/15 px-3 py-2 pr-9 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/60 dark:bg-background-gf-dark'
-                  value={searchParams.get('sort') || 'recent'}
+                  value={searchParams.get('sort') || DEFAULT_GFY_SORT}
                   onChange={(event) => {
                     const params = new URLSearchParams(searchParams.toString());
                     params.set('sort', event.target.value);

@@ -12,6 +12,7 @@ import {
   GfyDetailResponseSchema,
   GfyResponseSchema,
 } from '@/lib/types/gfys';
+import { DEFAULT_GFY_SORT } from '@/lib/gfys';
 import { validDateStringOrNull } from '@/lib/utils';
 
 const BASE_URL = process.env.BASE_URL;
@@ -28,7 +29,7 @@ export async function searchGfys(formData: FormData) {
     end_date = validDateStringOrNull(end_date) || '';
   }
   const page = formData.get('page')?.toString() || '1';
-  const sort = formData.get('sort')?.toString() || 'recent';
+  const sort = formData.get('sort')?.toString() || DEFAULT_GFY_SORT;
   let account = formData.get('account')?.toString() || '';
   if (account == 'All') {
     account = '';

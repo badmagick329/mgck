@@ -23,6 +23,10 @@ export async function generateMetadata({
   return {
     metadataBase: new URL('https://mgck.ink'),
     title: gfyDetail.display_title,
+    // Listing links can carry query strings; one clip is one indexable URL.
+    alternates: {
+      canonical: `/gfys/${encodeURIComponent(resolvedParams.videoId)}`,
+    },
     keywords: gfyDetail.tags.concat(['gfy', 'gfycat', 'kpop']),
     openGraph: {
       title: gfyDetail.display_title,

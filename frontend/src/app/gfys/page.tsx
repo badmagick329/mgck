@@ -1,9 +1,21 @@
 import Navbar from '@/app/_components/Navbar';
+import { getCanonicalGfysUrl } from '@/lib/gfys';
+import type { Metadata } from 'next';
 
 import GfyList from './_components/GfyList';
 import SearchForm from './_components/SearchForm';
 import SearchNavigation from './_components/SearchNavigation';
 import Footer from '@/app/_components/Footer';
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  return {
+    alternates: { canonical: getCanonicalGfysUrl(await searchParams) },
+  };
+}
 
 export default function GfysHome() {
   return (
