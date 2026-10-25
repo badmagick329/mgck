@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import clsx from 'clsx';
 import NextImage from 'next/image';
+import BorderRemovalExample from './_components/BorderRemovalExample';
 
 export default function ImageEditPage() {
   const [files, setFiles] = useState<File[]>([]);
@@ -59,7 +60,7 @@ export default function ImageEditPage() {
       <Navbar />
       <div className='container mx-auto flex w-full flex-grow flex-col items-center gap-12 px-4 py-6'>
         <h1 className='rounded-md border-2 border-primary-dg bg-secondary-dg px-4 py-2 text-xl shadow-glow-primary-dg'>
-          Auto crop solid color or gradient around images
+          Remove the solid color or gradient border around an image
         </h1>
         <div
           {...getRootProps({ className: 'dropzone' })}
@@ -89,6 +90,10 @@ export default function ImageEditPage() {
             </div>
           )}
         </div>
+
+        {previews.length === 0 && cropped.length === 0 && (
+          <BorderRemovalExample />
+        )}
 
         {previews.length > 0 && (
           <div className='flex flex-col items-center gap-2'>
