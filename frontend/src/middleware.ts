@@ -96,5 +96,7 @@ function clearAuthentication(request: NextRequest, protectedRoute: boolean) {
 }
 
 export const config = {
-  matcher: ['/((?!api|healthz|_next/static|_next/image|favicon.ico).*)'],
+  // ffmpeg: the static ~32 MB FFmpeg core needs no auth; matching it would put
+  // clearAuthentication's Set-Cookie on an immutable cached asset.
+  matcher: ['/((?!api|healthz|ffmpeg/|_next/static|_next/image|favicon.ico).*)'],
 };
