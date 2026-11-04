@@ -17,4 +17,7 @@ WORKDIR /app
 COPY --from=build /app ./
 ENV ASPNETCORE_URLS=http://*:5010
 ENV ASPNETCORE_ENVIRONMENT=Production
+# The base image's unprivileged `app` user. Core writes only to Postgres and to
+# its home directory (ephemeral Data Protection keys), never to /app or a mount.
+USER $APP_UID
 ENTRYPOINT ["dotnet", "CoreApi.WebApi.dll"]
