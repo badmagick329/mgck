@@ -123,12 +123,16 @@ SWAGGER_SETTINGS = {
 }
 
 USE_X_FORWARDED_HOST = True
-if not DEBUG:
-    # Production browsers reach Files only through Traefik's TLS router, so the
-    # Files session and CSRF cookies must never ride a plain-HTTP request, such
-    # as the first hop before Traefik's redirect. Local development stays on HTTP.
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+# Production browsers reach Files only through Traefik's TLS router, so the
+# Files session and CSRF cookies must never ride a plain-HTTP request, such as
+# the first hop before Traefik's redirect. Secure follows DEBUG=0 unless opted
+# out: the local_prod stack runs DEBUG=0 over plain HTTP, where browsers drop
+# Secure cookies and every Files POST fails CSRF.
+AUTH_COOKIES_SECURE = bool(
+    int(os.environ.get("AUTH_COOKIES_SECURE", int(not DEBUG)))
+)
+SESSION_COOKIE_SECURE = AUTH_COOKIES_SECURE
+CSRF_COOKIE_SECURE = AUTH_COOKIES_SECURE
 
 AUTH_PASSWORD_VALIDATORS = [
     {
