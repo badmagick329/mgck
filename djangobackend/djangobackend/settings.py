@@ -124,7 +124,11 @@ SWAGGER_SETTINGS = {
 
 USE_X_FORWARDED_HOST = True
 if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # Production browsers reach Files only through Traefik's TLS router, so the
+    # Files session and CSRF cookies must never ride a plain-HTTP request, such
+    # as the first hop before Traefik's redirect. Local development stays on HTTP.
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 AUTH_PASSWORD_VALIDATORS = [
     {
