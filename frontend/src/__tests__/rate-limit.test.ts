@@ -1,14 +1,12 @@
-jest.mock('ioredis', () =>
-  jest.fn().mockImplementation(() => ({
-    eval: jest.fn(),
-  }))
-);
-
-import Redis from 'ioredis';
+const mockRedis = {
+  status: 'ready',
+  eval: jest.fn(),
+  on: jest.fn(),
+  connect: jest.fn(),
+};
+jest.mock('ioredis', () => jest.fn().mockImplementation(() => mockRedis));
 
 import { RateLimit } from '@/lib/utils/rate-limit';
-
-const mockRedis = (Redis as unknown as jest.Mock).mock.results[0].value;
 
 describe('RateLimit failure policy', () => {
   let consoleError: jest.SpyInstance;

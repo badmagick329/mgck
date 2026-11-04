@@ -1,14 +1,12 @@
 /** @jest-environment node */
 jest.mock('server-only', () => ({}));
 jest.mock('next/headers', () => ({ headers: jest.fn() }));
-jest.mock('ioredis', () =>
-  jest.fn().mockImplementation(() => ({ eval: jest.fn() }))
-);
+const mockRedis = { status: 'ready', eval: jest.fn(), on: jest.fn() };
+jest.mock('ioredis', () => jest.fn().mockImplementation(() => mockRedis));
 jest.mock('../lib/account/verified-session', () => ({
   getVerifiedCoreSession: jest.fn(),
 }));
 
-import Redis from 'ioredis';
 import { headers } from 'next/headers';
 import { createFeedbackAction } from '@/actions/feedback';
 import {
@@ -16,7 +14,7 @@ import {
   asCreationSuccessOrError,
 } from '@/lib/feedback/parsed-server-response';
 
-const redis = (Redis as unknown as jest.Mock).mock.results[0].value;
+const redis = mockRedis;
 const counters = new Map<string, number>();
 const input = {
   comment: 'Useful feedback',
