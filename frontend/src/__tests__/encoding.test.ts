@@ -320,6 +320,26 @@ describe('Frame size calculator', () => {
 });
 
 describe('FFmpeg manager lifecycle', () => {
+  // MGK-24: the core runtime processes visitors' local media, so it must be
+  // fetched from the app's own origin rather than a third-party CDN.
+  test('loads the core runtime only from the page origin', async () => {
+    const runtime = createRuntime();
+    const toBlobURL = jest.fn(async (url: string) => url);
+    const manager = createManager(runtime, { toBlobURL });
+
+    await manager.load();
+
+    const fetched = toBlobURL.mock.calls.map(([url]) => url);
+    expect(fetched).toHaveLength(2);
+    for (const url of fetched) {
+      expect(new URL(url, 'https://mgck.ink').origin).toBe('https://mgck.ink');
+    }
+    expect(runtime.load).toHaveBeenCalledWith({
+      coreURL: '/ffmpeg/ffmpeg-core.js',
+      wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+    });
+  });
+
   test('shares one in-flight load across concurrent callers', async () => {
     let finishLoad: ((loaded: boolean) => void) | undefined;
     const runtime = createRuntime({

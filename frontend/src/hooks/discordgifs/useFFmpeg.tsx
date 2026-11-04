@@ -6,10 +6,13 @@ export function useFFmpeg() {
   const ffmpegRef = useRef<FFmpegManager>(new FFmpegManager());
 
   useEffect(() => {
-    (async () => {
-      await ffmpegRef.current.load();
-      setIsLoaded(true);
-    })();
+    ffmpegRef.current.load().then(
+      () => setIsLoaded(true),
+      (error) => {
+        console.error('Failed to load FFmpeg', error);
+        setIsLoaded(false);
+      }
+    );
     return () => {
       ffmpegRef.current.terminate();
     };

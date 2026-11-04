@@ -4,8 +4,8 @@
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "dev": "next dev -p 5000 -H 0.0.0.0",
-    "build": "next build",
+    "dev": "node scripts/copy-ffmpeg-core.mjs && next dev -p 5000 -H 0.0.0.0",
+    "build": "node scripts/copy-ffmpeg-core.mjs && next build",
     "start": "next start",
     "django:css:build": "tailwindcss -c ../djangobackend/tailwind.config.js -i ../djangobackend/urlshortener/static/css/input.css -o ../djangobackend/urlshortener/static/css/style.css --minify",
     "django:css:watch": "tailwindcss -c ../djangobackend/tailwind.config.js -i ../djangobackend/urlshortener/static/css/input.css -o ../djangobackend/urlshortener/static/css/style.css --watch",
@@ -14,6 +14,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@ffmpeg/core": "0.12.4",
     "@ffmpeg/ffmpeg": "0.12.6",
     "@ffmpeg/util": "^0.12.1",
     "@hookform/resolvers": "^3.9.0",

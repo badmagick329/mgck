@@ -113,8 +113,9 @@ export class FFmpegManager {
       const ffmpeg = this.dependencies.createFFmpeg();
       this.activeLoadRuntime = ffmpeg;
       try {
-        const baseURL =
-          'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/umd';
+        // Same-origin copies staged at build by scripts/copy-ffmpeg-core.mjs:
+        // this code processes local media, so a CDN must not be able to swap it.
+        const baseURL = '/ffmpeg';
         const coreURL = await this.dependencies.toBlobURL(
           `${baseURL}/ffmpeg-core.js`,
           'text/javascript'
