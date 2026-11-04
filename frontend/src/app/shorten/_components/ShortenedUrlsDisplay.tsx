@@ -15,11 +15,11 @@ export default function ShortenedUrlsDisplay({
   setCreatedUrlOutput: React.Dispatch<React.SetStateAction<string>>;
   onDeleted: (shortCode: string) => void;
 }) {
+  const [query, setQuery] = React.useState('');
+  const [sort, setSort] = React.useState<'newest' | 'most-used'>('newest');
   if (urlsResponse === null) {
     return <div>Failed to fetch URLs</div>;
   }
-  const [query, setQuery] = React.useState('');
-  const [sort, setSort] = React.useState<'newest' | 'most-used'>('newest');
   const displayed = urlsResponse
     .filter((url) => `${url.short_id} ${url.url}`.toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => sort === 'most-used' ? b.number_of_uses - a.number_of_uses : b.created.getTime() - a.created.getTime());

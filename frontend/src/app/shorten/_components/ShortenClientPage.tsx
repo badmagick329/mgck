@@ -17,7 +17,9 @@ export default function UrlShortenerPage({
 }) {
   const [error, setError] = useState('');
   const [output, setOutput] = useState('');
-  const [urls, setUrls] = useState(shortenedUrls || []);
+  // null means the list failed to load; keep it distinct from an empty list so
+  // the owner is not told they have no URLs.
+  const [urls, setUrls] = useState<ShortenedUrl[] | null>(shortenedUrls);
 
   return (
     <main className='flex min-h-screen flex-col'>
@@ -30,7 +32,9 @@ export default function UrlShortenerPage({
         <CreateUrlForm
           setError={setError}
           setOutput={setOutput}
-          onCreated={(record) => setUrls((current) => [record, ...current])}
+          onCreated={(record) =>
+            setUrls((current) => current && [record, ...current])
+          }
         />
         {output && <ResponseOutput output={output} />}
         <ShortenedUrlsDisplay
@@ -38,8 +42,9 @@ export default function UrlShortenerPage({
           createdUrlOutput={output}
           setCreatedUrlOutput={setOutput}
           onDeleted={(shortCode) =>
-            setUrls((current) =>
-              current.filter((url) => url.short_id !== shortCode)
+            setUrls(
+              (current) =>
+                current && current.filter((url) => url.short_id !== shortCode)
             )
           }
         />
