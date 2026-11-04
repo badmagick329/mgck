@@ -10,5 +10,10 @@ export default async function UrlShortenerPage() {
     redirect('/account/login?returnTo=%2Fshorten');
   }
   const response = await getAllShortenedUrls();
-  return <ShortenClientPage shortenedUrls={response.urls || null} />;
+  return (
+    <ShortenClientPage
+      shortenedUrls={response.urls ?? []}
+      loadFailed={!response.urls}
+    />
+  );
 }

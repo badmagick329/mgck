@@ -12,14 +12,16 @@ import useCreateUrlForm from '@/hooks/shorten/useCreateUrlForm';
 
 export default function UrlShortenerPage({
   shortenedUrls,
+  loadFailed,
 }: {
-  shortenedUrls: ShortenedUrl[] | null;
+  shortenedUrls: ShortenedUrl[];
+  loadFailed: boolean;
 }) {
   const [error, setError] = useState('');
   const [output, setOutput] = useState('');
-  // null means the list failed to load; keep it distinct from an empty list so
-  // the owner is not told they have no URLs.
-  const [urls, setUrls] = useState<ShortenedUrl[] | null>(shortenedUrls);
+  // The load failure is tracked apart from the list so URLs created after a
+  // failed load still show (and can be deleted) instead of being discarded.
+  const [urls, setUrls] = useState<ShortenedUrl[]>(shortenedUrls);
 
   return (
     <main className='flex min-h-screen flex-col'>
@@ -32,19 +34,17 @@ export default function UrlShortenerPage({
         <CreateUrlForm
           setError={setError}
           setOutput={setOutput}
-          onCreated={(record) =>
-            setUrls((current) => current && [record, ...current])
-          }
+          onCreated={(record) => setUrls((current) => [record, ...current])}
         />
         {output && <ResponseOutput output={output} />}
         <ShortenedUrlsDisplay
-          urlsResponse={urls}
+          urls={urls}
+          loadFailed={loadFailed}
           createdUrlOutput={output}
           setCreatedUrlOutput={setOutput}
           onDeleted={(shortCode) =>
-            setUrls(
-              (current) =>
-                current && current.filter((url) => url.short_id !== shortCode)
+            setUrls((current) =>
+              current.filter((url) => url.short_id !== shortCode)
             )
           }
         />
