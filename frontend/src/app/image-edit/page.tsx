@@ -144,7 +144,7 @@ export default function ImageEditPage() {
               <div className='flex w-full flex-col justify-center gap-4'>
                 <p className='text-center text-sm text-muted-foreground'>
                   Click any cropped image to download it individually, or use
-                  "Download all" to save all images at once.
+                  &ldquo;Download all&rdquo; to save all images at once.
                 </p>
                 <div className='flex w-full justify-center gap-4'>
                   <Button

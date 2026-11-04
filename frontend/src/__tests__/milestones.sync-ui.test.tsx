@@ -1,15 +1,35 @@
 import { render, screen } from '@testing-library/react';
 
 jest.mock('../hooks/milestones/useMilestones', () => jest.fn());
-jest.mock('../app/_components/Navbar', () => () => <div>Navbar</div>);
-jest.mock('../app/_components/Footer', () => () => <div>Footer</div>);
-jest.mock('../app/milestones/_components/MilestonesInput', () => () => (
-  <div>Input</div>
-));
+jest.mock(
+  '../app/_components/Navbar',
+  () =>
+    function Navbar() {
+      return <div>Navbar</div>;
+    }
+);
+jest.mock(
+  '../app/_components/Footer',
+  () =>
+    function Footer() {
+      return <div>Footer</div>;
+    }
+);
+jest.mock(
+  '../app/milestones/_components/MilestonesInput',
+  () =>
+    function MilestonesInput() {
+      return <div>Input</div>;
+    }
+);
 
-jest.mock('../app/milestones/_components/MilestonesComparison', () => () => (
-  <div>Comparison</div>
-));
+jest.mock(
+  '../app/milestones/_components/MilestonesComparison',
+  () =>
+    function MilestonesComparison() {
+      return <div>Comparison</div>;
+    }
+);
 
 import MilestonesClient from '@/app/milestones/_components/MilestonesClient';
 import useMilestones from '../hooks/milestones/useMilestones';

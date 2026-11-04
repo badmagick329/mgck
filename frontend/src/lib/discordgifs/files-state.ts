@@ -64,10 +64,6 @@ export type FileAction =
   | {
       type: 'removeFile';
       payload: { name: string };
-    }
-  | {
-      type: 'removeAll';
-      payload: {};
     };
 
 export type FilesState = Record<string, FFmpegFileData>;
@@ -226,8 +222,6 @@ export const filesStateReducer = (
     case 'removeFile':
       const { [action.payload.name]: _, ...rest } = state;
       return rest;
-    case 'removeAll':
-      return {};
     default:
       return state;
   }

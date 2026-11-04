@@ -63,7 +63,7 @@ export async function getShortenedUrl(
   code: string
 ): Promise<{ url?: string; error?: string }> {
   const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URL}${code}`);
-  let res = await fetch(apiUrl);
+  const res = await fetch(apiUrl);
   try {
     const data = await res.json();
     return data;
@@ -89,7 +89,7 @@ export async function getAllShortenedUrls(): Promise<{
   if (!authentication) return { error: 'Shortener service unavailable' };
   const apiUrl = new URL(`${BASE_URL}${INTERNAL_SHORTENER_URL}urls`);
 
-  let res = await fetch(apiUrl, { headers: authentication, cache: 'no-store' });
+  const res = await fetch(apiUrl, { headers: authentication, cache: 'no-store' });
   try {
     const data = await res.json();
     const parsed = shortenedUrlsByUsernameSchema.safeParse(data);

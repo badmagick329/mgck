@@ -9,7 +9,7 @@ const fetchWithAuthHeader = async ({
 }: {
   url: string;
   method: string;
-  data?: any | undefined;
+  data?: unknown;
 }): Promise<AspAuthResponse> => {
   const cookieStore = await cookies();
   const cookieToken = cookieStore.get('token')?.value;

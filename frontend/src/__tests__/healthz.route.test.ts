@@ -8,7 +8,7 @@ const mockRedisQuit = jest.fn();
 const mockRedisDisconnect = jest.fn();
 
 type MockPgClient = {
-  config: any;
+  config: { host: string };
   connect: jest.Mock;
   query: jest.Mock;
   end: jest.Mock;
@@ -55,9 +55,9 @@ let GET: typeof import('@/app/healthz/route').GET;
 const originalEnv = process.env;
 
 describe('/healthz route', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.resetModules();
-    GET = require('../app/healthz/route').GET;
+    ({ GET } = await import('../app/healthz/route'));
     jest.clearAllMocks();
     mockPgClients.length = 0;
     Object.keys(mockPgFailureByHost).forEach(

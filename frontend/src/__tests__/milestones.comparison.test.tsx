@@ -1,17 +1,18 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import MilestonesComparison from '../app/milestones/_components/MilestonesComparison';
 import useMilestones from '../hooks/milestones/useMilestones';
 jest.mock('lucide-react', () => ({ Eye: () => null, EyeOff: () => null }));
 jest.mock(
   '../app/milestones/_components/UpdateMilestoneModal',
   () =>
-    ({ trigger }: any) =>
+    ({ trigger }: { trigger: ReactNode }) =>
       trigger
 );
 jest.mock(
   '../app/milestones/_components/DeleteMilestoneModal',
   () =>
-    ({ trigger }: any) =>
+    ({ trigger }: { trigger: ReactNode }) =>
       trigger
 );
 const start = Date.UTC(2026, 8, 12);

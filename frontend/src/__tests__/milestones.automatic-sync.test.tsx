@@ -6,6 +6,7 @@ jest.mock('../actions/milestones', () => ({
 
 import { syncMilestonesAction } from '../actions/milestones';
 import useMilestones from '@/hooks/milestones/useMilestones';
+import type useMilestoneStore from '@/hooks/milestones/useMilestoneStore';
 import useMilestonesAutomaticSync from '@/hooks/milestones/useMilestonesAutomaticSync';
 import {
   accountStoreKey,
@@ -40,6 +41,7 @@ function readyStore(records: StoredMilestone[] = []): MilestoneLocalStore {
   };
 }
 
+// A partial fake: the coordinator uses only these members of the store.
 function fakeStore(local: MilestoneLocalStore, userId = 'alice') {
   let current = local;
   return {
@@ -67,7 +69,7 @@ function fakeStore(local: MilestoneLocalStore, userId = 'alice') {
       }
     ),
     markAutomaticSyncSuccess: jest.fn(() => true),
-  } as any;
+  } as unknown as jest.Mocked<ReturnType<typeof useMilestoneStore>>;
 }
 
 describe('milestone automatic sync coordinator', () => {
@@ -118,8 +120,8 @@ describe('milestone automatic sync coordinator', () => {
   });
 
   test('coalesces overlapping triggers into one queued pass', async () => {
-    let resolveFirst!: (value: any) => void;
-    let resolveSecond!: (value: any) => void;
+    let resolveFirst!: (value: unknown) => void;
+    let resolveSecond!: (value: unknown) => void;
     const first = new Promise((resolve) => (resolveFirst = resolve));
     const second = new Promise((resolve) => (resolveSecond = resolve));
     mockSync.mockReturnValueOnce(first).mockReturnValueOnce(second);
@@ -143,7 +145,7 @@ describe('milestone automatic sync coordinator', () => {
   });
 
   test('discards a late response after switching accounts', async () => {
-    let resolveAlice!: (value: any) => void;
+    let resolveAlice!: (value: unknown) => void;
     mockSync
       .mockReturnValueOnce(
         new Promise((resolve) => {
@@ -284,7 +286,9 @@ describe('milestone automatic sync coordinator', () => {
     jest.useFakeTimers();
     localStorage.setItem(
       accountStoreKey('alice'),
-      JSON.stringify(readyStore([createStoredMilestone(fields(), 100, FIRST_ID)]))
+      JSON.stringify(
+        readyStore([createStoredMilestone(fields(), 100, FIRST_ID)])
+      )
     );
     mockSync.mockImplementation(async (records: StoredMilestone[]) => ({
       ok: true,
@@ -301,13 +305,16 @@ describe('milestone automatic sync coordinator', () => {
     });
     mockSync.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     await act(async () => {
-      await result.current.updateMilestone(FIRST_ID, { name: 'Edited offline' });
+      await result.current.updateMilestone(FIRST_ID, {
+        name: 'Edited offline',
+      });
     });
 
     expect(result.current.syncStatus).toBe('not-synced');
     expect(result.current.store.milestones[0].name).toBe('Edited offline');
     expect(
-      JSON.parse(localStorage.getItem(accountStoreKey('alice'))!).records[0].name
+      JSON.parse(localStorage.getItem(accountStoreKey('alice'))!).records[0]
+        .name
     ).toBe('Edited offline');
     await act(async () => {
       jest.advanceTimersByTime(60_000);
@@ -342,7 +349,7 @@ describe('milestone automatic sync coordinator', () => {
     await act(async () => Promise.resolve());
     expect(result.current.status).toBe('retrying');
     expect(store.bootstrapFromServer).not.toHaveBeenCalled();
-    expect(store.getLocalStoreSnapshot().records).toEqual([local]);
+    expect(store.getLocalStoreSnapshot()?.records).toEqual([local]);
 
     await act(async () => jest.advanceTimersByTime(2_000));
     expect(mockSync.mock.calls.map(([records]) => records)).toEqual([
@@ -357,7 +364,7 @@ describe('milestone automatic sync coordinator', () => {
   test('discards a late transport rejection after switching accounts', async () => {
     jest.useFakeTimers();
     let rejectAlice!: (reason: Error) => void;
-    let resolveBob!: (value: any) => void;
+    let resolveBob!: (value: unknown) => void;
     mockSync
       .mockReturnValueOnce(
         new Promise((_resolve, reject) => (rejectAlice = reject))
@@ -366,7 +373,8 @@ describe('milestone automatic sync coordinator', () => {
     const aliceStore = fakeStore(readyStore());
     const bobStore = fakeStore(readyStore(), 'bob');
     const { result, rerender } = renderHook(
-      ({ owner, store }) => useMilestonesAutomaticSync({ account: owner, store }),
+      ({ owner, store }) =>
+        useMilestonesAutomaticSync({ account: owner, store }),
       { initialProps: { owner: account, store: aliceStore } }
     );
 
@@ -384,7 +392,7 @@ describe('milestone automatic sync coordinator', () => {
   });
 
   test('keeps CRUD local while an earlier response is in flight', async () => {
-    let resolveInitial!: (value: any) => void;
+    let resolveInitial!: (value: unknown) => void;
     mockSync
       .mockReturnValueOnce(
         new Promise((resolve) => {
@@ -428,7 +436,7 @@ describe('milestone automatic sync coordinator', () => {
   });
 
   test('keeps update and delete local while synchronization is unavailable', async () => {
-    let resolveInitial!: (value: any) => void;
+    let resolveInitial!: (value: unknown) => void;
     mockSync
       .mockReturnValueOnce(
         new Promise((resolve) => {

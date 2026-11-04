@@ -3,18 +3,32 @@ import { renderToString } from 'react-dom/server';
 import GfyView from '@/app/gfys/[videoId]/_components/GfyView';
 import RelatedGfys from '@/app/gfys/[videoId]/_components/RelatedGfys';
 import { GfyDetailResponse } from '@/lib/types/gfys';
-jest.mock('../app/gfys/[videoId]/_components/ShareButtons', () => () => (
-  <div>Copy actions</div>
-));
+jest.mock(
+  '../app/gfys/[videoId]/_components/ShareButtons',
+  () =>
+    function ShareButtons() {
+      return <div>Copy actions</div>;
+    }
+);
 
 jest.mock('react-dom/server', () =>
   jest.requireActual('react-dom/server.node')
 );
 
-jest.mock('../app/_components/Navbar', () => () => <nav>Site navigation</nav>);
-jest.mock('../app/gfys/[videoId]/_components/NavButtons', () => () => (
-  <div>Clip navigation</div>
-));
+jest.mock(
+  '../app/_components/Navbar',
+  () =>
+    function Navbar() {
+      return <nav>Site navigation</nav>;
+    }
+);
+jest.mock(
+  '../app/gfys/[videoId]/_components/NavButtons',
+  () =>
+    function NavButtons() {
+      return <div>Clip navigation</div>;
+    }
+);
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ replace: jest.fn() }),
 }));

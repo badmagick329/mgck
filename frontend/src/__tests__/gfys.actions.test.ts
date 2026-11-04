@@ -6,10 +6,10 @@ describe('Gfy server actions', () => {
   let fetchRandomGfy: typeof import('@/actions/gfys').fetchRandomGfy;
   let fetchGfy: typeof import('@/actions/gfys').fetchGfy;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.resetModules();
     process.env.BASE_URL = 'http://djangobackend:8002';
-    ({ fetchRandomGfy, fetchGfy } = require('../actions/gfys'));
+    ({ fetchRandomGfy, fetchGfy } = await import('../actions/gfys'));
     global.fetch = jest.fn();
   });
 

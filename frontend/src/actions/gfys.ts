@@ -42,7 +42,7 @@ export async function searchGfys(formData: FormData) {
   apiUrl.searchParams.append('account', account);
   apiUrl.searchParams.append('page', page);
   apiUrl.searchParams.append('sort', sort);
-  let res = await fetch(apiUrl.toString(), {
+  const res = await fetch(apiUrl.toString(), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ export async function fetchRandomGfy(paramsString: string) {
 
 export async function fetchGfy(videoId: string) {
   const apiUrl = new URL(`${BASE_URL}${API_GFYS}/${videoId}`);
-  let res = await fetch(apiUrl.toString(), {
+  const res = await fetch(apiUrl.toString(), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export async function fetchGfy(videoId: string) {
 
 export async function fetchAccounts() {
   const apiUrl = new URL(`${BASE_URL}${API_GFY_ACCOUNTS}`);
-  let res = await fetch(apiUrl.toString(), {
+  const res = await fetch(apiUrl.toString(), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export async function fetchAccounts() {
 
 export async function addGfyView(videoUrl: string) {
   const apiUrl = `${BASE_URL}${API_GFY_VIEWS}`;
-  let res = await fetch(apiUrl, {
+  const res = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
