@@ -55,6 +55,10 @@ type FFmpegFileConfig = {
 
 let fallbackId = 0;
 
+// Versioned path of the same-origin core copies, inlined from next.config.js
+// (set by jest.config.ts under Jest); scripts/ffmpeg-core.cjs is its one source.
+const ffmpegCoreBasePath = process.env.FFMPEG_CORE_BASE_PATH;
+
 const defaultDependencies: FFmpegManagerDependencies = {
   createFFmpeg: () => new FFmpeg() as FFmpegRuntime,
   fetchFile,
@@ -91,6 +95,9 @@ export class FFmpegManager {
     if (this.loadPromise) {
       return this.loadPromise;
     }
+    if (!ffmpegCoreBasePath) {
+      return Promise.reject(new Error('FFMPEG_CORE_BASE_PATH is not configured'));
+    }
 
     const generation = ++this.loadGeneration;
     const pendingLoad = this.loadWithRetries(retries, generation).finally(
@@ -115,7 +122,7 @@ export class FFmpegManager {
       try {
         // Same-origin copies staged at build by scripts/copy-ffmpeg-core.mjs:
         // this code processes local media, so a CDN must not be able to swap it.
-        const baseURL = '/ffmpeg';
+        const baseURL = ffmpegCoreBasePath;
         const coreURL = await this.dependencies.toBlobURL(
           `${baseURL}/ffmpeg-core.js`,
           'text/javascript'

@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- CommonJS config
+const { ffmpegCoreBasePath } = require('./scripts/ffmpeg-core.cjs');
+
 const allowedDevOrigins = process.env.ALLOWED_DEV_ORIGINS?.split(',') ?? [];
 const shouldUseStandaloneOutput = process.env.NEXT_OUTPUT_STANDALONE === '1';
 
@@ -23,8 +26,22 @@ const nextConfig = {
   // (MGK-26) or ship differently depending on whether ESLint is installed.
   eslint: { ignoreDuringBuilds: true },
   allowedDevOrigins,
+  // Inlined into the client so FFmpegManager fetches the same versioned path
+  // that scripts/copy-ffmpeg-core.mjs stages.
+  env: { FFMPEG_CORE_BASE_PATH: ffmpegCoreBasePath },
   async headers() {
     return [
+      {
+        // ~32 MB per visit otherwise: public/ files default to max-age=0. The
+        // version in the path makes the files safe to cache forever.
+        source: `${ffmpegCoreBasePath}/:file*`,
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
       {
         source: '/api/:path*',
         headers: [

@@ -16,6 +16,14 @@ import {
 } from '@/lib/discordgifs/ffmpeg-commands';
 import { FFmpegManager, FFmpegRuntime } from '@/lib/discordgifs/ffmpeg-manager';
 import { FrameSizeCalculator } from '@/lib/discordgifs/frame-size-calculator';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+// Read straight from the installed package, independent of the app's helper.
+function installedCoreVersion(): string {
+  const manifest = join(__dirname, '../../node_modules/@ffmpeg/core/package.json');
+  return JSON.parse(readFileSync(manifest, 'utf8')).version;
+}
 
 const customTarget: ConversionTarget = {
   id: 'custom-preview',
@@ -322,6 +330,7 @@ describe('Frame size calculator', () => {
 describe('FFmpeg manager lifecycle', () => {
   // MGK-24: the core runtime processes visitors' local media, so it must be
   // fetched from the app's own origin rather than a third-party CDN.
+  // MGK-27: the path carries the installed version so it can be cached immutably.
   test('loads the core runtime only from the page origin', async () => {
     const runtime = createRuntime();
     const toBlobURL = jest.fn(async (url: string) => url);
@@ -335,8 +344,8 @@ describe('FFmpeg manager lifecycle', () => {
       expect(new URL(url, 'https://mgck.ink').origin).toBe('https://mgck.ink');
     }
     expect(runtime.load).toHaveBeenCalledWith({
-      coreURL: '/ffmpeg/ffmpeg-core.js',
-      wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+      coreURL: `/ffmpeg/${installedCoreVersion()}/ffmpeg-core.js`,
+      wasmURL: `/ffmpeg/${installedCoreVersion()}/ffmpeg-core.wasm`,
     });
   });
 
