@@ -19,6 +19,9 @@ const nextConfig = {
     },
   },
   output: shouldUseStandaloneOutput ? 'standalone' : undefined,
+  // `pnpm lint` is the lint gate; a build must not fail on style findings
+  // (MGK-26) or ship differently depending on whether ESLint is installed.
+  eslint: { ignoreDuringBuilds: true },
   allowedDevOrigins,
   async headers() {
     return [
