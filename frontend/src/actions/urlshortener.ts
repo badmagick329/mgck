@@ -36,15 +36,17 @@ export async function createShortenedUrl({
     source_url: url,
     custom_id: customCode,
   });
-  const res = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authentication,
-    },
-    body,
-  });
+  // fetch sits inside the try so an unreachable Django becomes an { error }
+  // the form can show, not a rejection the caller never sees.
   try {
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authentication,
+      },
+      body,
+    });
     const data = await res.json();
     revalidateTag('shortened-urls');
     const record = shortenedUrlSchema.safeParse(data.record);
@@ -63,6 +65,8 @@ export async function getShortenedUrl(
   code: string
 ): Promise<{ url?: string; error?: string }> {
   const apiUrl = new URL(`${BASE_URL}${API_SHORTENER_URL}${code}`);
+  // Left to throw on purpose: an { error } here makes the redirect page answer
+  // a Django outage with notFound(), telling visitors and crawlers the link is gone.
   const res = await fetch(apiUrl);
   try {
     const data = await res.json();
@@ -89,8 +93,13 @@ export async function getAllShortenedUrls(): Promise<{
   if (!authentication) return { error: 'Shortener service unavailable' };
   const apiUrl = new URL(`${BASE_URL}${INTERNAL_SHORTENER_URL}urls`);
 
-  const res = await fetch(apiUrl, { headers: authentication, cache: 'no-store' });
+  // Inside the try so an unreachable Django renders the failed-load state on
+  // /shorten and /account/home instead of their error boundary.
   try {
+    const res = await fetch(apiUrl, {
+      headers: authentication,
+      cache: 'no-store',
+    });
     const data = await res.json();
     const parsed = shortenedUrlsByUsernameSchema.safeParse(data);
     if (!parsed.success) {
@@ -125,15 +134,19 @@ export async function deleteShortenedUrl({
     `${BASE_URL}${INTERNAL_SHORTENER_URL}url/${encodeURIComponent(code)}`
   );
 
-  const res = await fetch(apiUrl, {
-    method: 'DELETE',
-    headers: authentication,
-  });
-  if (!res.ok) {
-    return {
-      error: 'Failed to delete shortened url',
-    };
+  const failure = { error: 'Failed to delete shortened url' };
+  let res: Response;
+  try {
+    res = await fetch(apiUrl, {
+      method: 'DELETE',
+      headers: authentication,
+    });
+  } catch (e) {
+    // Report an unreachable Django like a refused delete so the dialog shows it.
+    console.error(e);
+    return failure;
   }
+  if (!res.ok) return failure;
   revalidateTag('shortened-urls');
   return {};
 }

@@ -10,8 +10,9 @@ export default function useDeleteUrlButton({
   createdUrlOutput: string;
   setCreatedUrlOutput: React.Dispatch<React.SetStateAction<string>>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
   const [isDeleteDisabled, setIsDeleteDisabled] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   useEffect(() => {
@@ -33,7 +34,11 @@ export default function useDeleteUrlButton({
       const result = await deleteShortenedUrl({
         code: shortCode,
       });
-      if (result.error) return false;
+      if (result.error) {
+        setDeleteError(result.error);
+        return false;
+      }
+      setDeleteError('');
       const match = createdUrlOutput.match(/(?:.+\/)(.+)/);
       if (!match) {
         return true;
@@ -48,11 +53,18 @@ export default function useDeleteUrlButton({
     }
   };
 
+  // A reopened dialog starts clean; a failure from an earlier attempt is stale.
+  const setOpen = (next: boolean) => {
+    setOpenState(next);
+    setDeleteError('');
+  };
+
   return {
     open,
     setOpen,
     keyboardOffset,
     isDeleteDisabled,
+    deleteError,
     handleDelete,
   };
 }

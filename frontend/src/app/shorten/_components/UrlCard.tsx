@@ -132,17 +132,24 @@ function DeleteUrlButton({
   setCreatedUrlOutput: React.Dispatch<React.SetStateAction<string>>;
   onDeleted: (shortCode: string) => void;
 }) {
-  const { open, setOpen, keyboardOffset, isDeleteDisabled, handleDelete } =
-    useDeleteUrlButton({
-      shortCode,
-      createdUrlOutput,
-      setCreatedUrlOutput,
-    });
+  const {
+    open,
+    setOpen,
+    keyboardOffset,
+    isDeleteDisabled,
+    deleteError,
+    handleDelete,
+  } = useDeleteUrlButton({
+    shortCode,
+    createdUrlOutput,
+    setCreatedUrlOutput,
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button
+          aria-label='Delete shortened URL'
           className='rounded-md bg-background/40 p-2 hover:bg-background/60'
           disabled={isDeleteDisabled}
         >
@@ -161,6 +168,11 @@ function DeleteUrlButton({
             Are you sure you want to delete this shortened URL?
           </DialogDescription>
         </DialogHeader>
+        {deleteError && (
+          <p role='alert' className='text-sm text-red-500'>
+            {deleteError}
+          </p>
+        )}
         <DialogFooter>
           <div className='flex justify-end'>
             <Button
