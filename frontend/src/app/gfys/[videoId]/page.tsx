@@ -13,9 +13,10 @@ export async function generateMetadata({
   const resolvedParams = await params;
   const gfyDetail = await fetchGfy(resolvedParams.videoId);
   if (gfyDetail === null) {
-    return {
-      title: 'Not Found',
-    };
+    // Serves the not-found metadata (noindex) instead of a clip's. The 404
+    // status itself needs no Suspense boundary above this page: see
+    // gfys/(listing)/loading.tsx.
+    notFound();
   }
   const width = gfyDetail.width || 1920;
   const height = gfyDetail.height || 1080;

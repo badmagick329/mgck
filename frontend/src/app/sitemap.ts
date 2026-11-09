@@ -8,7 +8,6 @@ const publicPaths = [
   '/image-edit',
   '/kpop',
   '/milestones',
-  '/shorten',
 ] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {

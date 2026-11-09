@@ -4,7 +4,7 @@ import {
   GfyResponse,
   GfyResult,
 } from '@/lib/types/gfys';
-import { validDateStringOrNull } from '@/lib/utils';
+import { validDateStringOrNull } from '@/lib/utils/dates';
 import { ReadonlyURLSearchParams } from 'next/navigation';
 
 export const DEFAULT_GFY_SORT = 'recent';

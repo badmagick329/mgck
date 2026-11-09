@@ -1,5 +1,8 @@
-import { validDateStringOrNull } from '@/lib/utils';
-import { ReadonlyURLSearchParams } from 'next/navigation';
+// Edge middleware imports this module to redirect to canonical K-pop URLs, so
+// it must stay free of React and Node-only imports.
+import { KPOP_BASE } from '@/lib/consts/urls';
+import { validDateStringOrNull } from '@/lib/utils/dates';
+import type { ReadonlyURLSearchParams } from 'next/navigation';
 
 export const DEFAULT_RECENT_BUFFER_DAYS = 7;
 export const TIMELINE_EXPANSION_DAYS = 7;
@@ -88,9 +91,10 @@ export function getCanonicalKpopSearchParams(
   );
   const page = getValidPageValue(params.get('page'));
   const view = getKpopView(params);
+  const defaultStartDate = getDefaultStartDateCompact();
 
   if (!startDate) {
-    startDate = getDefaultStartDateCompact();
+    startDate = defaultStartDate;
   }
 
   if (startDate && endDate) {
@@ -104,7 +108,15 @@ export function getCanonicalKpopSearchParams(
   }
 
   const canonical = new URLSearchParams();
-  canonical.set('start-date', startDate);
+  // The default open-ended window is the bare URL: /kpop is in the sitemap and
+  // must not redirect to a start date that changes daily. A bounded window
+  // keeps its explicit start so the range does not drift.
+  const isDefaultStart =
+    compactDateToUtcDate(startDate)?.getTime() ===
+    compactDateToUtcDate(defaultStartDate)?.getTime();
+  if (!isDefaultStart || endDate) {
+    canonical.set('start-date', startDate);
+  }
   if (endDate) {
     canonical.set('end-date', endDate);
   }
@@ -124,6 +136,25 @@ export function getCanonicalKpopSearchParams(
     canonical.set('view', view);
   }
   return canonical;
+}
+
+export function getCanonicalKpopUrl(searchParams: SearchParamsInput) {
+  return kpopHref(getCanonicalKpopSearchParams(searchParams));
+}
+
+export function kpopHref(searchParams: URLSearchParams) {
+  const query = searchParams.toString();
+  return query ? `${KPOP_BASE}?${query}` : KPOP_BASE;
+}
+
+/**
+ * The canonical URL to redirect to, or null when the request already is one.
+ * Exact string comparison is deliberate: param order, empty and unknown params
+ * also count, so each query state has one URL.
+ */
+export function getKpopRedirectUrl(searchParams: URLSearchParams) {
+  const canonical = getCanonicalKpopUrl(searchParams);
+  return canonical === kpopHref(searchParams) ? null : canonical;
 }
 
 export function searchParamsToKpopQueryState(
@@ -169,7 +200,7 @@ export function buildTimelineExpansionSearchParams(
   if (direction === 'earlier' && currentStart <= archiveStart) {
     params.delete('page');
     params.delete('view');
-    return params;
+    return getCanonicalKpopSearchParams(params);
   }
 
   if (direction === 'earlier') {
@@ -195,7 +226,7 @@ export function buildTimelineExpansionSearchParams(
   }
   params.delete('page');
   params.delete('view');
-  return params;
+  return getCanonicalKpopSearchParams(params);
 }
 
 export function canExpandTimelineEarlier(state: KpopQueryState) {
@@ -214,11 +245,12 @@ export function canExpandTimelineLater(state: KpopQueryState) {
 
 export function buildRecentSearchParams(searchParams: SearchParamsInput) {
   const params = getCanonicalKpopSearchParams(searchParams);
-  params.set('start-date', getDefaultStartDateCompact());
+  // No start-date is the default window; an explicit one would redirect.
+  params.delete('start-date');
   params.delete('end-date');
   params.delete('page');
   params.delete('view');
-  return params;
+  return getCanonicalKpopSearchParams(params);
 }
 
 export function buildAllSearchParams(searchParams: SearchParamsInput) {
@@ -227,27 +259,25 @@ export function buildAllSearchParams(searchParams: SearchParamsInput) {
   params.delete('end-date');
   params.delete('page');
   params.delete('view');
-  return params;
+  return getCanonicalKpopSearchParams(params);
 }
 
 export function buildFollowingSearchParams(searchParams: SearchParamsInput) {
   const params = getCanonicalKpopSearchParams(searchParams);
   params.set('view', 'following');
   params.delete('page');
-  return params;
+  return getCanonicalKpopSearchParams(params);
 }
 
 export function buildSearchSearchParams(searchParams: SearchParamsInput) {
   const params = getCanonicalKpopSearchParams(searchParams);
   params.set('view', 'search');
   params.delete('page');
-  return params;
+  return getCanonicalKpopSearchParams(params);
 }
 
 export function buildClearSearchParams(searchParams: SearchParamsInput) {
-  const params = new URLSearchParams();
-  params.set('start-date', getDefaultStartDateCompact());
-  return params;
+  return new URLSearchParams();
 }
 
 export function getTimelineLabel(state: KpopQueryState) {

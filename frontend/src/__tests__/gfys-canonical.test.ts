@@ -83,11 +83,28 @@ describe('getCanonicalGfysUrl', () => {
 
 describe('gfys page metadata', () => {
   test('listing emits the normalised canonical', async () => {
-    const { generateMetadata } = await import('@/app/gfys/page');
+    const { generateMetadata } = await import('@/app/gfys/(listing)/page');
     const metadata = await generateMetadata({
       searchParams: Promise.resolve({ sort: 'recent', tags: 'mv', page: '1' }),
     });
     expect(metadata.alternates).toEqual({ canonical: '/gfys?tags=mv' });
+  });
+
+  test('only the bare listing is indexable', async () => {
+    const { generateMetadata } = await import('@/app/gfys/(listing)/page');
+    const metadata = (query: Record<string, string | undefined>) =>
+      generateMetadata({ searchParams: Promise.resolve(query) });
+
+    expect((await metadata({})).robots).toBeUndefined();
+    expect(
+      (await metadata({ sort: 'recent', page: '1' })).robots
+    ).toBeUndefined();
+    for (const query of [{ tags: 'ggb' }, { page: '2' }, { sort: 'oldest' }]) {
+      expect((await metadata(query)).robots).toEqual({
+        index: false,
+        follow: true,
+      });
+    }
   });
 
   test('clip page emits a self canonical without the query string', async () => {
@@ -105,5 +122,16 @@ describe('gfys page metadata', () => {
       params: Promise.resolve({ videoId: 'abc123' }),
     });
     expect(metadata.alternates).toEqual({ canonical: '/gfys/abc123' });
+  });
+
+  test('unknown clip id fails metadata with a 404', async () => {
+    const { fetchGfy } = await import('@/actions/gfys');
+    (fetchGfy as jest.Mock).mockResolvedValue(null);
+    const { generateMetadata } = await import('@/app/gfys/[videoId]/page');
+    await expect(
+      generateMetadata({ params: Promise.resolve({ videoId: 'zzzzzzzz' }) })
+    ).rejects.toMatchObject({
+      digest: expect.stringMatching(/;404$/),
+    });
   });
 });

@@ -13,6 +13,7 @@ import {
   canExpandTimelineLater,
   hasKpopSearchFilters,
   getTimelineLabel,
+  kpopHref,
   getKpopView,
   searchParamsToKpopQueryState,
 } from '@/lib/kpop/query';
@@ -27,7 +28,7 @@ import ComebackFormInput from './ComebackFormInput';
 
 export default function ComebacksForm() {
   const [isSearching, startSearchTransition] = useTransition();
-  const { router, pathname, searchParams, formDataToURLState } = useURLState({
+  const { router, searchParams, formDataToURLState } = useURLState({
     formKeys,
   });
 
@@ -75,9 +76,7 @@ export default function ComebacksForm() {
           onClick={() => {
             setSearchOpen(false);
             startSearchTransition(() =>
-              router.replace(
-                `${pathname}?${buildRecentSearchParams(searchParams).toString()}`
-              )
+              router.replace(kpopHref(buildRecentSearchParams(searchParams)))
             );
           }}
         >
@@ -89,7 +88,6 @@ export default function ComebacksForm() {
           className={modeButtonClass(isFollowingView)}
           onClick={onFollowingClick(
             searchParams,
-            pathname,
             router,
             startSearchTransition
           )}
@@ -103,9 +101,7 @@ export default function ComebacksForm() {
           onClick={() => {
             setSearchOpen(true);
             startSearchTransition(() =>
-              router.replace(
-                `${pathname}?${buildSearchSearchParams(searchParams).toString()}`
-              )
+              router.replace(kpopHref(buildSearchSearchParams(searchParams)))
             );
           }}
         >
@@ -140,7 +136,6 @@ export default function ComebacksForm() {
                 className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
                 onClick={onTimelineExpansionClick(
                   searchParams,
-                  pathname,
                   router,
                   'earlier',
                   startSearchTransition
@@ -156,7 +151,6 @@ export default function ComebacksForm() {
                   className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
                   onClick={onTimelineExpansionClick(
                     searchParams,
-                    pathname,
                     router,
                     'later',
                     startSearchTransition
@@ -172,7 +166,6 @@ export default function ComebacksForm() {
                 className='whitespace-nowrap border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
                 onClick={onTodayClick(
                   searchParams,
-                  pathname,
                   router,
                   startSearchTransition
                 )}
@@ -314,7 +307,7 @@ export default function ComebacksForm() {
               type='button'
               variant='outline'
               className='border-primary-kp/40 bg-transparent hover:bg-primary-kp/10'
-              onClick={onClearClick(pathname, router, startSearchTransition)}
+              onClick={onClearClick(router, startSearchTransition)}
               disabled={isSearching}
             >
               Clear
@@ -350,9 +343,7 @@ function followingDescription(
 
 function onTimelineExpansionClick(
   searchParams:
-    | URLSearchParams
-    | ReturnType<typeof useURLState>['searchParams'],
-  pathname: string,
+    URLSearchParams | ReturnType<typeof useURLState>['searchParams'],
   router: ReturnType<typeof useURLState>['router'],
   direction: 'earlier' | 'later',
   startSearchTransition: (callback: () => void) => void
@@ -363,7 +354,7 @@ function onTimelineExpansionClick(
       direction
     );
     startSearchTransition(() => {
-      router.replace(`${pathname}?${nextSearchParams.toString()}`, {
+      router.replace(kpopHref(nextSearchParams), {
         scroll: false,
       });
     });
@@ -372,9 +363,7 @@ function onTimelineExpansionClick(
 
 function onTodayClick(
   searchParams:
-    | URLSearchParams
-    | ReturnType<typeof useURLState>['searchParams'],
-  pathname: string,
+    URLSearchParams | ReturnType<typeof useURLState>['searchParams'],
   router: ReturnType<typeof useURLState>['router'],
   startSearchTransition: (callback: () => void) => void
 ) {
@@ -389,7 +378,7 @@ function onTodayClick(
 
     const nextSearchParams = buildRecentSearchParams(searchParams);
     startSearchTransition(() => {
-      router.replace(`${pathname}?${nextSearchParams.toString()}#kpop-today`, {
+      router.replace(`${kpopHref(nextSearchParams)}#kpop-today`, {
         scroll: false,
       });
     });
@@ -398,16 +387,14 @@ function onTodayClick(
 
 function onFollowingClick(
   searchParams:
-    | URLSearchParams
-    | ReturnType<typeof useURLState>['searchParams'],
-  pathname: string,
+    URLSearchParams | ReturnType<typeof useURLState>['searchParams'],
   router: ReturnType<typeof useURLState>['router'],
   startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
     const nextSearchParams = buildFollowingSearchParams(searchParams);
     startSearchTransition(() => {
-      router.replace(`${pathname}?${nextSearchParams.toString()}`);
+      router.replace(kpopHref(nextSearchParams));
     });
   };
 }
@@ -432,14 +419,13 @@ function onSearchSubmit(
 }
 
 function onClearClick(
-  pathname: string,
   router: ReturnType<typeof useURLState>['router'],
   startSearchTransition: (callback: () => void) => void
 ) {
   return () => {
     const searchParams = buildSearchSearchParams(new URLSearchParams());
     startSearchTransition(() => {
-      router.replace(`${pathname}?${searchParams.toString()}`);
+      router.replace(kpopHref(searchParams));
     });
   };
 }

@@ -37,7 +37,6 @@ describe('Discord GIF Maker SEO', () => {
       'https://mgck.ink/image-edit',
       'https://mgck.ink/kpop',
       'https://mgck.ink/milestones',
-      'https://mgck.ink/shorten',
     ]);
     expect(urls.some((url) => url.includes('/account'))).toBe(false);
     expect(urls.some((url) => url.includes('/api'))).toBe(false);

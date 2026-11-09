@@ -26,6 +26,12 @@ const nextConfig = {
   // (MGK-26) or ship differently depending on whether ESLint is installed.
   eslint: { ignoreDuringBuilds: true },
   allowedDevOrigins,
+  // Next streams metadata into <body> for any UA this doesn't match, and its
+  // default list leaves out Googlebot (treated as a JS-running crawler), yet
+  // Google honours rel=canonical only in <head>. Matching every UA also lets
+  // notFound() in generateMetadata set a real 404 before the shell flushes.
+  // Cost: first byte waits for generateMetadata.
+  htmlLimitedBots: /.*/,
   // Inlined into the client so FFmpegManager fetches the same versioned path
   // that scripts/copy-ffmpeg-core.mjs stages.
   env: { FFMPEG_CORE_BASE_PATH: ffmpegCoreBasePath },

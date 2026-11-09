@@ -1,7 +1,7 @@
 import { fetchAccounts, fetchRandomGfy } from '@/actions/gfys';
 import { Button } from '@/components/ui/button';
 import { SearchFormParams, SearchParams } from '@/lib/types/gfys';
-import { validDateStringOrNull } from '@/lib/utils';
+import { validDateStringOrNull } from '@/lib/utils/dates';
 import { DEFAULT_GFY_SORT, createURL } from '@/lib/gfys';
 import {
   Tooltip,

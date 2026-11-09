@@ -7,9 +7,10 @@ import {
   searchParamsToKpopQueryState,
   getCanonicalKpopSearchParams,
   getKpopView,
+  kpopHref,
 } from '@/lib/kpop/query';
 import { ArrowUp, ExternalLink } from 'lucide-react';
-import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
 
 import ComebacksForm from './_components/ComebacksForm';
 import ErrorResponse from './_components/ErrorResponse';
@@ -23,30 +24,28 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  // Middleware redirects non-canonical queries, so this is a self-canonical.
+  const canonicalSearchParams = getCanonicalKpopSearchParams(
+    (await searchParams) || {}
+  );
+  return {
+    alternates: { canonical: kpopHref(canonicalSearchParams) },
+    // Following lists the visitor's own artists: nothing to index, but its
+    // links still lead to indexable pages.
+    ...(getKpopView(canonicalSearchParams) === 'following' && {
+      robots: { index: false, follow: true },
+    }),
+  };
+}
+
 export default async function KpopPage({ searchParams }: PageProps) {
   const session = await getVerifiedCoreSession();
-  const resolvedSearchParams = (await searchParams) || {};
-  const canonicalSearchParams =
-    getCanonicalKpopSearchParams(resolvedSearchParams);
-  const canonicalUrl = `/kpop?${canonicalSearchParams.toString()}`;
-  const rawSearchParams = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(resolvedSearchParams)) {
-    if (Array.isArray(value)) {
-      if (value[0]) {
-        rawSearchParams.set(key, value[0]);
-      }
-      continue;
-    }
-    if (value) {
-      rawSearchParams.set(key, value);
-    }
-  }
-
-  if (rawSearchParams.toString() !== canonicalSearchParams.toString()) {
-    redirect(canonicalUrl);
-  }
-
+  const canonicalSearchParams = getCanonicalKpopSearchParams(
+    (await searchParams) || {}
+  );
   const queryState = searchParamsToKpopQueryState(canonicalSearchParams);
   const kpopView = getKpopView(canonicalSearchParams);
   const comebacksResult =

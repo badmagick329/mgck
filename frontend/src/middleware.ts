@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { API_REFRESH } from '@/lib/consts/urls';
+import { API_REFRESH, KPOP_BASE } from '@/lib/consts/urls';
 import {
   isCoreSessionExpiring,
   verifyCoreAccessToken,
 } from '@/lib/account/core-token';
 import { accessCookieOptions } from '@/lib/account/auth-cookies';
+import { getKpopRedirectUrl } from '@/lib/kpop/query';
 
 const BASE_URL = process.env.CORE_API_BASE_URL;
 
@@ -50,6 +51,11 @@ function isProtectedRoute(pathname: string) {
 }
 
 export async function middleware(request: NextRequest) {
+  const kpopRedirect = getKpopCanonicalRedirect(request);
+  if (kpopRedirect) {
+    return kpopRedirect;
+  }
+
   const token = request.cookies.get('token')?.value;
   const currentRefreshToken = request.cookies.get('refreshToken')?.value;
   const verification = await verifyCoreAccessToken(token);
@@ -82,6 +88,22 @@ export async function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
+}
+
+/**
+ * Redirecting from the page came after kpop/loading.tsx had flushed, so the
+ * response was a 200 with a meta refresh. 307 rather than 308: the canonical
+ * form depends on today's date (the default start date is omitted). Auth work
+ * is skipped; the follow-up request to the canonical URL does it.
+ */
+function getKpopCanonicalRedirect(request: NextRequest) {
+  if (request.nextUrl.pathname !== KPOP_BASE) {
+    return null;
+  }
+  const canonicalUrl = getKpopRedirectUrl(request.nextUrl.searchParams);
+  return canonicalUrl
+    ? NextResponse.redirect(new URL(canonicalUrl, request.url), 307)
+    : null;
 }
 
 function clearAuthentication(request: NextRequest, protectedRoute: boolean) {

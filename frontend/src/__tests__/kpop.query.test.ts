@@ -9,7 +9,9 @@ import {
   canExpandTimelineLater,
   getActiveKpopPreset,
   getCanonicalKpopSearchParams,
+  getCanonicalKpopUrl,
   getKpopApiQuery,
+  getKpopRedirectUrl,
   getKpopView,
   hasKpopSearchFilters,
   searchParamsToKpopQueryState,
@@ -27,12 +29,8 @@ describe('kpop query helpers', () => {
     ).toBe(true);
   });
 
-  test('canonicalizes empty state to default recent browse window', () => {
-    const params = getCanonicalKpopSearchParams(new URLSearchParams());
-
-    expect(params.get('start-date')).toBeTruthy();
-    expect(params.get('end-date')).toBeNull();
-    expect(params.get('artist')).toBeNull();
+  test('canonicalizes empty state to the bare URL', () => {
+    expect(getCanonicalKpopUrl(new URLSearchParams())).toBe('/kpop');
   });
 
   test('normalizes invalid page and exact values', () => {
@@ -98,7 +96,7 @@ describe('kpop query helpers', () => {
     expect(buildAllSearchParams(source).get('start-date')).toBe('000101');
     expect(buildAllSearchParams(source).get('end-date')).toBeNull();
     expect(buildAllSearchParams(source).get('page')).toBeNull();
-    expect(buildClearSearchParams(source).toString()).toMatch(/^start-date=/);
+    expect(buildClearSearchParams(source).toString()).toBe('');
   });
 
   test('clamps earlier navigation at the archive boundary', () => {
@@ -201,5 +199,100 @@ describe('kpop query helpers', () => {
       page_size: '50',
       exact: '',
     });
+  });
+});
+
+describe('kpop canonical URLs', () => {
+  // Default open-ended window starts 7 days back: 261102.
+  const today = new Date('2026-11-09T12:00:00Z');
+
+  beforeEach(() => {
+    jest.useFakeTimers({
+      now: today,
+      doNotFake: ['nextTick', 'queueMicrotask', 'setImmediate', 'setTimeout'],
+    });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  const redirectFor = (query: string) =>
+    getKpopRedirectUrl(new URLSearchParams(query));
+
+  test('the default open-ended window is the bare URL', () => {
+    expect(redirectFor('')).toBeNull();
+    expect(redirectFor('start-date=261102')).toBe('/kpop');
+    expect(redirectFor('start-date=20261102')).toBe('/kpop');
+    expect(searchParamsToKpopQueryState(new URLSearchParams())).toMatchObject({
+      startDate: '261102',
+      endDate: '',
+    });
+  });
+
+  test('a bounded window keeps its explicit start date', () => {
+    expect(redirectFor('start-date=261102&end-date=261115')).toBeNull();
+    expect(redirectFor('end-date=261115')).toBe(
+      '/kpop?start-date=261102&end-date=261115'
+    );
+  });
+
+  test('normalises other queries to one URL', () => {
+    expect(redirectFor('start-date=250601&page=-4')).toBe(
+      '/kpop?start-date=250601'
+    );
+    expect(redirectFor('artist=rv&start-date=250601')).toBe(
+      '/kpop?start-date=250601&artist=rv'
+    );
+    expect(redirectFor('utm_source=x')).toBe('/kpop');
+    expect(redirectFor('artist=')).toBe('/kpop');
+    expect(redirectFor('start-date=250601')).toBeNull();
+    expect(redirectFor('view=following')).toBeNull();
+    expect(redirectFor('start-date=261102&view=following')).toBe(
+      '/kpop?view=following'
+    );
+  });
+
+  test('browse controls only produce canonical URLs', () => {
+    const sources = [
+      '',
+      'start-date=000101',
+      'start-date=261026',
+      'start-date=250526&end-date=250601&artist=rv&page=3&exact=on',
+      'artist=rv&view=search',
+      'view=following',
+    ].map((query) => new URLSearchParams(query));
+    const outputs = sources.flatMap((source) => [
+      buildRecentSearchParams(source),
+      buildAllSearchParams(source),
+      buildFollowingSearchParams(source),
+      buildSearchSearchParams(source),
+      buildClearSearchParams(source),
+      buildTimelineExpansionSearchParams(source, 'earlier'),
+      buildTimelineExpansionSearchParams(source, 'later'),
+    ]);
+
+    for (const output of outputs) {
+      expect(getKpopRedirectUrl(output)).toBeNull();
+    }
+  });
+
+  test('Timeline and retracting back to the default return to the bare URL', () => {
+    expect(
+      buildRecentSearchParams(
+        new URLSearchParams('start-date=250601')
+      ).toString()
+    ).toBe('');
+    expect(
+      buildTimelineExpansionSearchParams(
+        new URLSearchParams('start-date=261026'),
+        'later'
+      ).toString()
+    ).toBe('');
+    expect(
+      buildTimelineExpansionSearchParams(new URLSearchParams(), 'earlier').get(
+        'start-date'
+      )
+    ).toBe('261026');
   });
 });

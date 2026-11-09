@@ -13,7 +13,7 @@ import {
   GfyResponseSchema,
 } from '@/lib/types/gfys';
 import { DEFAULT_GFY_SORT } from '@/lib/gfys';
-import { validDateStringOrNull } from '@/lib/utils';
+import { validDateStringOrNull } from '@/lib/utils/dates';
 
 const BASE_URL = process.env.BASE_URL;
 
