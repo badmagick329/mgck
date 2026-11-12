@@ -7,7 +7,6 @@ frontend/*
 djangobackend/urlshortener/static/css/style.css
 !pyproject.toml
 !poetry.lock
-!crontab
 !uv.lock
 .git/
 .gitignore
