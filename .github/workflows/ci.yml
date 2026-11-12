@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      # Reads the pnpm version from packageManager in frontend/package.json.
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      # Node 22 matches the node:22-alpine base of frontend/Dockerfile.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      # next-env.d.ts (image module types) and .next/types are generated and
+      # ignored by Git, so tsc on a fresh checkout needs them created first.
+      - run: pnpm exec next typegen
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm test
+
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      # The tests start their own Postgres through Testcontainers, which uses
+      # the runner's Docker daemon, so no service container is needed here.
+      - run: dotnet test coreapi/CoreApi.WebApi.Tests/CoreApi.WebApi.Tests.csproj
+
+  django:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    # settings.py reads these at import. They are dummy values: CI has no
+    # secrets and no .env. DB_HOST=localhost selects the non-container branch,
+    # so NEXT_URL and UPLOADS apply rather than BASE_URL and UPLOADS_STATIC.
+    env:
+      SECRET_KEY: ci-only-insecure-secret-key-not-used-anywhere-else-0123456789
+      DEBUG: "0"
+      ALLOWED_HOSTS: "*"
+      ENGINE: django.db.backends.postgresql
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      VIDEO_URL: http://localhost/gfy-videos
+      NEXT_URL: http://localhost:5000
+      BASE_URL: http://localhost:5000
+      UPLOADS: /tmp/mgck-uploads
+      UPLOADS_STATIC: /tmp/mgck-uploads
+    steps:
+      - uses: actions/checkout@v7
+      # Python 3.10 matches the python:3.10 base of djangobackend/Dockerfile.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.10"
+      # setup-uv publishes no floating major tag (no v10), so pin the release.
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --python 3.10
+      # pytest.ini at the repository root sets the settings module and path.
+      - run: uv run --frozen pytest
