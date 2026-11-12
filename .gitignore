@@ -309,8 +309,7 @@ __pycache__/
 *.xsd.cs
 
 
-# Prod settings
-appsettings.Production.json
+# Local Core settings hold secrets; production secrets come from Dokploy env only.
 /coreapi/CoreApi.WebApi/appsettings.Development.json
 
 # Private deployment tools and credentials
