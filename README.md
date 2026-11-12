@@ -9,22 +9,9 @@ This project hosts a collection of web apps related to Kpop and Discord
 3. [Emojify Your Messages](https://mgck.ink/emojify) - Use the emoji generator to improve your messages by 300%. Add an emoji between each word to impress everyone.
 4. [Discord gifs](https://mgck.ink/discordgifs) - Create emotes and stickers for Discord from your video clips, complying with Discord's size limits.
 
-## Setup
+## Development
 
-You will need the follow files to run this:
-
-- .env
-- docker-compose.yml
-- nginx/conf.d/main.conf
-- frontend/.env.local
-
-Sample files are provided.
-
-Start the app with:
-
-```bash
-docker-compose up -d
-```
+There is no supported one-command local stack. Each app can be developed and tested on its own.
 
 ### Core API local development
 
