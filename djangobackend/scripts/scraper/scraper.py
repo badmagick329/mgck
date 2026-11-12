@@ -6,6 +6,7 @@ from pathlib import Path
 
 import praw
 from praw import Reddit
+from prawcore.exceptions import NotFound
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 if str(BASE_DIR) not in sys.path:
@@ -57,15 +58,31 @@ class Scraper:
         self._logger = logger
         self._wiki_urls = WikiUrls()
 
-    def scrape(self, urls: list[str] | None = None):
+    def scrape(self, urls: list[str] | None = None) -> bool:
+        """
+        Scrape and save each URL, returning False if any of them failed.
+
+        One bad month must not block the others, but its failure has to reach
+        the exit status: the scheduler only sees a failed run as non-zero.
+        """
         if not urls:
             urls = self._get_recent_urls()
+        succeeded = True
         for url in urls:
             saved_releases = self._db_reader.get_recent_saved_releases()
-            merged_releases = self._fetch_releases_from_url(
-                url, saved_releases
-            )
-            self._update_db(merged_releases)
+            try:
+                merged_releases = self._fetch_releases_from_url(
+                    url, saved_releases
+                )
+                self._update_db(merged_releases)
+            except NotFound:
+                # Recent URLs include next month, whose page often does not
+                # exist yet. That is normal, not a failed run.
+                self._logger.warning(f"No wiki page at {url}, skipping")
+            except Exception as e:
+                self._logger.error(f"Error scraping {url}\n{e}", exc_info=e)
+                succeeded = False
+        return succeeded
 
     def _get_recent_urls(self):
         self._wiki_urls.generate_urls()
@@ -74,73 +91,49 @@ class Scraper:
     def _fetch_releases_from_url(
         self, url: str, saved_releases: list[ReleaseData]
     ) -> list[ReleaseData]:
-        new_releases = []
+        # Errors propagate to scrape(), which records the run as failed.
+        new_releases = self._fetch_release_data_from_url(url, saved_releases)
         merged_releases = []
-
-        is_successful = self._fetch_release_data_from_url(
-            url, saved_releases, new_releases
-        )
-        if not is_successful:
-            return merged_releases
         self._merge_releases(saved_releases, new_releases, merged_releases)
 
         return merged_releases
 
     def _parse_html(self, url: str) -> list[ReleaseData]:
-        try:
-            self._logger.info(f"Scraping {url}")
-            self._fetched_releases.read_url(url)
-            html = self._fetched_releases.html
-            assert isinstance(html, str), f"Wiki page content is not a string"
-            parsed_html = ParsedHTML(html, url)
-            release_list = parsed_html.release_list()
-            release_list.sort(key=lambda r: r.release_date)
-            return release_list
-        except Exception as e:
-            self._logger.error(f"Error scraping {url}\n{e}")
-            return []
+        self._logger.info(f"Scraping {url}")
+        self._fetched_releases.read_url(url)
+        html = self._fetched_releases.html
+        assert isinstance(html, str), f"Wiki page content is not a string"
+        parsed_html = ParsedHTML(html, url)
+        release_list = parsed_html.release_list()
+        release_list.sort(key=lambda r: r.release_date)
+        return release_list
 
     def _fetch_release_data_from_url(
-        self,
-        url: str,
-        saved_releases: list[ReleaseData],
-        new_releases: list[ReleaseData],
-    ) -> bool:
-        try:
-            release_data_from_url = [r for r in self._parse_html(url)]
-            release_youtube_urls = ReleaseYoutubeUrls(
-                self._reddit,
-                saved_releases,
-                release_data_from_url,
-                self._logger,
-            )
-            release_youtube_urls.extract()
-            if release_youtube_urls.releases:
-                new_releases.extend(release_youtube_urls.releases)
-            return True
-        except Exception as e:
-            self._logger.error(f"Error scraping {url}\n{e}")
-            return False
+        self, url: str, saved_releases: list[ReleaseData]
+    ) -> list[ReleaseData]:
+        release_youtube_urls = ReleaseYoutubeUrls(
+            self._reddit,
+            saved_releases,
+            self._parse_html(url),
+            self._logger,
+        )
+        release_youtube_urls.extract()
+        return release_youtube_urls.releases
 
     def _merge_releases(
         self,
         saved_releases: list[ReleaseData],
         new_releases: list[ReleaseData],
         merged_releases: list[ReleaseData],
-    ) -> bool:
-        try:
-            newly_merged = self._create_merged_releases(
-                saved_releases, new_releases
-            )
-            for merged_release in newly_merged:
-                if merged_release not in merged_releases:
-                    merged_releases.append(merged_release)
+    ) -> None:
+        newly_merged = self._create_merged_releases(
+            saved_releases, new_releases
+        )
+        for merged_release in newly_merged:
+            if merged_release not in merged_releases:
+                merged_releases.append(merged_release)
 
-            self._logger.debug(f"Merged {len(newly_merged)} releases")
-            return True
-        except Exception as e:
-            self._logger.error(f"Error merging\n{e}")
-            return False
+        self._logger.debug(f"Merged {len(newly_merged)} releases")
 
     def _create_merged_releases(
         self, old_releases: list[ReleaseData], new_releases: list[ReleaseData]
@@ -158,14 +151,8 @@ class Scraper:
         return merged_releases
 
     def _update_db(self, releases: list[ReleaseData]):
-        try:
-            self._db_writer.save_to_db(releases)
-            self._logger.info("Update complete")
-        except Exception as e:
-            self._logger.error(
-                f"Error saving {e}", exc_info=e, stack_info=True
-            )
-            return
+        self._db_writer.save_to_db(releases)
+        self._logger.info("Update complete")
 
 
 def main():
@@ -182,15 +169,19 @@ def main():
     logger = get_stream_logger(LOG_LEVEL)
     fetched_releases = FetchedReleasesFromSubreddit(reddit, logger)
     retries = 2
+    succeeded = False
     while retries > 0:
         try:
             scraper = Scraper(reddit, fetched_releases, db, db, logger)
-            scraper.scrape(urls)
+            succeeded = scraper.scrape(urls)
             break
         except Exception as e:
             retries -= 1
             if retries == 0:
                 raise e
+    # The scheduler marks a run failed only on a non-zero exit.
+    if not succeeded:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

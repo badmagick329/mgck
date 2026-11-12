@@ -6,6 +6,12 @@ from praw import Reddit
 
 class FetchedReleases(Protocol):
     def read_url(self, url: str) -> None:
+        """
+        Load the wiki page at url, raising on failure.
+
+        A page that does not exist raises prawcore.exceptions.NotFound so the
+        scraper can tell a not-yet-created month from a real failure.
+        """
         raise NotImplementedError
 
     @property
@@ -24,20 +30,12 @@ class FetchedReleasesFromSubreddit:
         self._html = None
 
     def read_url(self, url: str) -> None:
-        try:
-            html = self._get_html(self.year(url), self.month(url))
-            if not isinstance(html, str):
-                raise ValueError(
-                    f"Wiki page content is not a string for {url}"
-                )
-            self._html = html
-        except Exception as e:
-            self._logger.error(
-                f"Error scraping {url}. status_code code: {e}",
-                exc_info=e,
-                stack_info=True,
-            )
-            self._html = None
+        # Errors propagate: swallowing them here hid every failed run.
+        self._html = None
+        html = self._get_html(self.year(url), self.month(url))
+        if not isinstance(html, str):
+            raise ValueError(f"Wiki page content is not a string for {url}")
+        self._html = html
 
     def _get_html(self, year: int, month: str) -> str | None:
         subreddit = self._reddit.subreddit("kpop")

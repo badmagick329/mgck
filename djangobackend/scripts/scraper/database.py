@@ -174,11 +174,15 @@ def _validate_releases(releases: list[ReleaseData]) -> None:
         ):
             if not isinstance(value, str):
                 raise ValidationError(f"{field_name} must be text")
-            # Empty titles/albums occur in the source; enforce persisted length
-            # constraints without inventing a new requirement for those cells.
+            # Empty titles, albums and release types occur in the r/kpop wiki
+            # (an announced comeback whose details are not out yet) and are
+            # already stored. Enforce persisted length constraints without
+            # inventing a new requirement for those cells: rejecting them
+            # fails the whole snapshot and stops every daily import.
             model._meta.get_field(field_name).run_validators(value)
-        if not release.artist.strip() or not release.release_type.strip():
-            raise ValidationError("Artist and release type must not be empty")
+        # A release without an artist is unusable and cannot be matched.
+        if not release.artist.strip():
+            raise ValidationError("Artist must not be empty")
         if not isinstance(release.release_date, str):
             raise ValidationError("Release date must be an ISO date string")
         parsed_date = Release._meta.get_field("release_date").clean(

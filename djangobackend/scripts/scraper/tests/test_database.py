@@ -68,8 +68,8 @@ def state():
         {"album": "x" * 511},
         {"artist": "x" * 511},
         {"release_type": "x" * 511},
+        {"artist": ""},
         {"artist": "   "},
-        {"release_type": ""},
         {"title": None},
         {"release_date": "2026-02-30"},
         {"release_date": "2026-1-4"},
@@ -193,6 +193,15 @@ def test_model_length_boundaries_and_source_empty_title_are_preserved(existing):
     )
     assert Release.objects.filter(title="t" * 510).exists()
     assert Release.objects.filter(title="", album="").exists()
+
+
+def test_announced_release_without_type_title_or_album_is_saved(existing):
+    # The wiki lists comebacks before their details are known.
+    Database.save_to_db(
+        [snapshot(artist="ADAP", release_type="", title="", album="")]
+    )
+    saved = Release.objects.get(artist__name="ADAP")
+    assert (saved.release_type.name, saved.title, saved.album) == ("", "", "")
 
 
 def test_missing_saved_id_rolls_back_a_replacement(existing):
