@@ -12,8 +12,7 @@ namespace CoreApi.WebApi.Tests;
 
 public class RefreshSessionMigrationTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder()
-        .WithImage("postgres:15-alpine")
+    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:15-alpine")
         .Build();
 
     public Task InitializeAsync() => _database.StartAsync();

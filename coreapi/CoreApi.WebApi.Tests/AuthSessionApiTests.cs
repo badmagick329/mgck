@@ -17,8 +17,7 @@ namespace CoreApi.WebApi.Tests;
 public class AuthSessionApiTests : IAsyncLifetime
 {
     private const string Password = "password1";
-    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder()
-        .WithImage("postgres:15-alpine")
+    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:15-alpine")
         .Build();
     private AuthApiFactory? _factory;
 

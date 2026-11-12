@@ -19,8 +19,7 @@ namespace CoreApi.WebApi.Tests;
 
 public class FeedbackApiTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
+    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:16-alpine")
         .Build();
     private WebApplicationFactory<Program> _factory = null!;
 

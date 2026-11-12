@@ -8,15 +8,17 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace CoreApi.WebApi.Tests;
 
 public class AuthRateLimitTests
 {
-    private static TestServer CreateServer(Func<Task>? work = null)
+    private static IHost CreateServer(Func<Task>? work = null)
     {
-        return new TestServer(new WebHostBuilder()
+        return new HostBuilder().ConfigureWebHost(web => web
+            .UseTestServer()
             .ConfigureServices(services =>
             {
                 services.AddRouting();
@@ -41,14 +43,15 @@ public class AuthRateLimitTests
                             .WithMetadata(policy);
                     }
                 });
-            }));
+            }))
+            .Start();
     }
 
     [Fact]
     public async Task Fresh_usernames_and_spoofed_forwarding_headers_cannot_bypass_registration_cap()
     {
         using var server = CreateServer();
-        using var client = server.CreateClient();
+        using var client = server.GetTestClient();
         for (var index = 0; index < 10; index++)
         {
             client.DefaultRequestHeaders.Remove("X-Forwarded-For");
@@ -63,7 +66,7 @@ public class AuthRateLimitTests
     public async Task Login_has_an_aggregate_cap_independent_of_username()
     {
         using var server = CreateServer();
-        using var client = server.CreateClient();
+        using var client = server.GetTestClient();
         for (var index = 0; index < 60; index++)
             Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/auth/login", new { username = $"name-{index}" })).StatusCode);
         Assert.Equal(HttpStatusCode.TooManyRequests, (await client.PostAsJsonAsync("/api/auth/login", new { username = "unused-name" })).StatusCode);
@@ -81,7 +84,7 @@ public class AuthRateLimitTests
             if (Interlocked.Increment(ref entered) == 4) allEntered.SetResult();
             await release.Task;
         });
-        using var client = server.CreateClient();
+        using var client = server.GetTestClient();
         var requests = Enumerable.Range(0, 4).Select(_ => client.PostAsJsonAsync("/api/auth/login", new { username = "user" })).ToArray();
         try
         {

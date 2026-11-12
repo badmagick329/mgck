@@ -13,8 +13,7 @@ namespace CoreApi.WebApi.Tests;
 
 public class FollowingApiTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
+    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:16-alpine")
         .Build();
     private FollowingApiFactory? _factory;
 

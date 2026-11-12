@@ -17,8 +17,7 @@ namespace CoreApi.WebApi.Tests;
 
 public class UserManagementApiTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine").Build();
+    private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:16-alpine").Build();
     private readonly FailurePlan _failures = new();
     private WebApplicationFactory<Program> _factory = null!;
 
