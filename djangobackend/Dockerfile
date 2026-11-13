@@ -7,7 +7,7 @@ RUN corepack enable && pnpm install --frozen-lockfile --ignore-scripts
 COPY djangobackend /app/djangobackend
 RUN pnpm run django:css:build
 
-FROM python:3.10-bookworm AS builder
+FROM python:3.13-bookworm AS builder
 
 WORKDIR /usr/src/app
 
@@ -19,13 +19,13 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 COPY pyproject.toml ./
 COPY uv.lock ./
-RUN uv sync --frozen --no-install-project --no-dev --python 3.10
+RUN uv sync --frozen --no-install-project --no-dev --python 3.13
 
 COPY ./djangobackend .
 # The runtime needs the compiled stylesheet, not Node or the CSS build tools.
 COPY --from=styles /app/djangobackend/urlshortener/static/css/style.css ./urlshortener/static/css/style.css
 
-FROM python:3.10-slim-bookworm
+FROM python:3.13-slim-bookworm
 
 WORKDIR /usr/src/app
 

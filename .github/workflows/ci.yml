@@ -85,14 +85,14 @@ jobs:
       UPLOADS_STATIC: /tmp/mgck-uploads
     steps:
       - uses: actions/checkout@v7
-      # Python 3.10 matches the python:3.10 base of djangobackend/Dockerfile.
+      # Python 3.13 matches the python:3.13 base of djangobackend/Dockerfile.
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.10"
+          python-version: "3.13"
       # setup-uv publishes no floating major tag (no v10), so pin the release.
       - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
-      - run: uv sync --frozen --python 3.10
+      - run: uv sync --frozen --python 3.13
       # pytest.ini at the repository root sets the settings module and path.
       - run: uv run --frozen pytest

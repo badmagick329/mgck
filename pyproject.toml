@@ -2,7 +2,7 @@
 name = "mgck"
 version = "0.1.0"
 description = ""
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 authors = [{ name = "badmagick329" }]
 license = "MIT"
 dependencies = [
@@ -13,7 +13,7 @@ dependencies = [
     "requests>=2.33.0,<3",
     "redis>=6.4,<7",
     "beautifulsoup4>=4.12.2,<5",
-    "pendulum>=2.1.2,<3",
+    "pendulum>=3.1,<4",
     "lxml>=6.1.0,<7",
     "praw>=7.7.1,<8",
     "result>=0.13.1,<0.14",
@@ -42,7 +42,7 @@ build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 79
-target-version = ['py310']
+target-version = ['py313']
 include = '\.pyi?$'
 # 'extend-exclude' excludes files or directories in addition to the defaults
 extend-exclude = '''
