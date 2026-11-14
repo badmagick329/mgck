@@ -1,7 +1,8 @@
 'use client';
 
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { ClipCrop, ClipTrim, FFmpegFileData } from '@/lib/types/discordgifs';
+import { getFileOutputEligibility } from '@/lib/discordgifs/eligibility';
 import {
   defaultFrameSeconds,
   formatClipTime,
@@ -15,6 +16,7 @@ import { useClipShortcuts } from '@/hooks/discordgifs/useClipShortcuts';
 import ClipTransport from './ClipTransport';
 import TrimTimeline from './TrimTimeline';
 import VideoCropper from './VideoCropper';
+import PresetPreview from './PresetPreview';
 
 type Playback = { start: number; end: number; loop: boolean };
 
@@ -59,7 +61,14 @@ export default function VideoTrimmer({
   onCropChange: (crop: ClipCrop | undefined) => void;
 }) {
   const { file, duration, trim } = fileData;
-  const video = useRef<HTMLVideoElement>(null);
+  const video = useRef<HTMLVideoElement | null>(null);
+  // The preview subscribes to the element's frames, so it needs the element
+  // as state to resubscribe when it mounts.
+  const [player, setPlayer] = useState<HTMLVideoElement | null>(null);
+  const attachVideo = useCallback((element: HTMLVideoElement | null) => {
+    video.current = element;
+    setPlayer(element);
+  }, []);
   const [url, setUrl] = useState('');
   const [failed, setFailed] = useState(false);
   const [playError, setPlayError] = useState('');
@@ -218,7 +227,7 @@ export default function VideoTrimmer({
         onChange={onCropChange}
       >
         <video
-          ref={video}
+          ref={attachVideo}
           src={url}
           muted={!sound}
           playsInline
@@ -323,6 +332,13 @@ export default function VideoTrimmer({
           </button>
         )}
       </div>
+      {dimensions && (
+        <PresetPreview
+          video={player}
+          crop={fileData.crop}
+          presetIds={getFileOutputEligibility(fileData).eligibleOutputTypes}
+        />
+      )}
       <ShortcutHints />
       <p className='text-xs text-foreground-dg/70'>
         The selection and crop apply to all selected outputs.

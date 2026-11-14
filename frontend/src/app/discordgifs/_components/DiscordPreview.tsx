@@ -1,14 +1,15 @@
 import { ConversionPresetId } from '@/lib/discordgifs/conversion-target';
+import { discordDisplayPx } from '@/lib/consts/discordgifs';
 import clsx from 'clsx';
 import Image from 'next/image';
 
-// Pixel boxes Discord's desktop client draws each output in, so people judge
-// legibility at the size others will see rather than at the source size.
-const stickerPx = 160;
-const inlineEmojiPx = 22;
-const jumboEmojiPx = 48;
-const chatAvatarPx = 40;
-const profileAvatarPx = 80;
+const {
+  sticker: stickerPx,
+  inlineEmoji: inlineEmojiPx,
+  jumboEmoji: jumboEmojiPx,
+  chatAvatar: chatAvatarPx,
+  profileAvatar: profileAvatarPx,
+} = discordDisplayPx;
 
 export default function DiscordPreview({
   type,

@@ -9,6 +9,18 @@ export const discordUploadSteps: Record<ConversionPresetId, string> = {
   avatar: 'User Settings → Profiles → Change Avatar',
 };
 
+/**
+ * Pixel boxes Discord's desktop client draws each output in, so people judge
+ * legibility at the size others will see rather than at the source size.
+ */
+export const discordDisplayPx = {
+  sticker: 160,
+  inlineEmoji: 22,
+  jumboEmoji: 48,
+  chatAvatar: 40,
+  profileAvatar: 80,
+} as const;
+
 // People who drag the APNG into a chat expect a sticker and get a plain image,
 // so the upload help states the difference wherever it names the sticker step.
 export const stickerAttachmentNote =
