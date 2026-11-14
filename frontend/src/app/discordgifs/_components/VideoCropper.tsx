@@ -24,14 +24,12 @@ export default function VideoCropper({
   crop,
   disabled,
   onChange,
-  onEditingChange,
 }: {
   children: ReactNode;
   dimensions: { width: number; height: number } | null;
   crop?: ClipCrop;
   disabled: boolean;
   onChange: (crop: ClipCrop | undefined) => void;
-  onEditingChange: (editing: boolean) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [square, setSquare] = useState(false);
@@ -48,10 +46,6 @@ export default function VideoCropper({
   const helpId = useId();
   const selection = crop ?? fullFrame;
   const aspect = dimensions ? dimensions.width / dimensions.height : 1;
-  const edit = (value: boolean) => {
-    setEditing(value);
-    onEditingChange(value);
-  };
   const update = (
     handle: CropHandle | 'move',
     original: ClipCrop,
@@ -107,7 +101,7 @@ export default function VideoCropper({
             className='rounded border px-3 py-2'
             disabled={disabled}
             aria-pressed={editing}
-            onClick={() => edit(!editing)}
+            onClick={() => setEditing(!editing)}
           >
             {editing ? 'Done cropping' : 'Adjust crop'}
           </button>

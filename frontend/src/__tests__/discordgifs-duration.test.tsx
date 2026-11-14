@@ -1,3 +1,7 @@
+// Thumbnail drawing needs real media decoding, which jsdom lacks.
+jest.mock('../hooks/discordgifs/useTimelineThumbnails', () => ({
+  useTimelineThumbnails: () => [],
+}));
 import '@testing-library/jest-dom';
 
 import { render, screen } from '@testing-library/react';

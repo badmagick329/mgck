@@ -1,3 +1,7 @@
+// Thumbnail drawing needs real media decoding, which jsdom lacks.
+jest.mock('../hooks/discordgifs/useTimelineThumbnails', () => ({
+  useTimelineThumbnails: () => [],
+}));
 jest.mock('@ffmpeg/ffmpeg', () => ({ FFmpeg: jest.fn() }));
 jest.mock('@ffmpeg/util', () => ({
   fetchFile: jest.fn(),

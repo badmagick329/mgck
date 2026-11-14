@@ -18,7 +18,6 @@ function Harness({ disabled = false }: { disabled?: boolean }) {
       crop={crop}
       disabled={disabled}
       onChange={setCrop}
-      onEditingChange={() => {}}
     >
       <video />
     </VideoCropper>
