@@ -16,6 +16,14 @@ import {
   buildOutputCommand,
 } from './ffmpeg-commands';
 import { FrameSizeCalculator } from './frame-size-calculator';
+import {
+  AdvancedSettings,
+  FileType,
+  fileTypeInfo,
+  fileTypeOrder,
+  singlePassDownloadName,
+} from './advanced';
+import { buildSinglePassCommand } from './single-pass-commands';
 
 type FFmpegData = Uint8Array | string;
 
@@ -51,6 +59,34 @@ type FFmpegFileConfig = {
   outputFsName: string;
   outputName: string;
   activeInputName: string;
+  /**
+   * Names something may have written, so cleanup never deletes a file that
+   * was never made (the optimized input is skipped for small files).
+   */
+  createdFiles: Set<string>;
+};
+
+export type SinglePassJob = {
+  file: File;
+  trim?: ClipTrim;
+  crop?: ClipCrop;
+  settings: AdvancedSettings;
+  /** Even output width, or null when the source size is unknown. */
+  width: number | null;
+  keepSound: boolean;
+  /** Seconds of output, which turns FFmpeg's output time into a fraction. */
+  outputSeconds: number;
+};
+
+export type SinglePassOutput =
+  | { fileType: FileType; name: string; blob: Blob }
+  | { fileType: FileType; failed: true };
+
+type SinglePassCallbacks = {
+  onStart?: (fileType: FileType, index: number) => void;
+  /** Fraction of the current file type done, 0 to 1. */
+  onProgress?: (fraction: number) => void;
+  onOutput?: (output: SinglePassOutput) => void;
 };
 
 let fallbackId = 0;
@@ -191,6 +227,7 @@ export class FFmpegManager {
       outputFsName: `output-${id}${target.extension}`,
       outputName: buildDownloadName(file.name, target),
       activeInputName: inputName,
+      createdFiles: new Set(),
     };
     return this;
   }
@@ -233,12 +270,6 @@ export class FFmpegManager {
     this.fileConfig = null;
   }
 
-  public async deleteFile(name: string): Promise<void> {
-    if (this.ffmpeg) {
-      await this.ffmpeg.deleteFile(name);
-    }
-  }
-
   public loaded(): boolean {
     return this.ffmpeg !== null;
   }
@@ -256,10 +287,13 @@ export class FFmpegManager {
     let logListenerAttached = false;
     let progressListenerAttached = false;
     try {
+      // Reading the file can fail before anything is written (Chrome reads
+      // nothing past about 2 GiB), so the input counts only once it is in.
       await ffmpeg.writeFile(
         config.inputName,
         await this.dependencies.fetchFile(config.file)
       );
+      config.createdFiles.add(config.inputName);
 
       try {
         await this.optimizeInput(config);
@@ -307,7 +341,7 @@ export class FFmpegManager {
       } catch (error) {
         console.error('Error removing FFmpeg progress listener', error);
       }
-      await this.cleanupFiles(config);
+      await this.deleteFiles(ffmpeg, config.createdFiles);
       if (this.fileConfig === config) {
         this.fileConfig = null;
       }
@@ -329,6 +363,7 @@ export class FFmpegManager {
       outputName: config.optimizedInputName,
       target: config.target,
     });
+    config.createdFiles.add(config.optimizedInputName);
     const returnCode = await ffmpeg.exec(command);
     if (returnCode === 1) {
       throw new Error('Error optimizing input');
@@ -363,6 +398,7 @@ export class FFmpegManager {
         target: config.target,
         width,
       });
+      config.createdFiles.add(config.outputFsName);
       const returnCode = await ffmpeg.exec(command);
       if (returnCode === 1) {
         return null;
@@ -379,16 +415,100 @@ export class FFmpegManager {
     return blob ? { blob, width: lastWidth } : null;
   }
 
-  private async cleanupFiles(config: FFmpegFileConfig): Promise<void> {
-    const names = [
-      config.inputName,
-      config.optimizedInputName,
-      config.outputFsName,
-    ];
+  /**
+   * Advanced mode's path: the user's settings, one run per file type, and no
+   * input optimisation or size search, which serve the presets' size caps.
+   * The input is written once and shared by every file type.
+   */
+  public async convertSinglePass(
+    job: SinglePassJob,
+    { onStart, onProgress, onOutput }: SinglePassCallbacks = {}
+  ): Promise<SinglePassOutput[]> {
+    const ffmpeg = this.ffmpeg;
+    if (!ffmpeg) {
+      throw new Error('FFmpeg not loaded');
+    }
+    const id = this.dependencies.createId();
+    const inputName = `input-${id}${this.safeInputExtension(job.file.name)}`;
+    const createdFiles = new Set<string>();
+    // FFmpeg reports output time in microseconds; its own progress figure is
+    // measured against the whole input, which a trim makes meaningless.
+    const progressListener = ({ time }: FFmpegProgressEvent) => {
+      if (job.outputSeconds > 0 && time > 0)
+        onProgress?.(Math.min(1, time / 1_000_000 / job.outputSeconds));
+    };
+    const outputs: SinglePassOutput[] = [];
+    ffmpeg.on('progress', progressListener);
+    try {
+      await ffmpeg.writeFile(
+        inputName,
+        await this.dependencies.fetchFile(job.file)
+      );
+      createdFiles.add(inputName);
+      const fileTypes = fileTypeOrder.filter((fileType) =>
+        job.settings.fileTypes.includes(fileType)
+      );
+      for (const [index, fileType] of fileTypes.entries()) {
+        onStart?.(fileType, index);
+        onProgress?.(0);
+        const outputFsName = `output-${id}${fileTypeInfo[fileType].extension}`;
+        createdFiles.add(outputFsName);
+        const returnCode = await ffmpeg.exec(
+          buildSinglePassCommand({
+            inputName,
+            outputName: outputFsName,
+            fileType,
+            settings: job.settings,
+            crop: job.crop,
+            trim: job.trim,
+            width: job.width,
+            keepSound: job.keepSound,
+          })
+        );
+        let output: SinglePassOutput;
+        if (returnCode !== 0) {
+          output = { fileType, failed: true };
+        } else {
+          const data = await ffmpeg.readFile(outputFsName);
+          output = {
+            fileType,
+            name: singlePassDownloadName(job.file.name, fileType),
+            blob: new Blob(
+              [data instanceof Uint8Array ? new Uint8Array(data) : data],
+              { type: fileTypeInfo[fileType].mimeType }
+            ),
+          };
+        }
+        // Output files can be large; drop each one before the next run.
+        await this.deleteFiles(ffmpeg, [outputFsName]);
+        createdFiles.delete(outputFsName);
+        outputs.push(output);
+        onOutput?.(output);
+      }
+      return outputs;
+    } finally {
+      try {
+        ffmpeg.off('progress', progressListener);
+      } catch (error) {
+        console.error('Error removing FFmpeg progress listener', error);
+      }
+      await this.deleteFiles(ffmpeg, createdFiles);
+    }
+  }
+
+  /**
+   * After terminate() the runtime that wrote these files is gone along with
+   * its file system, so there is nothing to delete.
+   */
+  private async deleteFiles(
+    runtime: FFmpegRuntime | null,
+    names: Iterable<string>
+  ): Promise<void> {
+    if (!runtime || runtime !== this.ffmpeg) return;
     await Promise.all(
-      names.map(async (name) => {
+      [...names].map(async (name) => {
         try {
-          await this.deleteFile(name);
+          await runtime.deleteFile(name);
         } catch (error) {
           console.error(`Error deleting temporary FFmpeg file ${name}`, error);
         }

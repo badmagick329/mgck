@@ -501,8 +501,11 @@ describe('FFmpeg manager lifecycle', () => {
     expect(runtime.off).toHaveBeenCalledWith('log', logCallback);
     expect(runtime.off).toHaveBeenCalledWith('progress', progressCallback);
     expect(runtime.deleteFile).toHaveBeenCalledWith('input-test-id.gif');
-    expect(runtime.deleteFile).toHaveBeenCalledWith('optimized-test-id.mp4');
     expect(runtime.deleteFile).toHaveBeenCalledWith('output-test-id.gif');
+    // A small input skips optimisation, so there is no optimized file to delete.
+    expect(runtime.deleteFile).not.toHaveBeenCalledWith(
+      'optimized-test-id.mp4'
+    );
     await expect(manager.convert()).rejects.toThrow(
       'FFmpegManager config not set'
     );

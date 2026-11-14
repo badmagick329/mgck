@@ -1,4 +1,12 @@
+// Only the route modules' exports matter here, not what they render.
+jest.mock('../components/ui/toaster', () => ({ Toaster: () => null }));
+jest.mock('../app/_components/Navbar', () => () => null);
+jest.mock('../app/_components/Footer', () => () => null);
+jest.mock('../app/discordgifs/_components/FileDropzone', () => () => null);
+
 import { discordGifsMetadata } from '@/app/discordgifs/metadata';
+import * as discordGifsLayout from '@/app/discordgifs/layout';
+import * as discordGifsPage from '@/app/discordgifs/page';
 import robots from '@/app/robots';
 import sitemap from '@/app/sitemap';
 import { discordGifMakerCard } from '@/lib/homepage/discord-gif-maker';
@@ -25,6 +33,20 @@ describe('Discord GIF Maker SEO', () => {
     expect(discordGifsMetadata.openGraph).toMatchObject({
       images: [expect.objectContaining({ width: 1200, height: 630 })],
     });
+  });
+
+  // MGK-37: /discordgifs?mode=advanced is a link into the same page, not a
+  // separate page for search engines.
+  test('keeps Advanced mode links canonical to /discordgifs', () => {
+    expect(discordGifsLayout.metadata).toBe(discordGifsMetadata);
+    expect(discordGifsLayout).not.toHaveProperty('generateMetadata');
+    expect(discordGifsPage).not.toHaveProperty('generateMetadata');
+    expect(discordGifsMetadata.alternates?.canonical).toBe('/discordgifs');
+    expect(discordGifsMetadata.openGraph?.url).toBe('/discordgifs');
+    const urls = sitemap().map((entry) => entry.url);
+    expect(urls.filter((url) => url.includes('discordgifs'))).toEqual([
+      'https://mgck.ink/discordgifs',
+    ]);
   });
 
   test('lists only the intended stable public routes in the sitemap', () => {

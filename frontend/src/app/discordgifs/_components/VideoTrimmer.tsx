@@ -1,7 +1,13 @@
 'use client';
 
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
-import { ClipCrop, ClipTrim, FFmpegFileData } from '@/lib/types/discordgifs';
+import {
+  ClipCrop,
+  ClipTrim,
+  EditorClip,
+  FFmpegFileData,
+} from '@/lib/types/discordgifs';
+import { clipHasAudio } from '@/lib/discordgifs/advanced';
 import { getFileOutputEligibility } from '@/lib/discordgifs/eligibility';
 import {
   defaultFrameSeconds,
@@ -42,6 +48,13 @@ function keepInSelection(player: HTMLVideoElement, playback: Playback) {
 const button =
   'h-9 rounded-md border border-foreground-dg/25 px-3 text-sm hover:bg-foreground-dg/10 disabled:cursor-not-allowed disabled:opacity-50';
 
+export type LoadedMedia = {
+  video: HTMLVideoElement;
+  width: number;
+  height: number;
+  hasAudio: boolean | null;
+};
+
 /** Native playback keeps editing responsive without generating encoded previews. */
 export default function VideoTrimmer({
   fileData,
@@ -50,8 +63,14 @@ export default function VideoTrimmer({
   card,
   onChange,
   onCropChange,
+  onMediaLoaded,
+  videoMaxHeight = 256,
 }: {
-  fileData: FFmpegFileData;
+  /**
+   * With `outputTypes` the clip is a simple-mode card, which adds the preset
+   * previews and the Sticker shortcut; Advanced mode's clip has none.
+   */
+  fileData: EditorClip & Partial<Pick<FFmpegFileData, 'outputTypes'>>;
   disabled: boolean;
   /** Whether keyboard shortcuts act on this clip. */
   active?: boolean;
@@ -59,8 +78,12 @@ export default function VideoTrimmer({
   card?: RefObject<Element>;
   onChange: (trim: ClipTrim | undefined) => void;
   onCropChange: (crop: ClipCrop | undefined) => void;
+  /** Advanced mode draws its preview and sizes its output from this. */
+  onMediaLoaded?: (media: LoadedMedia) => void;
+  /** Simple-mode cards are narrow; Advanced mode's editor column has room. */
+  videoMaxHeight?: number;
 }) {
-  const { file, duration, trim } = fileData;
+  const { file, duration, trim, outputTypes } = fileData;
   const video = useRef<HTMLVideoElement | null>(null);
   // The preview subscribes to the element's frames, so it needs the element
   // as state to resubscribe when it mounts.
@@ -225,21 +248,30 @@ export default function VideoTrimmer({
         crop={fileData.crop}
         disabled={disabled}
         onChange={onCropChange}
+        maxHeight={videoMaxHeight}
       >
         <video
           ref={attachVideo}
-          src={url}
+          src={url || undefined}
           muted={!sound}
           playsInline
           preload='auto'
-          className='max-h-64 w-full rounded-md bg-black'
+          className='w-full rounded-md bg-black'
+          style={{ maxHeight: videoMaxHeight }}
           onLoadedMetadata={() => {
             const player = video.current!;
-            if (player.videoWidth >= 2 && player.videoHeight >= 2)
+            if (player.videoWidth >= 2 && player.videoHeight >= 2) {
               setDimensions({
                 width: player.videoWidth,
                 height: player.videoHeight,
               });
+              onMediaLoaded?.({
+                video: player,
+                width: player.videoWidth,
+                height: player.videoHeight,
+                hasAudio: clipHasAudio(player),
+              });
+            }
           }}
           onError={() => setFailed(true)}
           onPlay={() => setPlaying(true)}
@@ -322,7 +354,7 @@ export default function VideoTrimmer({
         >
           Whole clip
         </button>
-        {fileData.outputTypes.includes('sticker') && length > 5 && (
+        {outputTypes?.includes('sticker') && length > 5 && (
           <button
             type='button'
             className={button}
@@ -332,17 +364,22 @@ export default function VideoTrimmer({
           </button>
         )}
       </div>
-      {dimensions && (
+      {dimensions && outputTypes && (
         <PresetPreview
           video={player}
           crop={fileData.crop}
-          presetIds={getFileOutputEligibility(fileData).eligibleOutputTypes}
+          presetIds={
+            getFileOutputEligibility({ ...fileData, outputTypes })
+              .eligibleOutputTypes
+          }
         />
       )}
       <ShortcutHints />
-      <p className='text-xs text-foreground-dg/70'>
-        The selection and crop apply to all selected outputs.
-      </p>
+      {outputTypes && (
+        <p className='text-xs text-foreground-dg/70'>
+          The selection and crop apply to all selected outputs.
+        </p>
+      )}
       {playError && <p role='alert'>{playError}</p>}
     </fieldset>
   );

@@ -74,12 +74,15 @@ export default function VideoCropper({
   crop,
   disabled,
   onChange,
+  maxHeight = 256,
 }: {
   children: ReactNode;
   dimensions: { width: number; height: number } | null;
   crop?: ClipCrop;
   disabled: boolean;
   onChange: (crop: ClipCrop | undefined) => void;
+  /** Tallest the video may draw, in CSS pixels; it matches the video's own cap. */
+  maxHeight?: number;
 }) {
   const [ratio, setRatio] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -199,7 +202,7 @@ export default function VideoCropper({
         className='relative mx-auto w-full overflow-hidden rounded-md bg-black'
         style={
           dimensions
-            ? { aspectRatio: aspect, maxWidth: 256 * aspect }
+            ? { aspectRatio: aspect, maxWidth: maxHeight * aspect }
             : undefined
         }
       >

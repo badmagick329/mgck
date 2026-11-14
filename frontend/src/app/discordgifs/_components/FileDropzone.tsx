@@ -3,8 +3,16 @@
 import {
   FileAction,
   FilesState,
+  durationState,
   filesStateReducer,
 } from '@/lib/discordgifs/files-state';
+import {
+  AdvancedSettings,
+  defaultAdvancedSettings,
+} from '@/lib/discordgifs/advanced';
+import { EditorClip, SessionResult } from '@/lib/types/discordgifs';
+import AdvancedEditor from './AdvancedEditor';
+import ModeSwitch, { ConverterMode } from './ModeSwitch';
 import {
   ConversionPresetId,
   defaultConversionPresetSelection,
@@ -38,15 +46,43 @@ export default function FileDropzone() {
   const [selectedOutputTypes, setSelectedOutputTypes] = useState<
     ConversionPresetId[]
   >([...defaultConversionPresetSelection]);
+  const [mode, setMode] = useState<ConverterMode>('simple');
+  const [advancedClip, setAdvancedClip] = useState<EditorClip | null>(null);
+  const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettings>(
+    defaultAdvancedSettings
+  );
+  const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
+  const [advancedBusy, setAdvancedBusy] = useState(false);
+  const advanced = mode === 'advanced';
+
+  // Read after hydration, so the server-rendered page stays the canonical
+  // simple mode and the link only changes what the visitor starts in.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get(modeParam) === 'advanced') setMode('advanced');
+  }, []);
 
   const checkFileDuration = useCallback((file: File) => {
     void readFileDuration(file).then((seconds) => {
       dispatch({
         type: 'updateDuration',
-        payload: { name: file.name, seconds },
+        payload: { name: file.name, file, seconds },
       });
+      setAdvancedClip((clip) =>
+        clip?.file === file
+          ? { ...clip, duration: durationState(seconds) }
+          : clip
+      );
     });
   }, []);
+
+  const openAdvancedClip = useCallback(
+    (file: File) => {
+      setAdvancedClip({ file, duration: { status: 'checking' } });
+      checkFileDuration(file);
+    },
+    [checkFileDuration]
+  );
 
   // The card the user last focused or pressed, falling back to the newest one,
   // so shortcuts never reach a card the user isn't working on.
@@ -86,13 +122,20 @@ export default function FileDropzone() {
       for (const rejection of fileRejections) {
         for (const err of rejection.errors) {
           if (err.code === 'too-many-files') {
-            setDropError(`You can only upload up to ${maxFiles} files`);
+            setDropError(
+              advanced
+                ? 'Advanced mode converts one clip at a time. Drop a single file.'
+                : `You can only upload up to ${maxFiles} files`
+            );
             return;
           }
         }
       }
     },
-    maxFiles,
+    maxFiles: advanced ? 1 : maxFiles,
+    multiple: !advanced,
+    // A replacement clip mid-conversion would orphan the running job.
+    disabled: advanced && advancedBusy,
   });
 
   const totalFiles = Object.values(filesState).reduce(
@@ -102,6 +145,12 @@ export default function FileDropzone() {
 
   useEffect(() => {
     if (acceptedFiles.length === 0) return;
+
+    if (advanced) {
+      openAdvancedClip(acceptedFiles[0]);
+      setDropError(null);
+      return;
+    }
 
     if (totalFiles + 1 > maxFiles) {
       setDropError(`You can only upload up to ${maxFiles} files.`);
@@ -125,6 +174,12 @@ export default function FileDropzone() {
 
   const onFilesPasted = useCallback(
     (fileItems: File[]) => {
+      if (advanced) {
+        if (advancedBusy) return;
+        openAdvancedClip(fileItems[0]);
+        setDropError(null);
+        return;
+      }
       if (totalFiles + 1 > maxFiles) {
         setDropError(`You can only upload up to ${maxFiles} files.`);
         return;
@@ -146,7 +201,14 @@ export default function FileDropzone() {
 
       setDropError(null);
     },
-    [selectedOutputTypes, totalFiles]
+    [
+      advanced,
+      advancedBusy,
+      openAdvancedClip,
+      checkFileDuration,
+      selectedOutputTypes,
+      totalFiles,
+    ]
   );
 
   useFilePaste(onFilesPasted);
@@ -173,6 +235,57 @@ export default function FileDropzone() {
       .finally(() => setConversionInProgress(false));
   };
 
+  /**
+   * The clip being worked on follows the switch, trim and crop included:
+   * simple mode's active card becomes Advanced mode's clip, and Advanced
+   * mode's clip joins the simple cards when there is room for it.
+   */
+  const switchMode = (next: ConverterMode) => {
+    if (next === mode) return;
+    if (next === 'advanced') {
+      const source = activeClip ? filesState[activeClip] : undefined;
+      if (source && source.file !== advancedClip?.file)
+        setAdvancedClip({
+          file: source.file,
+          duration: source.duration,
+          trim: source.trim,
+          crop: source.crop,
+        });
+    } else if (advancedClip) {
+      const { file, trim, crop, duration } = advancedClip;
+      const existing = filesState[file.name];
+      const canUpdate =
+        existing?.file === file && existing.conversionState === 'idle';
+      const canAdd = !existing && totalFiles < maxFiles;
+      if (canAdd) {
+        dispatch({
+          type: 'addFile',
+          payload: { file, outputTypes: selectedOutputTypes },
+        });
+        if (duration.status !== 'checking')
+          dispatch({
+            type: 'updateDuration',
+            payload: {
+              name: file.name,
+              file,
+              seconds: duration.status === 'known' ? duration.seconds : null,
+            },
+          });
+      }
+      if (canAdd || canUpdate) {
+        dispatch({ type: 'updateTrim', payload: { name: file.name, trim } });
+        dispatch({ type: 'updateCrop', payload: { name: file.name, crop } });
+        setChosenClip(file.name);
+      }
+    }
+    setMode(next);
+    setDropError(null);
+    const url = new URL(window.location.href);
+    if (next === 'advanced') url.searchParams.set(modeParam, 'advanced');
+    else url.searchParams.delete(modeParam);
+    window.history.replaceState(null, '', url);
+  };
+
   if (isLoaded === false) {
     return (
       <div className='flex w-full flex-col items-center gap-8 px-2 pt-16'>
@@ -185,17 +298,30 @@ export default function FileDropzone() {
 
   return (
     <div className='flex w-full grow flex-col items-center gap-5 px-2'>
-      <PresetSelector
-        selectedPresetIds={selectedOutputTypes}
-        disabled={selectorDisabled}
-        onChange={(presetIds) => {
-          setSelectedOutputTypes(presetIds);
-          dispatch({
-            type: 'updateIdleOutputTypes',
-            payload: { outputTypes: presetIds },
-          });
-        }}
+      <ModeSwitch
+        mode={mode}
+        disabled={selectorDisabled || advancedBusy}
+        onChange={switchMode}
       />
+      {!advanced && (
+        <PresetSelector
+          selectedPresetIds={selectedOutputTypes}
+          disabled={selectorDisabled}
+          onChange={(presetIds) => {
+            setSelectedOutputTypes(presetIds);
+            dispatch({
+              type: 'updateIdleOutputTypes',
+              payload: { outputTypes: presetIds },
+            });
+          }}
+        />
+      )}
+      {advanced && (
+        <p className='max-w-2xl text-center text-sm text-foreground-dg/80'>
+          Convert one clip to GIF, WebP or MP4 with your own width, frame rate
+          and quality. Nothing is sized for Discord&apos;s limits.
+        </p>
+      )}
       <div
         {...getRootProps({ className: 'dropzone' })}
         className={clsx(
@@ -206,44 +332,103 @@ export default function FileDropzone() {
         )}
       >
         <input {...getInputProps()} />
-        <p>Drop a video or GIF here, or click to choose files.</p>
-        <p>You can also paste files from your clipboard.</p>
+        <p>
+          {advanced
+            ? 'Drop a video or GIF here, or click to choose one.'
+            : 'Drop a video or GIF here, or click to choose files.'}
+        </p>
+        <p>
+          You can also paste {advanced ? 'a file' : 'files'} from your
+          clipboard.
+        </p>
         <p className='pb-4'>
           Supported formats:{' '}
           <span className='font-semibold'>
             {acceptedImageTypes.join(', ')}, {acceptedVideoTypes.join(', ')}
           </span>
         </p>
-        <MoreFilesText totalFiles={totalFiles} maxFiles={maxFiles} />
-      </div>
-      <button
-        className={clsx(
-          `${buttonEnabled && 'hover:bg-primary-dg/80'}`,
-          `${!buttonEnabled ? 'bg-secondary-dg' : 'bg-primary-dg'}`,
-          `rounded-md border-2 border-orange-500`,
-          `px-4 py-2 disabled:border-orange-500/60 disabled:text-foreground-dg/60`,
-          `shadow-glow-primary-dg ${
-            !buttonEnabled && dragEnter && 'animate-pulse'
-          }`
+        {advanced ? (
+          <p className='text-xs'>
+            {advancedClip
+              ? 'Opening another clip replaces this one.'
+              : 'Advanced mode converts one clip at a time.'}
+          </p>
+        ) : (
+          <MoreFilesText totalFiles={totalFiles} maxFiles={maxFiles} />
         )}
-        onClick={() => startConversion(filesState)}
-        disabled={!buttonEnabled}
-      >
-        Convert All
-      </button>
+      </div>
+      {!advanced && (
+        <button
+          className={clsx(
+            `${buttonEnabled && 'hover:bg-primary-dg/80'}`,
+            `${!buttonEnabled ? 'bg-secondary-dg' : 'bg-primary-dg'}`,
+            `rounded-md border-2 border-orange-500`,
+            `px-4 py-2 disabled:border-orange-500/60 disabled:text-foreground-dg/60`,
+            `shadow-glow-primary-dg ${
+              !buttonEnabled && dragEnter && 'animate-pulse'
+            }`
+          )}
+          onClick={() => startConversion(filesState)}
+          disabled={!buttonEnabled}
+        >
+          Convert All
+        </button>
+      )}
       {dropError && <p className='font-semibold text-red-500'>{dropError}</p>}
-      <ConvertedFiles
-        filesState={filesState}
-        activeClip={activeClip}
-        onActivate={setChosenClip}
-        dispatch={dispatch}
-        disabled={selectorDisabled}
-        onConvert={(name) => startConversion({ [name]: filesState[name] })}
-        setDropError={setDropError}
-      />
-      <DiscordUploadHelp />
+      {advanced ? (
+        <AdvancedEditor
+          // A new clip starts with fresh media and conversion state.
+          key={advancedClip ? fileKey(advancedClip.file) : 'empty'}
+          clip={advancedClip}
+          settings={advancedSettings}
+          results={sessionResults}
+          ffmpegRef={ffmpegRef}
+          onSettingsChange={setAdvancedSettings}
+          onTrimChange={(trim) =>
+            setAdvancedClip((clip) => clip && { ...clip, trim })
+          }
+          onCropChange={(crop) =>
+            setAdvancedClip((clip) => clip && { ...clip, crop })
+          }
+          onRemove={() => {
+            setAdvancedClip(null);
+            setDropError(null);
+          }}
+          onResult={(result) =>
+            setSessionResults((results) => [result, ...results])
+          }
+          onBusyChange={setAdvancedBusy}
+        />
+      ) : (
+        <>
+          <ConvertedFiles
+            filesState={filesState}
+            activeClip={activeClip}
+            onActivate={setChosenClip}
+            dispatch={dispatch}
+            disabled={selectorDisabled}
+            onConvert={(name) => startConversion({ [name]: filesState[name] })}
+            setDropError={setDropError}
+          />
+          <DiscordUploadHelp />
+        </>
+      )}
     </div>
   );
+}
+
+const modeParam = 'mode';
+
+/** Files carry no identity, so a key comes from a per-object counter. */
+const fileKeys = new WeakMap<File, string>();
+let nextFileKey = 0;
+function fileKey(file: File): string {
+  let key = fileKeys.get(file);
+  if (!key) {
+    key = `clip-${++nextFileKey}`;
+    fileKeys.set(file, key);
+  }
+  return key;
 }
 
 function MoreFilesText({

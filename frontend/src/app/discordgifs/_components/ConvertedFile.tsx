@@ -12,6 +12,7 @@ import { useClipShortcuts } from '@/hooks/discordgifs/useClipShortcuts';
 
 import ConversionOutput from './ConversionOutput';
 import ProgressBar from './ProgressBar';
+import LargeFileWarning from './LargeFileWarning';
 import { IoIosCloseCircle } from 'react-icons/io';
 
 type ConvertedFileProps = {
@@ -82,6 +83,7 @@ export default function ConvertedFile({
         </button>
         <p>{truncateText(file.name, 28)}</p>
       </div>
+      {conversionState === 'idle' && <LargeFileWarning file={file} />}
       {conversionState === 'idle' && (
         <VideoTrimmer
           fileData={fileData}

@@ -3,6 +3,7 @@ import {
   ConversionPresetId,
   ConversionTarget,
 } from '@/lib/discordgifs/conversion-target';
+import type { FileType } from '@/lib/discordgifs/advanced';
 
 export type FFmpegLogEvent = {
   type: string;
@@ -56,3 +57,12 @@ export type FFmpegFileData = {
   conversionState: FFmpegConversionState;
   duration: FileDurationState;
 };
+/** One file Advanced mode made, kept for the rest of the visit. */
+export type SessionResult =
+  | { id: string; fileType: FileType; name: string; url: string; size: number }
+  | { id: string; fileType: FileType; failed: true };
+/** What the editor needs from a clip in either mode. */
+export type EditorClip = Pick<
+  FFmpegFileData,
+  'file' | 'duration' | 'trim' | 'crop'
+>;

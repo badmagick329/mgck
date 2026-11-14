@@ -83,10 +83,29 @@ describe('per-file output eligibility', () => {
     });
     const afterLateResult = filesStateReducer(state, {
       type: 'updateDuration',
-      payload: { name: file.name, seconds: 8 },
+      payload: { name: file.name, file, seconds: 8 },
     });
     expect(afterLateResult).toBe(state);
     expect(afterLateResult).not.toHaveProperty(file.name);
+  });
+
+  test('ignores a late duration from a removed file with the same name', () => {
+    const removed = new File(['old'], 'same.mp4');
+    const replacement = new File(['new'], 'same.mp4');
+    const state = filesStateReducer(
+      {},
+      {
+        type: 'addFile',
+        payload: { file: replacement, outputTypes: ['sticker'] },
+      }
+    );
+    const afterLateResult = filesStateReducer(state, {
+      type: 'updateDuration',
+      payload: { name: 'same.mp4', file: removed, seconds: 8 },
+    });
+    expect(afterLateResult['same.mp4'].duration).toEqual({
+      status: 'checking',
+    });
   });
 
   test('disables conversion when no idle file has an eligible output', () => {

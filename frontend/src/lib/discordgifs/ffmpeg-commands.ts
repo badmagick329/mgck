@@ -72,7 +72,7 @@ export function buildOptimizedInputCommand({
 }
 
 /** Crop before scaling so retries spend their work on the retained image. */
-function cropFilter(crop?: ClipCrop): string {
+export function cropFilter(crop?: ClipCrop): string {
   return crop
     ? `crop='max(1,iw*${crop.width})':'max(1,ih*${crop.height})':iw*${crop.x}:ih*${crop.y}:exact=1,`
     : '';
@@ -88,7 +88,7 @@ export function buildDownloadName(
 }
 
 /** Seek before decoding so preprocessing and size retries only encode the selection. */
-function trimInput(inputName: string, trim?: ClipTrim): string[] {
+export function trimInput(inputName: string, trim?: ClipTrim): string[] {
   return trim
     ? [
         '-ss', String(trim.start),

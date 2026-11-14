@@ -9,6 +9,7 @@ import {
   FFmpegConversionState,
   FFmpegFileData,
   FFmpegFileDataOutput,
+  FileDurationState,
 } from '@/lib/types/discordgifs';
 import { getFileOutputEligibility } from './eligibility';
 
@@ -23,7 +24,8 @@ export type FileAction =
     }
   | {
       type: 'updateDuration';
-      payload: { name: string; seconds: number | null };
+      /** `file` is the one measured; a same-named replacement keeps its own. */
+      payload: { name: string; file: File; seconds: number | null };
     }
   | {
       type: 'updateProgress';
@@ -67,6 +69,12 @@ export type FileAction =
     };
 
 export type FilesState = Record<string, FFmpegFileData>;
+
+export function durationState(seconds: number | null): FileDurationState {
+  return seconds === null
+    ? { status: 'unknown' }
+    : { status: 'known', seconds };
+}
 
 export const filesStateReducer = (
   state: FilesState,
@@ -206,15 +214,13 @@ export const filesStateReducer = (
       };
 
     case 'updateDuration': {
-      if (!state[action.payload.name]) return state;
+      const current = state[action.payload.name];
+      if (current?.file !== action.payload.file) return state;
       return {
         ...state,
         [action.payload.name]: {
-          ...state[action.payload.name],
-          duration:
-            action.payload.seconds === null
-              ? { status: 'unknown' }
-              : { status: 'known', seconds: action.payload.seconds },
+          ...current,
+          duration: durationState(action.payload.seconds),
         },
       };
     }
