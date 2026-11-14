@@ -251,7 +251,9 @@ export default function AdvancedEditor({
           frames={frames}
           largeGif={largeGif}
         />
-        <fieldset disabled={busy} className='disabled:opacity-60'>
+        {/* A fieldset defaults to min-width: min-content, so without min-w-0
+            wide settings rows push past the column instead of shrinking. */}
+        <fieldset disabled={busy} className='min-w-0 disabled:opacity-60'>
           <legend className='sr-only'>Output settings</legend>
           <AdvancedSettingsForm
             settings={settings}

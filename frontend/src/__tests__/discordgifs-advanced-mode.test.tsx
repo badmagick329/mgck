@@ -251,6 +251,19 @@ describe('Advanced mode rotate, flip, speed and direction', () => {
     expect(details()).toHaveTextContent('480 × 270');
   });
 
+  test('width presets wider than the crop are disabled, not shown as chosen', async () => {
+    await openClip();
+    const preset = (name: string) => screen.getByRole('button', { name });
+    expect(preset('480')).toHaveAttribute('aria-pressed', 'true');
+
+    // A 9:16 box on a 1280 × 720 frame is about 405 px wide.
+    press('9:16');
+    expect(preset('480')).toBeDisabled();
+    expect(preset('480')).toHaveAttribute('aria-pressed', 'false');
+    expect(preset('640')).toBeDisabled();
+    expect(preset('400')).toBeEnabled();
+  });
+
   test('a locked ratio is re-fitted when a turn swaps it', async () => {
     await openClip();
     press('16:9');

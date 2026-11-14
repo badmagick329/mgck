@@ -21,7 +21,7 @@ import {
 } from '@/lib/discordgifs/advanced';
 
 const chip =
-  'h-8 rounded-md px-2.5 text-sm text-foreground-dg/80 hover:bg-foreground-dg/10 hover:text-foreground-dg aria-pressed:bg-primary-dg aria-pressed:font-semibold aria-pressed:text-foreground-dg';
+  'h-8 rounded-md px-2.5 text-sm text-foreground-dg/80 hover:bg-foreground-dg/10 hover:text-foreground-dg aria-pressed:bg-primary-dg aria-pressed:font-semibold aria-pressed:text-foreground-dg disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
 const field =
   'h-8 rounded-md border border-foreground-dg/25 bg-background-dg px-2 text-sm focus:border-primary-dg focus:outline-none';
 const range = 'min-w-0 grow accent-primary-dg';
@@ -66,6 +66,7 @@ export default function AdvancedSettingsForm({
   const shownWidth =
     outputWidth ?? (settings.width === 'original' ? null : settings.width);
   const sliderMax = nativeWidth ?? 1280;
+  const tooWide = (width: number) => nativeWidth !== null && width > nativeWidth;
 
   const toggleFileType = (fileType: FileType, checked: boolean) =>
     update({
@@ -78,7 +79,7 @@ export default function AdvancedSettingsForm({
     <div className='flex flex-col gap-4'>
       <Section title='Size'>
         <div className='flex items-center gap-2'>
-          <label htmlFor={widthId} className='w-20 shrink-0 text-sm'>
+          <label htmlFor={widthId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
             Width
           </label>
           <input
@@ -105,7 +106,10 @@ export default function AdvancedSettingsForm({
               key={width}
               type='button'
               className={chip}
-              aria-pressed={settings.width === width}
+              // Output never exceeds the crop, so a wider preset would only
+              // look selected while producing the crop's width.
+              aria-pressed={settings.width === width && !tooWide(width)}
+              disabled={tooWide(width)}
               onClick={() => update({ width })}
             >
               {width}
@@ -124,7 +128,7 @@ export default function AdvancedSettingsForm({
 
       <Section title='Timing'>
         <div className='flex items-center gap-2'>
-          <label htmlFor={fpsId} className='w-20 shrink-0 text-sm'>
+          <label htmlFor={fpsId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
             Frame rate
           </label>
           <input
@@ -144,7 +148,7 @@ export default function AdvancedSettingsForm({
           </span>
         </div>
         <div className='flex items-center gap-2'>
-          <label htmlFor={speedId} className='w-20 shrink-0 text-sm'>
+          <label htmlFor={speedId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
             Speed
           </label>
           <input
@@ -234,7 +238,7 @@ export default function AdvancedSettingsForm({
           )}
         </div>
         <div className='flex items-center gap-2'>
-          <label htmlFor={topTextId} className='w-20 shrink-0 text-sm'>
+          <label htmlFor={topTextId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
             Top text
           </label>
           <input
@@ -247,7 +251,7 @@ export default function AdvancedSettingsForm({
           />
         </div>
         <div className='flex items-center gap-2'>
-          <label htmlFor={bottomTextId} className='w-20 shrink-0 text-sm'>
+          <label htmlFor={bottomTextId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
             Bottom text
           </label>
           <input
@@ -260,7 +264,7 @@ export default function AdvancedSettingsForm({
           />
         </div>
         <div className='flex items-center gap-2'>
-          <label htmlFor={captionSizeId} className='w-20 shrink-0 text-sm'>
+          <label htmlFor={captionSizeId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
             Text size
           </label>
           <input
@@ -293,7 +297,7 @@ export default function AdvancedSettingsForm({
         </summary>
         <div className='mt-2 flex flex-col gap-3'>
           <div className='flex items-center gap-2'>
-            <label htmlFor={colorsId} className='w-20 shrink-0 text-sm'>
+            <label htmlFor={colorsId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
               GIF colours
             </label>
             <input
@@ -321,7 +325,7 @@ export default function AdvancedSettingsForm({
             Fewer colours make a smaller GIF; 64 to 128 is often plenty.
           </p>
           <div className='flex items-center gap-2'>
-            <label htmlFor={ditherId} className='w-20 shrink-0 text-sm'>
+            <label htmlFor={ditherId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
               Dithering
             </label>
             <select
@@ -342,7 +346,7 @@ export default function AdvancedSettingsForm({
             </select>
           </div>
           <div className='flex items-center gap-2'>
-            <label htmlFor={playsId} className='w-20 shrink-0 text-sm'>
+            <label htmlFor={playsId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
               Loop
             </label>
             <select
@@ -361,7 +365,7 @@ export default function AdvancedSettingsForm({
             </select>
           </div>
           <div className='flex items-center gap-2'>
-            <label htmlFor={webpId} className='w-20 shrink-0 text-sm'>
+            <label htmlFor={webpId} className='w-24 shrink-0 whitespace-nowrap text-sm'>
               WebP quality
             </label>
             <input
