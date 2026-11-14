@@ -4,6 +4,7 @@ import {
   ReactNode,
   PointerEvent,
   KeyboardEvent,
+  useEffect,
   useRef,
   useState,
   useId,
@@ -18,7 +19,9 @@ import {
   fullFrame,
   isFullFrame,
   moveCrop,
+  refitRatio,
   resizeCrop,
+  sourceRatio,
 } from '@/lib/discordgifs/crop';
 import { passesShortcuts } from '@/lib/discordgifs/shortcuts';
 
@@ -75,6 +78,7 @@ export default function VideoCropper({
   disabled,
   onChange,
   maxHeight = 256,
+  sideways = false,
 }: {
   children: ReactNode;
   dimensions: { width: number; height: number } | null;
@@ -83,6 +87,11 @@ export default function VideoCropper({
   onChange: (crop: ClipCrop | undefined) => void;
   /** Tallest the video may draw, in CSS pixels; it matches the video's own cap. */
   maxHeight?: number;
+  /**
+   * Advanced mode turned the output a quarter: ratios and readouts are in
+   * output pixels, so both swap while the box stays on the unturned video.
+   */
+  sideways?: boolean;
 }) {
   const [ratio, setRatio] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -99,8 +108,19 @@ export default function VideoCropper({
   const helpId = useId();
   const selection = crop ?? fullFrame;
   const aspect = dimensions ? dimensions.width / dimensions.height : 1;
+  const lockedRatio = ratio === null ? null : sourceRatio(ratio, sideways);
   const commit = (next: ClipCrop) =>
     onChange(dimensions && isFullFrame(next, dimensions) ? undefined : next);
+
+  // A turn flips what a locked ratio means on the source, so re-fit the box
+  // to keep the output at the ratio the user picked.
+  const turnedFrom = useRef(sideways);
+  useEffect(() => {
+    if (turnedFrom.current === sideways) return;
+    turnedFrom.current = sideways;
+    if (ratio !== null && dimensions)
+      commit(refitRatio(selection, sourceRatio(ratio, sideways), aspect));
+  });
   const update = (
     handle: CropHandle | 'move',
     original: ClipCrop,
@@ -110,7 +130,7 @@ export default function VideoCropper({
     commit(
       handle === 'move'
         ? moveCrop(original, dx, dy)
-        : resizeCrop(original, handle, dx, dy, aspect, ratio)
+        : resizeCrop(original, handle, dx, dy, aspect, lockedRatio)
     );
   const endDrag = () => {
     drag.current = undefined;
@@ -151,7 +171,11 @@ export default function VideoCropper({
     const step = event.shiftKey ? 0.05 : 0.01;
     update(handle, selection, direction[0] * step, direction[1] * step);
   };
-  const size = dimensions && cropPixels(selection, dimensions);
+  const pixels = dimensions && cropPixels(selection, dimensions);
+  const size =
+    pixels && sideways
+      ? { width: pixels.height, height: pixels.width }
+      : pixels;
 
   return (
     <div className='flex min-w-0 flex-col gap-2'>
@@ -169,7 +193,13 @@ export default function VideoCropper({
                 onClick={() => {
                   setRatio(choice.ratio);
                   if (choice.ratio !== null)
-                    commit(fitRatio(selection, choice.ratio, aspect));
+                    commit(
+                      fitRatio(
+                        selection,
+                        sourceRatio(choice.ratio, sideways),
+                        aspect
+                      )
+                    );
                 }}
               >
                 {choice.label}
@@ -181,9 +211,9 @@ export default function VideoCropper({
               disabled={disabled || !crop}
               onClick={() =>
                 commit(
-                  ratio === null
+                  lockedRatio === null
                     ? fullFrame
-                    : fitRatio(fullFrame, ratio, aspect)
+                    : fitRatio(fullFrame, lockedRatio, aspect)
                 )
               }
             >

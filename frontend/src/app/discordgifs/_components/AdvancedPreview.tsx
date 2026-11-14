@@ -2,6 +2,7 @@
 
 import { ClipCrop } from '@/lib/types/discordgifs';
 import { Size } from '@/lib/discordgifs/output-preview';
+import { AdvancedSettings, formatSpeed } from '@/lib/discordgifs/advanced';
 import OutputPreview from './OutputPreview';
 
 /** Fits the 390 px phone's settings column, the narrowest it gets. */
@@ -12,11 +13,16 @@ const pill =
 
 /**
  * Gif Studio's *Output preview*: the selection as it will encode, with the
- * file's exact size, length and frame count.
+ * file's exact size, length and frame count. It draws rotation and flips,
+ * and moves at the chosen speed because the editor's video plays at it.
+ * Reverse and Boomerang are labelled rather than played, as in Gif Studio:
+ * playing them would need every frame decoded and held, which is the cost
+ * the frame-memory limit (`frameMemoryLimitSeconds`) exists to bound.
  */
 export default function AdvancedPreview({
   video,
   crop,
+  settings,
   size,
   seconds,
   frames,
@@ -24,6 +30,10 @@ export default function AdvancedPreview({
 }: {
   video: HTMLVideoElement | null;
   crop?: ClipCrop;
+  settings: Pick<
+    AdvancedSettings,
+    'rotation' | 'flipHorizontal' | 'flipVertical' | 'speed' | 'direction'
+  >;
   size: Size | null;
   seconds: number | null;
   frames: number | null;
@@ -36,7 +46,9 @@ export default function AdvancedPreview({
     >
       <figcaption className='flex items-center justify-between text-sm font-semibold'>
         Output preview
-        <span className='text-xs font-normal text-foreground-dg/60'>live</span>
+        <span className='text-xs font-normal text-foreground-dg/60'>
+          live{settings.speed !== 1 && ` · ${formatSpeed(settings.speed)}`}
+        </span>
       </figcaption>
       <div
         className='grid place-items-center rounded bg-black/60'
@@ -49,10 +61,18 @@ export default function AdvancedPreview({
             box={previewBox}
             fit='contain'
             outputWidth={size.width}
+            orientation={settings}
             label='Output preview drawing'
           />
         )}
       </div>
+      {settings.direction !== 'forward' && (
+        <p className='text-xs text-foreground-dg/70'>
+          The preview plays forward.{' '}
+          {settings.direction === 'reverse' ? 'Reverse' : 'Boomerang'} is
+          applied when you convert.
+        </p>
+      )}
       {size && (
         <div className='flex flex-wrap gap-1.5' aria-label='Output details'>
           <span className={pill}>

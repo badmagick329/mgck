@@ -11,8 +11,10 @@ import {
   approximateWidthLabel,
   canvasResolution,
   cropSourceRect,
+  drawOutputFrame,
   fitToBox,
 } from '@/lib/discordgifs/output-preview';
+import type { Orientation } from '@/lib/discordgifs/output-preview';
 import { ClipCrop, FFmpegFileData } from '@/lib/types/discordgifs';
 
 const frame = { width: 1280, height: 720 };
@@ -72,6 +74,98 @@ describe('preview maths', () => {
   });
 });
 
+describe('rotated and flipped preview frames', () => {
+  /**
+   * Where each corner of the source lands on the canvas, read off the
+   * transform the frame was drawn with, as FFmpeg's transpose and flips
+   * would place it.
+   */
+  function corners(
+    orientation: Orientation,
+    canvas: { width: number; height: number }
+  ) {
+    const transforms: number[][] = [];
+    const draws: number[][] = [];
+    const context = {
+      clearRect: jest.fn(),
+      setTransform: (...m: number[]) => transforms.push(m),
+      drawImage: (_: unknown, ...args: number[]) => draws.push(args),
+    } as unknown as CanvasRenderingContext2D;
+    drawOutputFrame(
+      context,
+      {} as CanvasImageSource,
+      { x: 0, y: 0, width: 1280, height: 720 },
+      canvas,
+      orientation
+    );
+    // Reset, clear, draw transform, reset.
+    const [a, b, c, d, e, f] = transforms[1];
+    const [, , , , , , width, height] = draws[0];
+    const place = (x: number, y: number) => [
+      Math.round(a * x + c * y + e),
+      Math.round(b * x + d * y + f),
+    ];
+    expect(transforms[transforms.length - 1]).toEqual([1, 0, 0, 1, 0, 0]);
+    return {
+      topLeft: place(0, 0),
+      topRight: place(width, 0),
+      bottomLeft: place(0, height),
+    };
+  }
+  const flat = {
+    rotation: 0,
+    flipHorizontal: false,
+    flipVertical: false,
+  } as const;
+  const wide = { width: 160, height: 90 };
+  const tall = { width: 90, height: 160 };
+
+  test('upright draws the source as it is', () => {
+    expect(corners(flat, wide)).toEqual({
+      topLeft: [0, 0],
+      topRight: [160, 0],
+      bottomLeft: [0, 90],
+    });
+  });
+
+  test('a right turn puts the top left corner at the top right', () => {
+    expect(corners({ ...flat, rotation: 90 }, tall)).toEqual({
+      topLeft: [90, 0],
+      topRight: [90, 160],
+      bottomLeft: [0, 0],
+    });
+  });
+
+  test('a left turn puts the top left corner at the bottom left', () => {
+    expect(corners({ ...flat, rotation: 270 }, tall)).toEqual({
+      topLeft: [0, 160],
+      topRight: [0, 0],
+      bottomLeft: [90, 160],
+    });
+  });
+
+  test('a half turn and both flips land the same way', () => {
+    const half = corners({ ...flat, rotation: 180 }, wide);
+    expect(half.topLeft).toEqual([160, 90]);
+    expect(
+      corners({ ...flat, flipHorizontal: true, flipVertical: true }, wide)
+    ).toEqual(half);
+  });
+
+  test('flips mirror after the turn, as hflip follows transpose', () => {
+    expect(corners({ ...flat, flipHorizontal: true }, wide).topLeft).toEqual([
+      160, 0,
+    ]);
+    expect(corners({ ...flat, flipVertical: true }, wide).topLeft).toEqual([
+      0, 90,
+    ]);
+    // transpose=1 then hflip: the source top left ends at the canvas top left.
+    expect(
+      corners({ ...flat, rotation: 90, flipHorizontal: true }, tall)
+    ).toEqual({ topLeft: [0, 0], topRight: [0, 160], bottomLeft: [90, 0] });
+  });
+});
+
 describe('preview before converting', () => {
   const drawImage = jest.fn();
   beforeEach(() => {
@@ -83,7 +177,11 @@ describe('preview before converting', () => {
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation(
         () =>
-          ({ clearRect: jest.fn(), drawImage }) as unknown as RenderingContext
+          ({
+            clearRect: jest.fn(),
+            setTransform: jest.fn(),
+            drawImage,
+          }) as unknown as RenderingContext
       );
   });
   afterEach(() => jest.restoreAllMocks());

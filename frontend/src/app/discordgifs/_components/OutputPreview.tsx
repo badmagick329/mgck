@@ -4,13 +4,21 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { ClipCrop } from '@/lib/types/discordgifs';
 import {
+  Orientation,
   PreviewFit,
   Size,
+  SourceRect,
   canvasResolution,
   cropSourceRect,
   drawOutputFrame,
   fitToBox,
+  upright,
 } from '@/lib/discordgifs/output-preview';
+import { isSideways } from '@/lib/discordgifs/advanced';
+
+/** A source rectangle as it reads after a quarter turn. */
+const turned = (rect: SourceRect, sideways: boolean): SourceRect =>
+  sideways ? { ...rect, width: rect.height, height: rect.width } : rect;
 
 /**
  * Draws the cropped selection from the editor's own video on every presented
@@ -23,11 +31,14 @@ export default function OutputPreview({
   box,
   fit,
   outputWidth,
+  orientation = upright,
   label,
   className,
 }: {
   video: HTMLVideoElement | null;
   crop?: ClipCrop;
+  /** Advanced mode's rotate and flips; the presets stay upright. */
+  orientation?: Orientation;
   /** Side of the square CSS box the output is shown in. */
   box: number;
   fit: PreviewFit;
@@ -39,6 +50,8 @@ export default function OutputPreview({
   const canvas = useRef<HTMLCanvasElement>(null);
   const [display, setDisplay] = useState<Size | null>(null);
   const draw = useRef(() => {});
+  // Primitives, so a caller's fresh object each render doesn't redraw.
+  const { rotation, flipHorizontal, flipVertical } = orientation;
   useEffect(() => {
     draw.current = () => {
       const element = canvas.current;
@@ -50,11 +63,15 @@ export default function OutputPreview({
         width: video.videoWidth,
         height: video.videoHeight,
       });
-      const fitted = fitToBox(kept, box, fit);
+      // The box and sharpness follow the turned output, while drawing reads
+      // the unturned source; a centred square is the same either way.
+      const sideways = isSideways(rotation);
+      const { source } = fitToBox(kept, box, fit);
+      const shown = fitToBox(turned(kept, sideways), box, fit).display;
       const resolution = canvasResolution(
-        fitted.display,
-        fitted.source,
-        kept,
+        shown,
+        turned(source, sideways),
+        turned(kept, sideways),
         outputWidth,
         window.devicePixelRatio || 1
       );
@@ -62,16 +79,29 @@ export default function OutputPreview({
       if (element.height !== resolution.height)
         element.height = resolution.height;
       setDisplay((current) =>
-        current?.width === fitted.display.width &&
-        current.height === fitted.display.height
+        current?.width === shown.width && current.height === shown.height
           ? current
-          : fitted.display
+          : shown
       );
       const context = element.getContext('2d');
-      if (context) drawOutputFrame(context, video, fitted.source, resolution);
+      if (context)
+        drawOutputFrame(context, video, source, resolution, {
+          rotation,
+          flipHorizontal,
+          flipVertical,
+        });
     };
     draw.current();
-  }, [video, crop, box, fit, outputWidth]);
+  }, [
+    video,
+    crop,
+    box,
+    fit,
+    outputWidth,
+    rotation,
+    flipHorizontal,
+    flipVertical,
+  ]);
 
   useEffect(() => {
     if (!video) return;

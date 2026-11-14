@@ -65,6 +65,8 @@ export default function VideoTrimmer({
   onCropChange,
   onMediaLoaded,
   videoMaxHeight = 256,
+  playbackRate = 1,
+  sideways = false,
 }: {
   /**
    * With `outputTypes` the clip is a simple-mode card, which adds the preset
@@ -82,6 +84,13 @@ export default function VideoTrimmer({
   onMediaLoaded?: (media: LoadedMedia) => void;
   /** Simple-mode cards are narrow; Advanced mode's editor column has room. */
   videoMaxHeight?: number;
+  /**
+   * Advanced mode's speed. The editor plays at it, as Gif Studio's does, so
+   * the output preview drawn from this video moves at the output's pace.
+   */
+  playbackRate?: number;
+  /** Advanced mode turned the output a quarter; see `VideoCropper`. */
+  sideways?: boolean;
 }) {
   const { file, duration, trim, outputTypes } = fileData;
   const video = useRef<HTMLVideoElement | null>(null);
@@ -128,6 +137,13 @@ export default function VideoTrimmer({
     setMeasuredFrameSeconds(null);
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
+
+  // Loading a source resets the rate to the default, so set both.
+  useEffect(() => {
+    if (!player) return;
+    player.defaultPlaybackRate = playbackRate;
+    player.playbackRate = playbackRate;
+  }, [player, playbackRate, url]);
 
   // timeupdate fires only a few times a second; a frame loop keeps the
   // playhead smooth and the loop point tight while playing.
@@ -249,6 +265,7 @@ export default function VideoTrimmer({
         disabled={disabled}
         onChange={onCropChange}
         maxHeight={videoMaxHeight}
+        sideways={sideways}
       >
         <video
           ref={attachVideo}

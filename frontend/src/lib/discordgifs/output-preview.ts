@@ -3,6 +3,7 @@ import {
   ConversionPresetId,
   conversionTargetPresets,
 } from './conversion-target';
+import { Rotation, orientedSize } from './advanced';
 
 export type Size = { width: number; height: number };
 export type SourceRect = Size & { x: number; y: number };
@@ -90,18 +91,57 @@ export function canvasResolution(
   };
 }
 
+/** Advanced mode's rotate and flip, applied in FFmpeg's order: turn, then flip. */
+export type Orientation = {
+  rotation: Rotation;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
+};
+
+export const upright: Orientation = {
+  rotation: 0,
+  flipHorizontal: false,
+  flipVertical: false,
+};
+
+/** Exact sines and cosines, so a quarter turn never leaves a sub-pixel skew. */
+const turns: Record<Rotation, { cos: number; sin: number }> = {
+  0: { cos: 1, sin: 0 },
+  90: { cos: 0, sin: 1 },
+  180: { cos: -1, sin: 0 },
+  270: { cos: 0, sin: -1 },
+};
+
 /**
- * One output frame. Later editor options (rotation, flips, captions) belong
- * here, so every preview draws them the same way.
+ * One output frame. Every preview draws through here, so later editor options
+ * (captions) belong here too.
+ *
+ * The source is drawn unturned into a box the size of the canvas before the
+ * turn, and the transform turns it clockwise and then mirrors it about the
+ * canvas centre: the same result as `transpose`, then `hflip`/`vflip`.
  */
 export function drawOutputFrame(
   context: CanvasRenderingContext2D,
   video: CanvasImageSource,
   source: SourceRect,
-  canvas: Size
+  canvas: Size,
+  orientation: Orientation = upright
 ) {
+  const { cos, sin } = turns[orientation.rotation];
+  const flipX = orientation.flipHorizontal ? -1 : 1;
+  const flipY = orientation.flipVertical ? -1 : 1;
+  const unturned = orientedSize(canvas, orientation.rotation);
+  // Canvas point = flip · rotate · (point − unturned centre) + canvas centre.
+  const a = flipX * cos;
+  const b = flipY * sin;
+  const c = -flipX * sin;
+  const d = flipY * cos;
+  const e = canvas.width / 2 - (a * unturned.width + c * unturned.height) / 2;
+  const f = canvas.height / 2 - (b * unturned.width + d * unturned.height) / 2;
+  context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.imageSmoothingQuality = 'high';
+  context.setTransform(a, b, c, d, e, f);
   context.drawImage(
     video,
     source.x,
@@ -110,7 +150,8 @@ export function drawOutputFrame(
     source.height,
     0,
     0,
-    canvas.width,
-    canvas.height
+    unturned.width,
+    unturned.height
   );
+  context.setTransform(1, 0, 0, 1, 0, 0);
 }

@@ -53,6 +53,32 @@ export const playsOptions: ReadonlyArray<{ value: number; label: string }> = [
   { value: 3, label: 'Play 3 times' },
 ];
 
+/** Clockwise quarter turns, in degrees. */
+export type Rotation = 0 | 90 | 180 | 270;
+
+/**
+ * Forward plays the selection as recorded; Boomerang plays it forward, then
+ * backward, so the file is twice as long.
+ */
+export type Direction = 'forward' | 'reverse' | 'boomerang';
+
+export const directionOptions: ReadonlyArray<{
+  value: Direction;
+  label: string;
+}> = [
+  { value: 'forward', label: 'Forward' },
+  { value: 'reverse', label: 'Reverse' },
+  { value: 'boomerang', label: 'Boomerang' },
+];
+
+/** Gif Studio's speed slider steps. */
+export const speedSteps = [
+  0.25, 0.33, 0.5, 0.67, 0.75, 0.9, 1, 1.25, 1.5, 1.75, 2, 2.5, 3,
+] as const;
+
+/** FFmpeg's `atempo` keeps sound in step only between these speeds. */
+const soundSpeedRange = { min: 0.5, max: 2 } as const;
+
 /**
  * Explicit user choices. Nothing here targets a file size, and none of it
  * feeds the simple-mode presets, whose Quality policy is scale-only.
@@ -61,6 +87,12 @@ export type AdvancedSettings = {
   /** Output width before capping at the crop, or the crop's own width. */
   width: number | 'original';
   fps: number;
+  /** Playback speed; one of `speedSteps`. */
+  speed: number;
+  direction: Direction;
+  rotation: Rotation;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
   fileTypes: FileType[];
   gifColors: number;
   gifDither: GifDither;
@@ -82,6 +114,11 @@ export const settingLimits = {
 export const defaultAdvancedSettings: AdvancedSettings = {
   width: 480,
   fps: 15,
+  speed: 1,
+  direction: 'forward',
+  rotation: 0,
+  flipHorizontal: false,
+  flipVertical: false,
   fileTypes: ['gif'],
   gifColors: 256,
   gifDither: 'sierra2_4a',
@@ -89,6 +126,61 @@ export const defaultAdvancedSettings: AdvancedSettings = {
   webpQuality: 80,
   keepSound: false,
 };
+
+/**
+ * Gif Studio starts each clip unrotated, unflipped and forward, since those
+ * suit one recording; width, timing, quality and speed carry over.
+ */
+export function forNewClip(settings: AdvancedSettings): AdvancedSettings {
+  return {
+    ...settings,
+    direction: defaultAdvancedSettings.direction,
+    rotation: defaultAdvancedSettings.rotation,
+    flipHorizontal: defaultAdvancedSettings.flipHorizontal,
+    flipVertical: defaultAdvancedSettings.flipVertical,
+  };
+}
+
+export function rotate(rotation: Rotation, turn: 'left' | 'right'): Rotation {
+  return ((rotation + (turn === 'right' ? 90 : 270)) % 360) as Rotation;
+}
+
+/** A quarter turn swaps the output's width and height. */
+export function isSideways(rotation: Rotation): boolean {
+  return rotation % 180 !== 0;
+}
+
+/**
+ * Why MP4 sound can't follow these settings, or null when it can: `atempo`
+ * keeps it in step only between 0.5× and 2×, and nothing plays sound backward.
+ */
+export function soundDropReason(
+  settings: Pick<AdvancedSettings, 'speed' | 'direction'>
+): string | null {
+  if (settings.direction !== 'forward')
+    return `No sound in ${settings.direction === 'reverse' ? 'Reverse' : 'Boomerang'}.`;
+  if (
+    settings.speed < soundSpeedRange.min ||
+    settings.speed > soundSpeedRange.max
+  )
+    return `No sound at ${formatSpeed(settings.speed)}; it keeps up from ${formatSpeed(soundSpeedRange.min)} to ${formatSpeed(soundSpeedRange.max)}.`;
+  return null;
+}
+
+export function formatSpeed(speed: number): string {
+  return `${speed}×`;
+}
+
+/** Seconds of output: speed changes the length and Boomerang doubles it. */
+export function outputSeconds(
+  selectionSeconds: number,
+  settings: Pick<AdvancedSettings, 'speed' | 'direction'>
+): number {
+  return (
+    (selectionSeconds / settings.speed) *
+    (settings.direction === 'boomerang' ? 2 : 1)
+  );
+}
 
 export function clampSetting(
   name: keyof typeof settingLimits,
@@ -118,25 +210,77 @@ export function croppedSourceSize(
   };
 }
 
+/** The crop as it leaves the rotate step, which runs before scaling. */
+export function orientedSize(size: Size, rotation: Rotation): Size {
+  return isSideways(rotation)
+    ? { width: size.height, height: size.width }
+    : size;
+}
+
 /**
- * Exact encoded size. The width is even and never wider than the crop; the
- * height follows from `scale=W:-2`, which rounds to the nearest even number.
+ * Exact encoded size. The width is even and never wider than the rotated
+ * crop; the height follows from `scale=W:-2`, which rounds to the nearest even
+ * number.
  */
 export function outputSize(
   width: AdvancedSettings['width'],
-  cropped: Size
+  cropped: Size,
+  rotation: Rotation = 0
 ): Size & { native: number } {
-  const native = evenDown(cropped.width);
+  const turned = orientedSize(cropped, rotation);
+  const native = evenDown(turned.width);
   const outWidth = width === 'original' ? native : Math.min(evenDown(width), native);
   const height = Math.max(
     2,
-    Math.round((outWidth * cropped.height) / cropped.width / 2) * 2
+    Math.round((outWidth * turned.height) / turned.width / 2) * 2
   );
   return { width: outWidth, height, native };
 }
 
 export function frameCount(seconds: number, fps: number): number {
   return Math.max(1, Math.round(seconds * fps));
+}
+
+/**
+ * Decoded-frame bytes a conversion may hold at once in FFmpeg's Wasm memory,
+ * whose heap stops at 2 GiB in the shipped core. Past it FFmpeg stalls rather
+ * than failing. Measured 2026-11-14; the product doc's *Frame-memory limit*
+ * has the runs behind these numbers.
+ */
+export const frameMemoryBudget = {
+  desktop: 1_200_000_000,
+  phone: 300_000_000,
+} as const;
+
+/**
+ * Frame copies held at the peak, or 0 when frames stream through. A GIF
+ * queues every frame for `paletteuse`, which waits for the palette made from
+ * the last one; `reverse` keeps another copy until the input ends, and
+ * Boomerang adds its forward half to the GIF queue. Frames are counted at 4
+ * bytes a pixel, the GIF path's RGB, which overstates the YUV that MP4 and
+ * WebP hold, on the safe side.
+ */
+function heldCopies(direction: Direction, fileTypes: readonly FileType[]) {
+  const gif = fileTypes.includes('gif');
+  if (direction === 'forward') return gif ? 1 : 0;
+  if (!gif) return 1;
+  return direction === 'boomerang' ? 3 : 2;
+}
+
+/**
+ * The longest selection, in seconds, these settings may convert within
+ * `budget`, or null when no frames are held (Forward without a GIF).
+ */
+export function frameMemoryLimitSeconds(
+  size: Size,
+  settings: Pick<AdvancedSettings, 'fps' | 'speed' | 'direction' | 'fileTypes'>,
+  budget: number
+): number | null {
+  const copies = heldCopies(settings.direction, settings.fileTypes);
+  if (copies === 0) return null;
+  const frameBytes = size.width * size.height * 4;
+  const frames = budget / (frameBytes * copies);
+  return (frames / settings.fps) * settings.speed;
 }
 
 /**

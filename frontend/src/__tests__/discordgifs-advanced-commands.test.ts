@@ -8,10 +8,16 @@ import {
   AdvancedSettings,
   croppedSourceSize,
   defaultAdvancedSettings,
+  forNewClip,
   frameCount,
   isLargeGif,
+  outputSeconds,
   outputSize,
+  frameMemoryLimitSeconds,
+  rotate,
   singlePassDownloadName,
+  soundDropReason,
+  speedSteps,
 } from '@/lib/discordgifs/advanced';
 import { buildSinglePassCommand } from '@/lib/discordgifs/single-pass-commands';
 import {
@@ -182,6 +188,228 @@ describe('single-pass commands', () => {
   });
 });
 
+describe('rotate, flip, speed and direction commands', () => {
+  const chain = (args: string[]) => graph(args).replace(/^\[0:v\]/, '');
+
+  test.each([
+    [90, 'transpose=1'],
+    [270, 'transpose=2'],
+    [180, 'hflip,vflip'],
+  ] as const)('rotation %i° is %s, before fps and scale', (rotation, filter) => {
+    expect(chain(command('webp', { rotation }))).toBe(
+      `${filter},fps=15,scale=480:-2:flags=lanczos[out]`
+    );
+  });
+
+  test('flips mirror after the turn: hflip, then vflip', () => {
+    expect(chain(command('webp', { flipHorizontal: true }))).toMatch(/^hflip,fps=/);
+    expect(chain(command('webp', { flipVertical: true }))).toMatch(/^vflip,fps=/);
+    expect(
+      chain(
+        command('webp', { rotation: 90, flipHorizontal: true, flipVertical: true })
+      )
+    ).toMatch(/^transpose=1,hflip,vflip,fps=/);
+  });
+
+  test('speed rescales timestamps before fps, so the frame rate holds', () => {
+    expect(chain(command('webp', { speed: 2 }))).toMatch(
+      /^setpts=PTS\/2,fps=15,scale=/
+    );
+    expect(chain(command('webp', { speed: 0.25 }))).toMatch(
+      /^setpts=PTS\/0\.25,fps=/
+    );
+    expect(chain(command('webp'))).not.toContain('setpts');
+  });
+
+  test('Reverse and Boomerang come after scaling, before each encoder', () => {
+    const reverse = { direction: 'reverse' } as const;
+    const boomerang = { direction: 'boomerang' } as const;
+    const bounce = 'split[f0][r0];[r0]reverse[r1];[f0][r1]concat=n=2:v=1:a=0';
+    expect(chain(command('webp', reverse))).toBe(
+      'fps=15,scale=480:-2:flags=lanczos,reverse[out]'
+    );
+    expect(chain(command('mp4', reverse))).toBe(
+      'fps=15,scale=480:-2:flags=lanczos,reverse,format=yuv420p[out]'
+    );
+    expect(chain(command('gif', reverse))).toMatch(
+      /^fps=15,scale=480:-2:flags=lanczos,reverse,split\[a\]\[b\];\[a\]palettegen/
+    );
+    expect(chain(command('webp', boomerang))).toBe(
+      `fps=15,scale=480:-2:flags=lanczos,${bounce}[out]`
+    );
+    expect(chain(command('mp4', boomerang))).toBe(
+      `fps=15,scale=480:-2:flags=lanczos,${bounce},format=yuv420p[out]`
+    );
+    expect(chain(command('gif', boomerang))).toContain(
+      `scale=480:-2:flags=lanczos,${bounce},split[a][b];[a]palettegen`
+    );
+  });
+
+  test('every control together follows Gif Studio order', () => {
+    const args = command(
+      'gif',
+      {
+        rotation: 270,
+        flipHorizontal: true,
+        flipVertical: true,
+        speed: 1.5,
+        fps: 24,
+        direction: 'boomerang',
+      },
+      { width: 320, crop: { x: 0.25, y: 0, width: 0.5, height: 1 } }
+    );
+    expect(graph(args)).toBe(
+      "[0:v]crop='max(1,iw*0.5)':'max(1,ih*1)':iw*0.25:ih*0:exact=1," +
+        'transpose=2,hflip,vflip,setpts=PTS/1.5,fps=24,scale=320:-2:flags=lanczos,' +
+        'split[f0][r0];[r0]reverse[r1];[f0][r1]concat=n=2:v=1:a=0,' +
+        'split[a][b];[a]palettegen=max_colors=256:stats_mode=diff[p];[b][p]paletteuse=dither=sierra2_4a:diff_mode=rectangle[out]'
+    );
+  });
+
+  test.each([0.5, 0.67, 1.5, 2])(
+    'MP4 sound follows %s× through atempo',
+    (speed) => {
+      const args = command('mp4', { speed }, { keepSound: true });
+      expect(args.slice(-10)).toEqual([
+        '-map',
+        '0:a:0?',
+        '-c:a',
+        'aac',
+        '-b:a',
+        '160k',
+        '-af',
+        `atempo=${speed}`,
+        '-shortest',
+        'output.mp4',
+      ]);
+    }
+  );
+
+  test('at 1× sound needs no atempo', () => {
+    const args = command('mp4', {}, { keepSound: true });
+    expect(args).toContain('0:a:0?');
+    expect(args).not.toContain('-af');
+  });
+
+  test.each([
+    [{ speed: 0.25 }],
+    [{ speed: 0.33 }],
+    [{ speed: 2.5 }],
+    [{ speed: 3 }],
+    [{ direction: 'reverse' as const }],
+    [{ direction: 'boomerang' as const }],
+    [{ direction: 'reverse' as const, speed: 1.5 }],
+  ])('MP4 drops sound at %o even when asked to keep it', (patch) => {
+    const args = command('mp4', patch, { keepSound: true });
+    expect(args).toContain('-an');
+    expect(args).not.toContain('0:a:0?');
+    expect(args).not.toContain('-af');
+  });
+
+  test('the sound note says why sound is dropped', () => {
+    expect(soundDropReason({ speed: 1, direction: 'forward' })).toBeNull();
+    expect(soundDropReason({ speed: 0.5, direction: 'forward' })).toBeNull();
+    expect(soundDropReason({ speed: 2, direction: 'forward' })).toBeNull();
+    expect(soundDropReason({ speed: 3, direction: 'forward' })).toBe(
+      'No sound at 3×; it keeps up from 0.5× to 2×.'
+    );
+    expect(soundDropReason({ speed: 1, direction: 'reverse' })).toBe(
+      'No sound in Reverse.'
+    );
+    expect(soundDropReason({ speed: 1, direction: 'boomerang' })).toBe(
+      'No sound in Boomerang.'
+    );
+  });
+
+  test('speed steps are Gif Studio steps, 0.25× to 3×', () => {
+    expect(speedSteps).toEqual([
+      0.25, 0.33, 0.5, 0.67, 0.75, 0.9, 1, 1.25, 1.5, 1.75, 2, 2.5, 3,
+    ]);
+  });
+});
+
+describe('rotate, flip, speed and direction numbers', () => {
+  test('quarter turns swap the output size; a half turn does not', () => {
+    const portrait = { width: 1080, height: 1920 };
+    expect(outputSize(480, portrait, 0)).toEqual({
+      width: 480,
+      height: 854,
+      native: 1080,
+    });
+    expect(outputSize(480, portrait, 90)).toEqual({
+      width: 480,
+      height: 270,
+      native: 1920,
+    });
+    expect(outputSize('original', portrait, 270)).toMatchObject({
+      width: 1920,
+      height: 1080,
+    });
+    expect(outputSize(480, portrait, 180)).toEqual(outputSize(480, portrait, 0));
+  });
+
+  test('rotate steps a quarter either way and wraps', () => {
+    expect(rotate(0, 'right')).toBe(90);
+    expect(rotate(270, 'right')).toBe(0);
+    expect(rotate(0, 'left')).toBe(270);
+    expect(rotate(90, 'left')).toBe(0);
+  });
+
+  test('speed changes the length and Boomerang doubles it', () => {
+    expect(outputSeconds(4, { speed: 1, direction: 'forward' })).toBe(4);
+    expect(outputSeconds(4, { speed: 2, direction: 'forward' })).toBe(2);
+    expect(outputSeconds(4, { speed: 2, direction: 'boomerang' })).toBe(4);
+    expect(outputSeconds(4, { speed: 0.5, direction: 'reverse' })).toBe(8);
+  });
+
+  test('a new clip starts upright and forward but keeps speed and size', () => {
+    expect(
+      forNewClip(
+        settings({
+          rotation: 90,
+          flipHorizontal: true,
+          flipVertical: true,
+          direction: 'boomerang',
+          speed: 2,
+          width: 320,
+        })
+      )
+    ).toEqual(settings({ speed: 2, width: 320 }));
+  });
+
+  test('the frame-memory limit follows frame size, frame rate, speed and held copies', () => {
+    const size = { width: 480, height: 270 };
+    // A minute of reversed GIF at 15 fps: two RGBA copies of each frame.
+    const budget = 480 * 270 * 4 * 2 * 15 * 60;
+    const at = (patch: Partial<AdvancedSettings>) =>
+      frameMemoryLimitSeconds(
+        size,
+        settings({ direction: 'reverse', ...patch }),
+        budget
+      );
+    expect(at({})).toBeCloseTo(60);
+    // A forward GIF holds one copy, for the palette; forward MP4 and WebP
+    // stream their frames and have no limit.
+    expect(at({ direction: 'forward' })).toBeCloseTo(120);
+    expect(at({ direction: 'forward', fileTypes: ['mp4', 'webp'] })).toBeNull();
+    expect(at({ fps: 30 })).toBeCloseTo(30);
+    // Half speed makes two output frames of each source frame.
+    expect(at({ speed: 0.5 })).toBeCloseTo(30);
+    // Boomerang's forward half queues for the palette too.
+    expect(at({ direction: 'boomerang' })).toBeCloseTo(40);
+    // Without a GIF, nothing waits for a palette.
+    expect(at({ fileTypes: ['mp4', 'webp'] })).toBeCloseTo(120);
+    expect(at({ fileTypes: ['mp4', 'gif'] })).toBeCloseTo(60);
+    expect(
+      frameMemoryLimitSeconds(
+        { width: 240, height: 136 },
+        settings({ direction: 'reverse' }),
+        budget
+      )
+    ).toBeGreaterThan(3.9 * 60);
+  });
+});
+
 describe('Advanced mode output numbers', () => {
   const frame = { width: 1920, height: 1080 };
 
@@ -189,6 +417,11 @@ describe('Advanced mode output numbers', () => {
     expect(defaultAdvancedSettings).toEqual({
       width: 480,
       fps: 15,
+      speed: 1,
+      direction: 'forward',
+      rotation: 0,
+      flipHorizontal: false,
+      flipVertical: false,
       fileTypes: ['gif'],
       gifColors: 256,
       gifDither: 'sierra2_4a',

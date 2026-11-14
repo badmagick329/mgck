@@ -9,6 +9,7 @@ import {
 import {
   AdvancedSettings,
   defaultAdvancedSettings,
+  forNewClip,
 } from '@/lib/discordgifs/advanced';
 import { EditorClip, SessionResult } from '@/lib/types/discordgifs';
 import AdvancedEditor from './AdvancedEditor';
@@ -79,6 +80,7 @@ export default function FileDropzone() {
   const openAdvancedClip = useCallback(
     (file: File) => {
       setAdvancedClip({ file, duration: { status: 'checking' } });
+      setAdvancedSettings(forNewClip);
       checkFileDuration(file);
     },
     [checkFileDuration]
@@ -244,13 +246,15 @@ export default function FileDropzone() {
     if (next === mode) return;
     if (next === 'advanced') {
       const source = activeClip ? filesState[activeClip] : undefined;
-      if (source && source.file !== advancedClip?.file)
+      if (source && source.file !== advancedClip?.file) {
         setAdvancedClip({
           file: source.file,
           duration: source.duration,
           trim: source.trim,
           crop: source.crop,
         });
+        setAdvancedSettings(forNewClip);
+      }
     } else if (advancedClip) {
       const { file, trim, crop, duration } = advancedClip;
       const existing = filesState[file.name];

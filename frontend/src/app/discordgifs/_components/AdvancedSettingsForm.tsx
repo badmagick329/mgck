@@ -1,16 +1,22 @@
 'use client';
 
 import { ReactNode, useId, useState } from 'react';
+import { LuRotateCcw, LuRotateCw } from 'react-icons/lu';
 import { Switch } from '@/components/ui/switch';
 import {
   AdvancedSettings,
   FileType,
   clampSetting,
+  directionOptions,
   fileTypeInfo,
   fileTypeOrder,
+  formatSpeed,
   gifDitherOptions,
   playsOptions,
+  rotate,
   settingLimits,
+  soundDropReason,
+  speedSteps,
   widthChoices,
 } from '@/lib/discordgifs/advanced';
 
@@ -19,8 +25,10 @@ const chip =
 const field =
   'h-8 rounded-md border border-foreground-dg/25 bg-background-dg px-2 text-sm focus:border-primary-dg focus:outline-none';
 const range = 'min-w-0 grow accent-primary-dg';
+const button =
+  'flex h-8 items-center gap-1.5 rounded-md border border-foreground-dg/25 px-2.5 text-sm hover:bg-foreground-dg/10 aria-pressed:border-primary-dg aria-pressed:bg-primary-dg/15 aria-pressed:font-semibold';
 
-/** Gif Studio's settings column: Size, Timing, Quality & looping, Save as. */
+/** Gif Studio's settings column: Size, Timing, Edit, Quality & looping, Save as. */
 export default function AdvancedSettingsForm({
   settings,
   onChange,
@@ -44,7 +52,14 @@ export default function AdvancedSettingsForm({
   const playsId = useId();
   const webpId = useId();
   const soundId = useId();
+  const soundNoteId = useId();
   const widthId = useId();
+  const speedId = useId();
+  const speedIndex = Math.max(
+    0,
+    speedSteps.findIndex((step) => step === settings.speed)
+  );
+  const soundDropped = soundDropReason(settings);
   const shownWidth =
     outputWidth ?? (settings.width === 'original' ? null : settings.width);
   const sliderMax = nativeWidth ?? 1280;
@@ -124,6 +139,96 @@ export default function AdvancedSettingsForm({
           <span className='w-14 shrink-0 text-right text-sm tabular-nums'>
             {settings.fps} fps
           </span>
+        </div>
+        <div className='flex items-center gap-2'>
+          <label htmlFor={speedId} className='w-20 shrink-0 text-sm'>
+            Speed
+          </label>
+          <input
+            id={speedId}
+            type='range'
+            className={range}
+            min={0}
+            max={speedSteps.length - 1}
+            step={1}
+            value={speedIndex}
+            aria-valuetext={formatSpeed(settings.speed)}
+            onChange={(event) =>
+              update({ speed: speedSteps[Number(event.target.value)] })
+            }
+          />
+          <span className='w-14 shrink-0 text-right text-sm tabular-nums'>
+            {formatSpeed(settings.speed)}
+          </span>
+        </div>
+        <div
+          role='group'
+          aria-label='Direction'
+          className='grid grid-cols-3 gap-0.5 rounded-lg border border-foreground-dg/25 bg-background-dg p-0.5'
+        >
+          {directionOptions.map(({ value, label }) => (
+            <button
+              key={value}
+              type='button'
+              className='h-7 rounded-md text-sm text-foreground-dg/70 hover:text-foreground-dg aria-pressed:bg-foreground-dg/15 aria-pressed:font-semibold aria-pressed:text-foreground-dg'
+              aria-pressed={settings.direction === value}
+              onClick={() => update({ direction: value })}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section title='Edit'>
+        <div className='flex flex-wrap items-center gap-1.5'>
+          <button
+            type='button'
+            className={button}
+            aria-label='Rotate left'
+            title='Rotate left'
+            onClick={() => update({ rotation: rotate(settings.rotation, 'left') })}
+          >
+            <LuRotateCcw aria-hidden className='h-4 w-4' />
+            Left
+          </button>
+          <button
+            type='button'
+            className={button}
+            aria-label='Rotate right'
+            title='Rotate right'
+            onClick={() =>
+              update({ rotation: rotate(settings.rotation, 'right') })
+            }
+          >
+            <LuRotateCw aria-hidden className='h-4 w-4' />
+            Right
+          </button>
+          <button
+            type='button'
+            className={button}
+            aria-pressed={settings.flipHorizontal}
+            title='Mirror left to right'
+            onClick={() =>
+              update({ flipHorizontal: !settings.flipHorizontal })
+            }
+          >
+            Flip ↔
+          </button>
+          <button
+            type='button'
+            className={button}
+            aria-pressed={settings.flipVertical}
+            title='Flip upside down'
+            onClick={() => update({ flipVertical: !settings.flipVertical })}
+          >
+            Flip ↕
+          </button>
+          {settings.rotation !== 0 && (
+            <span className='text-sm tabular-nums text-foreground-dg/70'>
+              Turned {settings.rotation}°
+            </span>
+          )}
         </div>
       </Section>
 
@@ -228,17 +333,27 @@ export default function AdvancedSettingsForm({
           {/* Hidden only when the browser is sure there is no sound; when it
               can't tell, the optional audio map makes the switch harmless. */}
           {hasAudio !== false && (
-            <span className='flex items-center gap-2 text-sm'>
-              <Switch
-                id={soundId}
-                checked={settings.keepSound}
-                onCheckedChange={(keepSound) => update({ keepSound })}
-                className='data-[state=checked]:bg-primary-dg data-[state=unchecked]:bg-foreground-dg/20'
-              />
-              <label htmlFor={soundId} className='cursor-pointer'>
-                Keep sound in MP4
-              </label>
-            </span>
+            <div className='flex flex-col gap-1'>
+              <span className='flex items-center gap-2 text-sm'>
+                <Switch
+                  id={soundId}
+                  checked={settings.keepSound}
+                  onCheckedChange={(keepSound) => update({ keepSound })}
+                  aria-describedby={
+                    settings.keepSound && soundDropped ? soundNoteId : undefined
+                  }
+                  className='data-[state=checked]:bg-primary-dg data-[state=unchecked]:bg-foreground-dg/20'
+                />
+                <label htmlFor={soundId} className='cursor-pointer'>
+                  Keep sound in MP4
+                </label>
+              </span>
+              {settings.keepSound && soundDropped && (
+                <p id={soundNoteId} className='text-xs text-amber-200'>
+                  {soundDropped}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </details>

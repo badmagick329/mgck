@@ -49,6 +49,37 @@ export function fitRatio(
 }
 
 /**
+ * Gif Studio's re-fit when a turn flips a locked ratio's orientation: the
+ * new ratio around the old box's centre, at least as wide or as tall as the
+ * old box, so turning back and forth doesn't shrink it step by step the way
+ * `fitRatio` inside the old box would.
+ */
+export function refitRatio(
+  crop: ClipCrop,
+  ratio: number,
+  aspect: number
+): ClipCrop {
+  const largest = fitRatio(fullFrame, ratio, aspect);
+  const scale = Math.min(
+    1,
+    Math.max(crop.width / largest.width, crop.height / largest.height)
+  );
+  const width = largest.width * scale;
+  const height = largest.height * scale;
+  return {
+    x: clamp(crop.x + crop.width / 2 - width / 2, 0, 1 - width),
+    y: clamp(crop.y + crop.height / 2 - height / 2, 0, 1 - height),
+    width,
+    height,
+  };
+}
+
+/** A ratio picked in output pixels, as a ratio of the unturned source. */
+export function sourceRatio(ratio: number, sideways: boolean): number {
+  return sideways ? 1 / ratio : ratio;
+}
+
+/**
  * A dragged side moves while the opposite side stays anchored, so resizing
  * never leaves the frame. With a ratio, an edge handle drives one axis and the
  * other grows around the box's centre, shifting back inside the frame when it

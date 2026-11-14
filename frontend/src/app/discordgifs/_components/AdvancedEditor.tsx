@@ -17,14 +17,20 @@ import {
   fileTypeOrder,
   frameCount,
   isLargeGif,
+  isSideways,
+  outputSeconds,
   outputSize,
+  frameMemoryBudget,
+  frameMemoryLimitSeconds,
 } from '@/lib/discordgifs/advanced';
+import { formatClipTime } from '@/lib/discordgifs/trim';
 import {
   FFmpegManager,
   SinglePassOutput,
 } from '@/lib/discordgifs/ffmpeg-manager';
 import { truncateText } from '@/lib/utils';
 import { useClipShortcuts } from '@/hooks/discordgifs/useClipShortcuts';
+import { usePhoneMemory } from '@/hooks/discordgifs/usePhoneMemory';
 import VideoTrimmer, { LoadedMedia } from './VideoTrimmer';
 import AdvancedPreview from './AdvancedPreview';
 import AdvancedSettingsForm from './AdvancedSettingsForm';
@@ -68,29 +74,49 @@ export default function AdvancedEditor({
   const [job, setJob] = useState<Job | null>(null);
   const [message, setMessage] = useState('');
   const cancelled = useRef(false);
+  const phone = usePhoneMemory();
 
   // Media belongs to the clip it was read from; a replacement starts empty.
   const loaded = clip && mediaFile === clip.file ? media : null;
   const cropped = loaded ? croppedSourceSize(clip?.crop, loaded) : null;
-  const size = cropped ? outputSize(settings.width, cropped) : null;
-  const seconds = !clip
+  const size = cropped
+    ? outputSize(settings.width, cropped, settings.rotation)
+    : null;
+  const selectionSeconds = !clip
     ? null
     : clip.trim
       ? clip.trim.end - clip.trim.start
       : clip.duration.status === 'known'
         ? clip.duration.seconds
         : null;
+  const seconds =
+    selectionSeconds !== null
+      ? outputSeconds(selectionSeconds, settings)
+      : null;
   const frames = seconds !== null ? frameCount(seconds, settings.fps) : null;
   const largeGif =
     settings.fileTypes.includes('gif') &&
     size !== null &&
     frames !== null &&
     isLargeGif(size, frames);
+  const memoryLimit = size
+    ? frameMemoryLimitSeconds(
+        size,
+        settings,
+        phone ? frameMemoryBudget.phone : frameMemoryBudget.desktop
+      )
+    : null;
+  // An unknown length can't be checked; Cancel recovers a run that outgrows memory.
+  const overMemoryLimit =
+    memoryLimit !== null &&
+    selectionSeconds !== null &&
+    selectionSeconds > memoryLimit;
   const canConvert =
     clip !== null &&
     job === null &&
     clip.duration.status !== 'checking' &&
-    settings.fileTypes.length > 0;
+    settings.fileTypes.length > 0 &&
+    !overMemoryLimit;
 
   const convert = async () => {
     if (!clip || !canConvert) return;
@@ -190,6 +216,8 @@ export default function AdvancedEditor({
           disabled={busy}
           card={editor}
           videoMaxHeight={420}
+          playbackRate={settings.speed}
+          sideways={isSideways(settings.rotation)}
           onChange={onTrimChange}
           onCropChange={onCropChange}
           onMediaLoaded={(next) => {
@@ -205,6 +233,7 @@ export default function AdvancedEditor({
         <AdvancedPreview
           video={loaded?.video ?? null}
           crop={clip.crop}
+          settings={settings}
           size={size}
           seconds={seconds}
           frames={frames}
@@ -262,6 +291,14 @@ export default function AdvancedEditor({
                     .join(' + ')}`}
             </button>
           )}
+          {overMemoryLimit && memoryLimit !== null && (
+            <p role='alert' className='text-sm text-amber-200'>
+              {memoryHolder(settings.direction)} keeps every frame in browser
+              memory, so this selection is too long to convert here. Trim it to{' '}
+              {formatClipTime(Math.floor(memoryLimit * 100) / 100)} or less, or
+              lower the width or frame rate.
+            </p>
+          )}
           {message && (
             <p role='status' className='text-sm text-foreground-dg/80'>
               {message}
@@ -272,6 +309,13 @@ export default function AdvancedEditor({
       </aside>
     </div>
   );
+}
+
+/** What holds the frames: the direction, or else the GIF's palette pass. */
+function memoryHolder(direction: AdvancedSettings['direction']): string {
+  if (direction === 'reverse') return 'Reverse';
+  if (direction === 'boomerang') return 'Boomerang';
+  return 'Making a GIF';
 }
 
 function progressText(job: Job | null): string {

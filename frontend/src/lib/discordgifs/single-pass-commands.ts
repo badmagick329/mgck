@@ -1,5 +1,12 @@
 import { ClipCrop, ClipTrim } from '@/lib/types/discordgifs';
-import { AdvancedSettings, FileType, GifDither } from './advanced';
+import {
+  AdvancedSettings,
+  Direction,
+  FileType,
+  GifDither,
+  Rotation,
+  soundDropReason,
+} from './advanced';
 import { cropFilter, trimInput } from './ffmpeg-commands';
 
 type SinglePassCommandOptions = {
@@ -11,14 +18,19 @@ type SinglePassCommandOptions = {
   trim?: ClipTrim;
   /** Even output width, or null to keep the cropped width when it is unknown. */
   width: number | null;
-  /** Only honoured for MP4, and only when the clip has sound to keep. */
+  /**
+   * Only honoured for MP4, and only when the clip has sound to keep and the
+   * speed and direction let it keep up.
+   */
   keepSound: boolean;
 };
 
 /**
  * One FFmpeg run per file type, ported from Gif Studio's `buildFilter` and
- * `ffArgs`: crop, then `fps`, then a lanczos scale, so later filters work on
- * as few pixels and frames as possible.
+ * `ffArgs`, in its order: crop, rotate, flips, speed, `fps`, a lanczos scale,
+ * then direction. Cropping and dropping frames first leaves later filters
+ * as few pixels and frames as possible, and reversing last holds the
+ * smallest frames, since `reverse` keeps every one of them in memory.
  */
 export function buildSinglePassCommand({
   inputName,
@@ -30,8 +42,15 @@ export function buildSinglePassCommand({
   width,
   keepSound,
 }: SinglePassCommandOptions): string[] {
-  const scale = `scale=${width ?? 'trunc(iw/2)*2'}:-2:flags=lanczos`;
-  const video = `[0:v]${cropFilter(crop)}fps=${settings.fps},${scale}`;
+  const filters = [
+    ...rotateFilters(settings.rotation),
+    ...(settings.flipHorizontal ? ['hflip'] : []),
+    ...(settings.flipVertical ? ['vflip'] : []),
+    ...(settings.speed !== 1 ? [`setpts=PTS/${settings.speed}`] : []),
+    `fps=${settings.fps}`,
+    `scale=${width ?? 'trunc(iw/2)*2'}:-2:flags=lanczos`,
+  ];
+  const video = `[0:v]${cropFilter(crop)}${filters.join(',')}${directionFilter(settings.direction)}`;
   const input = trimInput(inputName, trim);
 
   if (fileType === 'gif') {
@@ -73,6 +92,7 @@ export function buildSinglePassCommand({
     ];
   }
 
+  const sound = keepSound && soundDropReason(settings) === null;
   return [
     ...input,
     '-filter_complex',
@@ -88,11 +108,39 @@ export function buildSinglePassCommand({
     '-movflags',
     '+faststart',
     // `?` keeps a clip without sound from failing the whole run.
-    ...(keepSound
-      ? ['-map', '0:a:0?', '-c:a', 'aac', '-b:a', '160k', '-shortest']
+    ...(sound
+      ? [
+          '-map',
+          '0:a:0?',
+          '-c:a',
+          'aac',
+          '-b:a',
+          '160k',
+          ...(settings.speed !== 1 ? ['-af', `atempo=${settings.speed}`] : []),
+          '-shortest',
+        ]
       : ['-an']),
     outputName,
   ];
+}
+
+/** `transpose=1` turns clockwise; a half turn is both flips. */
+function rotateFilters(rotation: Rotation): string[] {
+  if (rotation === 90) return ['transpose=1'];
+  if (rotation === 270) return ['transpose=2'];
+  if (rotation === 180) return ['hflip', 'vflip'];
+  return [];
+}
+
+/**
+ * Appended to the video chain, which later steps continue with `,`. Boomerang
+ * plays the frames forward, then a reversed copy, as one stream.
+ */
+function directionFilter(direction: Direction): string {
+  if (direction === 'reverse') return ',reverse';
+  if (direction === 'boomerang')
+    return ',split[f0][r0];[r0]reverse[r1];[f0][r1]concat=n=2:v=1:a=0';
+  return '';
 }
 
 function ditherOption(dither: GifDither): string {

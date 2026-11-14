@@ -1,19 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { inputMemoryLimits } from '@/lib/consts/discordgifs';
 import { formatBytes } from '@/lib/discordgifs/advanced';
+import { usePhoneMemory } from '@/hooks/discordgifs/usePhoneMemory';
 
 /**
  * FFmpeg reads the whole input into browser memory before converting, so a
- * file past what the device can hold fails only after a long wait. Phones
- * hold far less than desktops; a coarse pointer is the available hint.
+ * file past what the device can hold fails only after a long wait.
  */
 export default function LargeFileWarning({ file }: { file: File }) {
-  const [phone, setPhone] = useState(false);
-  useEffect(() => {
-    setPhone(window.matchMedia?.('(pointer: coarse)').matches ?? false);
-  }, []);
+  const phone = usePhoneMemory();
   const limit = phone ? inputMemoryLimits.phone : inputMemoryLimits.desktop;
   if (file.size <= limit.bytes) return null;
   return (
