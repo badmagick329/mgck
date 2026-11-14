@@ -13,8 +13,9 @@ const pill =
 
 /**
  * Gif Studio's *Output preview*: the selection as it will encode, with the
- * file's exact size, length and frame count. It draws rotation and flips,
- * and moves at the chosen speed because the editor's video plays at it.
+ * file's exact size, length and frame count. It draws rotation, flips and
+ * captions, and moves at the chosen speed because the editor's video plays
+ * at it.
  * Reverse and Boomerang are labelled rather than played, as in Gif Studio:
  * playing them would need every frame decoded and held, which is the cost
  * the frame-memory limit (`frameMemoryLimitSeconds`) exists to bound.
@@ -32,7 +33,14 @@ export default function AdvancedPreview({
   crop?: ClipCrop;
   settings: Pick<
     AdvancedSettings,
-    'rotation' | 'flipHorizontal' | 'flipVertical' | 'speed' | 'direction'
+    | 'rotation'
+    | 'flipHorizontal'
+    | 'flipVertical'
+    | 'speed'
+    | 'direction'
+    | 'topText'
+    | 'bottomText'
+    | 'captionSize'
   >;
   size: Size | null;
   seconds: number | null;
@@ -62,6 +70,7 @@ export default function AdvancedPreview({
             fit='contain'
             outputWidth={size.width}
             orientation={settings}
+            captions={{ captions: settings, output: size }}
             label='Output preview drawing'
           />
         )}

@@ -328,6 +328,58 @@ describe('rotate, flip, speed and direction commands', () => {
   });
 });
 
+describe('caption overlay commands', () => {
+  const captioned = (
+    fileType: 'gif' | 'webp' | 'mp4',
+    patch: Partial<AdvancedSettings> = {},
+    extra: Partial<Parameters<typeof buildSinglePassCommand>[0]> = {}
+  ) => command(fileType, patch, { captionsName: 'captions.png', ...extra });
+
+  test('the caption image is the second input, after the trimmed clip', () => {
+    const args = captioned('webp', {}, { trim: { start: 1, end: 3 } });
+    expect(args.slice(0, 8)).toEqual([
+      '-ss',
+      '1',
+      '-t',
+      '2',
+      '-i',
+      'input.mp4',
+      '-i',
+      'captions.png',
+    ]);
+  });
+
+  test('captions overlay after the turn and scale, before the direction', () => {
+    expect(
+      graph(captioned('webp', { rotation: 90, direction: 'boomerang' }))
+    ).toBe(
+      '[0:v]transpose=1,fps=15,scale=480:-2:flags=lanczos[scaled];' +
+        '[scaled][1:v]overlay=(W-w)/2:(H-h)/2,' +
+        'split[f0][r0];[r0]reverse[r1];[f0][r1]concat=n=2:v=1:a=0[out]'
+    );
+    expect(graph(captioned('mp4', { direction: 'reverse' }))).toBe(
+      '[0:v]fps=15,scale=480:-2:flags=lanczos[scaled];' +
+        '[scaled][1:v]overlay=(W-w)/2:(H-h)/2,reverse,format=yuv420p[out]'
+    );
+  });
+
+  test('a GIF composites in RGB, ahead of its palette', () => {
+    expect(graph(captioned('gif'))).toBe(
+      '[0:v]fps=15,scale=480:-2:flags=lanczos[scaled];' +
+        '[scaled][1:v]overlay=(W-w)/2:(H-h)/2:format=rgb,' +
+        'split[a][b];[a]palettegen=max_colors=256:stats_mode=diff[p];[b][p]paletteuse=dither=sierra2_4a:diff_mode=rectangle[out]'
+    );
+  });
+
+  test('sound still comes from the clip, and no image means no overlay', () => {
+    expect(captioned('mp4', {}, { keepSound: true })).toContain('0:a:0?');
+    for (const fileType of ['gif', 'webp', 'mp4'] as const) {
+      expect(command(fileType)).not.toContain('captions.png');
+      expect(graph(command(fileType))).not.toContain('overlay');
+    }
+  });
+});
+
 describe('rotate, flip, speed and direction numbers', () => {
   test('quarter turns swap the output size; a half turn does not', () => {
     const portrait = { width: 1080, height: 1920 };
@@ -362,7 +414,7 @@ describe('rotate, flip, speed and direction numbers', () => {
     expect(outputSeconds(4, { speed: 0.5, direction: 'reverse' })).toBe(8);
   });
 
-  test('a new clip starts upright and forward but keeps speed and size', () => {
+  test('a new clip starts upright, forward and uncaptioned but keeps speed and sizes', () => {
     expect(
       forNewClip(
         settings({
@@ -370,11 +422,14 @@ describe('rotate, flip, speed and direction numbers', () => {
           flipHorizontal: true,
           flipVertical: true,
           direction: 'boomerang',
+          topText: 'TOP',
+          bottomText: 'BOTTOM',
+          captionSize: 20,
           speed: 2,
           width: 320,
         })
       )
-    ).toEqual(settings({ speed: 2, width: 320 }));
+    ).toEqual(settings({ speed: 2, width: 320, captionSize: 20 }));
   });
 
   test('the frame-memory limit follows frame size, frame rate, speed and held copies', () => {
@@ -422,6 +477,9 @@ describe('Advanced mode output numbers', () => {
       rotation: 0,
       flipHorizontal: false,
       flipVertical: false,
+      topText: '',
+      bottomText: '',
+      captionSize: 12,
       fileTypes: ['gif'],
       gifColors: 256,
       gifDither: 'sierra2_4a',
@@ -525,6 +583,24 @@ describe('single-pass conversion', () => {
       'output-id.webp',
     ]);
     expect(runtime.off).toHaveBeenCalledWith('progress', expect.any(Function));
+  });
+
+  test('writes the caption image once and overlays it on every file type', async () => {
+    const { runtime, manager } = setup();
+    await manager.load();
+    const png = new Uint8Array([137, 80, 78, 71]);
+    await manager.convertSinglePass({ ...job, captions: png });
+
+    expect(runtime.writeFile).toHaveBeenCalledTimes(2);
+    expect(runtime.writeFile).toHaveBeenCalledWith('captions-id.png', png);
+    for (const [args] of (runtime.exec as jest.Mock).mock.calls as [string[]][]) {
+      expect(args.slice(args.indexOf('input-id.mov') + 1, args.indexOf('input-id.mov') + 3)).toEqual([
+        '-i',
+        'captions-id.png',
+      ]);
+      expect(graph(args)).toContain('[scaled][1:v]overlay=');
+    }
+    expect(runtime.deleteFile).toHaveBeenCalledWith('captions-id.png');
   });
 
   test('reports a failed file type and carries on with the rest', async () => {

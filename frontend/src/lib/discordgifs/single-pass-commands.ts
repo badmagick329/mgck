@@ -23,12 +23,17 @@ type SinglePassCommandOptions = {
    * speed and direction let it keep up.
    */
   keepSound: boolean;
+  /**
+   * FFmpeg file name of the caption image: a transparent PNG at the exact
+   * output size (`renderCaptionImage`), or undefined for no captions.
+   */
+  captionsName?: string;
 };
 
 /**
  * One FFmpeg run per file type, ported from Gif Studio's `buildFilter` and
  * `ffArgs`, in its order: crop, rotate, flips, speed, `fps`, a lanczos scale,
- * then direction. Cropping and dropping frames first leaves later filters
+ * captions, then direction. Cropping and dropping frames first leaves later filters
  * as few pixels and frames as possible, and reversing last holds the
  * smallest frames, since `reverse` keeps every one of them in memory.
  */
@@ -41,6 +46,7 @@ export function buildSinglePassCommand({
   trim,
   width,
   keepSound,
+  captionsName,
 }: SinglePassCommandOptions): string[] {
   const filters = [
     ...rotateFilters(settings.rotation),
@@ -50,8 +56,11 @@ export function buildSinglePassCommand({
     `fps=${settings.fps}`,
     `scale=${width ?? 'trunc(iw/2)*2'}:-2:flags=lanczos`,
   ];
-  const video = `[0:v]${cropFilter(crop)}${filters.join(',')}${directionFilter(settings.direction)}`;
-  const input = trimInput(inputName, trim);
+  const video = `[0:v]${cropFilter(crop)}${filters.join(',')}${captionsName ? captionOverlay(fileType) : ''}${directionFilter(settings.direction)}`;
+  const input = [
+    ...trimInput(inputName, trim),
+    ...(captionsName ? ['-i', captionsName] : []),
+  ];
 
   if (fileType === 'gif') {
     // stats_mode=diff and diff_mode=rectangle spend the palette and the
@@ -122,6 +131,20 @@ export function buildSinglePassCommand({
       : ['-an']),
     outputName,
   ];
+}
+
+/**
+ * Composites the caption image (input 1) after the scale, so it lands on
+ * output pixels the way the preview draws it, and after the turn and flips,
+ * so it stays upright. A single image repeats over every frame (overlay's
+ * default `eof_action=repeat`); centring it rather than pinning it at 0:0
+ * keeps a one-row rounding difference from shifting a caption off the edge.
+ * A GIF composites in RGB, which its palette needs anyway, so the outline
+ * skips a 4:2:0 round trip; MP4 and WebP encode 4:2:0 regardless.
+ */
+function captionOverlay(fileType: FileType): string {
+  const format = fileType === 'gif' ? ':format=rgb' : '';
+  return `[scaled];[scaled][1:v]overlay=(W-w)/2:(H-h)/2${format}`;
 }
 
 /** `transpose=1` turns clockwise; a half turn is both flips. */

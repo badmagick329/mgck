@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { ClipCrop } from '@/lib/types/discordgifs';
 import {
+  CaptionLayer,
   Orientation,
   PreviewFit,
   Size,
@@ -15,6 +16,10 @@ import {
   upright,
 } from '@/lib/discordgifs/output-preview';
 import { isSideways } from '@/lib/discordgifs/advanced';
+import {
+  captionFontsLoaded,
+  loadCaptionFonts,
+} from '@/lib/discordgifs/captions';
 
 /** A source rectangle as it reads after a quarter turn. */
 const turned = (rect: SourceRect, sideways: boolean): SourceRect =>
@@ -32,6 +37,7 @@ export default function OutputPreview({
   fit,
   outputWidth,
   orientation = upright,
+  captions,
   label,
   className,
 }: {
@@ -39,6 +45,8 @@ export default function OutputPreview({
   crop?: ClipCrop;
   /** Advanced mode's rotate and flips; the presets stay upright. */
   orientation?: Orientation;
+  /** Advanced mode's captions, fitted to the exact output size. */
+  captions?: CaptionLayer;
   /** Side of the square CSS box the output is shown in. */
   box: number;
   fit: PreviewFit;
@@ -52,6 +60,15 @@ export default function OutputPreview({
   const draw = useRef(() => {});
   // Primitives, so a caller's fresh object each render doesn't redraw.
   const { rotation, flipHorizontal, flipVertical } = orientation;
+  const topText = captions?.captions.topText ?? '';
+  const bottomText = captions?.captions.bottomText ?? '';
+  const captionSize = captions?.captions.captionSize ?? 0;
+  const outputHeight = captions?.output.height ?? 0;
+  // Caption text whose font load has settled, loaded or failed. Until then
+  // the frame is drawn without captions, since measuring with a fallback
+  // face would fit the line to the wrong widths.
+  const fontsSettled = useRef<string | null>(null);
+  const fontsPending = useRef<string | null>(null);
   useEffect(() => {
     draw.current = () => {
       const element = canvas.current;
@@ -84,12 +101,35 @@ export default function OutputPreview({
           : shown
       );
       const context = element.getContext('2d');
-      if (context)
-        drawOutputFrame(context, video, source, resolution, {
-          rotation,
-          flipHorizontal,
-          flipVertical,
+      if (!context) return;
+      const layer: CaptionLayer | undefined =
+        topText || bottomText
+          ? {
+              captions: { topText, bottomText, captionSize },
+              output: { width: outputWidth, height: outputHeight },
+            }
+          : undefined;
+      const fontKey = `${topText}
+${bottomText}`;
+      const fontsReady =
+        !layer ||
+        fontsSettled.current === fontKey ||
+        captionFontsLoaded(layer.captions);
+      if (layer && !fontsReady && fontsPending.current !== fontKey) {
+        fontsPending.current = fontKey;
+        void loadCaptionFonts(layer.captions).then(() => {
+          fontsSettled.current = fontKey;
+          draw.current();
         });
+      }
+      drawOutputFrame(
+        context,
+        video,
+        source,
+        resolution,
+        { rotation, flipHorizontal, flipVertical },
+        fontsReady ? layer : undefined
+      );
     };
     draw.current();
   }, [
@@ -101,6 +141,10 @@ export default function OutputPreview({
     rotation,
     flipHorizontal,
     flipVertical,
+    topText,
+    bottomText,
+    captionSize,
+    outputHeight,
   ]);
 
   useEffect(() => {

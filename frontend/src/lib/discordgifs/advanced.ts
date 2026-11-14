@@ -93,6 +93,11 @@ export type AdvancedSettings = {
   rotation: Rotation;
   flipHorizontal: boolean;
   flipVertical: boolean;
+  /** Caption lines; blank draws nothing (`captions.ts`). */
+  topText: string;
+  bottomText: string;
+  /** Caption size as a percentage of the output's shorter side. */
+  captionSize: number;
   fileTypes: FileType[];
   gifColors: number;
   gifDither: GifDither;
@@ -109,6 +114,7 @@ export const settingLimits = {
   fps: { min: 1, max: 60 },
   gifColors: { min: 2, max: 256 },
   webpQuality: { min: 1, max: 100 },
+  captionSize: { min: 5, max: 30 },
 } as const;
 
 export const defaultAdvancedSettings: AdvancedSettings = {
@@ -119,6 +125,9 @@ export const defaultAdvancedSettings: AdvancedSettings = {
   rotation: 0,
   flipHorizontal: false,
   flipVertical: false,
+  topText: '',
+  bottomText: '',
+  captionSize: 12,
   fileTypes: ['gif'],
   gifColors: 256,
   gifDither: 'sierra2_4a',
@@ -128,8 +137,9 @@ export const defaultAdvancedSettings: AdvancedSettings = {
 };
 
 /**
- * Gif Studio starts each clip unrotated, unflipped and forward, since those
- * suit one recording; width, timing, quality and speed carry over.
+ * Gif Studio starts each clip unrotated, unflipped, forward and uncaptioned,
+ * since those suit one recording; width, timing, quality, speed and caption
+ * size carry over.
  */
 export function forNewClip(settings: AdvancedSettings): AdvancedSettings {
   return {
@@ -138,6 +148,8 @@ export function forNewClip(settings: AdvancedSettings): AdvancedSettings {
     rotation: defaultAdvancedSettings.rotation,
     flipHorizontal: defaultAdvancedSettings.flipHorizontal,
     flipVertical: defaultAdvancedSettings.flipVertical,
+    topText: defaultAdvancedSettings.topText,
+    bottomText: defaultAdvancedSettings.bottomText,
   };
 }
 

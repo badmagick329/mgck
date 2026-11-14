@@ -55,6 +55,9 @@ export default function AdvancedSettingsForm({
   const soundNoteId = useId();
   const widthId = useId();
   const speedId = useId();
+  const topTextId = useId();
+  const bottomTextId = useId();
+  const captionSizeId = useId();
   const speedIndex = Math.max(
     0,
     speedSteps.findIndex((step) => step === settings.speed)
@@ -229,6 +232,58 @@ export default function AdvancedSettingsForm({
               Turned {settings.rotation}°
             </span>
           )}
+        </div>
+        <div className='flex items-center gap-2'>
+          <label htmlFor={topTextId} className='w-20 shrink-0 text-sm'>
+            Top text
+          </label>
+          <input
+            id={topTextId}
+            type='text'
+            className={`${field} min-w-0 grow`}
+            placeholder='Caption above'
+            value={settings.topText}
+            onChange={(event) => update({ topText: event.target.value })}
+          />
+        </div>
+        <div className='flex items-center gap-2'>
+          <label htmlFor={bottomTextId} className='w-20 shrink-0 text-sm'>
+            Bottom text
+          </label>
+          <input
+            id={bottomTextId}
+            type='text'
+            className={`${field} min-w-0 grow`}
+            placeholder='Caption below'
+            value={settings.bottomText}
+            onChange={(event) => update({ bottomText: event.target.value })}
+          />
+        </div>
+        <div className='flex items-center gap-2'>
+          <label htmlFor={captionSizeId} className='w-20 shrink-0 text-sm'>
+            Text size
+          </label>
+          <input
+            id={captionSizeId}
+            type='range'
+            className={range}
+            min={settingLimits.captionSize.min}
+            max={settingLimits.captionSize.max}
+            step={1}
+            value={settings.captionSize}
+            aria-valuetext={`${settings.captionSize}% of the shorter side`}
+            onChange={(event) =>
+              update({
+                captionSize: clampSetting(
+                  'captionSize',
+                  Number(event.target.value)
+                ),
+              })
+            }
+          />
+          <span className='w-14 shrink-0 text-right text-sm tabular-nums'>
+            {settings.captionSize}%
+          </span>
         </div>
       </Section>
 

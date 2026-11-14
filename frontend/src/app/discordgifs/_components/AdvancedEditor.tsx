@@ -25,6 +25,10 @@ import {
 } from '@/lib/discordgifs/advanced';
 import { formatClipTime } from '@/lib/discordgifs/trim';
 import {
+  hasCaptions,
+  renderCaptionImage,
+} from '@/lib/discordgifs/captions';
+import {
   FFmpegManager,
   SinglePassOutput,
 } from '@/lib/discordgifs/ffmpeg-manager';
@@ -111,12 +115,15 @@ export default function AdvancedEditor({
     memoryLimit !== null &&
     selectionSeconds !== null &&
     selectionSeconds > memoryLimit;
+  const captioned = hasCaptions(settings);
+  // Captions are drawn at the exact output size, which needs the decoded frame.
   const canConvert =
     clip !== null &&
     job === null &&
     clip.duration.status !== 'checking' &&
     settings.fileTypes.length > 0 &&
-    !overMemoryLimit;
+    !overMemoryLimit &&
+    (!captioned || size !== null);
 
   const convert = async () => {
     if (!clip || !canConvert) return;
@@ -129,6 +136,10 @@ export default function AdvancedEditor({
     setJob({ fileType: fileTypes[0], index: 0, total: fileTypes.length, done: 0 });
     onBusyChange(true);
     try {
+      const captions =
+        captioned && size
+          ? ((await renderCaptionImage(settings, size)) ?? undefined)
+          : undefined;
       if (!manager.loaded()) await manager.load();
       await manager.convertSinglePass(
         {
@@ -140,6 +151,7 @@ export default function AdvancedEditor({
             size?.width ??
             (settings.width === 'original' ? null : evenDown(settings.width)),
           keepSound: settings.keepSound && loaded?.hasAudio !== false,
+          captions,
           outputSeconds: seconds ?? 0,
         },
         {

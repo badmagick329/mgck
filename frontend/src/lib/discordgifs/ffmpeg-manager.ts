@@ -74,6 +74,8 @@ export type SinglePassJob = {
   /** Even output width, or null when the source size is unknown. */
   width: number | null;
   keepSound: boolean;
+  /** Caption image (PNG) at the exact output size, overlaid on every frame. */
+  captions?: Uint8Array;
   /** Seconds of output, which turns FFmpeg's output time into a fraction. */
   outputSeconds: number;
 };
@@ -445,6 +447,12 @@ export class FFmpegManager {
         await this.dependencies.fetchFile(job.file)
       );
       createdFiles.add(inputName);
+      let captionsName: string | undefined;
+      if (job.captions) {
+        captionsName = `captions-${id}.png`;
+        await ffmpeg.writeFile(captionsName, job.captions);
+        createdFiles.add(captionsName);
+      }
       const fileTypes = fileTypeOrder.filter((fileType) =>
         job.settings.fileTypes.includes(fileType)
       );
@@ -463,6 +471,7 @@ export class FFmpegManager {
             trim: job.trim,
             width: job.width,
             keepSound: job.keepSound,
+            captionsName,
           })
         );
         let output: SinglePassOutput;

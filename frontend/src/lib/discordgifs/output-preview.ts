@@ -4,6 +4,7 @@ import {
   conversionTargetPresets,
 } from './conversion-target';
 import { Rotation, orientedSize } from './advanced';
+import { Captions, drawCaptions } from './captions';
 
 export type Size = { width: number; height: number };
 export type SourceRect = Size & { x: number; y: number };
@@ -112,9 +113,13 @@ const turns: Record<Rotation, { cos: number; sin: number }> = {
   270: { cos: 0, sin: -1 },
 };
 
+/** Captions and the output size they are fitted to. */
+export type CaptionLayer = { captions: Captions; output: Size };
+
 /**
- * One output frame. Every preview draws through here, so later editor options
- * (captions) belong here too.
+ * One output frame. Every preview draws through here. Captions go on last,
+ * outside the turn, as FFmpeg overlays them after the scale so they stay
+ * upright; the overlay image comes from the same `drawCaptions`.
  *
  * The source is drawn unturned into a box the size of the canvas before the
  * turn, and the transform turns it clockwise and then mirrors it about the
@@ -125,7 +130,8 @@ export function drawOutputFrame(
   video: CanvasImageSource,
   source: SourceRect,
   canvas: Size,
-  orientation: Orientation = upright
+  orientation: Orientation = upright,
+  captions?: CaptionLayer
 ) {
   const { cos, sin } = turns[orientation.rotation];
   const flipX = orientation.flipHorizontal ? -1 : 1;
@@ -154,4 +160,6 @@ export function drawOutputFrame(
     unturned.height
   );
   context.setTransform(1, 0, 0, 1, 0, 0);
+  if (captions)
+    drawCaptions(context, captions.captions, captions.output, canvas);
 }
