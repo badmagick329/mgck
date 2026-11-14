@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import { ClipCrop, ClipTrim, FFmpegFileData } from '@/lib/types/discordgifs';
 import {
   defaultFrameSeconds,
@@ -11,6 +11,7 @@ import {
   toClipTrim,
 } from '@/lib/discordgifs/trim';
 import { useTimelineThumbnails } from '@/hooks/discordgifs/useTimelineThumbnails';
+import { useClipShortcuts } from '@/hooks/discordgifs/useClipShortcuts';
 import ClipTransport from './ClipTransport';
 import TrimTimeline from './TrimTimeline';
 import VideoCropper from './VideoCropper';
@@ -43,11 +44,17 @@ const button =
 export default function VideoTrimmer({
   fileData,
   disabled,
+  active = true,
+  card,
   onChange,
   onCropChange,
 }: {
   fileData: FFmpegFileData;
   disabled: boolean;
+  /** Whether keyboard shortcuts act on this clip. */
+  active?: boolean;
+  /** The clip's card; keys pressed inside another element are not this clip's. */
+  card?: RefObject<Element>;
   onChange: (trim: ClipTrim | undefined) => void;
   onCropChange: (crop: ClipCrop | undefined) => void;
 }) {
@@ -125,17 +132,6 @@ export default function VideoTrimmer({
     return () => player.cancelVideoFrameCallback(handle);
   }, [playing]);
 
-  if (duration.status === 'checking') return <p>Checking clip duration…</p>;
-  if (duration.status === 'unknown' || duration.seconds <= 0 || failed) {
-    return (
-      <p className='text-sm'>
-        This browser cannot preview this format. You can still try converting
-        the original file. To trim or crop it here, choose a browser-playable
-        video such as an H.264 MP4.
-      </p>
-    );
-  }
-
   const selection = { start, end };
   const length = end - start;
   const change = (next: { start: number; end: number } | undefined) =>
@@ -173,6 +169,41 @@ export default function VideoTrimmer({
     change(next);
     seek(next.end);
   };
+  const step = (seconds: number) => {
+    video.current!.pause();
+    seek(video.current!.currentTime + seconds);
+  };
+  // The element's time is fresher than state, which the frame loop updates
+  // only once per animation frame while playing.
+  const playheadTime = () => video.current?.currentTime ?? currentTime;
+
+  const editable =
+    duration.status === 'known' && duration.seconds > 0 && !failed;
+  useClipShortcuts(
+    {
+      togglePlay,
+      previousFrame: () => step(-frameSeconds),
+      nextFrame: () => step(frameSeconds),
+      backOneSecond: () => step(-1),
+      forwardOneSecond: () => step(1),
+      setStart: () => commitStart(playheadTime()),
+      setEnd: () => commitEnd(playheadTime()),
+      jumpToStart: () => seek(start),
+      jumpToEnd: () => seek(end),
+    },
+    { enabled: active && !disabled && editable, scope: card }
+  );
+
+  if (duration.status === 'checking') return <p>Checking clip duration…</p>;
+  if (!editable) {
+    return (
+      <p className='text-sm'>
+        This browser cannot preview this format. You can still try converting
+        the original file. To trim or crop it here, choose a browser-playable
+        video such as an H.264 MP4.
+      </p>
+    );
+  }
 
   return (
     <fieldset
@@ -226,10 +257,7 @@ export default function VideoTrimmer({
         loopSelection={loopSelection}
         sound={sound}
         onTogglePlay={togglePlay}
-        onStep={(direction) => {
-          video.current!.pause();
-          seek(video.current!.currentTime + direction * frameSeconds);
-        }}
+        onStep={(direction) => step(direction * frameSeconds)}
         onLoopSelectionChange={setLoopSelection}
         onSoundChange={setSound}
       />
@@ -295,11 +323,55 @@ export default function VideoTrimmer({
           </button>
         )}
       </div>
+      <ShortcutHints />
       <p className='text-xs text-foreground-dg/70'>
         The selection and crop apply to all selected outputs.
       </p>
       {playError && <p role='alert'>{playError}</p>}
     </fieldset>
+  );
+}
+
+/** Keys as tokens; `+` and `/` are separators drawn as plain text. */
+const shortcutHints: Array<[keys: string[], action: string]> = [
+  [['Space'], 'play'],
+  [['←', '→'], 'frame'],
+  [['Shift', '+', '←', '→'], '1 s'],
+  [['I', '/', 'O'], 'start/end'],
+  [['Home', '/', 'End'], 'jump'],
+  [['Ctrl', '+', 'Enter'], 'convert'],
+  [['Ctrl', '+', 'O'], 'open'],
+];
+const separators = new Set(['+', '/']);
+
+/**
+ * Gif Studio's hint row. Hidden unless some pointer is fine, so touch-only
+ * screens, which have no keyboard to use it with, don't spend space on it.
+ */
+function ShortcutHints() {
+  return (
+    <ul
+      aria-label='Keyboard shortcuts'
+      className='hidden flex-wrap gap-x-3 gap-y-1 text-xs text-foreground-dg/60 [@media(any-pointer:fine)]:flex'
+    >
+      {shortcutHints.map(([keys, action]) => (
+        <li key={action} className='flex items-center gap-0.5'>
+          {keys.map((key, index) =>
+            separators.has(key) ? (
+              <span key={index}>{key}</span>
+            ) : (
+              <kbd
+                key={index}
+                className='rounded border border-b-2 border-foreground-dg/25 bg-foreground-dg/10 px-1 font-mono text-[11px] leading-4 text-foreground-dg'
+              >
+                {key}
+              </kbd>
+            )
+          )}{' '}
+          <span className='ml-1'>{action}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

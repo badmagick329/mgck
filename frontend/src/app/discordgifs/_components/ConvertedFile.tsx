@@ -7,6 +7,8 @@ import {
 import { getFileOutputEligibility } from '@/lib/discordgifs/eligibility';
 import { truncateText } from '@/lib/utils';
 import clsx from 'clsx';
+import { useRef } from 'react';
+import { useClipShortcuts } from '@/hooks/discordgifs/useClipShortcuts';
 
 import ConversionOutput from './ConversionOutput';
 import ProgressBar from './ProgressBar';
@@ -16,6 +18,11 @@ type ConvertedFileProps = {
   fileData: FFmpegFileData;
   removeFile: () => void;
   disabled?: boolean;
+  /** Whether keyboard shortcuts act on this card. */
+  active?: boolean;
+  /** Outlines the active card, which only matters once there is a choice. */
+  showActive?: boolean;
+  onActivate?: () => void;
   onConvert: () => void;
   onTrimChange: (trim: ClipTrim | undefined) => void;
   onCropChange: (crop: ClipCrop | undefined) => void;
@@ -25,6 +32,9 @@ export default function ConvertedFile({
   fileData,
   removeFile,
   disabled = false,
+  active = true,
+  showActive = false,
+  onActivate,
   onTrimChange,
   onCropChange,
   onConvert,
@@ -35,15 +45,30 @@ export default function ConvertedFile({
     getFileOutputEligibility(fileData);
   const stickerLimit = conversionTargetPresets.sticker.maxDurationSeconds;
   const stickerIsExcluded = excludedOutputTypes.includes('sticker');
+  const card = useRef<HTMLDivElement>(null);
+  const canConvert =
+    conversionState === 'idle' &&
+    !disabled &&
+    fileData.duration.status !== 'checking' &&
+    eligibleOutputTypes.length > 0;
+  useClipShortcuts(
+    { convert: () => canConvert && onConvert() },
+    { enabled: active, scope: card }
+  );
   if (!file) {
     return null;
   }
 
   return (
     <div
+      ref={card}
+      data-active={active || undefined}
+      onPointerDownCapture={onActivate}
+      onFocusCapture={onActivate}
       className={clsx(
         'flex min-h-80 w-full max-w-md flex-col items-center gap-4 rounded-md px-2 pb-4 pt-2',
-        'bg-secondary-dg shadow-glow-secondary-dg'
+        'bg-secondary-dg shadow-glow-secondary-dg',
+        showActive && active && 'outline outline-2 outline-primary-dg/70'
       )}
     >
       <div className='flex w-full flex-col'>
@@ -61,6 +86,8 @@ export default function ConvertedFile({
         <VideoTrimmer
           fileData={fileData}
           disabled={disabled}
+          active={active}
+          card={card}
           onChange={onTrimChange}
           onCropChange={onCropChange}
         />
@@ -105,11 +132,7 @@ export default function ConvertedFile({
         <button
           type='button'
           className='mt-auto w-full rounded-md bg-primary-dg px-4 py-3 font-semibold hover:bg-primary-dg/80 disabled:cursor-not-allowed disabled:opacity-50'
-          disabled={
-            disabled ||
-            fileData.duration.status === 'checking' ||
-            eligibleOutputTypes.length === 0
-          }
+          disabled={!canConvert}
           onClick={onConvert}
         >
           {fileData.outputTypes.length === 1 &&

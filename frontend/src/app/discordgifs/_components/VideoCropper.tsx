@@ -20,6 +20,7 @@ import {
   moveCrop,
   resizeCrop,
 } from '@/lib/discordgifs/crop';
+import { passesShortcuts } from '@/lib/discordgifs/shortcuts';
 
 const ratioChoices = [{ label: 'Free', ratio: null }, ...cropRatios];
 
@@ -234,6 +235,7 @@ export default function VideoCropper({
                 <button
                   key={handle}
                   type='button'
+                  {...passesShortcuts}
                   disabled={disabled}
                   tabIndex={
                     handle === 'move' || corners.has(handle) ? undefined : -1

@@ -27,6 +27,7 @@ import {
 } from '@/lib/consts/discordgifs';
 import { useFFmpeg } from '@/hooks/discordgifs/useFFmpeg';
 import { useFilePaste } from '@/hooks/discordgifs/useFilePaste';
+import { useClipShortcuts } from '@/hooks/discordgifs/useClipShortcuts';
 
 export default function FileDropzone() {
   const { ffmpegRef, isLoaded } = useFFmpeg();
@@ -47,32 +48,52 @@ export default function FileDropzone() {
     });
   }, []);
 
-  const { acceptedFiles, getRootProps, getInputProps, fileRejections } =
-    useDropzone({
-      accept: acceptedTypes,
-      onDragEnter: (e) => {
-        setDragEnter(true);
-      },
-      onDragLeave: (e) => {
-        setDragEnter(false);
-      },
-      onDropAccepted: (files) => {
-        setDragEnter(false);
-        setDropError(null);
-      },
-      onDropRejected: (fileRejections) => {
-        setDragEnter(false);
-        for (const rejection of fileRejections) {
-          for (const err of rejection.errors) {
-            if (err.code === 'too-many-files') {
-              setDropError(`You can only upload up to ${maxFiles} files`);
-              return;
-            }
+  // The card the user last focused or pressed, falling back to the newest one,
+  // so shortcuts never reach a card the user isn't working on.
+  const [chosenClip, setChosenClip] = useState<string | null>(null);
+  const clipNames = Object.keys(filesState);
+  const activeClip =
+    chosenClip !== null && chosenClip in filesState
+      ? chosenClip
+      : clipNames[clipNames.length - 1];
+
+  const {
+    acceptedFiles,
+    getRootProps,
+    getInputProps,
+    fileRejections,
+    open,
+    rootRef,
+  } = useDropzone({
+    accept: acceptedTypes,
+    onDragEnter: (e) => {
+      setDragEnter(true);
+    },
+    onDragLeave: (e) => {
+      setDragEnter(false);
+    },
+    onDropAccepted: (files) => {
+      setDragEnter(false);
+      setDropError(null);
+      // Choosing files leaves focus on the dropzone, where Space would
+      // reopen the picker instead of playing the clip that just arrived.
+      const focused = document.activeElement;
+      if (focused instanceof HTMLElement && rootRef.current?.contains(focused))
+        focused.blur();
+    },
+    onDropRejected: (fileRejections) => {
+      setDragEnter(false);
+      for (const rejection of fileRejections) {
+        for (const err of rejection.errors) {
+          if (err.code === 'too-many-files') {
+            setDropError(`You can only upload up to ${maxFiles} files`);
+            return;
           }
         }
-      },
-      maxFiles,
-    });
+      }
+    },
+    maxFiles,
+  });
 
   const totalFiles = Object.values(filesState).reduce(
     (count, file) => count + (file.conversionState === 'idle' ? 1 : 0),
@@ -97,6 +118,7 @@ export default function FileDropzone() {
         payload: { file, outputTypes: selectedOutputTypes },
       });
       checkFileDuration(file);
+      setChosenClip(file.name);
     }
     setDropError(null);
   }, [acceptedFiles]);
@@ -119,6 +141,8 @@ export default function FileDropzone() {
         payload: { files: newFiles, outputTypes: selectedOutputTypes },
       });
       for (const file of newFiles) checkFileDuration(file);
+      if (newFiles.length > 0)
+        setChosenClip(newFiles[newFiles.length - 1].name);
 
       setDropError(null);
     },
@@ -126,6 +150,7 @@ export default function FileDropzone() {
   );
 
   useFilePaste(onFilesPasted);
+  useClipShortcuts({ openFile: open }, {});
 
   const anyProcessing = Object.values(filesState).some((d) =>
     ['busy', 'optimizing', 'converting'].includes(d.conversionState)
@@ -209,6 +234,8 @@ export default function FileDropzone() {
       {dropError && <p className='font-semibold text-red-500'>{dropError}</p>}
       <ConvertedFiles
         filesState={filesState}
+        activeClip={activeClip}
+        onActivate={setChosenClip}
         dispatch={dispatch}
         disabled={selectorDisabled}
         onConvert={(name) => startConversion({ [name]: filesState[name] })}
@@ -243,6 +270,8 @@ function MoreFilesText({
 
 function ConvertedFiles({
   filesState,
+  activeClip,
+  onActivate,
   dispatch,
   setDropError,
   disabled,
@@ -251,6 +280,8 @@ function ConvertedFiles({
   disabled: boolean;
   onConvert: (name: string) => void;
   filesState: FilesState;
+  activeClip: string | undefined;
+  onActivate: (name: string) => void;
   dispatch: (value: FileAction) => void;
   setDropError: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
@@ -260,6 +291,9 @@ function ConvertedFiles({
         Object.entries(filesState).map(([name, data]) => (
           <ConvertedFile
             key={name}
+            active={name === activeClip}
+            showActive={Object.keys(filesState).length > 1}
+            onActivate={() => onActivate(name)}
             disabled={disabled}
             onConvert={() => onConvert(name)}
             onCropChange={(crop) =>
