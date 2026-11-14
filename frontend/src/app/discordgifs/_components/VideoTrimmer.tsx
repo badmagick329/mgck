@@ -296,7 +296,7 @@ export default function VideoTrimmer({
         )}
       </div>
       <p className='text-xs text-foreground-dg/70'>
-        The selection applies to all selected outputs.
+        The selection and crop apply to all selected outputs.
       </p>
       {playError && <p role='alert'>{playError}</p>}
     </fieldset>
