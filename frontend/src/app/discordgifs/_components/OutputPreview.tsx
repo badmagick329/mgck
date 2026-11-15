@@ -15,11 +15,15 @@ import {
   fitToBox,
   upright,
 } from '@/lib/discordgifs/output-preview';
-import { isSideways } from '@/lib/discordgifs/advanced';
+import { isSideways, orientedSize } from '@/lib/discordgifs/advanced';
 import {
   captionFontsLoaded,
   loadCaptionFonts,
 } from '@/lib/discordgifs/captions';
+import {
+  frameRegion,
+  subscribeToFrames,
+} from '@/lib/discordgifs/video-frames';
 
 /** A source rectangle as it reads after a quarter turn. */
 const turned = (rect: SourceRect, sideways: boolean): SourceRect =>
@@ -28,7 +32,8 @@ const turned = (rect: SourceRect, sideways: boolean): SourceRect =>
 /**
  * Draws the cropped selection from the editor's own video on every presented
  * frame, so it loops whatever the editor plays without decoding the clip twice
- * or touching FFmpeg.
+ * or touching FFmpeg. Frames come through `video-frames`, which keeps them on
+ * the GPU where Firefox's direct video draws would not.
  */
 export default function OutputPreview({
   video,
@@ -69,6 +74,11 @@ export default function OutputPreview({
   // face would fit the line to the wrong widths.
   const fontsSettled = useRef<string | null>(null);
   const fontsPending = useRef<string | null>(null);
+  // Before the drawing effect, so its first draw finds the feed.
+  useEffect(() => {
+    if (!video) return;
+    return subscribeToFrames(video, () => draw.current());
+  }, [video]);
   useEffect(() => {
     draw.current = () => {
       const element = canvas.current;
@@ -122,10 +132,16 @@ ${bottomText}`;
           draw.current();
         });
       }
-      drawOutputFrame(
-        context,
+      const frame = frameRegion(
         video,
         source,
+        orientedSize(resolution, rotation)
+      );
+      if (!frame) return;
+      drawOutputFrame(
+        context,
+        frame.image,
+        frame.source,
         resolution,
         { rotation, flipHorizontal, flipVertical },
         fontsReady ? layer : undefined
@@ -146,36 +162,6 @@ ${bottomText}`;
     captionSize,
     outputHeight,
   ]);
-
-  useEffect(() => {
-    if (!video) return;
-    const redraw = () => draw.current();
-    video.addEventListener('loadeddata', redraw);
-    video.addEventListener('seeked', redraw);
-    let frame = 0;
-    let handle: number | undefined;
-    if ('requestVideoFrameCallback' in video) {
-      // Fires once per presented frame, during playback and after a seek,
-      // and not at all while paused.
-      handle = video.requestVideoFrameCallback(function onFrame() {
-        redraw();
-        handle = video.requestVideoFrameCallback(onFrame);
-      });
-    } else {
-      // Older browsers without frame callbacks; the DOM types assume them.
-      const media: HTMLMediaElement = video;
-      frame = requestAnimationFrame(function tick() {
-        if (!media.paused) redraw();
-        frame = requestAnimationFrame(tick);
-      });
-    }
-    return () => {
-      video.removeEventListener('loadeddata', redraw);
-      video.removeEventListener('seeked', redraw);
-      if (handle !== undefined) video.cancelVideoFrameCallback(handle);
-      cancelAnimationFrame(frame);
-    };
-  }, [video]);
 
   return (
     <canvas

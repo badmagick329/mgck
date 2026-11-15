@@ -349,6 +349,7 @@ function fakeVideo({ failAt }: { failAt?: number } = {}) {
   Object.assign(element, {
     videoWidth: 640,
     videoHeight: 360,
+    readyState: 4,
     removeAttribute: jest.fn(),
     load: jest.fn(),
   });
@@ -372,6 +373,10 @@ function fakeVideo({ failAt }: { failAt?: number } = {}) {
 test('thumbnails are drawn from evenly spaced seeks and report decode failures', async () => {
   const drawImage = jest.fn();
   let drawn = 0;
+  // jsdom has no WebGL, so thumbnails take the 2D route.
+  jest
+    .spyOn(HTMLCanvasElement.prototype, 'getContext')
+    .mockImplementation(() => null);
   const createCanvas = () =>
     ({
       getContext: () => ({ drawImage }),
@@ -390,7 +395,17 @@ test('thumbnails are drawn from evenly spaced seeks and report decode failures',
   expect(video.seeks[23]).toBe(47);
   expect(frames).toHaveLength(24);
   expect(frames[23]).toBe('frame-23');
-  expect(drawImage).toHaveBeenCalledWith(video.element, 0, 0, 128, 72);
+  expect(drawImage).toHaveBeenCalledWith(
+    video.element,
+    0,
+    0,
+    640,
+    360,
+    0,
+    0,
+    128,
+    72
+  );
   expect(video.element.removeAttribute).toHaveBeenCalledWith('src');
 
   const broken = fakeVideo({ failAt: 3 });

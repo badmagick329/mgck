@@ -191,13 +191,16 @@ describe('Advanced mode rotate, flip, speed and direction', () => {
     window.matchMedia = jest.fn(() => ({ matches: false }) as MediaQueryList);
     jest
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      // jsdom has no WebGL, so the previews take the 2D route.
       .mockImplementation(
-        () =>
-          ({
-            clearRect: jest.fn(),
-            setTransform: jest.fn(),
-            drawImage: jest.fn(),
-          }) as unknown as RenderingContext
+        (type) =>
+          (type === '2d'
+            ? {
+                clearRect: jest.fn(),
+                setTransform: jest.fn(),
+                drawImage: jest.fn(),
+              }
+            : null) as unknown as RenderingContext
       );
   });
 

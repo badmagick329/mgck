@@ -1,3 +1,5 @@
+import { frameRegion, subscribeToFrames } from './video-frames';
+
 export const timelineThumbnailCount = 24;
 
 const thumbnailHeight = 72;
@@ -63,6 +65,7 @@ export async function generateTimelineThumbnails(
       signal?.addEventListener('abort', onAbort);
     });
 
+  let unsubscribe = () => {};
   try {
     if (signal?.aborted || duration <= 0) return false;
     video.muted = true;
@@ -81,18 +84,41 @@ export async function generateTimelineThumbnails(
     const context = canvas.getContext('2d');
     if (!context) return false;
 
+    // Through the previews' WebGL route: Firefox's direct draw of a 4K frame
+    // blocks the page for about 110 ms, once per thumbnail.
+    unsubscribe = subscribeToFrames(video, () => {});
+    const whole = {
+      x: 0,
+      y: 0,
+      width: video.videoWidth,
+      height: video.videoHeight,
+    };
     for (let index = 0; index < count; index++) {
       if (signal?.aborted) return false;
       const seeked = waitFor('seeked', seekTimeoutMilliseconds);
       video.currentTime = (duration * (index + 0.5)) / count;
       await seeked;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const frame = frameRegion(video, whole, canvas);
+      if (!frame) return false;
+      const { x, y, width, height } = frame.source;
+      context.drawImage(
+        frame.image,
+        x,
+        y,
+        width,
+        height,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
       onFrame(index, canvas.toDataURL('image/jpeg', 0.7));
     }
     return true;
   } catch {
     return false;
   } finally {
+    unsubscribe();
     video.removeAttribute('src');
     try {
       video.load();

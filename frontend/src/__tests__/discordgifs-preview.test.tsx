@@ -175,13 +175,12 @@ describe('preview before converting', () => {
     jest.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
     jest
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      // jsdom has no WebGL, so the previews take the 2D route.
       .mockImplementation(
-        () =>
-          ({
-            clearRect: jest.fn(),
-            setTransform: jest.fn(),
-            drawImage,
-          }) as unknown as RenderingContext
+        (type) =>
+          (type === '2d'
+            ? { clearRect: jest.fn(), setTransform: jest.fn(), drawImage }
+            : null) as unknown as RenderingContext
       );
   });
   afterEach(() => jest.restoreAllMocks());

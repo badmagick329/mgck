@@ -248,7 +248,9 @@ describe('Advanced mode captions', () => {
     recorders = new WeakMap();
     jest
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
-      .mockImplementation(function (this: HTMLCanvasElement) {
+      .mockImplementation(function (this: HTMLCanvasElement, type: string) {
+        // jsdom has no WebGL, so the previews take the 2D route.
+        if (type !== '2d') return null;
         if (!recorders.has(this)) recorders.set(this, recordingContext());
         return recorders.get(this)!.context as unknown as RenderingContext;
       });
