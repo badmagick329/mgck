@@ -49,7 +49,7 @@ export async function convert(
       targetCallback(target);
       sizeCallback(0);
       const result = await ffmpeg.convert();
-      if (result) {
+      if (!('failed' in result)) {
         const {
           url,
           outputName,
@@ -80,7 +80,12 @@ export async function convert(
           type: 'addOutput',
           payload: {
             name,
-            output: { name: '', url: '', type: outputType },
+            output: {
+              name: '',
+              url: '',
+              type: outputType,
+              reason: result.reason,
+            },
           },
         });
       }

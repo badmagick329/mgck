@@ -22,7 +22,11 @@ export type FFmpegFileDataOutput = {
   format?: ConversionFormat;
   mimeType?: ConversionTarget['mimeType'];
   width?: number;
+  /** Why a failed output (empty `url`) failed, when FFmpeg's log says. */
+  reason?: string;
 };
+/** A conversion FFmpeg refused; `reason` is set when its log explains why. */
+export type FFmpegConversionFailure = { failed: true; reason?: string };
 export type FFmpegConversionResult = {
   url: string;
   outputName: string;
@@ -60,7 +64,7 @@ export type FFmpegFileData = {
 /** One file Advanced mode made, kept for the rest of the visit. */
 export type SessionResult =
   | { id: string; fileType: FileType; name: string; url: string; size: number }
-  | { id: string; fileType: FileType; failed: true };
+  | { id: string; fileType: FileType; failed: true; reason?: string };
 /** What the editor needs from a clip in either mode. */
 export type EditorClip = Pick<
   FFmpegFileData,

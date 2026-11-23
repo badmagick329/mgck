@@ -41,9 +41,14 @@ function ResultRow({ result }: { result: SessionResult }) {
   const label = fileTypeInfo[result.fileType].label;
   if ('failed' in result) {
     return (
-      <p className='text-sm font-semibold text-red-500'>
-        {label} conversion failed
-      </p>
+      <div className='flex flex-col gap-1 text-left'>
+        <p className='text-sm font-semibold text-red-500'>
+          {label} conversion failed
+        </p>
+        {result.reason && (
+          <p className='text-xs text-foreground-dg/80'>{result.reason}</p>
+        )}
+      </div>
     );
   }
   const overLimit = result.size > discordFreeUploadLimit.bytes;

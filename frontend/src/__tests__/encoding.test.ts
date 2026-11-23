@@ -479,6 +479,41 @@ describe('FFmpeg manager lifecycle', () => {
     expect(outputBlob?.type).toBe('image/png');
   });
 
+  test('a failed preset carries the reason FFmpeg logged, if any', async () => {
+    let logListener: ((event: { type: string; message: string }) => void) | null =
+      null;
+    const runtime = createRuntime({
+      on: jest.fn((event: string, callback: never) => {
+        if (event === 'log') logListener = callback;
+      }) as FFmpegRuntime['on'],
+      exec: jest.fn(async () => {
+        logListener?.({
+          type: 'stderr',
+          message: 'Decoder (codec hevc) not found for input stream #0:0',
+        });
+        return 1;
+      }),
+    });
+    const manager = createManager(runtime);
+    await manager.load();
+    manager.setFileConfig({
+      file: new File(['source'], 'clip.mov'),
+      target: conversionTargetPresets.emote,
+    });
+
+    expect(await manager.convert()).toEqual({
+      failed: true,
+      reason: expect.stringContaining('This video is HEVC'),
+    });
+
+    (runtime.on as jest.Mock).mockImplementation(() => undefined);
+    manager.setFileConfig({
+      file: new File(['source'], 'clip.mov'),
+      target: conversionTargetPresets.emote,
+    });
+    expect(await manager.convert()).toEqual({ failed: true, reason: undefined });
+  });
+
   test('removes listeners, temporary files, and config when encoding fails', async () => {
     const runtime = createRuntime({
       exec: jest.fn(async () => {

@@ -4,6 +4,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 
 import ConversionOutput from '@/app/discordgifs/_components/ConversionOutput';
 import DiscordUploadHelp from '@/app/discordgifs/_components/DiscordUploadHelp';
+import SessionResults from '@/app/discordgifs/_components/SessionResults';
 import { FFmpegFileDataOutput } from '@/lib/types/discordgifs';
 
 describe('Discord GIF Maker output', () => {
@@ -54,6 +55,33 @@ describe('Discord GIF Maker output', () => {
     expect(screen.getByText('Sticker conversion failed')).toBeInTheDocument();
     expect(screen.queryByRole('figure')).toBeNull();
     expect(screen.queryByRole('link')).toBeNull();
+  });
+
+  test('shows why a conversion failed when FFmpeg said', () => {
+    render(
+      <ConversionOutput
+        output={{ name: '', url: '', type: 'emote', reason: 'This video is AV1.' }}
+      />
+    );
+    expect(screen.getByText('This video is AV1.')).toBeInTheDocument();
+  });
+});
+
+describe('Made this session', () => {
+  test('shows why a file type failed beside the failure', () => {
+    render(
+      <SessionResults
+        results={[
+          { id: 'a', fileType: 'gif', failed: true, reason: 'This video is AV1.' },
+          { id: 'b', fileType: 'webp', failed: true },
+        ]}
+      />
+    );
+    const rows = screen.getAllByRole('listitem');
+    expect(rows.map((row) => row.textContent)).toEqual([
+      'GIF conversion failedThis video is AV1.',
+      'WebP conversion failed',
+    ]);
   });
 });
 

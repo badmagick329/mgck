@@ -352,7 +352,13 @@ function restartCore(manager: FFmpegManager) {
 
 function toResult(output: SinglePassOutput): SessionResult {
   const id = `result-${++resultId}`;
-  if ('failed' in output) return { id, fileType: output.fileType, failed: true };
+  if ('failed' in output)
+    return {
+      id,
+      fileType: output.fileType,
+      failed: true,
+      reason: output.reason,
+    };
   return {
     id,
     fileType: output.fileType,

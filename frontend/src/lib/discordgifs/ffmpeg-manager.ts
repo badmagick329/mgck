@@ -1,6 +1,7 @@
 import {
   ClipTrim,
   ClipCrop,
+  FFmpegConversionFailure,
   FFmpegConversionResult,
   FFmpegConversionState,
   FFmpegLogEvent,
@@ -15,6 +16,7 @@ import {
   buildOptimizedInputCommand,
   buildOutputCommand,
 } from './ffmpeg-commands';
+import { FailureDiagnosis } from './ffmpeg-failure';
 import { FrameSizeCalculator } from './frame-size-calculator';
 import {
   AdvancedSettings,
@@ -82,7 +84,7 @@ export type SinglePassJob = {
 
 export type SinglePassOutput =
   | { fileType: FileType; name: string; blob: Blob }
-  | { fileType: FileType; failed: true };
+  | { fileType: FileType; failed: true; reason?: string };
 
 type SinglePassCallbacks = {
   onStart?: (fileType: FileType, index: number) => void;
@@ -276,7 +278,9 @@ export class FFmpegManager {
     return this.ffmpeg !== null;
   }
 
-  public async convert(): Promise<FFmpegConversionResult | null> {
+  public async convert(): Promise<
+    FFmpegConversionResult | FFmpegConversionFailure
+  > {
     const ffmpeg = this.ffmpeg;
     const config = this.fileConfig;
     if (!ffmpeg) {
@@ -286,6 +290,13 @@ export class FFmpegManager {
       throw new Error('FFmpegManager config not set');
     }
 
+    // Spans optimisation too: an undecodable input fails there first.
+    const diagnosis = new FailureDiagnosis();
+    const failed = (): FFmpegConversionFailure => ({
+      failed: true,
+      reason: diagnosis.reason,
+    });
+    ffmpeg.on('log', diagnosis.listener);
     let logListenerAttached = false;
     let progressListenerAttached = false;
     try {
@@ -300,7 +311,7 @@ export class FFmpegManager {
       try {
         await this.optimizeInput(config);
       } catch {
-        return null;
+        return failed();
       }
 
       if (this.logMessageCallback) {
@@ -315,7 +326,7 @@ export class FFmpegManager {
 
       const result = await this.runSizeSearch(config);
       if (!result) {
-        return null;
+        return failed();
       }
 
       const { blob, width } = result;
@@ -329,6 +340,11 @@ export class FFmpegManager {
         width,
       };
     } finally {
+      try {
+        ffmpeg.off('log', diagnosis.listener);
+      } catch (error) {
+        console.error('Error removing FFmpeg log listener', error);
+      }
       try {
         if (logListenerAttached && this.logMessageCallback) {
           ffmpeg.off('log', this.logMessageCallback);
@@ -461,6 +477,8 @@ export class FFmpegManager {
         onProgress?.(0);
         const outputFsName = `output-${id}${fileTypeInfo[fileType].extension}`;
         createdFiles.add(outputFsName);
+        const diagnosis = new FailureDiagnosis();
+        ffmpeg.on('log', diagnosis.listener);
         const returnCode = await ffmpeg.exec(
           buildSinglePassCommand({
             inputName,
@@ -473,10 +491,16 @@ export class FFmpegManager {
             keepSound: job.keepSound,
             captionsName,
           })
-        );
+        ).finally(() => {
+          try {
+            ffmpeg.off('log', diagnosis.listener);
+          } catch (error) {
+            console.error('Error removing FFmpeg log listener', error);
+          }
+        });
         let output: SinglePassOutput;
         if (returnCode !== 0) {
-          output = { fileType, failed: true };
+          output = { fileType, failed: true, reason: diagnosis.reason };
         } else {
           const data = await ffmpeg.readFile(outputFsName);
           output = {

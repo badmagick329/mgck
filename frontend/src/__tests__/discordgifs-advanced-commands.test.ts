@@ -25,7 +25,7 @@ import {
   FFmpegRuntime,
   SinglePassOutput,
 } from '@/lib/discordgifs/ffmpeg-manager';
-import { FFmpegProgressEvent } from '@/lib/types/discordgifs';
+import { FFmpegLogEvent, FFmpegProgressEvent } from '@/lib/types/discordgifs';
 
 const settings = (patch: Partial<AdvancedSettings> = {}): AdvancedSettings => ({
   ...defaultAdvancedSettings,
@@ -521,6 +521,7 @@ describe('Advanced mode output numbers', () => {
 describe('single-pass conversion', () => {
   function setup(exec: FFmpegRuntime['exec'] = jest.fn(async () => 0)) {
     let emitProgress: (event: FFmpegProgressEvent) => void = () => {};
+    const logListeners = new Set<(event: FFmpegLogEvent) => void>();
     const runtime = {
       load: jest.fn(async () => true),
       exec,
@@ -529,8 +530,13 @@ describe('single-pass conversion', () => {
       deleteFile: jest.fn(async () => true),
       on: jest.fn((event: string, callback: typeof emitProgress) => {
         if (event === 'progress') emitProgress = callback;
+        if (event === 'log')
+          logListeners.add(callback as unknown as (e: FFmpegLogEvent) => void);
       }),
-      off: jest.fn(),
+      off: jest.fn((event: string, callback: unknown) => {
+        if (event === 'log')
+          logListeners.delete(callback as (e: FFmpegLogEvent) => void);
+      }),
       terminate: jest.fn(),
     } as unknown as FFmpegRuntime;
     const manager = new FFmpegManager({
@@ -541,7 +547,13 @@ describe('single-pass conversion', () => {
       createId: () => 'id',
       retryDelay: async () => undefined,
     });
-    return { runtime, manager, progress: (event: FFmpegProgressEvent) => emitProgress(event) };
+    return {
+      runtime,
+      manager,
+      progress: (event: FFmpegProgressEvent) => emitProgress(event),
+      log: (message: string) =>
+        logListeners.forEach((listener) => listener({ type: 'stderr', message })),
+    };
   }
 
   const job = {
@@ -616,6 +628,30 @@ describe('single-pass conversion', () => {
       [true, 'webp'],
       [false, 'mp4'],
     ]);
+  });
+
+  test('explains a video FFmpeg cannot decode, from its log', async () => {
+    let log: (message: string) => void = () => {};
+    // The line ffmpeg.wasm 0.12's core prints for AV1 input, typo included.
+    const exec = jest.fn(async (args: string[]) => {
+      if (args[args.length - 1].endsWith('.gif')) {
+        log("[av1 @ 0x108bdb0] Your platform doesn't suppport hardware accelerated AV1 decoding.");
+        return 1;
+      }
+      return 0;
+    });
+    const harness = setup(exec);
+    log = harness.log;
+    await harness.manager.load();
+    const outputs = await harness.manager.convertSinglePass(job);
+
+    expect(outputs[0]).toEqual({
+      fileType: 'gif',
+      failed: true,
+      reason: expect.stringContaining('This video is AV1'),
+    });
+    // The reason belongs to the run that logged it, not the ones after.
+    expect(outputs.slice(1).every((output) => !('failed' in output))).toBe(true);
   });
 
   test('turns output time in microseconds into a fraction of the selection', async () => {

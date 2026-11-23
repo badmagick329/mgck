@@ -12,13 +12,18 @@ export default function ConversionOutput({
 }: {
   output: FFmpegFileDataOutput;
 }) {
-  const { url, name, finalSize, type } = output;
+  const { url, name, finalSize, type, reason } = output;
   const label = conversionPresetLabels[type];
   if (url === '') {
     return (
-      <p className='break-words font-semibold text-red-600'>
-        {label} conversion failed
-      </p>
+      <div className='flex flex-col gap-1'>
+        <p className='break-words font-semibold text-red-600'>
+          {label} conversion failed
+        </p>
+        {reason && (
+          <p className='text-xs text-foreground-dg/80'>{reason}</p>
+        )}
+      </div>
     );
   }
   const sizeText = finalSize ? ` · ${(finalSize / 1024).toFixed(1)} KiB` : '';
